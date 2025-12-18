@@ -12,8 +12,6 @@ import { z } from "zod";
 import { cn } from "@/lib/utils";
 
 import { LastUsed, useLastUsed } from "@/components/hooks/useLastUsed";
-import Google from "@/components/shared/icons/google";
-import LinkedIn from "@/components/shared/icons/linkedin";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -30,7 +28,7 @@ export default function Login() {
   const { next } = useParams as { next?: string };
 
   const [lastUsed, setLastUsed] = useLastUsed();
-  const authMethods = ["google", "email", "linkedin"] as const;
+  const authMethods = ["email"] as const;
   type AuthMethod = (typeof authMethods)[number];
   const [clickedMethod, setClickedMethod] = useState<AuthMethod | undefined>(
     undefined,
@@ -184,53 +182,6 @@ export default function Login() {
               {lastUsed === "credentials" && <LastUsed />}
             </div>
           </form>
-          <p className="py-4 text-center text-gray-400">or</p>
-          <div className="flex flex-col space-y-2 px-4 sm:px-12">
-            <div className="relative">
-              <Button
-                onClick={() => {
-                  setClickedMethod("google");
-                  setLastUsed("google");
-                  signIn("google", {
-                    ...(next && next.length > 0 ? { callbackUrl: next } : {}),
-                  }).then((res) => {
-                    setClickedMethod(undefined);
-                  });
-                }}
-                loading={clickedMethod === "google"}
-                disabled={clickedMethod && clickedMethod !== "google"}
-                className="flex w-full items-center justify-center space-x-2 border border-gray-600 bg-gray-900 font-normal text-white hover:bg-gray-800"
-              >
-                <Google className="h-5 w-5" />
-                <span>Continue with Google</span>
-                {clickedMethod !== "google" && lastUsed === "google" && (
-                  <LastUsed />
-                )}
-              </Button>
-            </div>
-            <div className="relative">
-              <Button
-                onClick={() => {
-                  setClickedMethod("linkedin");
-                  setLastUsed("linkedin");
-                  signIn("linkedin", {
-                    ...(next && next.length > 0 ? { callbackUrl: next } : {}),
-                  }).then((res) => {
-                    setClickedMethod(undefined);
-                  });
-                }}
-                loading={clickedMethod === "linkedin"}
-                disabled={clickedMethod && clickedMethod !== "linkedin"}
-                className="flex w-full items-center justify-center space-x-2 border border-gray-600 bg-gray-900 font-normal text-white hover:bg-gray-800"
-              >
-                <LinkedIn />
-                <span>Continue with LinkedIn</span>
-                {clickedMethod !== "linkedin" && lastUsed === "linkedin" && (
-                  <LastUsed />
-                )}
-              </Button>
-            </div>
-          </div>
           <div className="mt-8 px-4 sm:px-12">
             <Dialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen}>
               <DialogTrigger asChild>

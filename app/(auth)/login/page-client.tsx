@@ -17,6 +17,14 @@ import Google from "@/components/shared/icons/google";
 import LinkedIn from "@/components/shared/icons/linkedin";
 import Passkey from "@/components/shared/icons/passkey";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -33,6 +41,52 @@ export default function Login() {
   const [emailButtonText, setEmailButtonText] = useState<string>(
     "Continue with Email",
   );
+
+  const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
+  const [inviteForm, setInviteForm] = useState({
+    email: "",
+    fullName: "",
+    company: "",
+  });
+  const [inviteLoading, setInviteLoading] = useState(false);
+
+  const inviteFormSchema = z.object({
+    email: z.string().trim().email("Please enter a valid email"),
+    fullName: z.string().trim().min(2, "Name must be at least 2 characters"),
+    company: z.string().trim().min(2, "Company must be at least 2 characters"),
+  });
+
+  const inviteValidation = inviteFormSchema.safeParse(inviteForm);
+  const isInviteFormValid = inviteValidation.success;
+
+  const handleInviteSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!inviteValidation.success) {
+      toast.error(inviteValidation.error.errors[0]?.message || "Please fill in all fields correctly");
+      return;
+    }
+
+    setInviteLoading(true);
+    try {
+      const response = await fetch("/api/request-invite", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(inviteForm),
+      });
+
+      if (response.ok) {
+        toast.success("Request sent! We'll be in touch soon.");
+        setInviteDialogOpen(false);
+        setInviteForm({ email: "", fullName: "", company: "" });
+      } else {
+        toast.error("Failed to send request. Please try again.");
+      }
+    } catch (error) {
+      toast.error("An error occurred. Please try again.");
+    } finally {
+      setInviteLoading(false);
+    }
+  };
 
   const emailSchema = z
     .string()
@@ -200,7 +254,67 @@ export default function Login() {
               </Button>
             </div>
           </div>
-          <p className="mt-10 w-full max-w-md px-4 text-xs text-gray-400 sm:px-12">
+          <div className="mt-8 px-4 sm:px-12">
+            <Dialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen}>
+              <DialogTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="w-full border-gray-600 bg-transparent text-white hover:bg-gray-800 hover:text-white"
+                >
+                  Request Invite
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="bg-gray-900 border-gray-700 text-white sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle className="text-white">Request Access</DialogTitle>
+                  <DialogDescription className="text-gray-400">
+                    Submit your details to request access to the BF Fund Investor Portal.
+                  </DialogDescription>
+                </DialogHeader>
+                <form onSubmit={handleInviteSubmit} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="invite-name" className="text-gray-300">Full Name</Label>
+                    <Input
+                      id="invite-name"
+                      placeholder="John Smith"
+                      value={inviteForm.fullName}
+                      onChange={(e) => setInviteForm({ ...inviteForm, fullName: e.target.value })}
+                      className="border-gray-600 bg-gray-800 text-white placeholder:text-gray-500"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="invite-email" className="text-gray-300">Email</Label>
+                    <Input
+                      id="invite-email"
+                      type="email"
+                      placeholder="john@company.com"
+                      value={inviteForm.email}
+                      onChange={(e) => setInviteForm({ ...inviteForm, email: e.target.value })}
+                      className="border-gray-600 bg-gray-800 text-white placeholder:text-gray-500"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="invite-company" className="text-gray-300">Company</Label>
+                    <Input
+                      id="invite-company"
+                      placeholder="Company Name"
+                      value={inviteForm.company}
+                      onChange={(e) => setInviteForm({ ...inviteForm, company: e.target.value })}
+                      className="border-gray-600 bg-gray-800 text-white placeholder:text-gray-500"
+                    />
+                  </div>
+                  <Button
+                    type="submit"
+                    disabled={inviteLoading || !isInviteFormValid}
+                    className="w-full bg-white text-black hover:bg-gray-200 disabled:opacity-50"
+                  >
+                    {inviteLoading ? "Sending..." : "Submit Request"}
+                  </Button>
+                </form>
+              </DialogContent>
+            </Dialog>
+          </div>
+          <p className="mt-6 w-full max-w-md px-4 text-xs text-gray-400 sm:px-12">
             By clicking continue, you acknowledge that you have read and agree
             to Bermuda Franchise Group&apos;s terms of use. For inquiries,
             contact{" "}

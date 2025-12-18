@@ -38,13 +38,20 @@ export default async function handler(
       company,
     });
 
+    if (process.env.NODE_ENV === "development") {
+      console.log("[Invite Request] New access request:");
+      console.log(`  From: ${fullName} (${email})`);
+      console.log(`  Company: ${company}`);
+      console.log("  Would send to: investors@bermudafranchisegroup.com");
+      return res.status(200).json({ message: "Request sent successfully" });
+    }
+
     await sendEmail({
       to: "investors@bermudafranchisegroup.com",
-      from: "BF Fund Portal <system@papermark.io>",
+      from: "BF Fund Portal <notifications@bermudafranchisegroup.com>",
       subject: `New Investor Access Request: ${fullName}`,
       react: emailTemplate,
       replyTo: email,
-      test: process.env.NODE_ENV === "development",
     });
 
     return res.status(200).json({ message: "Request sent successfully" });

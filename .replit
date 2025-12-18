@@ -25,6 +25,7 @@ NEXT_PUBLIC_MARKETING_URL = "https://df50c344-693e-455c-bef7-f789d56774bd-00-jcv
 NEXT_PUBLIC_APP_BASE_HOST = "df50c344-693e-455c-bef7-f789d56774bd-00-jcveq2hx1o9i.spock.replit.dev"
 NEXT_PUBLIC_UPLOAD_TRANSPORT = "vercel"
 NEXT_PRIVATE_DOCUMENT_PASSWORD_KEY = "bermuda-franchise-secure-key-2025"
+NEXT_PRIVATE_VERIFICATION_SECRET = "bermuda-franchise-secure-verification-2025"
 
 [workflows]
 runButton = "Project"

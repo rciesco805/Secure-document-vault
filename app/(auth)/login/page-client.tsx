@@ -187,7 +187,6 @@ export default function Login() {
               >
                 {emailButtonText}
               </Button>
-              {lastUsed === "credentials" && <LastUsed />}
             </div>
           </form>
           <div className="mt-8 px-4 sm:px-12">

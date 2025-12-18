@@ -1,11 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
-import { signIn } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { z } from "zod";
 
@@ -26,6 +26,14 @@ import { Label } from "@/components/ui/label";
 
 export default function Login() {
   const { next } = useParams as { next?: string };
+  const router = useRouter();
+  const { data: session, status } = useSession();
+
+  useEffect(() => {
+    if (status === "authenticated") {
+      router.push("/dashboard");
+    }
+  }, [status, router]);
 
   const [lastUsed, setLastUsed] = useLastUsed();
   const authMethods = ["email"] as const;

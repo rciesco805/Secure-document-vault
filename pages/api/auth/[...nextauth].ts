@@ -120,6 +120,17 @@ export const authOptions: NextAuthOptions = {
     },
   },
   callbacks: {
+    redirect: async ({ url, baseUrl }) => {
+      // If the URL is just the base URL or login page, redirect to dashboard
+      if (url === baseUrl || url === `${baseUrl}/` || url.includes('/login')) {
+        return `${baseUrl}/dashboard`;
+      }
+      // Allows relative callback URLs
+      if (url.startsWith("/")) return `${baseUrl}${url}`;
+      // Allows callback URLs on the same origin
+      if (new URL(url).origin === baseUrl) return url;
+      return `${baseUrl}/dashboard`;
+    },
     jwt: async (params) => {
       const { token, user, trigger } = params;
       if (!token.email) {

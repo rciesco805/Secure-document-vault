@@ -552,7 +552,9 @@ export default function UploadZone({
           );
       });
       const uploadedDocuments = await documents;
-      const dataroomDocuments = uploadedDocuments.map((document) => ({
+      // Filter out any undefined documents from failed uploads
+      const validDocuments = uploadedDocuments.filter((doc): doc is NonNullable<typeof doc> => doc != null);
+      const dataroomDocuments = validDocuments.map((document) => ({
         documentId: document.id,
         dataroomDocumentId: document.dataroomDocumentId,
         fileName: document.name,

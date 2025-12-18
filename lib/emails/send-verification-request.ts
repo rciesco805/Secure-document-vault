@@ -20,10 +20,9 @@ export const sendVerificationRequestEmail = async (params: {
   try {
     await sendEmail({
       to: email as string,
-      system: true,
-      subject: "Your Papermark Login Link",
+      from: "BF Fund Portal <noreply@investors.bermudafranchisegroup.com>",
+      subject: "Your BF Fund Portal Login Link",
       react: emailTemplate,
-      test: process.env.NODE_ENV === "development",
     });
   } catch (e) {
     console.error(e);

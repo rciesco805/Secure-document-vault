@@ -77,26 +77,10 @@ const providers = [
         finalUrl = urlObj.toString();
       }
 
-      if (process.env.NODE_ENV === "development") {
-        const checksum = generateChecksum(finalUrl);
-        const verificationUrlParams = new URLSearchParams({
-          verification_url: finalUrl,
-          checksum,
-        });
-
-        const baseUrl = hasValidNextAuthUrl
-          ? process.env.NEXTAUTH_URL
-          : getMainDomainUrl();
-
-        const verificationUrl = `${baseUrl}/verify?${verificationUrlParams}`;
-        console.log("[Login URL]", verificationUrl);
-        return;
-      } else {
-        await sendVerificationRequestEmail({
-          url: finalUrl,
-          email: identifier,
-        });
-      }
+      await sendVerificationRequestEmail({
+        url: finalUrl,
+        email: identifier,
+      });
     },
   }),
 ];

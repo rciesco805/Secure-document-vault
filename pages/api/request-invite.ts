@@ -38,17 +38,9 @@ export default async function handler(
       company,
     });
 
-    if (process.env.NODE_ENV === "development") {
-      console.log("[Invite Request] New access request:");
-      console.log(`  From: ${fullName} (${email})`);
-      console.log(`  Company: ${company}`);
-      console.log("  Would send to: investors@bermudafranchisegroup.com");
-      return res.status(200).json({ message: "Request sent successfully" });
-    }
-
     await sendEmail({
-      to: "investors@bermudafranchisegroup.com",
-      from: "BF Fund Portal <notifications@bermudafranchisegroup.com>",
+      to: "investors@bermudaclubfranchise.com",
+      from: "BF Fund Portal <noreply@investors.bermudafranchisegroup.com>",
       subject: `New Investor Access Request: ${fullName}`,
       react: emailTemplate,
       replyTo: email,

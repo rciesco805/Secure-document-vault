@@ -49,9 +49,15 @@ const VerificationLinkEmail = ({
             <Text className="text-sm leading-6 text-black">
               or copy and paste this URL into your browser:
             </Text>
-            <Link href={url} className="max-w-sm flex-wrap break-words font-medium text-purple-600">
-              {url.replace(/^https?:\/\//, "")}
-            </Link>
+            <Text className="text-sm">
+              <Link 
+                href={url} 
+                className="text-purple-600"
+                style={{ wordBreak: "break-all", overflowWrap: "break-word" }}
+              >
+                {url.replace(/^https?:\/\//, "")}
+              </Link>
+            </Text>
             <Footer />
           </Container>
         </Body>

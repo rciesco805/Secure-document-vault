@@ -53,11 +53,30 @@ export default async function handler(
         return {
           addRandomSuffix: true,
           allowedContentTypes: [
+            // PDF
             "application/pdf",
+            // Excel
             "application/vnd.ms-excel",
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            "application/vnd.ms-excel.sheet.macroEnabled.12",
+            // Word
+            "application/msword",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            // PowerPoint
+            "application/vnd.ms-powerpoint",
+            "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+            // Images
+            "image/png",
+            "image/jpeg",
+            "image/jpg",
+            "image/gif",
+            "image/webp",
+            "image/svg+xml",
+            // Archives
+            "application/zip",
+            "application/x-zip-compressed",
           ],
-          maximumSizeInBytes: maxSize, // 30 MB
+          maximumSizeInBytes: maxSize,
           metadata: JSON.stringify({
             // optional, sent to your server on upload completion
             userId: (session.user as CustomUser).id,

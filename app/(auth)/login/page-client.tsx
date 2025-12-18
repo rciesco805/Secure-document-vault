@@ -44,9 +44,9 @@ export default function Login() {
   const emailValidation = emailSchema.safeParse(email);
 
   return (
-    <div className="flex h-screen w-full flex-wrap">
+    <div className="flex h-screen w-full flex-wrap bg-black">
       {/* Left part */}
-      <div className="flex w-full justify-center bg-gray-50 md:w-1/2 lg:w-1/2">
+      <div className="flex w-full justify-center bg-black md:w-1/2 lg:w-1/2">
         <div
           className="absolute inset-x-0 top-10 -z-10 flex transform-gpu justify-center overflow-hidden blur-3xl"
           aria-hidden="true"
@@ -54,16 +54,16 @@ export default function Login() {
         <div className="z-10 mx-5 mt-[calc(1vh)] h-fit w-full max-w-md overflow-hidden rounded-lg sm:mx-0 sm:mt-[calc(2vh)] md:mt-[calc(3vh)]">
           <div className="items-left flex flex-col space-y-3 px-4 py-6 pt-8 sm:px-12">
             <img
-              src="/_static/bfg-logo-black.png"
+              src="/_static/bfg-logo-white.png"
               alt="Bermuda Franchise Group"
               className="md:mb-48s -mt-8 mb-36 h-12 w-auto self-start sm:mb-32"
             />
             <Link href="/">
-              <span className="text-balance text-3xl font-semibold text-gray-900">
+              <span className="text-balance text-3xl font-semibold text-white">
                 BF Fund Investor Portal
               </span>
             </Link>
-            <h3 className="text-balance text-sm text-gray-800">
+            <h3 className="text-balance text-sm text-gray-300">
               Secure access to investment documents.
             </h3>
           </div>
@@ -106,14 +106,13 @@ export default function Login() {
               autoComplete="email"
               autoCorrect="off"
               disabled={clickedMethod === "email"}
-              // pattern={patternSimpleEmailRegex}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className={cn(
-                "flex h-10 w-full rounded-md border-0 bg-background bg-white px-3 py-2 text-sm text-gray-900 ring-1 ring-gray-200 transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 dark:bg-white",
+                "flex h-10 w-full rounded-md border border-gray-600 bg-gray-900 px-3 py-2 text-sm text-white ring-0 transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-gray-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white disabled:cursor-not-allowed disabled:opacity-50",
                 email.length > 0 && !emailValidation.success
-                  ? "ring-red-500"
-                  : "ring-gray-200",
+                  ? "border-red-500"
+                  : "border-gray-600",
               )}
             />
             <div className="relative">
@@ -122,10 +121,10 @@ export default function Login() {
                 loading={clickedMethod === "email"}
                 disabled={!emailValidation.success || !!clickedMethod}
                 className={cn(
-                  "focus:shadow-outline w-full transform rounded px-4 py-2 text-white transition-colors duration-300 ease-in-out focus:outline-none",
+                  "focus:shadow-outline w-full transform rounded px-4 py-2 text-black transition-colors duration-300 ease-in-out focus:outline-none",
                   clickedMethod === "email"
-                    ? "bg-black"
-                    : "bg-gray-800 hover:bg-gray-900",
+                    ? "bg-white"
+                    : "bg-white hover:bg-gray-200",
                 )}
               >
                 {emailButtonText}
@@ -133,7 +132,7 @@ export default function Login() {
               {lastUsed === "credentials" && <LastUsed />}
             </div>
           </form>
-          <p className="py-4 text-center">or</p>
+          <p className="py-4 text-center text-gray-400">or</p>
           <div className="flex flex-col space-y-2 px-4 sm:px-12">
             <div className="relative">
               <Button
@@ -148,7 +147,7 @@ export default function Login() {
                 }}
                 loading={clickedMethod === "google"}
                 disabled={clickedMethod && clickedMethod !== "google"}
-                className="flex w-full items-center justify-center space-x-2 border border-gray-300 bg-gray-100 font-normal text-gray-900 hover:bg-gray-200"
+                className="flex w-full items-center justify-center space-x-2 border border-gray-600 bg-gray-900 font-normal text-white hover:bg-gray-800"
               >
                 <Google className="h-5 w-5" />
                 <span>Continue with Google</span>
@@ -170,7 +169,7 @@ export default function Login() {
                 }}
                 loading={clickedMethod === "linkedin"}
                 disabled={clickedMethod && clickedMethod !== "linkedin"}
-                className="flex w-full items-center justify-center space-x-2 border border-gray-300 bg-gray-100 font-normal text-gray-900 hover:bg-gray-200"
+                className="flex w-full items-center justify-center space-x-2 border border-gray-600 bg-gray-900 font-normal text-white hover:bg-gray-800"
               >
                 <LinkedIn />
                 <span>Continue with LinkedIn</span>
@@ -193,7 +192,7 @@ export default function Login() {
                 variant="outline"
                 loading={clickedMethod === "passkey"}
                 disabled={clickedMethod && clickedMethod !== "passkey"}
-                className="flex w-full items-center justify-center space-x-2 border border-gray-300 bg-gray-100 font-normal text-gray-900 hover:bg-gray-200 hover:text-gray-900"
+                className="flex w-full items-center justify-center space-x-2 border border-gray-600 bg-gray-900 font-normal text-white hover:bg-gray-800"
               >
                 <Passkey className="h-4 w-4" />
                 <span>Continue with a passkey</span>
@@ -201,13 +200,13 @@ export default function Login() {
               </Button>
             </div>
           </div>
-          <p className="mt-10 w-full max-w-md px-4 text-xs text-muted-foreground sm:px-12">
+          <p className="mt-10 w-full max-w-md px-4 text-xs text-gray-400 sm:px-12">
             By clicking continue, you acknowledge that you have read and agree
             to Bermuda Franchise Group&apos;s terms of use. For inquiries,
             contact{" "}
             <a
               href="mailto:investors@bermudafranchisegroup.com"
-              className="underline"
+              className="underline text-gray-300 hover:text-white"
             >
               investors@bermudafranchisegroup.com
             </a>

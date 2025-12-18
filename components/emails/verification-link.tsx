@@ -31,7 +31,7 @@ const VerificationLinkEmail = ({
               <span className="font-bold tracking-tighter">BF Fund Investor Portal</span>
             </Text>
             <Text className="mx-0 my-7 p-0 text-center text-xl font-semibold text-black">
-              Your Login Link
+              Your Secure BF Fund Login Link
             </Text>
 
             <Text className="text-sm leading-6 text-black">

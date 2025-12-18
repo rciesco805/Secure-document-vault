@@ -26,46 +26,46 @@ export default function App({
   return (
     <>
       <Head>
-        <title>Papermark | The Open Source DocSend Alternative</title>
+        <title>BF Fund Dataroom | Bermuda Franchise Group</title>
         <meta name="theme-color" content="#000000" />
         <meta
           name="description"
-          content="Papermark is an open-source document sharing alternative to DocSend with built-in analytics."
+          content="Secure investor dataroom for Bermuda Franchise Group - Work Well. Play Well. Be Well."
           key="description"
         />
         <meta
           property="og:title"
-          content="Papermark | The Open Source DocSend Alternative"
+          content="BF Fund Dataroom | Bermuda Franchise Group"
           key="og-title"
         />
         <meta
           property="og:description"
-          content="Papermark is an open-source document sharing alternative to DocSend with built-in analytics."
+          content="Secure investor dataroom for Bermuda Franchise Group - Work Well. Play Well. Be Well."
           key="og-description"
         />
         <meta
           property="og:image"
-          content="https://www.papermark.com/_static/meta-image.png"
+          content="/_static/bfg-logo-black.png"
           key="og-image"
         />
         <meta
           property="og:url"
-          content="https://www.papermark.com"
+          content="https://bfg-fund-dataroom.vercel.app"
           key="og-url"
         />
         <meta property="og:type" content="website" />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:site" content="@papermarkio" />
-        <meta name="twitter:creator" content="@papermarkio" />
-        <meta name="twitter:title" content="Papermark" key="tw-title" />
+        <meta name="twitter:site" content="@bermudafranchise" />
+        <meta name="twitter:creator" content="@bermudafranchise" />
+        <meta name="twitter:title" content="BF Fund Dataroom" key="tw-title" />
         <meta
           name="twitter:description"
-          content="Papermark is an open-source document sharing alternative to DocSend with built-in analytics."
+          content="Secure investor dataroom for Bermuda Franchise Group - Work Well. Play Well. Be Well."
           key="tw-description"
         />
         <meta
           name="twitter:image"
-          content="https://www.papermark.com/_static/meta-image.png"
+          content="/_static/bfg-logo-black.png"
           key="tw-image"
         />
         <link rel="icon" href="/favicon.ico" key="favicon" />

@@ -25,3 +25,31 @@ NEXT_PUBLIC_MARKETING_URL = "http://0.0.0.0:5000"
 NEXT_PUBLIC_APP_BASE_HOST = "0.0.0.0:5000"
 NEXT_PUBLIC_UPLOAD_TRANSPORT = "vercel"
 NEXT_PRIVATE_DOCUMENT_PASSWORD_KEY = "bermuda-franchise-secure-key-2025"
+
+[workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "BF Fund Dataroom"
+
+[[workflows.workflow]]
+name = "BF Fund Dataroom"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npm run dev -- -p 5000 -H 0.0.0.0"
+waitForPort = 5000
+
+[workflows.workflow.metadata]
+outputType = "webview"
+
+[[ports]]
+localPort = 5000
+externalPort = 80

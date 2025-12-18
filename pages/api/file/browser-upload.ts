@@ -55,16 +55,26 @@ export default async function handler(
           allowedContentTypes: [
             // PDF
             "application/pdf",
-            // Excel
+            // Excel & Spreadsheets
             "application/vnd.ms-excel",
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             "application/vnd.ms-excel.sheet.macroEnabled.12",
-            // Word
+            "text/csv",
+            "text/tab-separated-values",
+            "application/vnd.oasis.opendocument.spreadsheet",
+            // Word & Documents
             "application/msword",
             "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-            // PowerPoint
+            "application/vnd.oasis.opendocument.text",
+            "application/rtf",
+            "text/rtf",
+            "text/plain",
+            // PowerPoint & Presentations
             "application/vnd.ms-powerpoint",
             "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+            "application/vnd.oasis.opendocument.presentation",
+            "application/vnd.apple.keynote",
+            "application/x-iwork-keynote-sffkey",
             // Images
             "image/png",
             "image/jpeg",
@@ -72,9 +82,26 @@ export default async function handler(
             "image/gif",
             "image/webp",
             "image/svg+xml",
+            "image/vnd.dwg",
+            "image/vnd.dxf",
+            // Video
+            "video/mp4",
+            "video/quicktime",
+            "video/x-msvideo",
+            "video/webm",
+            "video/ogg",
+            // Audio
+            "audio/mp4",
+            "audio/x-m4a",
+            "audio/m4a",
+            "audio/mpeg",
             // Archives
             "application/zip",
             "application/x-zip-compressed",
+            // Other formats
+            "application/vnd.google-earth.kml+xml",
+            "application/vnd.google-earth.kmz",
+            "application/vnd.ms-outlook",
           ],
           maximumSizeInBytes: maxSize,
           metadata: JSON.stringify({

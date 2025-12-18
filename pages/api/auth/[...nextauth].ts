@@ -22,6 +22,7 @@ import { generateChecksum } from "@/lib/utils/generate-checksum";
 import { getIpAddress } from "@/lib/utils/ip";
 
 const VERCEL_DEPLOYMENT = !!process.env.VERCEL_URL;
+const IS_REPLIT = !!process.env.REPL_ID;
 
 function getMainDomainUrl(): string {
   if (process.env.NODE_ENV === "development") {
@@ -112,9 +113,9 @@ export const authOptions: NextAuthOptions = {
         httpOnly: true,
         sameSite: "lax",
         path: "/",
-        // When working on localhost, the cookie domain must be omitted entirely (https://stackoverflow.com/a/1188145)
-        domain: VERCEL_DEPLOYMENT ? ".papermark.com" : undefined,
-        secure: VERCEL_DEPLOYMENT,
+        // When working on localhost or Replit, the cookie domain must be omitted entirely
+        domain: VERCEL_DEPLOYMENT && !IS_REPLIT ? ".papermark.com" : undefined,
+        secure: VERCEL_DEPLOYMENT || IS_REPLIT,
       },
     },
   },

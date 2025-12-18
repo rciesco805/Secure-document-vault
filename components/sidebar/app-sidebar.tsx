@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/router";
 
@@ -235,11 +236,41 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       {...props}
     >
       <SidebarHeader className="gap-y-8">
-        <p className="hidden w-full justify-center text-2xl font-bold tracking-tighter text-black group-data-[collapsible=icon]:inline-flex dark:text-white">
-          <Link href="/dashboard">BF</Link>
-        </p>
-        <p className="ml-2 flex items-center text-2xl font-bold tracking-tighter text-black group-data-[collapsible=icon]:hidden dark:text-white">
-          <Link href="/dashboard">BF Fund</Link>
+        <div className="hidden w-full justify-center group-data-[collapsible=icon]:inline-flex">
+          <Link href="/dashboard">
+            <Image
+              src="/_static/bfg-icon-black.png"
+              alt="BF Fund"
+              width={32}
+              height={32}
+              className="dark:hidden"
+            />
+            <Image
+              src="/_static/bfg-icon-white.png"
+              alt="BF Fund"
+              width={32}
+              height={32}
+              className="hidden dark:block"
+            />
+          </Link>
+        </div>
+        <div className="ml-2 flex items-center group-data-[collapsible=icon]:hidden">
+          <Link href="/dashboard">
+            <Image
+              src="/_static/bfg-logo-black.png"
+              alt="BF Fund"
+              width={120}
+              height={32}
+              className="dark:hidden"
+            />
+            <Image
+              src="/_static/bfg-logo-white.png"
+              alt="BF Fund"
+              width={120}
+              height={32}
+              className="hidden dark:block"
+            />
+          </Link>
           {userPlan && !isFree && !isDataroomsPlus && !isDataroomsPremium ? (
             <span className="ml-4 rounded-full bg-background px-2.5 py-1 text-xs tracking-normal text-foreground ring-1 ring-gray-800">
               {userPlan.charAt(0).toUpperCase() + userPlan.slice(1)}
@@ -260,7 +291,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               Trial
             </span>
           ) : null}
-        </p>
+        </div>
         {isLoading ? (
           <div className="flex items-center gap-2 text-sm">
             <Loader className="h-5 w-5 animate-spin" /> Loading teams...

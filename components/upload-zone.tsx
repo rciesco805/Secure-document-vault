@@ -332,13 +332,18 @@ export default function UploadZone({
         if (useVercelBlob) {
           // Use Vercel Blob upload
           try {
-            const { type, data } = await putFile({
+            console.log("Starting Vercel Blob upload for:", file.name);
+            const result = await putFile({
               file,
               teamId: teamInfo?.currentTeam?.id as string,
             });
+            console.log("putFile result:", result);
+            
+            const { type, data } = result;
             
             if (!type || !data) {
-              throw new Error("Upload failed");
+              console.error("Upload returned null type or data:", { type, data });
+              throw new Error("Upload failed - null response");
             }
             
             uploadKey = data;
@@ -354,14 +359,16 @@ export default function UploadZone({
               onUploadProgress(index, 99, undefined);
               return updatedUploads;
             });
+            console.log("Vercel Blob upload successful, key:", uploadKey);
           } catch (error) {
+            console.error("Vercel Blob upload error:", error);
             setUploads((prev) =>
               prev.filter(
                 (upload) => upload.uploadId !== newUploads[index].uploadId,
               ),
             );
             setRejectedFiles((prev) => [
-              { fileName: file.name, message: "Error uploading file" },
+              { fileName: file.name, message: `Error uploading file: ${error instanceof Error ? error.message : 'Unknown error'}` },
               ...prev,
             ]);
             return;

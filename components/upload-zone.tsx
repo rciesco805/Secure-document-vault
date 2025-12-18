@@ -16,6 +16,7 @@ import {
   SUPPORTED_DOCUMENT_MIME_TYPES,
 } from "@/lib/constants";
 import { DocumentData, createDocument } from "@/lib/documents/create-document";
+import { putFile } from "@/lib/files/put-file";
 import { resumableUpload } from "@/lib/files/tus-upload";
 import {
   createFolderInBoth,
@@ -321,76 +322,126 @@ export default function UploadZone({
           }
         }
 
-        const { complete } = await resumableUpload({
-          file, // File
-          onProgress: (bytesUploaded, bytesTotal) => {
-            const progress = Math.min(
-              Math.round((bytesUploaded / bytesTotal) * 100),
-              99,
-            );
+        // Check upload transport method
+        const useVercelBlob = process.env.NEXT_PUBLIC_UPLOAD_TRANSPORT === "vercel";
+        
+        let uploadKey: string;
+        let uploadStorageType: DocumentStorageType;
+        let uploadContentType = file.type;
+        
+        if (useVercelBlob) {
+          // Use Vercel Blob upload
+          try {
+            const { type, data } = await putFile({
+              file,
+              teamId: teamInfo?.currentTeam?.id as string,
+            });
+            
+            if (!type || !data) {
+              throw new Error("Upload failed");
+            }
+            
+            uploadKey = data;
+            uploadStorageType = type;
+            
+            // Update progress to 99% for Vercel Blob (no streaming progress)
             setUploads((prevUploads) => {
               const updatedUploads = prevUploads.map((upload) =>
                 upload.uploadId === newUploads[index].uploadId
-                  ? { ...upload, progress }
+                  ? { ...upload, progress: 99 }
                   : upload,
               );
-              const currentUpload = updatedUploads.find(
-                (upload) => upload.uploadId === newUploads[index].uploadId,
-              );
-
-              onUploadProgress(index, progress, currentUpload?.documentId);
+              onUploadProgress(index, 99, undefined);
               return updatedUploads;
             });
-          },
-          onError: (error) => {
+          } catch (error) {
             setUploads((prev) =>
               prev.filter(
                 (upload) => upload.uploadId !== newUploads[index].uploadId,
               ),
             );
-
             setRejectedFiles((prev) => [
               { fileName: file.name, message: "Error uploading file" },
               ...prev,
             ]);
-          },
-          ownerId: (session?.user as CustomUser).id,
-          teamId: teamInfo?.currentTeam?.id as string,
-          numPages,
-          relativePath: path.substring(0, path.lastIndexOf("/")),
-        });
+            return;
+          }
+        } else {
+          // Use TUS resumable upload
+          const { complete } = await resumableUpload({
+            file,
+            onProgress: (bytesUploaded, bytesTotal) => {
+              const progress = Math.min(
+                Math.round((bytesUploaded / bytesTotal) * 100),
+                99,
+              );
+              setUploads((prevUploads) => {
+                const updatedUploads = prevUploads.map((upload) =>
+                  upload.uploadId === newUploads[index].uploadId
+                    ? { ...upload, progress }
+                    : upload,
+                );
+                const currentUpload = updatedUploads.find(
+                  (upload) => upload.uploadId === newUploads[index].uploadId,
+                );
 
-        const uploadResult = await complete;
+                onUploadProgress(index, progress, currentUpload?.documentId);
+                return updatedUploads;
+              });
+            },
+            onError: (error) => {
+              setUploads((prev) =>
+                prev.filter(
+                  (upload) => upload.uploadId !== newUploads[index].uploadId,
+                ),
+              );
 
-        let contentType = uploadResult.fileType;
+              setRejectedFiles((prev) => [
+                { fileName: file.name, message: "Error uploading file" },
+                ...prev,
+              ]);
+            },
+            ownerId: (session?.user as CustomUser).id,
+            teamId: teamInfo?.currentTeam?.id as string,
+            numPages,
+            relativePath: path.substring(0, path.lastIndexOf("/")),
+          });
+
+          const uploadResult = await complete;
+          uploadKey = uploadResult.id;
+          uploadStorageType = DocumentStorageType.S3_PATH;
+          uploadContentType = uploadResult.fileType;
+        }
+
+        let contentType = uploadContentType;
         let supportedFileType = getSupportedContentType(contentType) ?? "";
 
         if (
-          uploadResult.fileName.endsWith(".dwg") ||
-          uploadResult.fileName.endsWith(".dxf")
+          file.name.endsWith(".dwg") ||
+          file.name.endsWith(".dxf")
         ) {
           supportedFileType = "cad";
-          contentType = `image/vnd.${uploadResult.fileName.split(".").pop()}`;
+          contentType = `image/vnd.${file.name.split(".").pop()}`;
         }
 
-        if (uploadResult.fileName.endsWith(".xlsm")) {
+        if (file.name.endsWith(".xlsm")) {
           supportedFileType = "sheet";
           contentType = "application/vnd.ms-excel.sheet.macroEnabled.12";
         }
 
         if (
-          uploadResult.fileName.endsWith(".kml") ||
-          uploadResult.fileName.endsWith(".kmz")
+          file.name.endsWith(".kml") ||
+          file.name.endsWith(".kmz")
         ) {
           supportedFileType = "map";
-          contentType = `application/vnd.google-earth.${uploadResult.fileName.endsWith(".kml") ? "kml+xml" : "kmz"}`;
+          contentType = `application/vnd.google-earth.${file.name.endsWith(".kml") ? "kml+xml" : "kmz"}`;
         }
 
         const documentData: DocumentData = {
-          key: uploadResult.id,
+          key: uploadKey,
           supportedFileType: supportedFileType,
           name: file.name,
-          storageType: DocumentStorageType.S3_PATH,
+          storageType: uploadStorageType,
           contentType: contentType,
           fileSize: file.size,
         };
@@ -401,7 +452,7 @@ export default function UploadZone({
         const response = await createDocument({
           documentData,
           teamId: teamInfo?.currentTeam?.id as string,
-          numPages: uploadResult.numPages,
+          numPages: numPages,
           folderPathName: fileUploadPathName,
         });
 

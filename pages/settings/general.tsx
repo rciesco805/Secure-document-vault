@@ -180,7 +180,7 @@ export default function General() {
         <div className="space-y-6">
           <Form
             title="Team Name"
-            description="This is the name of your team on Papermark."
+            description="This is the name of your team on BF Fund."
             inputAttrs={{
               name: "name",
               placeholder: "My Personal Team",

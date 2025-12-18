@@ -126,7 +126,7 @@ export default function WebhookSettings() {
             </CardTitle>
             <CardDescription>
               Create incoming webhooks to receive data from external services
-              and automatically create new documents in Papermark.
+              and automatically create new documents in BF Fund.
             </CardDescription>
           </CardHeader>
           <Separator className="mb-6" />

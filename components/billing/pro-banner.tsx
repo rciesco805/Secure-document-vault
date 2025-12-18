@@ -31,7 +31,7 @@ export default function ProBanner({
         <span className="sr-only">Close</span>
       </button>
       <div className="flex space-x-2">
-        <span className="text-sm font-bold">✨ Papermark Business ✨</span>
+        <span className="text-sm font-bold">✨ BF Fund Business ✨</span>
       </div>
       <p className="my-4 text-sm">
         Upgrade to unlock custom branding, team members, domains and data rooms.

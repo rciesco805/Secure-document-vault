@@ -128,7 +128,7 @@ export default function TokenSettings() {
                 </BadgeTooltip>
               </div>
               <p className="text-sm text-gray-500">
-                Create API tokens to integrate Papermark with your applications.
+                Create API tokens to integrate BF Fund with your applications.
                 Keep your tokens secure and never share them publicly.
               </p>
             </div>

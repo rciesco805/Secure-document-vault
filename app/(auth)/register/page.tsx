@@ -3,23 +3,23 @@ import { Metadata } from "next";
 import RegisterClient from "./page-client";
 
 const data = {
-  description: "Signup to Papermark",
-  title: "Sign up | Papermark",
+  description: "Request access to BF Fund Investor Portal",
+  title: "Request Access | BF Fund",
   url: "/register",
 };
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://www.papermark.com"),
+  metadataBase: new URL("https://www.bermudafranchisegroup.com"),
   title: data.title,
   description: data.description,
   openGraph: {
     title: data.title,
     description: data.description,
     url: data.url,
-    siteName: "Papermark",
+    siteName: "BF Fund Investor Portal",
     images: [
       {
-        url: "/_static/meta-image.png",
+        url: "/_static/bfg-logo-black.png",
         width: 800,
         height: 600,
       },
@@ -31,8 +31,8 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: data.title,
     description: data.description,
-    creator: "@papermarkio",
-    images: ["/_static/meta-image.png"],
+    creator: "@bermudafranchise",
+    images: ["/_static/bfg-logo-black.png"],
   },
 };
 

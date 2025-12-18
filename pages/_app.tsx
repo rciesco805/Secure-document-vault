@@ -68,7 +68,7 @@ export default function App({
           content="/_static/bfg-logo-black.png"
           key="tw-image"
         />
-        <link rel="icon" href="/favicon.ico" key="favicon" />
+        <link rel="icon" href="/favicon.png" key="favicon" />
       </Head>
       <SessionProvider session={session}>
         <PostHogCustomProvider>

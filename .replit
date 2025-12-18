@@ -15,3 +15,13 @@ ignorePorts = false
 
 [agent]
 expertMode = true
+
+[userenv]
+
+[userenv.development]
+NEXTAUTH_URL = "https://bfg-fund-dataroom.vercel.app"
+NEXT_PUBLIC_BASE_URL = "http://0.0.0.0:5000"
+NEXT_PUBLIC_MARKETING_URL = "http://0.0.0.0:5000"
+NEXT_PUBLIC_APP_BASE_HOST = "0.0.0.0:5000"
+NEXT_PUBLIC_UPLOAD_TRANSPORT = "vercel"
+NEXT_PRIVATE_DOCUMENT_PASSWORD_KEY = "bermuda-franchise-secure-key-2025"

@@ -237,7 +237,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     >
       <SidebarHeader className="gap-y-8">
         <div className="hidden w-full justify-center group-data-[collapsible=icon]:inline-flex">
-          <Link href="/dashboard">
+          <Link href="/dashboard" shallow>
             <Image
               src="/_static/bfg-icon-black.png"
               alt="BF Fund"
@@ -255,7 +255,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </Link>
         </div>
         <div className="ml-2 flex items-center group-data-[collapsible=icon]:hidden">
-          <Link href="/dashboard">
+          <Link href="/dashboard" shallow>
             <Image
               src="/_static/bfg-logo-black.png"
               alt="BF Fund"

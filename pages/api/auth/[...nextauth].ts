@@ -113,11 +113,29 @@ export const authOptions: NextAuthOptions = {
         httpOnly: true,
         sameSite: "none" as const,
         path: "/",
-        domain: undefined,
+        secure: true,
+      },
+    },
+    callbackUrl: {
+      name: `next-auth.callback-url`,
+      options: {
+        httpOnly: true,
+        sameSite: "none" as const,
+        path: "/",
+        secure: true,
+      },
+    },
+    csrfToken: {
+      name: `next-auth.csrf-token`,
+      options: {
+        httpOnly: true,
+        sameSite: "none" as const,
+        path: "/",
         secure: true,
       },
     },
   },
+  debug: true,
   callbacks: {
     redirect: async ({ url, baseUrl }) => {
       // If the URL is just the base URL or login page, redirect to dashboard

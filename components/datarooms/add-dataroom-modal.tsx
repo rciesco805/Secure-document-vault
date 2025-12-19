@@ -344,19 +344,7 @@ export function AddDataroomModal({
     }
   };
 
-  // If the team is on a free plan, show the upgrade modal
-  if (isFree || isPro) {
-    if (children) {
-      return (
-        <UpgradePlanModal
-          clickedPlan={PlanEnum.DataRooms}
-          trigger={"add_dataroom_overview"}
-        >
-          {children}
-        </UpgradePlanModal>
-      );
-    }
-  }
+  // Self-hosted: All features enabled, no upgrade prompts
 
   const onOpenChange = (open: boolean) => {
     if (!open) {

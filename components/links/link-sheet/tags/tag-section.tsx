@@ -74,11 +74,7 @@ export default function TagSection({
   };
 
   const createTag = async (tag: string) => {
-    if (isFree && tagCount && tagCount >= 5) {
-      setShowUpgradeModal(true);
-      toast.error("You have reached the maximum number of tags.");
-      return false;
-    }
+    // Self-hosted: No tag limits
 
     const res = await fetch(`/api/teams/${teamId}/tags`, {
       method: "POST",

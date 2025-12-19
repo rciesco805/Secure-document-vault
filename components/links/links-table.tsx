@@ -259,10 +259,7 @@ export default function LinksTable({
   };
 
   const handlePreviewLink = async (link: LinkWithViews) => {
-    if (link.domainId && isFree) {
-      toast.error("You need to upgrade to preview this link");
-      return;
-    }
+    // Self-hosted: All features enabled
 
     if (isDocumentProcessing(primaryVersion)) {
       toast.error(

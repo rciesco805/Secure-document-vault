@@ -321,10 +321,7 @@ export default function DocumentHeader({
 
   // export method to fetch the visits data and convert to csv.
   const exportVisitCounts = (document: Document) => {
-    if (isFree) {
-      toast.error("This feature is not available for your plan");
-      return;
-    }
+    // Self-hosted: All features enabled
     setExportModalOpen(true);
   };
 

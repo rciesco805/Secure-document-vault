@@ -207,10 +207,7 @@ export default function LinkSheet({
   }, [currentLink]);
 
   const handlePreviewLink = async (link: LinkWithViews) => {
-    if (link.domainId && isFree) {
-      toast.error("You need to upgrade to preview this link");
-      return;
-    }
+    // Self-hosted: All features enabled
 
     setIsLoading(true);
     const response = await fetch(`/api/links/${link.id}/preview`, {

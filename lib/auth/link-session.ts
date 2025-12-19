@@ -44,6 +44,10 @@ export async function createLinkSession(
   documentId?: string,
   dataroomId?: string,
 ): Promise<{ token: string; expiresAt: number }> {
+  if (!redis) {
+    throw new Error("Session storage not configured");
+  }
+
   const sessionToken = crypto.randomBytes(48).toString("base64url");
   const expiresAt = Date.now() + COOKIE_EXPIRATION_TIME;
   const now = Date.now();
@@ -88,6 +92,8 @@ export async function verifyLinkSession(
   request: NextRequest,
   linkId: string,
 ): Promise<LinkSession | null> {
+  if (!redis) return null;
+
   const sessionToken = cookies().get(`pm_ls_${linkId}`)?.value;
 
   if (!sessionToken) return null;
@@ -164,6 +170,7 @@ async function deleteLinkSession(
   sessionToken: string,
   viewerId?: string,
 ): Promise<void> {
+  if (!redis) return;
   await redis.del(`link_session:${sessionToken}`);
   if (viewerId) {
     await redis.srem(`viewer_sessions:${viewerId}`, sessionToken);
@@ -171,6 +178,7 @@ async function deleteLinkSession(
 }
 
 export async function revokeLinkSession(linkId: string): Promise<void> {
+  if (!redis) return;
   const sessionToken = cookies().get(`pm_ls_${linkId}`)?.value;
   if (sessionToken) {
     const session = await redis.get(`link_session:${sessionToken}`);

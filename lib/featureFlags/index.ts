@@ -36,11 +36,14 @@ export const getFeatureFlags = async ({ teamId }: { teamId?: string }) => {
     ai: false,
   };
 
-  // Return all features as false if edge config is not available
+  // Return all features as false if edge config is not available, except dataroomInvitations
   if (!process.env.EDGE_CONFIG) {
-    return Object.fromEntries(
-      Object.entries(teamFeatures).map(([key, _v]) => [key, false]),
-    );
+    return {
+      ...Object.fromEntries(
+        Object.entries(teamFeatures).map(([key, _v]) => [key, false]),
+      ),
+      dataroomInvitations: true,
+    };
   } else if (!teamId) {
     return teamFeatures;
   }

@@ -623,8 +623,11 @@ export default function LinksTable({
           <Table>
             <TableHeader>
               <TableRow className="*:whitespace-nowrap *:font-medium hover:bg-transparent">
+                {targetType === "DATAROOM" && isFeatureEnabled("dataroomInvitations") && (
+                  <TableHead className="w-[90px]">Send Link</TableHead>
+                )}
                 <TableHead>Name</TableHead>
-                <TableHead className="w-[150px] sm:w-[200px] md:w-[250px]">
+                <TableHead className="w-[120px] sm:w-[150px] md:w-[180px]">
                   Link
                 </TableHead>
                 {hasAnyTags ? (
@@ -650,6 +653,19 @@ export default function LinksTable({
                             "bg-gray-50 opacity-50 dark:bg-gray-700",
                         )}
                       >
+                        {targetType === "DATAROOM" && isFeatureEnabled("dataroomInvitations") && (
+                          <TableCell className="text-center">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-7 gap-1 text-xs"
+                              onClick={() => handleSendInvitations(link)}
+                            >
+                              <SendIcon className="h-3 w-3" />
+                              Send
+                            </Button>
+                          </TableCell>
+                        )}
                         <TableCell className="w-[250px] truncate font-medium">
                           <div className="flex items-center gap-x-2">
                             {link.groupId ? (
@@ -681,7 +697,7 @@ export default function LinksTable({
                             ) : null}
                           </div>
                         </TableCell>
-                        <TableCell className="flex items-center gap-x-2 sm:min-w-[300px] md:min-w-[400px] lg:min-w-[450px]">
+                        <TableCell className="flex items-center gap-x-2 max-w-[180px] sm:max-w-[220px] md:max-w-[280px]">
                           <div
                             className={cn(
                               `group/cell relative flex w-full items-center gap-x-4 overflow-hidden truncate rounded-sm px-3 py-1.5 text-center text-secondary-foreground transition-all group-hover/row:ring-1 group-hover/row:ring-gray-400 group-hover/row:dark:ring-gray-100 md:py-1`,
@@ -703,10 +719,10 @@ export default function LinksTable({
                                 />
                               )}
 
-                            <div className="flex w-full whitespace-nowrap text-sm group-hover/cell:opacity-0">
+                            <div className="flex w-full whitespace-nowrap text-sm group-hover/cell:opacity-0 truncate">
                               {link.domainId
-                                ? `https://${link.domainSlug}/${link.slug}`
-                                : `${process.env.NEXT_PUBLIC_MARKETING_URL}/view/${link.id}`}
+                                ? `${link.domainSlug}/${link.slug?.slice(0, 8)}...`
+                                : `/view/${link.id.slice(-12)}...`}
                             </div>
 
                             {link.domainId && isFree ? (

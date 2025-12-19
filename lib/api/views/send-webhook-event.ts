@@ -65,14 +65,21 @@ export async function sendLinkViewWebhook({
       throw new Error("Link not found");
     }
 
+    // Get team's default domain for fallback
+    const defaultDomain = await prisma.domain.findFirst({
+      where: { teamId, isDefault: true },
+      select: { slug: true },
+    });
+    const fallbackHost = defaultDomain?.slug ?? process.env.REPLIT_DEV_DOMAIN ?? "localhost";
+
     // Prepare link data for webhook
     const linkData = {
       id: link.id,
       url: link.domainId
         ? `https://${link.domainSlug}/${link.slug}`
-        : `https://www.papermark.com/view/${link.id}`,
+        : `https://${fallbackHost}/view/${link.id}`,
       domain:
-        link.domainId && link.domainSlug ? link.domainSlug : "papermark.com",
+        link.domainId && link.domainSlug ? link.domainSlug : fallbackHost,
       key: link.domainId && link.slug ? link.slug : `view/${link.id}`,
       name: link.name,
       expiresAt: link.expiresAt?.toISOString() || null,

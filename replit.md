@@ -21,9 +21,13 @@ Preferred communication style: Simple, everyday language.
 - Configured development environment with Next.js on port 5000
 - Upgraded team plan to "datarooms-plus" for all premium features
 - Removed papermark.com domain references, using custom domains only
-- Updated all email sender addresses to use bermudafranchisegroup.com
+- Updated all email sender addresses to use investors.bermudafranchisegroup.com subdomain
 - Made rate limiting optional (works without Upstash Redis)
 - Fixed viewer page meta URLs to use NEXT_PUBLIC_BASE_URL
+- Added "Send Link" button to Permissions page for sending access links via email
+- Created custom BFG-branded invitation email with confidentiality notice
+- Enabled dataroom invitations feature by default
+- Shortened link URL display for better fit on smaller screens
 
 ## Platform Testing Status (Dec 2024)
 

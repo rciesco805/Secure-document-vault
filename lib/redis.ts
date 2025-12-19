@@ -8,7 +8,7 @@ export const redis = hasRedisConfig
       url: process.env.UPSTASH_REDIS_REST_URL as string,
       token: process.env.UPSTASH_REDIS_REST_TOKEN as string,
     })
-  : null as unknown as Redis;
+  : null;
 
 const hasLockerRedisConfig = !!(process.env.UPSTASH_REDIS_REST_LOCKER_URL && process.env.UPSTASH_REDIS_REST_LOCKER_TOKEN);
 
@@ -17,9 +17,17 @@ export const lockerRedisClient = hasLockerRedisConfig
       url: process.env.UPSTASH_REDIS_REST_LOCKER_URL as string,
       token: process.env.UPSTASH_REDIS_REST_LOCKER_TOKEN as string,
     })
-  : null as unknown as Redis;
+  : null;
 
-// Create a new ratelimiter, that allows 10 requests per 10 seconds by default
+const noopRatelimiter = {
+  limit: async (_key: string) => ({
+    success: true,
+    limit: 999999,
+    remaining: 999999,
+    reset: Date.now() + 60000,
+  }),
+};
+
 export const ratelimit = (
   requests: number = 10,
   seconds:
@@ -29,6 +37,9 @@ export const ratelimit = (
     | `${number} h`
     | `${number} d` = "10 s",
 ) => {
+  if (!redis) {
+    return noopRatelimiter;
+  }
   return new Ratelimit({
     redis: redis,
     limiter: Ratelimit.slidingWindow(requests, seconds),

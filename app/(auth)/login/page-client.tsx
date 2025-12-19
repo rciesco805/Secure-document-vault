@@ -104,17 +104,17 @@ export default function Login() {
   return (
     <div className="flex h-screen w-full flex-wrap bg-black">
       {/* Left part */}
-      <div className="flex w-full justify-center bg-black md:w-1/2 lg:w-1/2">
+      <div className="flex w-full items-center justify-center bg-black md:w-1/2 lg:w-1/2">
         <div
           className="absolute inset-x-0 top-10 -z-10 flex transform-gpu justify-center overflow-hidden blur-3xl"
           aria-hidden="true"
         ></div>
-        <div className="z-10 mx-5 mt-[calc(1vh)] h-fit w-full max-w-md overflow-hidden rounded-lg sm:mx-0 sm:mt-[calc(2vh)] md:mt-[calc(3vh)]">
+        <div className="z-10 mx-5 h-fit w-full max-w-md overflow-hidden rounded-lg sm:mx-0">
           <div className="items-left flex flex-col space-y-3 px-4 py-6 pt-8 sm:px-12">
             <img
               src="/_static/bfg-logo-white.png"
               alt="Bermuda Franchise Group"
-              className="-mt-8 mb-8 h-12 w-auto self-start sm:mb-10"
+              className="mb-6 h-12 w-auto self-start"
             />
             <Link href="/">
               <span className="text-balance text-3xl font-semibold text-white">

@@ -22,9 +22,11 @@ export const config = {
   },
 };
 
-const locker = new RedisLocker({
-  redisClient: lockerRedisClient,
-});
+const locker = lockerRedisClient
+  ? new RedisLocker({
+      redisClient: lockerRedisClient,
+    })
+  : undefined;
 
 const tusServer = new Server({
   // `path` needs to match the route declared by the next file router

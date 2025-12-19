@@ -42,10 +42,13 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ButtonTooltip } from "@/components/ui/tooltip";
 
+import { InviteViewersModal } from "@/ee/features/dataroom-invitations/components/invite-viewers-modal";
+
 import { CustomFieldData } from "./custom-fields-panel";
 import { type ItemPermission } from "./dataroom-link-sheet";
 import DomainSection from "./domain-section";
 import { LinkOptions } from "./link-options";
+import LinkSuccessSheet from "./link-success-sheet";
 import TagSection from "./tags/tag-section";
 
 export const DEFAULT_LINK_PROPS = (
@@ -177,6 +180,9 @@ export default function LinkSheet({
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [currentPreset, setCurrentPreset] = useState<LinkPreset | null>(null);
+  const [showSuccessSheet, setShowSuccessSheet] = useState<boolean>(false);
+  const [createdLink, setCreatedLink] = useState<LinkWithViews | null>(null);
+  const [showInviteModal, setShowInviteModal] = useState<boolean>(false);
 
   const isPresetsAllowed =
     isTrial ||
@@ -412,8 +418,6 @@ export default function LinkSheet({
 
       toast.success("Link updated successfully");
     } else {
-      setIsOpen(false);
-
       // Add the new link to the list of links
       mutate(
         `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}/${encodeURIComponent(
@@ -447,7 +451,10 @@ export default function LinkSheet({
         customDomain: returnedLink.domainSlug,
       });
 
-      toast.success("Link created successfully");
+      // Show success sheet with option to send link
+      setCreatedLink(returnedLink);
+      setIsOpen(false);
+      setShowSuccessSheet(true);
     }
 
     setData(DEFAULT_LINK_PROPS(linkType, groupId));
@@ -459,6 +466,7 @@ export default function LinkSheet({
   };
 
   return (
+    <>
     <Sheet open={isOpen} onOpenChange={(open: boolean) => setIsOpen(open)}>
       <SheetContent className="flex w-[90%] flex-col justify-between border-l border-gray-200 bg-background px-4 text-foreground dark:border-gray-800 dark:bg-gray-900 sm:w-[800px] sm:max-w-4xl md:px-5">
         <SheetHeader className="text-start">
@@ -777,5 +785,40 @@ export default function LinkSheet({
         </form>
       </SheetContent>
     </Sheet>
+
+    {/* Success Sheet - shown after creating a new link */}
+    {createdLink && (
+      <LinkSuccessSheet
+        isOpen={showSuccessSheet}
+        setIsOpen={setShowSuccessSheet}
+        link={createdLink}
+        hasCustomPermissions={false}
+        onCreateAnother={() => {
+          setShowSuccessSheet(false);
+          setCreatedLink(null);
+          setIsOpen(true);
+        }}
+        onSendLink={() => {
+          setShowSuccessSheet(false);
+          setShowInviteModal(true);
+        }}
+      />
+    )}
+
+    {/* Invite Modal - for sending link via email */}
+    {createdLink && linkType === LinkType.DATAROOM_LINK && (
+      <InviteViewersModal
+        open={showInviteModal}
+        setOpen={setShowInviteModal}
+        dataroomId={targetId}
+        linkId={createdLink.id}
+        defaultEmails={
+          createdLink.allowList?.length > 0
+            ? createdLink.allowList.map((email: string) => email)
+            : []
+        }
+      />
+    )}
+    </>
   );
 }

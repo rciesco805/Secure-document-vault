@@ -28,6 +28,7 @@ Preferred communication style: Simple, everyday language.
 - Created custom BFG-branded invitation email with confidentiality notice
 - Enabled dataroom invitations feature by default
 - Shortened link URL display for better fit on smaller screens
+- Added "Send Link Now" prompt after creating a new link to streamline investor invitations
 
 ## Platform Testing Status (Dec 2024)
 

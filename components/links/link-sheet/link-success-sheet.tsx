@@ -13,6 +13,7 @@ import {
   Mail,
   MailCheckIcon,
   MailIcon,
+  SendIcon,
   ShieldIcon,
   Users,
 } from "lucide-react";
@@ -36,6 +37,7 @@ interface LinkSuccessSheetProps {
   link: LinkWithViews;
   hasCustomPermissions: boolean;
   onCreateAnother: () => void;
+  onSendLink?: () => void;
 }
 
 export default function LinkSuccessSheet({
@@ -44,6 +46,7 @@ export default function LinkSuccessSheet({
   link,
   hasCustomPermissions,
   onCreateAnother,
+  onSendLink,
 }: LinkSuccessSheetProps) {
   const [copied, setCopied] = useState(false);
 
@@ -219,23 +222,52 @@ export default function LinkSuccessSheet({
 
           <Separator />
 
-          {/* Future: Invite Members Section */}
+          {/* Send Link via Email Section */}
           <div className="space-y-3">
-            <h3 className="text-sm font-medium text-muted-foreground">
-              Invite Members (Coming Soon)
-            </h3>
-            <div className="rounded-lg border border-dashed border-muted-foreground/25 p-6 text-center">
-              <Mail className="mx-auto h-8 w-8 text-muted-foreground/50" />
-              <p className="mt-2 text-sm text-muted-foreground">
-                Soon you&apos;ll be able to invite team members directly via
-                email
-              </p>
+            <h3 className="text-sm font-medium">Send Link via Email</h3>
+            <div className="rounded-lg border bg-muted/30 p-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+                  <SendIcon className="h-5 w-5 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium">
+                    Email this link to investors
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Send a branded invitation with the access link
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  variant="default"
+                  size="sm"
+                  onClick={() => {
+                    setIsOpen(false);
+                    onSendLink?.();
+                  }}
+                >
+                  <SendIcon className="mr-1 h-4 w-4" />
+                  Send Link
+                </Button>
+              </div>
             </div>
           </div>
         </div>
 
         <SheetFooter>
           <div className="flex flex-row-reverse items-center gap-2 pt-2">
+            <Button
+              type="button"
+              variant="default"
+              onClick={() => {
+                setIsOpen(false);
+                onSendLink?.();
+              }}
+            >
+              <SendIcon className="mr-1 h-4 w-4" />
+              Send Link Now
+            </Button>
             <Button type="button" variant="outline" onClick={onCreateAnother}>
               Create Another Link
             </Button>

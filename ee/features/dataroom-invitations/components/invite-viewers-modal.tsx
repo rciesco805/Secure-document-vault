@@ -32,7 +32,7 @@ type InviteViewersModalProps = {
   open: boolean;
   setOpen: (open: boolean) => void;
   dataroomId: string;
-  dataroomName: string;
+  dataroomName?: string;
   groupId?: string;
   linkId?: string;
   defaultEmails?: string[];
@@ -59,7 +59,7 @@ export function InviteViewersModal({
   open,
   setOpen,
   dataroomId,
-  dataroomName,
+  dataroomName: providedDataroomName,
   groupId,
   linkId,
   defaultEmails = [],
@@ -69,6 +69,16 @@ export function InviteViewersModal({
   const teamId = teamInfo?.currentTeam?.id;
   const { data: session } = useSession();
   const senderEmail = session?.user?.email ?? "you";
+
+  const { data: dataroomData } = useSWR<{ name: string }>(
+    open && teamId && dataroomId && !providedDataroomName
+      ? `/api/teams/${teamId}/datarooms/${dataroomId}`
+      : null,
+    fetcher,
+    { revalidateOnMount: true },
+  );
+
+  const dataroomName = providedDataroomName || dataroomData?.name || "Investor Documents";
 
   const { data: groupLinks } = useSWR<LinkOption[]>(
     groupId && teamId

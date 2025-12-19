@@ -247,14 +247,33 @@ export default function Nav({
           <div className="flex flex-1 items-center justify-start">
             <div className="relative flex h-16 w-36 flex-shrink-0 items-center">
               {brand && brand.logo ? (
-                <img
-                  className="h-16 w-36 object-contain"
-                  src={brand.logo}
-                  alt="Logo"
-                  // fill
-                  // quality={100}
-                  // priority
-                />
+                isDataroom ? (
+                  <Link
+                    href={`${dataroomPath}${isPreview ? "?previewToken=" + previewToken + "&preview=" + preview : ""}`}
+                    className="cursor-pointer"
+                    title="Back to dataroom"
+                  >
+                    <img
+                      className="h-16 w-36 object-contain"
+                      src={brand.logo}
+                      alt="Logo"
+                    />
+                  </Link>
+                ) : (
+                  <img
+                    className="h-16 w-36 object-contain"
+                    src={brand.logo}
+                    alt="Logo"
+                  />
+                )
+              ) : isDataroom ? (
+                <Link
+                  href={`${dataroomPath}${isPreview ? "?previewToken=" + previewToken + "&preview=" + preview : ""}`}
+                  className="text-2xl font-bold tracking-tighter text-white"
+                  title="Back to dataroom"
+                >
+                  BF Fund
+                </Link>
               ) : (
                 <Link
                   href="https://www.bermudafranchisegroup.com"
@@ -266,7 +285,7 @@ export default function Nav({
               )}
             </div>
             {isDataroom ? (
-              <Breadcrumb className="ml-6">
+              <Breadcrumb className="ml-2 hidden sm:ml-6 sm:block">
                 <BreadcrumbList>
                   <BreadcrumbItem>
                     <BreadcrumbLink

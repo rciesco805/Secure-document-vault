@@ -137,6 +137,10 @@ export default async function handler(
       status: "PENDING",
     });
 
+    if (!exportJob) {
+      return res.status(503).json({ message: "Export service temporarily unavailable" });
+    }
+
     // Trigger the background task
     const handle = await exportVisitsTask.trigger(
       {

@@ -17,10 +17,6 @@ import { PreviewSession, verifyPreviewSession } from "@/lib/auth/preview-auth";
 import { sendOtpVerificationEmail } from "@/lib/emails/send-email-otp-verification";
 import { getFile } from "@/lib/files/get-file";
 import { newId } from "@/lib/id-helper";
-import {
-  notifyDataroomAccess,
-  notifyDocumentView,
-} from "@/lib/integrations/slack/events";
 import prisma from "@/lib/prisma";
 import { ratelimit } from "@/lib/redis";
 import { parseSheet } from "@/lib/sheet";
@@ -677,23 +673,6 @@ export async function POST(request: NextRequest) {
             }),
           );
 
-          if (link.teamId && !isPreview) {
-            waitUntil(
-              (async () => {
-                try {
-                  await notifyDataroomAccess({
-                    teamId: link.teamId!,
-                    dataroomId,
-                    linkId,
-                    viewerEmail: verifiedEmail ?? email,
-                    viewerId: viewer?.id,
-                  });
-                } catch (error) {
-                  console.error("Error sending Slack notification:", error);
-                }
-              })(),
-            );
-          }
         }
 
         const dataroomViewId =
@@ -807,25 +786,6 @@ export async function POST(request: NextRequest) {
           select: { id: true },
         });
         console.timeEnd("create-view");
-        // Only send Slack notifications for non-preview views
-        if (link.teamId && !isPreview) {
-          waitUntil(
-            (async () => {
-              try {
-                await notifyDocumentView({
-                  teamId: link.teamId!,
-                  documentId,
-                  dataroomId,
-                  linkId,
-                  viewerEmail: verifiedEmail ?? email,
-                  viewerId: viewer?.id,
-                });
-              } catch (error) {
-                console.error("Error sending Slack notification:", error);
-              }
-            })(),
-          );
-        }
       }
 
       // if document version has pages, then return pages

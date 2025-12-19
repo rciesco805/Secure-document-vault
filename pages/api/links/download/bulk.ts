@@ -5,7 +5,6 @@ import { InvocationType, InvokeCommand } from "@aws-sdk/client-lambda";
 import { ItemType, ViewType } from "@prisma/client";
 
 import { getLambdaClientForTeam } from "@/lib/files/aws-client";
-import { notifyDocumentDownload } from "@/lib/integrations/slack/events";
 import prisma from "@/lib/prisma";
 import { getIpAddress } from "@/lib/utils/ip";
 
@@ -351,25 +350,6 @@ export default async function handle(
 
       if (fileKeys.length === 0) {
         return res.status(404).json({ error: "No files to download" });
-      }
-
-      if (view.dataroom?.teamId) {
-        try {
-          await notifyDocumentDownload({
-            teamId: view.dataroom.teamId,
-            documentId: undefined, // Bulk download, no specific document
-            dataroomId: view.dataroom.id,
-            linkId,
-            viewerEmail: view.viewerEmail ?? undefined,
-            viewerId: view.viewerId ?? undefined,
-            metadata: {
-              documentCount: downloadDocuments.length,
-              isBulkDownload: true,
-            },
-          });
-        } catch (error) {
-          console.error("Error sending Slack notification:", error);
-        }
       }
 
       // Get team-specific storage configuration

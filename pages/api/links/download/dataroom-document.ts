@@ -4,7 +4,6 @@ import { ItemType, ViewType } from "@prisma/client";
 import { waitUntil } from "@vercel/functions";
 
 import { getFile } from "@/lib/files/get-file";
-import { notifyDocumentDownload } from "@/lib/integrations/slack/events";
 import prisma from "@/lib/prisma";
 import { getFileNameWithPdfExtension } from "@/lib/utils";
 import { getIpAddress } from "@/lib/utils/ip";
@@ -174,21 +173,6 @@ export default async function handle(
           verified: view.verified,
         },
       });
-
-      if (view.link.teamId) {
-        waitUntil(
-          notifyDocumentDownload({
-            teamId: view.link.teamId,
-            documentId,
-            dataroomId: view.dataroom.id,
-            linkId,
-            viewerEmail: view.viewerEmail ?? undefined,
-            viewerId: view.viewerId ?? undefined,
-          }),
-        );
-      } else {
-        console.log("No teamId found, skipping Slack notification");
-      }
 
       const file =
         view.link.enableWatermark &&

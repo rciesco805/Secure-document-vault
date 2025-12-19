@@ -29,6 +29,12 @@ Preferred communication style: Simple, everyday language.
 - Enabled dataroom invitations feature by default
 - Shortened link URL display for better fit on smaller screens
 - Added "Send Link Now" prompt after creating a new link to streamline investor invitations
+- Mobile optimization: Admin portal and viewer now fully responsive with Tailwind breakpoints
+  - Link creation form stacks vertically on mobile with visible toggle labels
+  - Links table hides non-essential columns (Send Link, URL, Tags, Last Viewed) on phones
+  - Group member table responsive with shorter button text and dropdown actions for mobile
+  - Document viewer logo/branding is tappable to navigate back to dataroom on mobile
+  - Reaction toolbar properly centered on all screen sizes
 
 ## Platform Testing Status (Dec 2024)
 

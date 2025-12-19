@@ -67,16 +67,18 @@ export default async function handle(
           },
         });
 
-        await redis.set(
-          `email-change-request:user:${sessionUser.id}`,
-          {
-            email: sessionUser.email,
-            newEmail: email,
-          },
-          {
-            px: expiresIn,
-          },
-        );
+        if (redis) {
+          await redis.set(
+            `email-change-request:user:${sessionUser.id}`,
+            {
+              email: sessionUser.email,
+              newEmail: email,
+            },
+            {
+              px: expiresIn,
+            },
+          );
+        }
 
         waitUntil(
           sendEmailChangeVerificationRequestEmail({

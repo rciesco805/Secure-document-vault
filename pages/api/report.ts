@@ -69,30 +69,32 @@ export default async function handler(
     const reportKey = `report:doc_${documentId}`;
     const viewIdValue = `view_${viewId}`;
 
-    // Check if the viewId has already reported for this documentId
-    const hasReported = await redis.sismember(reportKey, viewIdValue);
-    if (hasReported) {
-      return res.status(400).json({
-        status: "error",
-        message: "You have already reported this document",
-      });
+    // Check if the viewId has already reported for this documentId (if Redis available)
+    if (redis) {
+      const hasReported = await redis.sismember(reportKey, viewIdValue);
+      if (hasReported) {
+        return res.status(400).json({
+          status: "error",
+          message: "You have already reported this document",
+        });
+      }
+
+      // Perform all non-dependent Redis operations in parallel
+      waitUntil(
+        Promise.all([
+          // Add the viewId to the Redis set for this documentId
+          redis.sadd(reportKey, viewIdValue),
+
+          // Increment the report count for the documentId
+          redis.hincrby("reportCount", `doc_${documentId}`, 1),
+
+          // Store the abuse type report under a Redis hash for future analysis
+          redis.hset(`report:doc_${documentId}:details`, {
+            [viewIdValue]: abuseType, // Store the abuseType as a number for this viewId
+          }),
+        ]),
+      );
     }
-
-    // Perform all non-dependent Redis operations in parallel
-    waitUntil(
-      Promise.all([
-        // Add the viewId to the Redis set for this documentId
-        redis.sadd(reportKey, viewIdValue),
-
-        // Increment the report count for the documentId
-        redis.hincrby("reportCount", `doc_${documentId}`, 1),
-
-        // Store the abuse type report under a Redis hash for future analysis
-        redis.hset(`report:doc_${documentId}:details`, {
-          [viewIdValue]: abuseType, // Store the abuseType as a number for this viewId
-        }),
-      ]),
-    );
 
     return res.status(200).json({
       status: "success",

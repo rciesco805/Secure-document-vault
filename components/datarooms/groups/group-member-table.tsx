@@ -347,6 +347,16 @@ export default function GroupMemberTable({
                                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem
+                                  className="gap-x-2"
+                                  onClick={() => {
+                                    setSingleInviteEmail(viewer.viewer.email);
+                                    setInviteOpen(true);
+                                  }}
+                                >
+                                  <SendIcon className="h-4 w-4" />
+                                  Send Link
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
                                   className="gap-x-2 text-destructive focus:bg-destructive focus:text-destructive-foreground"
                                   onClick={() => handleRemoveMember(viewer.id)}
                                 >

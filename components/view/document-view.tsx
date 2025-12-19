@@ -115,11 +115,10 @@ export default function DocumentView({
   const [verificationRequested, setVerificationRequested] =
     useState<boolean>(false);
   const [verificationToken, setVerificationToken] = useState<string | null>(
-    token ?? null,
+    magicLinkToken ?? token ?? null,
   );
-  const [code, setCode] = useState<string | null>(magicLinkToken ?? null);
+  const [code, setCode] = useState<string | null>(null);
   const [isInvalidCode, setIsInvalidCode] = useState<boolean>(false);
-  const [magicLinkProcessed, setMagicLinkProcessed] = useState<boolean>(false);
 
   const handleSubmission = async (): Promise<void> => {
     setIsLoading(true);

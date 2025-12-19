@@ -17,6 +17,10 @@ async function createPreviewSession(
   linkId: string,
   userId: string,
 ): Promise<{ token: string; expiresAt: number }> {
+  if (!redis) {
+    throw new Error("Redis is not configured. Preview sessions require Redis.");
+  }
+
   const sessionToken = crypto.randomBytes(32).toString("hex");
   const expiresAt = Date.now() + PREVIEW_EXPIRATION_TIME;
 
@@ -47,6 +51,10 @@ async function verifyPreviewSession(
   userId: string,
   linkId: string,
 ): Promise<PreviewSession | null> {
+  if (!redis) {
+    return null;
+  }
+
   const sessionToken = previewToken;
   if (!sessionToken) return null;
 

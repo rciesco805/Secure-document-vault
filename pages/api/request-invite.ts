@@ -2,9 +2,12 @@ import { NextApiRequest, NextApiResponse } from "next";
 
 import { z } from "zod";
 
+import { createAdminMagicLink } from "@/lib/auth/create-admin-magic-link";
 import { sendEmail } from "@/lib/resend";
 
 import InviteRequest from "@/components/emails/invite-request";
+
+const ADMIN_EMAIL = "investors@bermudafranchisegroup.com";
 
 const inviteRequestSchema = z.object({
   email: z.string().trim().email("Invalid email address").min(1),
@@ -32,8 +35,15 @@ export default async function handler(
 
     const { email, fullName, company } = validation.data;
 
-    const baseUrl = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_BASE_URL || "https://bfg-dataroom.replit.app";
-    const signInUrl = `${baseUrl}/login`;
+    const baseUrl = process.env.VERIFICATION_EMAIL_BASE_URL || process.env.NEXTAUTH_URL || "https://bfg-dataroom.replit.app";
+    
+    const magicLink = await createAdminMagicLink({
+      email: ADMIN_EMAIL,
+      callbackUrl: "/dashboard",
+      baseUrl,
+    });
+    
+    const signInUrl = magicLink || `${baseUrl}/login`;
 
     const emailTemplate = InviteRequest({
       email,
@@ -43,7 +53,7 @@ export default async function handler(
     });
 
     await sendEmail({
-      to: "investors@bermudafranchisegroup.com",
+      to: ADMIN_EMAIL,
       from: "BF Fund Portal <noreply@investors.bermudafranchisegroup.com>",
       subject: `New Investor Access Request: ${fullName}`,
       react: emailTemplate,

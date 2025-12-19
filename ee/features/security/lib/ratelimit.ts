@@ -8,16 +8,16 @@ const hasRedis = !!redis && !!(process.env.UPSTASH_REDIS_REST_URL && process.env
  * Simple rate limiters for core endpoints
  * Only initialize if Redis is available
  */
-export const rateLimiters = hasRedis ? {
+export const rateLimiters = hasRedis && redis ? {
   auth: new Ratelimit({
-    redis,
+    redis: redis,
     limiter: Ratelimit.slidingWindow(10, "20 m"),
     prefix: "rl:auth",
     enableProtection: true,
     analytics: true,
   }),
   billing: new Ratelimit({
-    redis,
+    redis: redis,
     limiter: Ratelimit.slidingWindow(10, "20 m"),
     prefix: "rl:billing",
     enableProtection: true,

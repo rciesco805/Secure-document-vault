@@ -47,21 +47,21 @@ export const sendEmail = async ({
   const fromAddress =
     from ??
     (marketing
-      ? "BF Fund <investors@bermudafranchisegroup.com>"
+      ? "BF Fund <noreply@investors.bermudafranchisegroup.com>"
       : system
-        ? "BF Fund <system@bermudafranchisegroup.com>"
+        ? "BF Fund <system@investors.bermudafranchisegroup.com>"
         : verify
-          ? "BF Fund <verify@bermudafranchisegroup.com>"
+          ? "BF Fund <verify@investors.bermudafranchisegroup.com>"
           : !!scheduledAt
-            ? "BF Fund <investors@bermudafranchisegroup.com>"
-            : "BF Fund <investors@bermudafranchisegroup.com>");
+            ? "BF Fund <noreply@investors.bermudafranchisegroup.com>"
+            : "BF Fund <noreply@investors.bermudafranchisegroup.com>");
 
   try {
     const { data, error } = await resend.emails.send({
       from: fromAddress,
       to: test ? "delivered@resend.dev" : to,
       cc: cc,
-      replyTo: marketing ? "investors@bermudafranchisegroup.com" : replyTo,
+      replyTo: marketing ? "noreply@investors.bermudafranchisegroup.com" : replyTo,
       subject,
       react,
       scheduledAt,

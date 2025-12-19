@@ -40,7 +40,7 @@ export default async function handler(
 
     await sendEmail({
       to: "investors@bermudafranchisegroup.com",
-      from: "BF Fund Portal <investors@bermudafranchisegroup.com>",
+      from: "BF Fund Portal <noreply@investors.bermudafranchisegroup.com>",
       subject: `New Investor Access Request: ${fullName}`,
       react: emailTemplate,
       replyTo: email,

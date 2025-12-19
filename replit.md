@@ -37,6 +37,8 @@ Preferred communication style: Simple, everyday language.
 - Changed default team plan in Prisma schema to "datarooms-plus" for all new teams
 - Updated custom domain to dataroom.bermudafranchisegroup.com
 - Made All Datarooms and Visitors navigation always enabled (no plan gating)
+- Added magic link functionality for visitor email verification (one-click access from email)
+- Extended verification token expiration from 10 to 20 minutes for both admin and visitor flows
 
 ## Platform Testing Status (Dec 2024)
 

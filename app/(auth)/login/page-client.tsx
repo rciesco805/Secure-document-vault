@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { X } from "lucide-react";
 
 export default function Login() {
   const { next } = useParams as { next?: string };
@@ -45,6 +46,7 @@ export default function Login() {
   const [emailButtonText, setEmailButtonText] = useState<string>(
     "Continue with Email",
   );
+  const [showAccessNotice, setShowAccessNotice] = useState(false);
 
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
   const [inviteForm, setInviteForm] = useState({
@@ -145,9 +147,10 @@ export default function Login() {
                   setLastUsed("credentials");
                   setEmailButtonText("Email sent - check your inbox!");
                   toast.success("Email sent - check your inbox!");
+                  setShowAccessNotice(false);
                 } else {
-                  setEmailButtonText("Error sending email - try again?");
-                  toast.error("Error sending email - try again?");
+                  setEmailButtonText("Continue with Email");
+                  setShowAccessNotice(true);
                 }
                 setClickedMethod(undefined);
               });
@@ -189,6 +192,20 @@ export default function Login() {
               </Button>
             </div>
           </form>
+          {showAccessNotice && (
+            <div className="mx-4 mt-4 sm:mx-12 relative rounded-lg border border-amber-500/50 bg-amber-500/10 p-4">
+              <button
+                onClick={() => setShowAccessNotice(false)}
+                className="absolute right-2 top-2 p-1 text-gray-400 hover:text-white transition-colors"
+                aria-label="Close notice"
+              >
+                <X className="h-4 w-4" />
+              </button>
+              <p className="text-sm text-amber-200 pr-6">
+                Your email is not on the approved access list. Please request an invite using the button below.
+              </p>
+            </div>
+          )}
           <div className="mt-8 px-4 sm:px-12">
             <p className="mb-3 text-center text-sm text-gray-400">
               Want Access? Click below

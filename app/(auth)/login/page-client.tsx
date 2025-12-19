@@ -190,6 +190,9 @@ export default function Login() {
             </div>
           </form>
           <div className="mt-8 px-4 sm:px-12">
+            <p className="mb-3 text-center text-sm text-gray-400">
+              Want Access? Click below
+            </p>
             <Dialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen}>
               <DialogTrigger asChild>
                 <Button

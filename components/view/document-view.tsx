@@ -67,6 +67,7 @@ export default function DocumentView({
   logoOnAccessForm,
   isEmbedded,
   annotationsEnabled,
+  magicLinkToken,
 }: {
   link: LinkWithDocument;
   userEmail: string | null | undefined;
@@ -89,6 +90,7 @@ export default function DocumentView({
   isEmbedded?: boolean;
   logoOnAccessForm?: boolean;
   annotationsEnabled?: boolean;
+  magicLinkToken?: string;
 }) {
   useDisablePrint();
   const {
@@ -115,8 +117,9 @@ export default function DocumentView({
   const [verificationToken, setVerificationToken] = useState<string | null>(
     token ?? null,
   );
-  const [code, setCode] = useState<string | null>(null);
+  const [code, setCode] = useState<string | null>(magicLinkToken ?? null);
   const [isInvalidCode, setIsInvalidCode] = useState<boolean>(false);
+  const [magicLinkProcessed, setMagicLinkProcessed] = useState<boolean>(false);
 
   const handleSubmission = async (): Promise<void> => {
     setIsLoading(true);
@@ -229,14 +232,15 @@ export default function DocumentView({
 
   // If token is present, run handle submit which will verify token and get document
   // If link is not submitted and does not have email / password protection, show the access form
+  // Also handle magic link tokens for direct access
   useEffect(() => {
     if (!didMount.current) {
-      if ((!submitted && !isProtected) || token || previewToken) {
+      if ((!submitted && !isProtected) || token || previewToken || magicLinkToken) {
         handleSubmission();
       }
       didMount.current = true;
     }
-  }, [submitted, isProtected, token, previewToken]);
+  }, [submitted, isProtected, token, previewToken, magicLinkToken]);
 
   // Components to render when email is submitted but verification is pending
   if (verificationRequested) {

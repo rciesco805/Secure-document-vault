@@ -62,6 +62,7 @@ export default function DataroomView({
   isEmbedded,
   preview,
   dataroomIndexEnabled,
+  magicLinkToken,
 }: {
   link: LinkWithDataroom;
   userEmail: string | null | undefined;
@@ -77,6 +78,7 @@ export default function DataroomView({
   preview?: boolean;
   logoOnAccessForm?: boolean;
   dataroomIndexEnabled?: boolean;
+  magicLinkToken?: string;
 }) {
   useDisablePrint();
   const {
@@ -107,7 +109,7 @@ export default function DataroomView({
     token ?? null,
   );
 
-  const [code, setCode] = useState<string | null>(null);
+  const [code, setCode] = useState<string | null>(magicLinkToken ?? null);
   const [isInvalidCode, setIsInvalidCode] = useState<boolean>(false);
 
   const handleSubmission = async (): Promise<void> => {
@@ -217,14 +219,15 @@ export default function DataroomView({
 
   // If token is present, run handle submit which will verify token and get document
   // If link is not submitted and does not have email / password protection, show the access form
+  // Also handle magic link tokens for direct access
   useEffect(() => {
     if (!didMount.current) {
-      if ((!submitted && !isProtected) || token || preview || previewToken) {
+      if ((!submitted && !isProtected) || token || preview || previewToken || magicLinkToken) {
         handleSubmission();
         didMount.current = true;
       }
     }
-  }, [submitted, isProtected, token, preview, previewToken]);
+  }, [submitted, isProtected, token, preview, previewToken, magicLinkToken]);
 
   // Components to render when email is submitted but verification is pending
   if (verificationRequested) {

@@ -14,6 +14,7 @@ import {
 } from "@/lib/auth/dataroom-auth";
 import { verifyDataroomSession } from "@/lib/auth/dataroom-auth";
 import { PreviewSession, verifyPreviewSession } from "@/lib/auth/preview-auth";
+import { createVisitorMagicLink, verifyVisitorMagicLink } from "@/lib/auth/create-visitor-magic-link";
 import { sendOtpVerificationEmail } from "@/lib/emails/send-email-otp-verification";
 import { getFile } from "@/lib/files/get-file";
 import { newId } from "@/lib/id-helper";
@@ -411,9 +412,16 @@ export async function POST(request: NextRequest) {
           },
         });
 
+        // Also delete any existing visitor magic links
+        await prisma.verificationToken.deleteMany({
+          where: {
+            identifier: `visitor-magic:${linkId}:${email}`,
+          },
+        });
+
         const otpCode = generateOTP();
         const expiresAt = new Date();
-        expiresAt.setMinutes(expiresAt.getMinutes() + 10); // token expires at 10 minutes
+        expiresAt.setMinutes(expiresAt.getMinutes() + 20); // token expires at 20 minutes
 
         await prisma.verificationToken.create({
           data: {
@@ -423,7 +431,24 @@ export async function POST(request: NextRequest) {
           },
         });
 
-        waitUntil(sendOtpVerificationEmail(email, otpCode, true, link.teamId!));
+        // Generate magic link for direct access
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || request.headers.get("origin") || "";
+        const magicLinkResult = await createVisitorMagicLink({
+          email: email.toLowerCase(),
+          linkId,
+          isDataroom: true,
+          baseUrl,
+        });
+
+        waitUntil(
+          sendOtpVerificationEmail(
+            email, 
+            otpCode, 
+            true, 
+            link.teamId!,
+            magicLinkResult?.magicLink,
+          ),
+        );
         return NextResponse.json(
           {
             type: "email-verification",
@@ -445,61 +470,84 @@ export async function POST(request: NextRequest) {
           );
         }
 
-        // Check if the OTP code is valid
-        const verification = await prisma.verificationToken.findUnique({
-          where: {
-            token: code,
-            identifier: `otp:${linkId}:${email}`,
-          },
+        // First check if this is a visitor magic link token
+        const isMagicLinkValid = await verifyVisitorMagicLink({
+          token: code,
+          email,
+          linkId,
         });
 
-        if (!verification) {
-          return NextResponse.json(
-            {
-              message: "Unauthorized access. Request new access.",
-              resetVerification: true,
+        if (isMagicLinkValid) {
+          // Magic link verified successfully - create a long-term token
+          const newToken = newId("email");
+          hashedVerificationToken = hashToken(newToken);
+          const tokenExpiresAt = new Date();
+          tokenExpiresAt.setHours(tokenExpiresAt.getHours() + 23);
+          await prisma.verificationToken.create({
+            data: {
+              token: hashedVerificationToken,
+              identifier: `link-verification:${linkId}:${link.teamId}:${email}`,
+              expires: tokenExpiresAt,
             },
-            { status: 401 },
-          );
-        }
+          });
+          isEmailVerified = true;
+        } else {
+          // Check if the OTP code is valid
+          const verification = await prisma.verificationToken.findUnique({
+            where: {
+              token: code,
+              identifier: `otp:${linkId}:${email}`,
+            },
+          });
 
-        // Check the OTP code's expiration date
-        if (Date.now() > verification.expires.getTime()) {
+          if (!verification) {
+            return NextResponse.json(
+              {
+                message: "Unauthorized access. Request new access.",
+                resetVerification: true,
+              },
+              { status: 401 },
+            );
+          }
+
+          // Check the OTP code's expiration date
+          if (Date.now() > verification.expires.getTime()) {
+            await prisma.verificationToken.delete({
+              where: {
+                token: code,
+              },
+            });
+            return NextResponse.json(
+              {
+                message: "Access expired. Request new access.",
+                resetVerification: true,
+              },
+              { status: 401 },
+            );
+          }
+
+          // delete the OTP code after verification
           await prisma.verificationToken.delete({
             where: {
               token: code,
             },
           });
-          return NextResponse.json(
-            {
-              message: "Access expired. Request new access.",
-              resetVerification: true,
+
+          // Create a email verification token for repeat access
+          const newToken = newId("email");
+          hashedVerificationToken = hashToken(newToken);
+          const tokenExpiresAt = new Date();
+          tokenExpiresAt.setHours(tokenExpiresAt.getHours() + 23); // token expires at 23 hours
+          await prisma.verificationToken.create({
+            data: {
+              token: hashedVerificationToken,
+              identifier: `link-verification:${linkId}:${link.teamId}:${email}`,
+              expires: tokenExpiresAt,
             },
-            { status: 401 },
-          );
+          });
+
+          isEmailVerified = true;
         }
-
-        // delete the OTP code after verification
-        await prisma.verificationToken.delete({
-          where: {
-            token: code,
-          },
-        });
-
-        // Create a email verification token for repeat access
-        const token = newId("email");
-        hashedVerificationToken = hashToken(token);
-        const tokenExpiresAt = new Date();
-        tokenExpiresAt.setHours(tokenExpiresAt.getHours() + 23); // token expires at 23 hours
-        await prisma.verificationToken.create({
-          data: {
-            token: hashedVerificationToken,
-            identifier: `link-verification:${linkId}:${link.teamId}:${email}`,
-            expires: tokenExpiresAt,
-          },
-        });
-
-        isEmailVerified = true;
       }
 
       if (link.emailAuthenticated && token && !dataroomVerified) {

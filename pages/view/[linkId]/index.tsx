@@ -363,11 +363,13 @@ export default function ViewPage({
     d: disableEditEmail,
     previewToken,
     preview,
+    token: magicLinkToken,
   } = router.query as {
     email: string;
     d: string;
     previewToken?: string;
     preview?: string;
+    token?: string;
   };
   const { linkType } = linkData;
 
@@ -468,6 +470,7 @@ export default function ViewPage({
           token={storedToken}
           verifiedEmail={verifiedEmail}
           annotationsEnabled={annotationsEnabled}
+          magicLinkToken={magicLinkToken}
         />
       </>
     );
@@ -548,6 +551,7 @@ export default function ViewPage({
           previewToken={previewToken}
           preview={!!preview}
           dataroomIndexEnabled={dataroomIndexEnabled}
+          magicLinkToken={magicLinkToken}
         />
       </>
     );

@@ -146,7 +146,7 @@ export default function DataroomTrial() {
         className="flex flex-col items-center space-y-10 text-center"
       >
         <p className="text-2xl font-bold tracking-tighter text-foreground">
-          Papermark
+          BF Fund Dataroom
         </p>
         <h1 className="font-display max-w-lg text-3xl font-semibold transition-colors sm:text-4xl">
           Start a 7-day free trial!
@@ -334,7 +334,7 @@ export default function DataroomTrial() {
                 highlightItem={["datarooms"]}
                 trigger="dataroom_trial_form"
               >
-                <button className="underline">Papermark Data Rooms</button>
+                <button className="underline">BF Fund Data Rooms</button>
               </UpgradePlanModal>{" "}
               to continue using data rooms.
             </div>

@@ -148,7 +148,7 @@ export default async function VerifyInvitationPage({
                 </div>
                 <p className="mt-10 w-full max-w-md px-4 text-xs text-muted-foreground sm:px-16">
                   By accepting this invitation, you acknowledge that you have
-                  read and agree to Papermark&apos;s{" "}
+                  read and agree to BF Fund&apos;s{" "}
                   <a
                     href={`${process.env.NEXT_PUBLIC_MARKETING_URL}/terms`}
                     target="_blank"
@@ -190,17 +190,17 @@ export default async function VerifyInvitationPage({
                 <div className="max-w-xl text-center">
                   <blockquote className="text-l text-balance leading-8 text-gray-100 sm:text-xl sm:leading-9">
                     <p>
-                      True builders listen to their users and build what they
-                      need. Thanks Papermark team for solving a big pain point.
-                      DocSend monopoly will end soon!
+                      Bermuda Franchise Group provides secure document sharing
+                      for investors. Experience transparent, professional
+                      investor relations.
                     </p>
                   </blockquote>
                   <figcaption className="mt-4">
                     <div className="text-balance font-semibold text-white">
-                      Jaski
+                      BF Fund Team
                     </div>
                     <div className="text-balance text-gray-400">
-                      Founder, Townhall Network
+                      Bermuda Franchise Group
                     </div>
                   </figcaption>
                 </div>

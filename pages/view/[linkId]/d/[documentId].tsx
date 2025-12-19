@@ -104,7 +104,7 @@ export default function DataroomDocumentViewPage({
           enableBranding={meta.enableCustomMetatag ?? false}
           title={
             meta.metaTitle ??
-            `${link?.dataroomDocument?.document?.name} | Powered by Papermark`
+            `${link?.dataroomDocument?.document?.name} | BF Fund Dataroom`
           }
           description={meta.metaDescription ?? null}
           imageUrl={meta.metaImage ?? null}
@@ -149,7 +149,7 @@ export default function DataroomDocumentViewPage({
         enableBranding={meta.enableCustomMetatag ?? false}
         title={
           meta.metaTitle ??
-          `${link?.dataroomDocument?.document?.name} | Powered by Papermark`
+          `${link?.dataroomDocument?.document?.name} | BF Fund Dataroom`
         }
         description={meta.metaDescription ?? null}
         imageUrl={meta.metaImage ?? null}

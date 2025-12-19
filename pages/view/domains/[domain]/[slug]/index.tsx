@@ -369,7 +369,7 @@ export default function ViewPage({
         <CustomMetaTag
           favicon={meta.metaFavicon}
           enableBranding={false}
-          title="Access Workflow | Powered by Papermark"
+          title="Access Workflow | BF Fund Dataroom"
           description={null}
           imageUrl={null}
           url={meta.metaUrl ?? ""}
@@ -395,7 +395,7 @@ export default function ViewPage({
             favicon={meta.metaFavicon}
             enableBranding={meta.enableCustomMetatag ?? false}
             title={
-              meta.metaTitle ?? `${link?.document?.name} | Powered by Papermark`
+              meta.metaTitle ?? `${link?.document?.name} | BF Fund Dataroom`
             }
             description={meta.metaDescription ?? null}
             imageUrl={meta.metaImage ?? null}
@@ -438,7 +438,7 @@ export default function ViewPage({
           favicon={meta.metaFavicon}
           enableBranding={meta.enableCustomMetatag ?? false}
           title={
-            meta.metaTitle ?? `${link?.document?.name} | Powered by Papermark`
+            meta.metaTitle ?? `${link?.document?.name} | BF Fund Dataroom`
           }
           description={meta.metaDescription ?? null}
           imageUrl={meta.metaImage ?? null}
@@ -475,7 +475,7 @@ export default function ViewPage({
             favicon={meta.metaFavicon}
             enableBranding={meta.enableCustomMetatag ?? false}
             title={
-              meta.metaTitle ?? `${link?.dataroom?.name} | Powered by Papermark`
+              meta.metaTitle ?? `${link?.dataroom?.name} | BF Fund Dataroom`
             }
             description={meta.metaDescription ?? null}
             imageUrl={meta.metaImage ?? null}
@@ -519,7 +519,7 @@ export default function ViewPage({
           favicon={meta.metaFavicon}
           enableBranding={meta.enableCustomMetatag ?? false}
           title={
-            meta.metaTitle ?? `${link?.dataroom?.name} | Powered by Papermark`
+            meta.metaTitle ?? `${link?.dataroom?.name} | BF Fund Dataroom`
           }
           description={meta.metaDescription ?? null}
           imageUrl={meta.metaImage ?? null}

@@ -37,7 +37,7 @@ export default function InvitationStatusContent({
       </div>
       <div className="w-full space-y-4">
         <h4 className="text-center text-sm font-medium text-gray-800">
-          Create your own Papermark account
+          Create your own BF Fund account
         </h4>
         <div className="space-y-3">
           <Link href="/login" className="block w-full">

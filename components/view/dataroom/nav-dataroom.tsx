@@ -19,7 +19,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { Button } from "../../ui/button";
 import { ConversationSidebar } from "../conversations/sidebar";
 
-const DEFAULT_BANNER_IMAGE = "/_static/papermark-banner.png";
+const DEFAULT_BANNER_IMAGE = "/_static/bfg-logo-black.png";
 
 export default function DataroomNav({
   allowDownload,
@@ -141,11 +141,11 @@ export default function DataroomNav({
                 />
               ) : (
                 <Link
-                  href={`https://www.papermark.com/home?utm_campaign=navbar&utm_medium=navbar&utm_source=papermark-${linkId}`}
+                  href="https://bermudafranchisegroup.com"
                   target="_blank"
                   className="text-2xl font-bold tracking-tighter text-white"
                 >
-                  Papermark
+                  BF Fund
                 </Link>
               )}
             </div>

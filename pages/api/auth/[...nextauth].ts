@@ -25,6 +25,12 @@ import { getIpAddress } from "@/lib/utils/ip";
 const VERCEL_DEPLOYMENT = !!process.env.VERCEL_URL;
 const IS_REPLIT = !!process.env.REPL_ID;
 
+const ALLOWED_ADMIN_EMAILS = [
+  "rciesco@gmail.com",
+  "investors@bermudafranchisegroup.com",
+  "richard@bermudafranchisegroup.com",
+];
+
 function getMainDomainUrl(): string {
   if (process.env.NODE_ENV === "development") {
     return process.env.NEXTAUTH_URL || "http://localhost:3000";
@@ -226,6 +232,16 @@ const getAuthOptions = (req: NextApiRequest): NextAuthOptions => {
             event: "User Sign In Attempted",
             email: user.email ?? undefined,
             userId: user.id,
+          });
+          return false;
+        }
+
+        // Restrict admin dashboard access to allowed emails only
+        const emailLower = user.email.toLowerCase();
+        if (!ALLOWED_ADMIN_EMAILS.some(e => e.toLowerCase() === emailLower)) {
+          log({
+            message: `Unauthorized login attempt: ${user.email}`,
+            type: "error",
           });
           return false;
         }

@@ -8,6 +8,10 @@ import { getSlackEnv } from "./env";
 export const getSlackInstallationUrl = async (
   teamId: string,
 ): Promise<string> => {
+  if (!redis) {
+    throw new Error("Redis is not configured. Slack integration requires Redis.");
+  }
+
   const env = getSlackEnv();
 
   const state = nanoid(16);

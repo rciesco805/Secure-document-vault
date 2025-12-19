@@ -1,5 +1,4 @@
 import { getCustomEmail } from "@/lib/edge-config/custom-email";
-import prisma from "@/lib/prisma";
 import { redis } from "@/lib/redis";
 import { sendEmail } from "@/lib/resend";
 
@@ -10,6 +9,7 @@ export const sendOtpVerificationEmail = async (
   code: string,
   isDataroom: boolean = false,
   teamId: string,
+  magicLink?: string,
 ) => {
   let logo: string | null = null;
   let from: string | undefined;
@@ -28,13 +28,14 @@ export const sendOtpVerificationEmail = async (
     code,
     isDataroom,
     logo: logo ?? undefined,
+    magicLink,
   });
 
   try {
     await sendEmail({
       from,
       to: email,
-      subject: `One-time passcode to access the ${isDataroom ? "dataroom" : "document"}`,
+      subject: `Access your ${isDataroom ? "dataroom" : "document"} - BF Fund`,
       react: emailTemplate,
       test: process.env.NODE_ENV === "development",
       verify: true,

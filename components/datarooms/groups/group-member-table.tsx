@@ -64,6 +64,7 @@ export default function GroupMemberTable({
 
   const [addMembersOpen, setAddMembersOpen] = useState<boolean>(false);
   const [inviteOpen, setInviteOpen] = useState<boolean>(false);
+  const [singleInviteEmail, setSingleInviteEmail] = useState<string | null>(null);
 
   const groupKey = teamId
     ? `/api/teams/${teamId}/datarooms/${dataroomId}/groups/${groupId}`
@@ -212,17 +213,15 @@ export default function GroupMemberTable({
           <Table>
             <TableHeader>
               <TableRow className="*:whitespace-nowrap *:font-medium hover:bg-transparent">
+                <TableHead className="w-[100px]">Send Link</TableHead>
                 <TableHead>Name</TableHead>
-                {/* <TableHead>Visit Duration</TableHead> */}
-                {/* <TableHead>Last Viewed Document</TableHead> */}
-                {/* <TableHead>Last Viewed</TableHead> */}
                 <TableHead className="text-center"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {viewerGroupAllowAll ? (
                 <TableRow>
-                  <TableCell colSpan={2}>
+                  <TableCell colSpan={3}>
                     <div className="flex h-40 w-full items-center justify-center">
                       <p className="text-sm text-muted-foreground">
                         All email addresses are allowed to access this group
@@ -233,7 +232,7 @@ export default function GroupMemberTable({
               ) : viewerGroupMembers.length === 0 &&
                 viewerGroupDomains.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={2}>
+                  <TableCell colSpan={3}>
                     <div className="flex h-40 w-full items-center justify-center">
                       <p>No views yet. Try sharing a link.</p>
                     </div>
@@ -244,6 +243,9 @@ export default function GroupMemberTable({
                   {viewerGroupDomains.length > 0 &&
                     viewerGroupDomains.map((domain) => (
                       <TableRow key={domain} className="group/row">
+                        <TableCell className="text-center text-muted-foreground text-sm">
+                          -
+                        </TableCell>
                         <TableCell className="">
                           <div className="flex items-center overflow-visible sm:space-x-3">
                             <VisitorAvatar viewerEmail={"@"} />
@@ -288,6 +290,21 @@ export default function GroupMemberTable({
                       const latestInvitation = viewer.viewer.invitations?.[0];
                       return (
                         <TableRow key={viewer.id} className="group/row">
+                          {/* Send Link Button */}
+                          <TableCell className="text-center">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-7 gap-1 text-xs"
+                              onClick={() => {
+                                setSingleInviteEmail(viewer.viewer.email);
+                                setInviteOpen(true);
+                              }}
+                            >
+                              <SendIcon className="h-3 w-3" />
+                              Send
+                            </Button>
+                          </TableCell>
                           {/* Name */}
                           <TableCell className="">
                             <div className="flex items-center overflow-visible sm:space-x-3">
@@ -312,16 +329,6 @@ export default function GroupMemberTable({
                               </div>
                             </div>
                           </TableCell>
-                          {/* Last Viewed */}
-                          {/* <TableCell className="text-sm text-muted-foreground">
-                        <time
-                          dateTime={new Date(viewer.viewer.updatedAt).toISOString()}
-                        >
-                          {viewer.viewer.updatedAt
-                            ? timeAgo(viewer.viewer.updatedAt)
-                            : "-"}
-                        </time>
-                      </TableCell> */}
                           {/* Actions */}
                           <TableCell className="p-0 text-center">
                             <DropdownMenu>
@@ -352,11 +359,14 @@ export default function GroupMemberTable({
                     })
                   ) : (
                     <TableRow>
+                      <TableCell className="min-w-[80px]">
+                        <Skeleton className="h-6 w-16" />
+                      </TableCell>
                       <TableCell className="min-w-[100px]">
                         <Skeleton className="h-6 w-full" />
                       </TableCell>
                       <TableCell>
-                        <Skeleton className="h-6 w-24" />
+                        <Skeleton className="h-6 w-8" />
                       </TableCell>
                     </TableRow>
                   )}
@@ -378,17 +388,19 @@ export default function GroupMemberTable({
           setOpen={(next) => {
             setInviteOpen(next);
             if (!next) {
+              setSingleInviteEmail(null);
               mutateUninvited();
             }
           }}
           dataroomId={dataroomId}
           dataroomName={dataroom?.name ?? "this dataroom"}
           groupId={groupId}
-          defaultEmails={uninvitedEmails}
+          defaultEmails={singleInviteEmail ? [singleInviteEmail] : uninvitedEmails}
           onSuccess={() => {
             if (groupKey) {
               mutate(groupKey);
             }
+            setSingleInviteEmail(null);
             mutateUninvited();
           }}
         />

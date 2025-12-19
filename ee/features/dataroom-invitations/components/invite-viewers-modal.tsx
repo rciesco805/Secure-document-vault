@@ -425,8 +425,8 @@ export function InviteViewersModal({
                   <br />
                   <span className="break-all text-foreground">
                     {selectedLink
-                      ? `${process.env.NEXT_PUBLIC_BASE_URL || 'https://docs.bermudafranchisegroup.com'}/view/${selectedLink.slug ?? selectedLink.id}`
-                      : "https://docs.bermudafranchisegroup.com/view/..."}
+                      ? `${process.env.NEXT_PUBLIC_BASE_URL || 'https://dataroom.bermudafranchisegroup.com'}/view/${selectedLink.slug ?? selectedLink.id}`
+                      : "https://dataroom.bermudafranchisegroup.com/view/..."}
                   </span>
                 </p>
                 <Separator className="my-2" />

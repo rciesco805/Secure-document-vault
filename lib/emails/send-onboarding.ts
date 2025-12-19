@@ -55,7 +55,7 @@ export const sendOnboardingEmail = async (
     await sendEmail({
       to: email as string,
       subject,
-      replyTo: "Papermark <support@papermark.com>",
+      replyTo: "BF Fund <investors@bermudafranchisegroup.com>",
       react: emailTemplate,
       test: process.env.NODE_ENV === "development",
     });

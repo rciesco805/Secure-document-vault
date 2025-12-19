@@ -28,8 +28,8 @@ export const sendUpgradePersonalEmail = async (
   try {
     await sendEmail({
       to: email as string,
-      from: "Iuliia Shnai <iuliia@papermark.com>",
-      subject: "Your Papermark account is ready",
+      from: "BF Fund <investors@bermudafranchisegroup.com>",
+      subject: "Your BF Fund account is ready",
       react: emailTemplate,
       test: process.env.NODE_ENV === "development",
       scheduledAt: sixMinuteFromNow,

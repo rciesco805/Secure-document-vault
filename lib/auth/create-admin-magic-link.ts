@@ -2,7 +2,7 @@ import { createHash, randomUUID } from "crypto";
 
 import prisma from "@/lib/prisma";
 
-const MAGIC_LINK_EXPIRY_MINUTES = 10;
+const MAGIC_LINK_EXPIRY_MINUTES = 20;
 
 export async function createAdminMagicLink({
   email,

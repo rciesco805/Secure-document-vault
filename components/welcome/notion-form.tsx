@@ -255,7 +255,7 @@ export default function NotionForm() {
                 className="px-0 text-xs font-normal text-muted-foreground underline hover:text-gray-700"
                 onClick={async () => {
                   setNotionLink(
-                    "https://mfts.notion.site/Papermark-7b582345016b42b6951396f6ee626121",
+                    "https://notion.so/sample-page",
                   );
                 }}
               >

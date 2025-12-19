@@ -19,6 +19,28 @@ Preferred communication style: Simple, everyday language.
 - Configured security defaults: email required for all access, downloads disabled
 - Set up PostgreSQL database with Prisma migrations
 - Configured development environment with Next.js on port 5000
+- Upgraded team plan to "datarooms-plus" for all premium features
+- Removed papermark.com domain references, using custom domains only
+- Updated all email sender addresses to use bermudafranchisegroup.com
+- Made rate limiting optional (works without Upstash Redis)
+- Fixed viewer page meta URLs to use NEXT_PUBLIC_BASE_URL
+
+## Platform Testing Status (Dec 2024)
+
+**Verified Working:**
+- Login page with BFG branding
+- Document upload (PDF, images, all file types)
+- Vercel Blob storage for file hosting
+- Database connectivity (PostgreSQL)
+- API health endpoints
+- Session management (NextAuth)
+- Rate limiting graceful fallback
+
+**Optional Services (Not Configured):**
+- Upstash Redis (rate limiting works without it)
+- Slack integration (not needed)
+- Trigger.dev (PDF-to-image conversion disabled)
+- Tinybird analytics (view tracking limited)
 
 ## Security Configuration
 

@@ -124,7 +124,7 @@ export default function Login() {
               </span>
             </Link>
             <h3 className="text-balance text-sm text-gray-300">
-              Secure access to investment documents.
+              Secure access to Bermuda Franchise Group dataroom.
             </h3>
           </div>
           <form

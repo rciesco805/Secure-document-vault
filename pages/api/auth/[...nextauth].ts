@@ -226,7 +226,10 @@ const getAuthOptions = (req: NextApiRequest): NextAuthOptions => {
     callbacks: {
       ...authOptions.callbacks,
       signIn: async ({ user }) => {
+        console.log("[AUTH] signIn callback called for:", user.email);
+        
         if (!user.email || (await isBlacklistedEmail(user.email))) {
+          console.log("[AUTH] User blocked - no email or blacklisted");
           await identifyUser(user.email ?? user.id);
           await trackAnalytics({
             event: "User Sign In Attempted",
@@ -238,7 +241,11 @@ const getAuthOptions = (req: NextApiRequest): NextAuthOptions => {
 
         // Restrict admin dashboard access to allowed emails only
         const emailLower = user.email.toLowerCase();
-        if (!ALLOWED_ADMIN_EMAILS.some(e => e.toLowerCase() === emailLower)) {
+        const isAllowed = ALLOWED_ADMIN_EMAILS.some(e => e.toLowerCase() === emailLower);
+        console.log("[AUTH] Email check:", emailLower, "allowed:", isAllowed);
+        
+        if (!isAllowed) {
+          console.log("[AUTH] Unauthorized - email not in whitelist");
           log({
             message: `Unauthorized login attempt: ${user.email}`,
             type: "error",
@@ -246,9 +253,9 @@ const getAuthOptions = (req: NextApiRequest): NextAuthOptions => {
           return false;
         }
 
-        // Apply rate limiting for signin attempts
+        // Apply rate limiting for signin attempts (optional - skip if Redis unavailable)
         try {
-          if (req) {
+          if (req && rateLimiters?.auth) {
             const clientIP = getIpAddress(req.headers);
             const rateLimitResult = await checkRateLimit(
               rateLimiters.auth,
@@ -256,15 +263,19 @@ const getAuthOptions = (req: NextApiRequest): NextAuthOptions => {
             );
 
             if (!rateLimitResult.success) {
+              console.log("[AUTH] Rate limit exceeded for:", clientIP);
               log({
                 message: `Rate limit exceeded for IP ${clientIP} during signin attempt`,
                 type: "error",
               });
-              return false; // Block the signin
+              return false;
             }
           }
-        } catch (error) {}
+        } catch (error) {
+          console.log("[AUTH] Rate limit check skipped:", error);
+        }
 
+        console.log("[AUTH] Sign-in allowed for:", user.email);
         return true;
       },
     },

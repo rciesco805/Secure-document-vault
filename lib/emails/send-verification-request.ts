@@ -17,7 +17,9 @@ export const sendVerificationRequestEmail = async (params: {
     checksum,
   });
 
-  const verificationUrl = `${process.env.NEXTAUTH_URL}/verify?${verificationUrlParams}`;
+  // Use fallback URL if set (for when custom domain DNS is propagating)
+  const baseUrl = process.env.VERIFICATION_EMAIL_BASE_URL || process.env.NEXTAUTH_URL;
+  const verificationUrl = `${baseUrl}/verify?${verificationUrlParams}`;
   console.log("[EMAIL] Verification URL:", verificationUrl);
   
   const emailTemplate = LoginLink({ url: verificationUrl });

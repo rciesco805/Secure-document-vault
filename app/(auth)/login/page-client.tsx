@@ -114,7 +114,7 @@ export default function Login() {
             <img
               src="/_static/bfg-logo-white.png"
               alt="Bermuda Franchise Group"
-              className="md:mb-48s -mt-8 mb-36 h-12 w-auto self-start sm:mb-32"
+              className="-mt-8 mb-8 h-12 w-auto self-start sm:mb-10"
             />
             <Link href="/">
               <span className="text-balance text-3xl font-semibold text-white">

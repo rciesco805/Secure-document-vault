@@ -30,7 +30,7 @@ model Team {
   views View[]
   workflows Workflow[]
 
-  plan           String    @default("free")
+  plan           String    @default("datarooms-plus")
   stripeId       String?   @unique // Stripe customer ID
   subscriptionId String?   @unique // Stripe subscription ID
   startsAt       DateTime? // Stripe subscription start date

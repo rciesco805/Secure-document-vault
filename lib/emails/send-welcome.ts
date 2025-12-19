@@ -11,7 +11,7 @@ export const sendWelcomeEmail = async (params: CreateUserEmailProps) => {
     await sendEmail({
       to: email as string,
       from: "BF Fund <investors@bermudafranchisegroup.com>",
-      subject: "Welcome to Papermark!",
+      subject: "Welcome to BF Fund Dataroom!",
       react: emailTemplate,
       test: process.env.NODE_ENV === "development",
     });

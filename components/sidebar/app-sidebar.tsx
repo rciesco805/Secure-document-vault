@@ -5,11 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 
 import * as React from "react";
-import { useEffect, useState } from "react";
 
 import { TeamContextType, initialState, useTeam } from "@/context/team-context";
-import { PlanEnum } from "@/ee/stripe/constants";
-import Cookies from "js-cookie";
 import {
   BrushIcon,
   CogIcon,
@@ -24,8 +21,6 @@ import {
 import { useFeatureFlags } from "@/lib/hooks/use-feature-flags";
 import { usePlan } from "@/lib/swr/use-billing";
 import useDatarooms from "@/lib/swr/use-datarooms";
-import useLimits from "@/lib/swr/use-limits";
-import { nFormatter } from "@/lib/utils";
 
 import { NavMain } from "@/components/sidebar/nav-main";
 import { NavUser } from "@/components/sidebar/nav-user";
@@ -35,56 +30,26 @@ import {
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
-  SidebarMenu,
-  SidebarMenuItem,
 } from "@/components/ui/sidebar";
 
-import ProAnnualBanner from "../billing/pro-annual-banner";
-import ProBanner from "../billing/pro-banner";
-import { Progress } from "../ui/progress";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const router = useRouter();
-  const [showProBanner, setShowProBanner] = useState<boolean | null>(null);
-  const [showProAnnualBanner, setShowProAnnualBanner] = useState<
-    boolean | null
-  >(null);
   const { currentTeam, teams, setCurrentTeam, isLoading }: TeamContextType =
     useTeam() || initialState;
   const {
     plan: userPlan,
-    isAnnualPlan,
-    isPro,
-    isBusiness,
-    isDatarooms,
+    isFree,
     isDataroomsPlus,
     isDataroomsPremium,
-    isFree,
     isTrial,
   } = usePlan();
-
-  const { limits } = useLimits();
-  const linksLimit = limits?.links;
-  const documentsLimit = limits?.documents;
 
   // Check feature flags
   const { features } = useFeatureFlags();
 
   // Fetch datarooms for the current team
   const { datarooms } = useDatarooms();
-
-  useEffect(() => {
-    if (Cookies.get("hideProBanner") !== "pro-banner") {
-      setShowProBanner(true);
-    } else {
-      setShowProBanner(false);
-    }
-    if (Cookies.get("hideProAnnualBanner") !== "pro-annual-banner") {
-      setShowProAnnualBanner(true);
-    } else {
-      setShowProAnnualBanner(false);
-    }
-  }, []);
 
   // Prepare datarooms items for sidebar (limit to first 5, sorted by most recent)
   const dataroomItems =
@@ -119,27 +84,16 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         url: "/datarooms",
         icon: ServerIcon,
         current: router.pathname === "/datarooms",
-        disabled: !isBusiness && !isDatarooms && !isDataroomsPlus && !isTrial,
-        trigger: "sidebar_datarooms",
-        plan: PlanEnum.Business,
-        highlightItem: ["datarooms"],
-        isActive:
-          router.pathname.includes("datarooms") &&
-          (isBusiness || isDatarooms || isDataroomsPlus || isTrial),
-        items:
-          isBusiness || isDatarooms || isDataroomsPlus || isTrial
-            ? dataroomItems
-            : undefined,
+        disabled: false,
+        isActive: router.pathname.includes("datarooms"),
+        items: dataroomItems,
       },
       {
         title: "Visitors",
         url: "/visitors",
         icon: ContactIcon,
         current: router.pathname.includes("visitors"),
-        disabled: isFree && !isTrial,
-        trigger: "sidebar_visitors",
-        plan: PlanEnum.Pro,
-        highlightItem: ["visitors"],
+        disabled: false,
       },
       {
         title: "Workflows",
@@ -147,9 +101,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         icon: WorkflowIcon,
         current: router.pathname.includes("/workflows"),
         disabled: !features?.workflows,
-        trigger: "sidebar_workflows",
-        plan: PlanEnum.DataRoomsPlus,
-        highlightItem: ["workflows"],
       },
       {
         title: "Branding",
@@ -290,80 +241,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavMain items={filteredNavMain} />
       </SidebarContent>
       <SidebarFooter>
-        <SidebarMenu className="group-data-[collapsible=icon]:hidden">
-          <SidebarMenuItem>
-            <div>
-              {/*
-               * if user is free and showProBanner is true show pro banner
-               */}
-              {isFree && showProBanner ? (
-                <ProBanner setShowProBanner={setShowProBanner} />
-              ) : null}
-              {/*
-               * if user is pro and showProAnnualBanner is true show pro annual banner
-               */}
-              {isPro && !isAnnualPlan && showProAnnualBanner ? (
-                <ProAnnualBanner
-                  setShowProAnnualBanner={setShowProAnnualBanner}
-                />
-              ) : null}
-
-              <div className="mb-2">
-                {linksLimit ? (
-                  <UsageProgress
-                    title="Links"
-                    unit="links"
-                    usage={limits?.usage?.links}
-                    usageLimit={linksLimit}
-                  />
-                ) : null}
-                {documentsLimit ? (
-                  <UsageProgress
-                    title="Documents"
-                    unit="documents"
-                    usage={limits?.usage?.documents}
-                    usageLimit={documentsLimit}
-                  />
-                ) : null}
-                {linksLimit || documentsLimit ? (
-                  <p className="mt-2 px-2 text-xs text-muted-foreground">
-                    Change plan to increase usage limits
-                  </p>
-                ) : null}
-              </div>
-            </div>
-          </SidebarMenuItem>
-        </SidebarMenu>
         <NavUser />
       </SidebarFooter>
     </Sidebar>
   );
 }
 
-function UsageProgress(data: {
-  title: string;
-  unit: string;
-  usage?: number;
-  usageLimit?: number;
-}) {
-  let { title, unit, usage, usageLimit } = data;
-  let usagePercentage = 0;
-  if (usage !== undefined && usageLimit !== undefined) {
-    usagePercentage = (usage / usageLimit) * 100;
-  }
-
-  return (
-    <div className="p-2">
-      <div className="mt-1 flex flex-col space-y-1">
-        {usage !== undefined && usageLimit !== undefined ? (
-          <p className="text-xs text-foreground">
-            <span>{nFormatter(usage)}</span> / {nFormatter(usageLimit)} {unit}
-          </p>
-        ) : (
-          <div className="h-5 w-32 animate-pulse rounded-md bg-muted" />
-        )}
-        <Progress value={usagePercentage} className="h-1 bg-muted" max={100} />
-      </div>
-    </div>
-  );
-}

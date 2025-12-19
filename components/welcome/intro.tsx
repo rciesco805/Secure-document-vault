@@ -32,14 +32,13 @@ export default function Intro() {
           variants={STAGGER_CHILD_VARIANTS}
         >
           Welcome to{" "}
-          <span className="font-bold tracking-tighter">Papermark</span>
+          <span className="font-bold tracking-tighter">BF Fund Dataroom</span>
         </motion.h1>
         <motion.p
           className="max-w-md text-accent-foreground/80 transition-colors sm:text-lg"
           variants={STAGGER_CHILD_VARIANTS}
         >
-          Papermark gives you the power to securely share your documents with an
-          impression that lasts.
+          Securely share investor documents with detailed analytics and access controls.
         </motion.p>
         <motion.div
           variants={STAGGER_CHILD_VARIANTS}

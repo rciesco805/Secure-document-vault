@@ -30,11 +30,13 @@ Preferred communication style: Simple, everyday language.
 - Shortened link URL display for better fit on smaller screens
 - Added "Send Link Now" prompt after creating a new link to streamline investor invitations
 - Mobile optimization: Admin portal and viewer now fully responsive with Tailwind breakpoints
-  - Link creation form stacks vertically on mobile with visible toggle labels
-  - Links table hides non-essential columns (Send Link, URL, Tags, Last Viewed) on phones
-  - Group member table responsive with shorter button text and dropdown actions for mobile
-  - Document viewer logo/branding is tappable to navigate back to dataroom on mobile
-  - Reaction toolbar properly centered on all screen sizes
+- Implemented magic link authentication for admin access request notifications (one-click login)
+- Added dismissable "Request Invite" notice for unapproved login attempts
+- Removed Upgrade/Pro Banner from sidebar completely (self-hosted deployment)
+- Rebranded all welcome/onboarding screens from Papermark to BF Fund Dataroom
+- Changed default team plan in Prisma schema to "datarooms-plus" for all new teams
+- Updated custom domain to dataroom.bermudafranchisegroup.com
+- Made All Datarooms and Visitors navigation always enabled (no plan gating)
 
 ## Platform Testing Status (Dec 2024)
 

@@ -2,11 +2,13 @@ import React from "react";
 
 import {
   Body,
+  Button,
   Container,
   Head,
   Hr,
   Html,
   Preview,
+  Section,
   Tailwind,
   Text,
 } from "@react-email/components";
@@ -15,15 +17,17 @@ export default function InviteRequest({
   email,
   fullName,
   company,
+  signInUrl,
 }: {
   email: string;
   fullName: string;
   company: string;
+  signInUrl: string;
 }) {
   return (
     <Html>
       <Head />
-      <Preview>New Investor Access Request</Preview>
+      <Preview>New Investor Access Request from {fullName}</Preview>
       <Tailwind>
         <Body className="mx-auto my-auto bg-white font-sans">
           <Container className="mx-auto my-10 w-[465px] p-5">
@@ -47,8 +51,16 @@ export default function InviteRequest({
               <span className="font-semibold">Company:</span> {company}
             </Text>
             <Hr className="my-4 border-gray-300" />
-            <Text className="text-sm leading-6 text-gray-600">
-              To grant access, invite this user through the admin portal.
+            <Section className="my-6 text-center">
+              <Button
+                className="rounded-md bg-black px-6 py-3 text-center text-sm font-medium text-white no-underline"
+                href={signInUrl}
+              >
+                Sign In to Add Investor
+              </Button>
+            </Section>
+            <Text className="text-sm leading-6 text-gray-600 text-center">
+              Click the button above to sign in and grant access to this investor.
             </Text>
           </Container>
         </Body>

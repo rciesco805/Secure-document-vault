@@ -32,10 +32,14 @@ export default async function handler(
 
     const { email, fullName, company } = validation.data;
 
+    const baseUrl = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_BASE_URL || "https://bfg-dataroom.replit.app";
+    const signInUrl = `${baseUrl}/login`;
+
     const emailTemplate = InviteRequest({
       email,
       fullName,
       company,
+      signInUrl,
     });
 
     await sendEmail({

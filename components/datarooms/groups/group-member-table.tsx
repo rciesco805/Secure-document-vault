@@ -164,9 +164,9 @@ export default function GroupMemberTable({
   return (
     <>
       <div className="l">
-        <div className="mb-2 flex items-center justify-between md:mb-4">
+        <div className="mb-2 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between md:mb-4">
           <h2>All members</h2>
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-4">
             <div className="flex items-center gap-2">
               <Switch
                 checked={viewerGroupAllowAll}
@@ -174,7 +174,7 @@ export default function GroupMemberTable({
                 aria-label="Allow all emails"
               />
               <span className="text-sm text-muted-foreground">
-                Allow all emails
+                Allow all
               </span>
             </div>
             <div className="flex items-center gap-2">
@@ -185,7 +185,8 @@ export default function GroupMemberTable({
                 disabled={viewerGroupAllowAll}
               >
                 <PlusCircleIcon className="h-4 w-4" />
-                Add members
+                <span className="hidden sm:inline">Add members</span>
+                <span className="sm:hidden">Add</span>
               </Button>
               {isFeatureEnabled("dataroomInvitations") && (
                 <Button
@@ -195,11 +196,12 @@ export default function GroupMemberTable({
                   className="relative h-8 gap-1"
                 >
                   <SendIcon className="h-4 w-4" />
-                  Share invite
+                  <span className="hidden sm:inline">Share invite</span>
+                  <span className="sm:hidden">Invite</span>
                   {uninvitedCount > 0 ? (
                     <Badge
                       variant="secondary"
-                      className="ml-2 h-5 rounded-full px-2 text-xs font-medium"
+                      className="ml-1 h-5 rounded-full px-2 text-xs font-medium sm:ml-2"
                     >
                       {uninvitedCount}
                     </Badge>
@@ -213,7 +215,7 @@ export default function GroupMemberTable({
           <Table>
             <TableHeader>
               <TableRow className="*:whitespace-nowrap *:font-medium hover:bg-transparent">
-                <TableHead className="w-[100px]">Send Link</TableHead>
+                <TableHead className="hidden w-[100px] sm:table-cell">Send Link</TableHead>
                 <TableHead>Name</TableHead>
                 <TableHead className="text-center"></TableHead>
               </TableRow>
@@ -243,7 +245,7 @@ export default function GroupMemberTable({
                   {viewerGroupDomains.length > 0 &&
                     viewerGroupDomains.map((domain) => (
                       <TableRow key={domain} className="group/row">
-                        <TableCell className="text-center text-muted-foreground text-sm">
+                        <TableCell className="hidden text-center text-muted-foreground text-sm sm:table-cell">
                           -
                         </TableCell>
                         <TableCell className="">
@@ -291,7 +293,7 @@ export default function GroupMemberTable({
                       return (
                         <TableRow key={viewer.id} className="group/row">
                           {/* Send Link Button */}
-                          <TableCell className="text-center">
+                          <TableCell className="hidden text-center sm:table-cell">
                             <Button
                               size="sm"
                               variant="outline"

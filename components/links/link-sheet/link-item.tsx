@@ -38,7 +38,7 @@ export default function LinkItem({
     isTrial && requiredPlan?.toLowerCase() === "data rooms plus";
 
   return (
-    <div className="flex items-center justify-between gap-x-2">
+    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-x-2">
       <div className="flex w-full items-center justify-between space-x-2">
         <h2
           className={cn(
@@ -77,11 +77,17 @@ export default function LinkItem({
             </Button>
           </ButtonTooltip>
         )}
+        <Switch
+          checked={enabled}
+          onClick={isAllowed ? undefined : () => upgradeAction?.()}
+          className={cn("sm:hidden", isAllowed ? undefined : "opacity-50")}
+          onCheckedChange={isAllowed ? action : undefined}
+        />
       </div>
       <Switch
         checked={enabled}
         onClick={isAllowed ? undefined : () => upgradeAction?.()}
-        className={isAllowed ? undefined : "opacity-50"}
+        className={cn("hidden sm:block", isAllowed ? undefined : "opacity-50")}
         onCheckedChange={isAllowed ? action : undefined}
       />
     </div>

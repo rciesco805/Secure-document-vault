@@ -624,18 +624,18 @@ export default function LinksTable({
             <TableHeader>
               <TableRow className="*:whitespace-nowrap *:font-medium hover:bg-transparent">
                 {targetType === "DATAROOM" && isFeatureEnabled("dataroomInvitations") && (
-                  <TableHead className="w-[90px]">Send Link</TableHead>
+                  <TableHead className="hidden w-[90px] sm:table-cell">Send Link</TableHead>
                 )}
                 <TableHead>Name</TableHead>
-                <TableHead className="w-[120px] sm:w-[150px] md:w-[180px]">
+                <TableHead className="hidden w-[120px] sm:table-cell sm:w-[150px] md:w-[180px]">
                   Link
                 </TableHead>
                 {hasAnyTags ? (
-                  <TableHead className="w-[250px] 2xl:w-auto">Tags</TableHead>
+                  <TableHead className="hidden w-[250px] lg:table-cell 2xl:w-auto">Tags</TableHead>
                 ) : null}
-                <TableHead className="w-[250px] sm:w-auto">Views</TableHead>
-                <TableHead>Last Viewed</TableHead>
-                <TableHead className="w-[80px]">Active</TableHead>
+                <TableHead className="w-[60px] sm:w-[250px] sm:w-auto">Views</TableHead>
+                <TableHead className="hidden md:table-cell">Last Viewed</TableHead>
+                <TableHead className="w-[60px] sm:w-[80px]">Active</TableHead>
                 <TableHead className="text-center sm:text-right"></TableHead>
               </TableRow>
             </TableHeader>
@@ -654,7 +654,7 @@ export default function LinksTable({
                         )}
                       >
                         {targetType === "DATAROOM" && isFeatureEnabled("dataroomInvitations") && (
-                          <TableCell className="text-center">
+                          <TableCell className="hidden text-center sm:table-cell">
                             <Button
                               size="sm"
                               variant="outline"
@@ -666,7 +666,7 @@ export default function LinksTable({
                             </Button>
                           </TableCell>
                         )}
-                        <TableCell className="w-[250px] truncate font-medium">
+                        <TableCell className="max-w-[120px] truncate font-medium sm:max-w-[250px]">
                           <div className="flex items-center gap-x-2">
                             {link.groupId ? (
                               <ButtonTooltip content="Group Link">
@@ -697,7 +697,7 @@ export default function LinksTable({
                             ) : null}
                           </div>
                         </TableCell>
-                        <TableCell className="flex items-center gap-x-2 max-w-[180px] sm:max-w-[220px] md:max-w-[280px]">
+                        <TableCell className="hidden sm:table-cell sm:max-w-[220px] md:max-w-[280px]">
                           <div
                             className={cn(
                               `group/cell relative flex w-full items-center gap-x-4 overflow-hidden truncate rounded-sm px-3 py-1.5 text-center text-secondary-foreground transition-all group-hover/row:ring-1 group-hover/row:ring-gray-400 group-hover/row:dark:ring-gray-100 md:py-1`,
@@ -850,7 +850,7 @@ export default function LinksTable({
                           )}
                         </TableCell>
                         {hasAnyTags ? (
-                          <TableCell className="w-[250px] 2xl:w-auto">
+                          <TableCell className="hidden w-[250px] lg:table-cell 2xl:w-auto">
                             <TagColumn link={link} />
                           </TableCell>
                         ) : null}
@@ -876,7 +876,7 @@ export default function LinksTable({
                             </div>
                           </CollapsibleTrigger>
                         </TableCell>
-                        <TableCell className="text-sm text-muted-foreground">
+                        <TableCell className="hidden text-sm text-muted-foreground md:table-cell">
                           {link.views[0] ? (
                             <TimestampTooltip
                               timestamp={link.views[0].viewedAt}

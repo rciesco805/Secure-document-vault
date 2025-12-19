@@ -54,7 +54,12 @@ export class RedisJobStore {
 
   async createJob(
     jobData: Omit<ExportJob, "id" | "createdAt" | "updatedAt">,
-  ): Promise<ExportJob> {
+  ): Promise<ExportJob | null> {
+    if (!redis) {
+      console.warn("Redis not available, cannot create job");
+      return null;
+    }
+
     const jobId = nanoid();
     const now = new Date().toISOString();
 
@@ -84,6 +89,10 @@ export class RedisJobStore {
   }
 
   async getJob(jobId: string): Promise<ExportJob | null> {
+    if (!redis) {
+      return null;
+    }
+
     const jobKey = this.getJobKey(jobId);
     const jobData = await redis.get(jobKey);
 
@@ -108,6 +117,10 @@ export class RedisJobStore {
     jobId: string,
     updates: Partial<ExportJob>,
   ): Promise<ExportJob | null> {
+    if (!redis) {
+      return null;
+    }
+
     const job = await this.getJob(jobId);
     if (!job) {
       return null;
@@ -131,6 +144,10 @@ export class RedisJobStore {
   }
 
   async scheduleBlobForCleanup(blobUrl: string, jobId: string): Promise<void> {
+    if (!redis) {
+      return;
+    }
+
     const cleanupTime = Date.now() + JOB_TTL * 1000; // Convert to milliseconds
     const cleanupQueueKey = this.getCleanupQueueKey();
 
@@ -148,6 +165,10 @@ export class RedisJobStore {
   async getBlobsForCleanup(
     beforeTimestamp?: number,
   ): Promise<Array<ExportJobCleanupItem>> {
+    if (!redis) {
+      return [];
+    }
+
     const cleanupQueueKey = this.getCleanupQueueKey();
     const maxScore = beforeTimestamp || Date.now();
 
@@ -181,6 +202,10 @@ export class RedisJobStore {
     blobUrl: string,
     jobId: string,
   ): Promise<void> {
+    if (!redis) {
+      return;
+    }
+
     const cleanupQueueKey = this.getCleanupQueueKey();
     const itemToRemove = JSON.stringify({
       blobUrl,
@@ -193,6 +218,10 @@ export class RedisJobStore {
   }
 
   async deleteJob(jobId: string): Promise<boolean> {
+    if (!redis) {
+      return false;
+    }
+
     const job = await this.getJob(jobId);
     if (!job) {
       return false;
@@ -213,6 +242,10 @@ export class RedisJobStore {
   }
 
   async getUserJobs(userId: string, limit: number = 20): Promise<ExportJob[]> {
+    if (!redis) {
+      return [];
+    }
+
     const userJobsKey = this.getUserJobsKey(userId);
 
     // Get job IDs sorted by creation time (newest first)
@@ -234,6 +267,10 @@ export class RedisJobStore {
   }
 
   async getTeamJobs(teamId: string, limit: number = 20): Promise<ExportJob[]> {
+    if (!redis) {
+      return [];
+    }
+
     const teamJobsKey = this.getTeamJobsKey(teamId);
 
     // Get job IDs sorted by creation time (newest first)

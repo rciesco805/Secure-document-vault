@@ -36,6 +36,10 @@ async function createDataroomSession(
   verified: boolean,
   viewerId?: string,
 ): Promise<{ token: string; expiresAt: number }> {
+  if (!redis) {
+    throw new Error("Session storage not configured");
+  }
+
   const sessionToken = crypto.randomBytes(32).toString("hex");
   const expiresAt = Date.now() + COOKIE_EXPIRATION_TIME;
 
@@ -70,7 +74,7 @@ async function verifyDataroomSession(
   linkId: string,
   dataroomId: string,
 ): Promise<DataroomSession | null> {
-  if (!dataroomId) return null;
+  if (!dataroomId || !redis) return null;
 
   const sessionToken = cookies().get(`pm_drs_${linkId}`)?.value;
   if (!sessionToken) return null;
@@ -117,7 +121,7 @@ export async function verifyDataroomSessionInPagesRouter(
   linkId: string,
   dataroomId: string,
 ): Promise<DataroomSession | null> {
-  if (!dataroomId) return null;
+  if (!dataroomId || !redis) return null;
 
   // Get cookies from request headers
   const cookies = parse(req.headers.cookie || "");

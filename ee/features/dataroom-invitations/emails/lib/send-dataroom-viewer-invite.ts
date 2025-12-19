@@ -18,7 +18,7 @@ export const sendDataroomViewerInvite = async ({
   try {
     await sendEmail({
       to: to,
-      subject: `You are invited to view ${dataroomName}`,
+      subject: `${dataroomName} | Confidential Investor Data Room Access`,
       react: DataroomViewerInvitation({
         senderEmail,
         dataroomName,

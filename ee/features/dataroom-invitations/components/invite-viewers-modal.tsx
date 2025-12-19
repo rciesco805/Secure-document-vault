@@ -186,7 +186,7 @@ export function InviteViewersModal({
   const displayRecipients = currentRecipients.slice(0, 2);
   const remainingCount = recipientCount - displayRecipients.length;
 
-  const fallbackSubject = `You are invited to view ${dataroomName}`;
+  const fallbackSubject = `${dataroomName} | Confidential Investor Data Room Access`;
 
   const handleClose = () => {
     setOpen(false);

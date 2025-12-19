@@ -152,3 +152,16 @@ Generate Prisma client:
 ```bash
 npx prisma generate
 ```
+
+## Production Deployment
+
+After deploying to production, run the SQL script to enable all features:
+```sql
+-- Set default plan for new teams to 'datarooms-plus'
+ALTER TABLE "Team" ALTER COLUMN "plan" SET DEFAULT 'datarooms-plus';
+
+-- Upgrade existing teams from 'free' to 'datarooms-plus'
+UPDATE "Team" SET plan = 'datarooms-plus' WHERE plan = 'free';
+```
+
+The full script is available at `scripts/production-setup.sql`.

@@ -29,22 +29,24 @@ export default function DataroomViewerInvitation({
   return (
     <Html>
       <Head />
-      <Preview>Your access to {dataroomName} from Bermuda Franchise Group</Preview>
+      <Preview>Bermuda Franchise Group - Fund I Investor Data Room Access</Preview>
       <Tailwind>
         <Body className="mx-auto my-auto bg-white font-sans">
           <Container className="mx-auto my-10 w-[465px] p-5">
             <Text className="mx-0 mb-8 mt-4 p-0 text-center text-2xl font-normal">
               <span className="font-bold tracking-tighter">Bermuda Franchise Group</span>
             </Text>
-            <Text className="font-seminbold mx-0 mb-4 mt-4 p-0 text-center text-xl">
-              Your Access Link
+            <Text className="text-sm leading-6 text-black">
+              Hi,
             </Text>
             <Text className="text-sm leading-6 text-black">
-              Thank you for your interest in Bermuda Franchise Group.
+              You've been granted secure access to the Bermuda Franchise Group – Fund I Investor Data Room.
             </Text>
             <Text className="text-sm leading-6 text-black">
-              You have been granted access to view{" "}
-              <span className="font-semibold">{dataroomName}</span>.
+              Inside, you'll find our fund overview, structure, financial models, and supporting diligence materials outlining the Bermuda Club franchise expansion strategy. We appreciate your feedback at this time.
+            </Text>
+            <Text className="text-sm leading-6 text-black">
+              Please review at your convenience. I'm happy to walk through the materials or answer any questions as you dig in.
             </Text>
             {customMessage ? (
               <Text
@@ -60,41 +62,39 @@ export default function DataroomViewerInvitation({
                 href={`${url}`}
                 style={{ padding: "12px 20px" }}
               >
-                View Documents
+                View the Data Room
               </Button>
             </Section>
-            <Text className="text-sm text-black">
+            <Text className="text-sm text-gray-500">
               or copy and paste this URL into your browser: <br />
               {`${url}`}
             </Text>
             <Hr className="my-6" />
-            <Section className="rounded-md bg-gray-100 p-4">
-              <Text className="m-0 text-xs font-semibold text-gray-700">
-                CONFIDENTIAL NOTICE
-              </Text>
-              <Text className="m-0 mt-2 text-xs text-gray-600">
-                This information is confidential and intended solely for the recipient. 
-                Please do not share, forward, or distribute these documents to others 
-                without prior written approval from Bermuda Franchise Group.
-              </Text>
-            </Section>
+            <Text className="text-sm leading-6 text-black">
+              Best regards,
+            </Text>
+            <Text className="m-0 text-sm leading-5 text-black">
+              <strong>Richard Ciesco</strong><br />
+              Managing Partner<br />
+              Bermuda Franchise Group
+            </Text>
             <Hr className="my-6" />
             <Section className="text-center text-gray-400">
               <Text className="m-0 text-xs italic">
                 Work Well. Play Well. Be Well.
               </Text>
               <Text className="mt-4 text-xs">
-                © {new Date().getFullYear()} Bermuda Franchise Group. All rights reserved.
+                © 2026 Bermuda Franchise Group, LLC. All Rights Reserved.
               </Text>
               <Text className="text-xs">
-                This email was sent to{" "}
-                <span className="text-black">{recipientEmail}</span>.
-              </Text>
-              <Text className="text-xs">
-                Questions? Contact us at{" "}
-                <a href="mailto:investors@bermudafranchisegroup.com" className="text-blue-600">
+                The invitation was sent by{" "}
+                <a href="mailto:investors@bermudafranchisegroup.com" className="text-black">
                   investors@bermudafranchisegroup.com
                 </a>
+              </Text>
+              <Text className="text-xs">
+                This email was intended for{" "}
+                <span className="text-black">{recipientEmail}</span>. If you were not expecting this email, you can ignore this email.
               </Text>
             </Section>
           </Container>

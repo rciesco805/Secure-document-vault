@@ -378,7 +378,7 @@ export function InviteViewersModal({
                 </p>
                 <p>
                   <span className="font-medium text-foreground">From:</span>{" "}
-                  system@papermark.com
+                  investors@bermudafranchisegroup.com
                 </p>
                 <p>
                   <span className="font-medium text-foreground">To:</span>{" "}
@@ -401,23 +401,16 @@ export function InviteViewersModal({
               <Separator />
 
               <div className="space-y-3 text-sm text-muted-foreground">
-                <p>Hey!</p>
+                <p>Hi,</p>
                 <p>
-                  You have been invited to view the{" "}
+                  You've been granted secure access to the{" "}
                   <span className="font-semibold text-foreground">
-                    {dataroomName}
-                  </span>{" "}
-                  dataroom on{" "}
-                  <span className="font-semibold text-foreground">
-                    Papermark
+                    Bermuda Franchise Group – Fund I Investor Data Room
                   </span>
                   .
-                  <br />
-                  The invitation was sent by{" "}
-                  <span className="font-semibold text-foreground">
-                    {senderEmail}
-                  </span>
-                  .
+                </p>
+                <p>
+                  Inside, you'll find our fund overview, structure, financial models, and supporting diligence materials...
                 </p>
                 {customMessage.length > 0 ? (
                   <p className="whitespace-pre-wrap text-foreground">
@@ -425,21 +418,24 @@ export function InviteViewersModal({
                   </p>
                 ) : null}
                 <div className="my-4 rounded border border-gray-200 bg-black px-5 py-3 text-center text-xs font-semibold text-white">
-                  View the dataroom
+                  View the Data Room
                 </div>
                 <p className="text-xs">
                   or copy and paste this URL into your browser:
                   <br />
                   <span className="break-all text-foreground">
                     {selectedLink
-                      ? `https://papermark.io/view/${selectedLink.slug ?? selectedLink.id}`
-                      : "https://papermark.io/view/..."}
+                      ? `${process.env.NEXT_PUBLIC_BASE_URL || 'https://docs.bermudafranchisegroup.com'}/view/${selectedLink.slug ?? selectedLink.id}`
+                      : "https://docs.bermudafranchisegroup.com/view/..."}
                   </span>
                 </p>
                 <Separator className="my-2" />
                 <p className="text-xs">
-                  © {new Date().getFullYear()} Papermark, Inc. All rights
-                  reserved.
+                  © 2026 Bermuda Franchise Group, LLC. All Rights Reserved.
+                </p>
+                <p className="text-xs">
+                  The invitation was sent by{" "}
+                  <span className="text-foreground">investors@bermudafranchisegroup.com</span>
                 </p>
                 <p className="text-xs">
                   This email was intended for{" "}

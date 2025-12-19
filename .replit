@@ -29,13 +29,14 @@ NEXT_PRIVATE_DOCUMENT_PASSWORD_KEY = "bermuda-franchise-secure-key-2025"
 NEXT_PRIVATE_VERIFICATION_SECRET = "bermuda-franchise-secure-verification-2025"
 
 [userenv.production]
-NEXTAUTH_URL = "https://docs.bermudafranchisegroup.com"
-NEXT_PUBLIC_BASE_URL = "https://docs.bermudafranchisegroup.com"
+NEXTAUTH_URL = "https://bfg-dataroom.replit.app"
+NEXT_PUBLIC_BASE_URL = "https://bfg-dataroom.replit.app"
 NEXT_PUBLIC_MARKETING_URL = "https://www.bermudafranchisegroup.com"
 NEXT_PUBLIC_UPLOAD_TRANSPORT = "vercel"
 NEXT_PRIVATE_DOCUMENT_PASSWORD_KEY = "bermuda-franchise-secure-key-2025"
 NEXT_PRIVATE_VERIFICATION_SECRET = "bermuda-franchise-secure-verification-2025"
 VERIFICATION_EMAIL_BASE_URL = "https://bfg-dataroom.replit.app"
+NEXT_PUBLIC_APP_BASE_HOST = "bfg-dataroom.replit.app"
 
 [workflows]
 runButton = "Project"

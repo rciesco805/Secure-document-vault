@@ -41,14 +41,8 @@ export default async function handler(
           },
         });
 
-        let maxSize = 30 * 1024 * 1024; // 30 MB
-        const stripedTeamPlan = team?.plan.replace("+old", "");
-        if (
-          stripedTeamPlan &&
-          ["business", "datarooms", "datarooms-plus"].includes(stripedTeamPlan)
-        ) {
-          maxSize = 100 * 1024 * 1024; // 100 MB
-        }
+        // Self-hosted: 100MB limit for all users
+        const maxSize = 100 * 1024 * 1024; // 100 MB
 
         return {
           addRandomSuffix: true,

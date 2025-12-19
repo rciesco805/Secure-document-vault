@@ -4,6 +4,8 @@ import { sendEmail } from "@/lib/resend";
 
 import OtpEmailVerification from "@/components/emails/otp-verification";
 
+const DEFAULT_SENDER = "BF Fund Dataroom <no-reply@investors.bermudafranchisegroup.com>";
+
 export const sendOtpVerificationEmail = async (
   email: string,
   code: string,
@@ -12,7 +14,7 @@ export const sendOtpVerificationEmail = async (
   magicLink?: string,
 ) => {
   let logo: string | null = null;
-  let from: string | undefined;
+  let from: string = DEFAULT_SENDER;
 
   const customEmail = await getCustomEmail(teamId);
 
@@ -40,7 +42,9 @@ export const sendOtpVerificationEmail = async (
       test: process.env.NODE_ENV === "development",
       verify: true,
     });
+    return { success: true };
   } catch (e) {
-    console.error(e);
+    console.error("Failed to send OTP verification email:", e);
+    return { success: false, error: e };
   }
 };

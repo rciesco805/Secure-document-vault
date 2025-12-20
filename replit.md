@@ -44,6 +44,7 @@ Preferred communication style: Simple, everyday language.
 - Added magic link functionality for visitor email verification (one-click access from email)
 - Extended verification token expiration from 10 to 20 minutes for both admin and visitor flows
 - Completed comprehensive email template rebranding: all 30+ email templates updated from Papermark to BF Fund Dataroom branding with correct contact info and team signatures
+- Disabled all upgrade prompts and plan upsell modals (self-hosted deployment with datarooms-plus plan)
 
 ## Platform Testing Status (Dec 2024)
 

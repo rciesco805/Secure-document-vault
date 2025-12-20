@@ -158,6 +158,24 @@ export function UpgradePlanModal({
   highlightItem?: string[];
   children?: React.ReactNode;
 }) {
+  return <>{children}</>;
+}
+
+export function UpgradePlanModalDisabled({
+  clickedPlan,
+  trigger,
+  open,
+  setOpen,
+  highlightItem,
+  children,
+}: {
+  clickedPlan: PlanEnum;
+  trigger?: string;
+  open?: boolean;
+  setOpen?: React.Dispatch<React.SetStateAction<boolean>>;
+  highlightItem?: string[];
+  children?: React.ReactNode;
+}) {
   const router = useRouter();
   const [period, setPeriod] = useState<"yearly" | "monthly">("yearly");
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);

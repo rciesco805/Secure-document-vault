@@ -1,7 +1,6 @@
 import Cookies from "js-cookie";
 
 import { AppBreadcrumb } from "@/components/layouts/breadcrumb";
-import TrialBanner from "@/components/layouts/trial-banner";
 import { AppSidebar } from "@/components/sidebar/app-sidebar";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -10,8 +9,6 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-
-import { BlockingModal } from "./blocking-modal";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   // Default to open (true) if no cookie exists, otherwise use the stored preference
@@ -31,8 +28,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               <AppBreadcrumb />
             </div>
           </header>
-          <TrialBanner />
-          <BlockingModal />
           <main className="flex-1">{children}</main>
         </SidebarInset>
       </div>

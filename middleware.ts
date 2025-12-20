@@ -20,6 +20,13 @@ function isAnalyticsPath(path: string) {
 }
 
 function isCustomDomain(host: string) {
+  // For self-hosted deployment: dataroom.bermudafranchisegroup.com is the main app domain
+  // It should NOT be treated as a custom document-sharing domain
+  const mainAppDomain = process.env.NEXT_PUBLIC_APP_BASE_HOST || "";
+  if (host === mainAppDomain || host?.includes("bermudafranchisegroup.com")) {
+    return false;
+  }
+  
   return (
     (process.env.NODE_ENV === "development" &&
       (host?.includes(".local") || host?.includes("papermark.dev"))) ||

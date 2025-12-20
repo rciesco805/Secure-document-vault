@@ -39,7 +39,7 @@ Preferred communication style: Simple, everyday language.
 - Removed Upgrade/Pro Banner from sidebar completely (self-hosted deployment)
 - Rebranded all welcome/onboarding screens from Papermark to BF Fund Dataroom
 - Changed default team plan in Prisma schema to "datarooms-plus" for all new teams
-- Updated custom domain to dataroom.bermudafranchisegroup.com
+- Updated custom domain to dataroom.bermudafranchisegroup.com (now active in production)
 - Made All Datarooms and Visitors navigation always enabled (no plan gating)
 - Added magic link functionality for visitor email verification (one-click access from email)
 - Extended verification token expiration from 10 to 20 minutes for both admin and visitor flows

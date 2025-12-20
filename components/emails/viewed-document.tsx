@@ -35,7 +35,7 @@ export default function ViewedDocument({
         <Body className="mx-auto my-auto bg-white font-sans">
           <Container className="mx-auto my-10 w-[465px] p-5">
             <Text className="mx-0 mb-8 mt-4 p-0 text-center text-2xl font-normal">
-              <span className="font-bold tracking-tighter">Papermark</span>
+              <span className="font-bold tracking-tighter">BF Fund Dataroom</span>
             </Text>
             <Text className="mx-0 my-7 p-0 text-center text-xl font-semibold text-black">
               New Document Visitor
@@ -56,13 +56,13 @@ export default function ViewedDocument({
               from the link <span className="font-semibold">{linkName}</span>.
             </Text>
             <Text className="text-sm leading-6 text-black">
-              You can get the detailed engagement insights like time-spent per
-              page and total duration for this document on Papermark.
+              You can get detailed engagement insights like time-spent per
+              page and total duration for this document.
             </Text>
             <Section className="my-8 text-center">
               <Button
                 className="rounded bg-black text-center text-xs font-semibold text-white no-underline"
-                href={`https://app.papermark.com/documents/${documentId}`}
+                href={`${process.env.NEXT_PUBLIC_BASE_URL || 'https://dataroom.bermudafranchisegroup.com'}/documents/${documentId}`}
                 style={{ padding: "12px 20px" }}
               >
                 See my document insights

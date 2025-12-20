@@ -16,7 +16,7 @@ import {
 import { Footer } from "./shared/footer";
 
 const VerificationLinkEmail = ({
-  url = "https://www.papermark.com",
+  url = "https://dataroom.bermudafranchisegroup.com",
 }: {
   url: string;
 }) => {

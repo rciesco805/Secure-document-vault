@@ -17,7 +17,7 @@ import {
 import { Footer } from "./shared/footer";
 
 export default function InvalidDomain({
-  domain = "papermark.com",
+  domain = "bermudafranchisegroup.com",
   invalidDays = 14,
 }: {
   domain: string;
@@ -31,7 +31,7 @@ export default function InvalidDomain({
         <Body className="mx-auto my-auto bg-white font-sans">
           <Container className="mx-auto my-10 w-[465px] p-5">
             <Text className="mx-0 mb-8 mt-4 p-0 text-center text-2xl font-normal">
-              <span className="font-bold tracking-tighter">Papermark</span>
+              <span className="font-bold tracking-tighter">BF Fund Dataroom</span>
             </Text>
             <Text className="mx-0 my-7 p-0 text-center text-xl font-semibold text-black">
               {invalidDays >= 14
@@ -40,29 +40,29 @@ export default function InvalidDomain({
             </Text>
             <Text className="text-sm leading-6 text-black">
               Your domain <code className="text-purple-600">{domain}</code> for
-              your Papermark account{" "}
+              your BF Fund Dataroom account{" "}
               {invalidDays >= 14
                 ? `has been invalid for ${invalidDays} days.`
                 : `is still unconfigured.`}
             </Text>
             <Text className="text-sm leading-6 text-black">
               If your domain remains unconfigured for 30 days, it will be
-              automatically deleted from Papermark. Please click the link below
+              automatically deleted. Please click the link below
               to configure your domain.
             </Text>
             <Section className="my-8 text-center">
               <Button
                 className="rounded bg-black text-center text-xs font-semibold text-white no-underline"
-                href={`https://app.papermark.com/settings/domains`}
+                href={`${process.env.NEXT_PUBLIC_BASE_URL || 'https://dataroom.bermudafranchisegroup.com'}/settings/domains`}
                 style={{ padding: "12px 20px" }}
               >
                 Configure domain
               </Button>
             </Section>
             <Text className="text-sm leading-6 text-black">
-              If you do not want to keep this domain on Papermark, you can{" "}
+              If you do not want to keep this domain, you can{" "}
               <Link
-                href={`https://app.papermark.com/settings/domains`}
+                href={`${process.env.NEXT_PUBLIC_BASE_URL || 'https://dataroom.bermudafranchisegroup.com'}/settings/domains`}
                 className="font-medium text-blue-600 no-underline"
               >
                 delete it

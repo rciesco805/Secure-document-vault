@@ -21,17 +21,17 @@ const SixMonthMilestoneEmail = ({
   return (
     <Html>
       <Head />
-      <Preview>6 months with Papermark</Preview>
+      <Preview>6 months with BF Fund Dataroom</Preview>
       <Tailwind>
         <Body className="font-sans text-sm">
           <Text>Hi {name},</Text>
-          <Text>What&apos;s been your biggest win using Papermark?</Text>
+          <Text>What&apos;s been your biggest win using BF Fund Dataroom?</Text>
           <Text>
-            Marc here. It&apos;s been 6 months since you using advanced
-            Papermark features! Excited to hear your story and feedback for us.
+            It&apos;s been 6 months since you started using advanced
+            features! We&apos;d love to hear your story and feedback.
           </Text>
 
-          <Text>Marc</Text>
+          <Text>The BF Fund Team</Text>
         </Body>
       </Tailwind>
     </Html>

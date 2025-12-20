@@ -55,17 +55,17 @@ export default function PapermarkYearInReviewEmail({
           <Container className="mx-auto w-full max-w-[600px] p-0">
             <Section className="p-8 text-center">
               <Text className="mx-0 mb-8 mt-4 p-0 text-center text-2xl font-normal">
-                <span className="font-bold tracking-tighter">Papermark</span>
+                <span className="font-bold tracking-tighter">BF Fund Dataroom</span>
               </Text>
               <Text className="text-sm font-normal uppercase tracking-wider">
                 {year} in review
               </Text>
               <Heading className="my-4 text-4xl font-medium leading-tight">
-                Your Year with Papermark
+                Your Year with BF Fund Dataroom
               </Heading>
               <Text className="mb-8 text-lg leading-8">
                 What a year it&apos;s been! Let&apos;s take a look at how
-                you&apos;ve used Papermark to share your important documents.
+                you&apos;ve shared your important documents.
               </Text>
               <Link
                 href={`https://x.com/intent/post?text=In%202024%2C%20my%20documents%20have%20been%20viewed%20${minutesSpentOnDocs}%20minutes%20on%20%40papermarkio%2C%20by%3A%0A%0A%E2%80%A2%20Uploading%20${uploadedDocuments}%20documents%0A%E2%80%A2%20Sharing%20${sharedLinks}%20links%0A%E2%80%A2%20Receiving%20${receivedViews}%20views%0A%0A&url=https%3A%2F%2Fwww.papermark.com%2Fyear-in-review`}

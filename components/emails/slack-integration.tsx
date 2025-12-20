@@ -28,7 +28,7 @@ const SlackIntegrationEmail = ({ name }: SlackIntegrationEmailProps) => {
         <Body className="mx-auto my-auto bg-white font-sans">
           <Container className="mx-auto my-10 w-[465px] p-5">
             <Text className="mx-0 mb-8 mt-4 p-0 text-center text-2xl font-normal">
-              <span className="font-bold tracking-tighter">Papermark</span>
+              <span className="font-bold tracking-tighter">BF Fund Dataroom</span>
             </Text>
             <Text className="mx-0 mb-8 mt-4 p-0 text-center text-2xl font-normal">
               Connect Slack in 2 clicks
@@ -54,24 +54,17 @@ const SlackIntegrationEmail = ({ name }: SlackIntegrationEmailProps) => {
             </Section>
 
             <Text className="text-sm">
-              If you have any questions or need help setting it up, just respond
-              to this email. I&apos;m always happy to help!
+              If you have any questions or need help setting it up, please contact
+              us at investors@bermudafranchisegroup.com.
             </Text>
-            <Text className="text-sm text-gray-400">Marc from Papermark</Text>
+            <Text className="text-sm text-gray-400">The BF Fund Team</Text>
             <Hr />
             <Section className="mt-8 text-gray-400">
               <Text className="text-xs">
-                © {new Date().getFullYear()}{" "}
-                <a
-                  href="https://www.papermark.com"
-                  className="text-gray-400 no-underline"
-                  target="_blank"
-                >
-                  papermark.com
-                </a>
+                © {new Date().getFullYear()} Bermuda Franchise Group, LLC. All rights reserved.
               </Text>
               <Text className="text-xs">
-                Feel free to always reach out to me or our support team.
+                Feel free to reach out to our support team.
               </Text>
             </Section>
           </Container>

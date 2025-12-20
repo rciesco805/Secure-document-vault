@@ -15,7 +15,7 @@ import { Footer } from "./shared/footer";
 
 export default function ExportReady({
   resourceName = "Export",
-  downloadUrl = "https://app.papermark.com/datarooms/123",
+  downloadUrl = "https://dataroom.bermudafranchisegroup.com/datarooms/123",
   email = "email@example.com",
 }: {
   resourceName?: string;
@@ -30,11 +30,11 @@ export default function ExportReady({
         <Body className="mx-auto my-auto bg-white font-sans">
           <Container className="mx-auto my-10 w-[465px] p-5">
             <Text className="mx-0 mb-8 mt-4 p-0 text-center text-2xl font-normal">
-              <span className="font-bold tracking-tighter">Papermark</span>
+              <span className="font-bold tracking-tighter">BF Fund Dataroom</span>
             </Text>
             <Text className="text-sm leading-6 text-black">
-              The export you requested is ready to download for your Papermark
-              account. Make sure you&apos;re signed into this account, and click
+              The export you requested is ready to download from your BF Fund
+              Dataroom account. Make sure you&apos;re signed into this account, and click
               below to download. The file will be available for the next three
               days.
             </Text>
@@ -58,7 +58,7 @@ export default function ExportReady({
             <Text className="text-sm leading-6 text-black">
               Best,
               <br />
-              The Papermark Team
+              The BF Fund Team
             </Text>
             <Footer
               footerText={

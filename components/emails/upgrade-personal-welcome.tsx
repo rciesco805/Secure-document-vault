@@ -26,13 +26,14 @@ const UpgradePersonalEmail = ({
         <Body className="font-sans text-sm">
           <Text>Hi{name && ` ${name}`},</Text>
           <Text>
-            I&apos;m Iuliia, co-founder of Papermark. Thanks for upgrading!
-            I&apos;m thrilled to have you on our {planName} plan.
+            Welcome to BF Fund Dataroom! Thanks for upgrading!
+            We&apos;re thrilled to have you on our {planName} plan.
           </Text>
           <Text>
-            You now have access to advanced features. Any questions so far??
+            You now have access to advanced features. If you have any questions,
+            please reach out to investors@bermudafranchisegroup.com.
           </Text>
-          <Text>Iuliia</Text>
+          <Text>The BF Fund Team</Text>
         </Body>
       </Tailwind>
     </Html>

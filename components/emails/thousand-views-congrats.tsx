@@ -20,30 +20,19 @@ const ThousandViewsCongratsEmail = ({
   return (
     <Html>
       <Head />
-      <Preview>1000 views on Papermark.</Preview>
+      <Preview>1000 views on BF Fund Dataroom.</Preview>
       <Tailwind>
         <Body className="font-sans text-sm">
           <Text>Hi{name && ` ${name}`},</Text>
           <Text>
-            I&apos;m Marc, founder of Papermark. Congrats on 1000 views on your
-            documents.
+            Congratulations on reaching 1000 views on your documents in the BF Fund Dataroom!
           </Text>
-          <Text>How is your experience so far?</Text>
+          <Text>We hope you&apos;re enjoying the platform. If you have any feedback or questions, please let us know.</Text>
 
           <Text>
-            Thanks so much,
+            Best regards,
             <br />
-            Marc
-          </Text>
-          <Text>
-            <Link
-              href="https://www.g2.com/products/papermark/reviews"
-              target="_blank"
-              className="text-blue-500 underline"
-              rel="noopener noreferrer"
-            >
-              Leave us a G2 review
-            </Link>
+            The BF Fund Team
           </Text>
         </Body>
       </Tailwind>

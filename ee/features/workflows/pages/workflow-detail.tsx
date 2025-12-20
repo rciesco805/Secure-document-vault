@@ -101,7 +101,7 @@ export default function WorkflowDetailPage() {
     if (workflow.entryLink.domainSlug && workflow.entryLink.slug) {
       return `https://${workflow.entryLink.domainSlug}/${workflow.entryLink.slug}`;
     }
-    return `${process.env.NEXT_PUBLIC_MARKETING_URL || "https://www.papermark.io"}/view/${workflow.entryLink.id}`;
+    return `${process.env.NEXT_PUBLIC_MARKETING_URL || (typeof window !== 'undefined' ? window.location.origin : 'https://dataroom.bermudafranchisegroup.com')}/view/${workflow.entryLink.id}`;
   };
 
   const handleDeleteStep = async (stepId: string) => {

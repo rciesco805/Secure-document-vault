@@ -189,7 +189,7 @@ export class WorkflowEngine {
         if (targetLink.domainSlug && targetLink.slug) {
           targetUrl = `https://${targetLink.domainSlug}/${targetLink.slug}`;
         } else {
-          targetUrl = `${process.env.NEXT_PUBLIC_MARKETING_URL}/view/${targetLink.id}`;
+          targetUrl = `${process.env.NEXT_PUBLIC_MARKETING_URL || 'https://dataroom.bermudafranchisegroup.com'}/view/${targetLink.id}`;
         }
 
         // 7. Mark execution as completed

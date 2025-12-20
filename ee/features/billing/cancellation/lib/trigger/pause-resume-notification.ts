@@ -68,7 +68,7 @@ export const sendPauseResumeNotificationTask = task({
 
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/jobs/send-pause-resume-notification`,
+        `${process.env.NEXT_PUBLIC_BASE_URL || 'https://dataroom.bermudafranchisegroup.com'}/api/jobs/send-pause-resume-notification`,
         {
           method: "POST",
           body: JSON.stringify({

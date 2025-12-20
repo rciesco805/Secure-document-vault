@@ -163,7 +163,8 @@ export function DataroomLinkSheet({
       }
 
       const { previewToken } = await response.json();
-      const previewLink = `${process.env.NEXT_PUBLIC_MARKETING_URL}/view/${linkId}?previewToken=${previewToken}`;
+      const marketingUrl = process.env.NEXT_PUBLIC_MARKETING_URL || (typeof window !== 'undefined' ? window.location.origin : 'https://dataroom.bermudafranchisegroup.com');
+      const previewLink = `${marketingUrl}/view/${linkId}?previewToken=${previewToken}`;
       setIsLoading(false);
       const linkElement = document.createElement("a");
       linkElement.href = previewLink;

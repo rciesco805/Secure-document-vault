@@ -110,7 +110,7 @@ export const sendConversationMessageNotificationTask = task({
         if (link.domainId && link.domainSlug && link.slug) {
           linkUrl = `https://${link.domainSlug}/${link.slug}`;
         } else {
-          linkUrl = `${process.env.NEXT_PUBLIC_MARKETING_URL}/view/${link.id}`;
+          linkUrl = `${process.env.NEXT_PUBLIC_MARKETING_URL || 'https://dataroom.bermudafranchisegroup.com'}/view/${link.id}`;
         }
 
         return {
@@ -131,7 +131,7 @@ export const sendConversationMessageNotificationTask = task({
     for (const viewer of viewersWithLinks) {
       try {
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_BASE_URL}/api/jobs/send-conversation-new-message-notification`,
+          `${process.env.NEXT_PUBLIC_BASE_URL || 'https://dataroom.bermudafranchisegroup.com'}/api/jobs/send-conversation-new-message-notification`,
           {
             method: "POST",
             body: JSON.stringify({
@@ -222,7 +222,7 @@ export const sendConversationTeamMemberNotificationTask = task({
     // Send notification to all team members at once
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/jobs/send-conversation-team-member-notification`,
+        `${process.env.NEXT_PUBLIC_BASE_URL || 'https://dataroom.bermudafranchisegroup.com'}/api/jobs/send-conversation-team-member-notification`,
         {
           method: "POST",
           body: JSON.stringify({

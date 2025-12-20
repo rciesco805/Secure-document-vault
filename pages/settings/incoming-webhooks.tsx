@@ -157,17 +157,18 @@ export default function WebhookSettings() {
                     <Separator className="mb-6" />
                     <CardContent>
                       <code className="mt-2 flex items-center break-all rounded bg-background p-2 font-mono text-sm dark:bg-gray-900">
-                        {`${process.env.NEXT_PUBLIC_WEBHOOK_BASE_URL}/services/${webhookId}`}{" "}
+                        {`${process.env.NEXT_PUBLIC_WEBHOOK_BASE_URL || (typeof window !== 'undefined' ? window.location.origin : '')}/services/${webhookId}`}{" "}
                         <Button
                           variant="ghost"
                           size="icon"
                           className="ml-2 h-6 w-6"
-                          onClick={() =>
+                          onClick={() => {
+                            const webhookBaseUrl = process.env.NEXT_PUBLIC_WEBHOOK_BASE_URL || window.location.origin;
                             copyToClipboard(
-                              `${process.env.NEXT_PUBLIC_WEBHOOK_BASE_URL}/services/${webhookId}`,
+                              `${webhookBaseUrl}/services/${webhookId}`,
                               "Webhook URL copied to clipboard",
-                            )
-                          }
+                            );
+                          }}
                         >
                           <CopyIcon />
                         </Button>
@@ -211,15 +212,16 @@ export default function WebhookSettings() {
                             <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                               <div className="flex items-center gap-2 rounded-md border bg-background px-3 py-1.5 font-mono dark:bg-gray-900">
                                 <span className="max-w-[200px] overflow-x-auto whitespace-nowrap md:max-w-[400px]">
-                                  {`${process.env.NEXT_PUBLIC_WEBHOOK_BASE_URL}/services/${webhook.webhookId}`}
+                                  {`${process.env.NEXT_PUBLIC_WEBHOOK_BASE_URL || (typeof window !== 'undefined' ? window.location.origin : '')}/services/${webhook.webhookId}`}
                                 </span>
                                 <Button
                                   variant="ghost"
                                   size="icon"
                                   className="h-6 w-6"
                                   onClick={() => {
+                                    const webhookBaseUrl = process.env.NEXT_PUBLIC_WEBHOOK_BASE_URL || window.location.origin;
                                     navigator.clipboard.writeText(
-                                      `${process.env.NEXT_PUBLIC_WEBHOOK_BASE_URL}/services/${webhook.webhookId}`,
+                                      `${webhookBaseUrl}/services/${webhook.webhookId}`,
                                     );
                                     toast.success(
                                       "Webhook URL copied to clipboard",

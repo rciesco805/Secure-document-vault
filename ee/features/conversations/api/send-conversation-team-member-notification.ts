@@ -149,7 +149,7 @@ export default async function handle(
     }
 
     // Generate the URL for team members to access the conversation
-    const conversationUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/datarooms/${dataroomId}/conversations/${conversationId}`;
+    const conversationUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'https://dataroom.bermudafranchisegroup.com'}/datarooms/${dataroomId}/conversations/${conversationId}`;
 
     // For team members, provide a generic unsubscribe URL to team settings
 

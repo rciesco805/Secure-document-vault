@@ -38,12 +38,22 @@ export const TeamProvider = ({ children }: TeamContextProps): JSX.Element => {
 
   // Effect to set initial currentTeam on mount
   useEffect(() => {
-    if (!teams || teams.length === 0 || currentTeam) return;
+    if (!teams || teams.length === 0) return;
 
     const savedTeamId =
       typeof localStorage !== "undefined"
         ? localStorage.getItem("currentTeamId")
         : null;
+
+    // If we already have a currentTeam, check if it needs to be updated with fresh data
+    if (currentTeam) {
+      const updatedTeam = teams.find((team) => team.id === currentTeam.id);
+      if (updatedTeam && updatedTeam.name !== currentTeam.name) {
+        // Team data has changed, update currentTeam with fresh data
+        setCurrentTeamState(updatedTeam);
+      }
+      return;
+    }
 
     let teamToSet: Team | null = null;
 

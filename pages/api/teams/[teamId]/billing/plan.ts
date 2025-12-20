@@ -52,7 +52,9 @@ export default async function handle(
         return res.status(404).json({ error: "Team not found" });
       }
 
-      const isCustomer = !!team.stripeId;
+      // Force datarooms-plus plan for self-hosted deployment (BF Fund Dataroom)
+      const forcedPlan = "datarooms-plus";
+      const isCustomer = true;
 
       // calculate the plan cycle either yearly or monthly based on the startsAt and endsAt dates
       let subscriptionCycle = "monthly";
@@ -87,14 +89,14 @@ export default async function handle(
       }
 
       return res.status(200).json({
-        plan: team.plan,
+        plan: forcedPlan,
         startsAt: team.startsAt,
         endsAt: team.endsAt,
         isCustomer,
         subscriptionCycle,
-        pauseStartsAt: team.pauseStartsAt,
-        cancelledAt: team.cancelledAt,
-        discount,
+        pauseStartsAt: null,
+        cancelledAt: null,
+        discount: null,
       });
     } catch (error) {
       errorhandler(error, res);

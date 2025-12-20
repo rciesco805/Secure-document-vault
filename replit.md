@@ -45,6 +45,7 @@ Preferred communication style: Simple, everyday language.
 - Extended verification token expiration from 10 to 20 minutes for both admin and visitor flows
 - Completed comprehensive email template rebranding: all 30+ email templates updated from Papermark to BF Fund Dataroom branding with correct contact info and team signatures
 - Disabled all upgrade prompts and plan upsell modals (self-hosted deployment with datarooms-plus plan)
+- Comprehensive code cleanup: removed old demo pages, simplified upgrade modal code, updated remaining Papermark branding references to BF Fund Dataroom throughout the codebase
 
 ## Platform Testing Status (Dec 2024)
 

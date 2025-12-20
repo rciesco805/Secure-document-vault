@@ -45,7 +45,7 @@ export default function DataroomGroupPage() {
           <div className="grid gap-6">
             <Form
               title="Group Name"
-              description="This is the name of your data room group on Papermark."
+              description="This is the name of your data room group."
               inputAttrs={{
                 name: "name",
                 placeholder: "e.g. Management Team",

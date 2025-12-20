@@ -128,7 +128,7 @@ export default function DomainConfiguration({
         ]}
         warning={
           txtVerification
-            ? "Warning: if you are using this domain for another site, setting this TXT record will transfer domain ownership away from that site and break it. Please exercise caution when setting this record; make sure that the domain that is shown in the TXT verification value is actually the <b><i>domain you want to use on Papermark</i></b> – <b><i>not your production site</i></b>."
+            ? "Warning: if you are using this domain for another site, setting this TXT record will transfer domain ownership away from that site and break it. Please exercise caution when setting this record; make sure that the domain that is shown in the TXT verification value is actually the <b><i>domain you want to use on BF Fund Dataroom</i></b> – <b><i>not your production site</i></b>."
             : undefined
         }
       />

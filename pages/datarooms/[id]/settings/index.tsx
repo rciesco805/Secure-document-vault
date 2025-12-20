@@ -62,7 +62,7 @@ export default function Settings() {
           <div className="grid gap-6">
             <Form
               title="Dataroom Name"
-              description="This is the name of your data room on Papermark."
+              description="This is the name of your data room."
               inputAttrs={{
                 name: "name",
                 placeholder: "My Dataroom",
@@ -144,7 +144,7 @@ export default function Settings() {
               <CardHeader>
                 <CardTitle>Dataroom ID</CardTitle>
                 <CardDescription>
-                  Unique ID of your dataroom on Papermark.
+                  Unique ID of your dataroom.
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -178,8 +178,7 @@ export default function Settings() {
               </CardContent>
               <CardFooter className="flex items-center justify-between rounded-b-lg border-t bg-muted px-6 py-6">
                 <p className="text-sm text-muted-foreground transition-colors">
-                  Used to identify your dataroom when interacting with the
-                  Papermark API.
+                  Used to identify your dataroom when interacting with the API.
                 </p>
               </CardFooter>
             </Card>

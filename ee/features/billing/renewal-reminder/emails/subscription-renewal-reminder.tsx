@@ -25,18 +25,18 @@ const SubscriptionRenewalReminderEmail = ({
   return (
     <Html>
       <Head />
-      <Preview>Your Papermark subscription renews soon</Preview>
+      <Preview>Your BF Fund Dataroom subscription renews soon</Preview>
       <Tailwind>
         <Body className="mx-auto my-auto bg-white font-sans text-sm">
           <Container className="mx-auto my-10 w-[465px] p-5">
             <Text className="mx-0 mb-8 mt-4 p-0 text-2xl font-normal">
-              <span className="font-bold tracking-tighter">Papermark</span>
+              <span className="font-bold tracking-tighter">BF Fund Dataroom</span>
             </Text>
             <Text className="text-2xl font-bold">
               Is your payment information up to date?
             </Text>
             <Text>
-              Another year has come and gone, which means your annual Papermark
+              Another year has come and gone, which means your annual BF Fund Dataroom
               subscription will automatically renew on {renewalDate}.
             </Text>
             <Text>
@@ -60,7 +60,7 @@ const SubscriptionRenewalReminderEmail = ({
             {isOldAccount ? (
               <>
                 <Hr />
-                <Text className="text-gray-400">Papermark Team</Text>
+                <Text className="text-gray-400">The BF Fund Team</Text>
               </>
             ) : (
               <Footer />

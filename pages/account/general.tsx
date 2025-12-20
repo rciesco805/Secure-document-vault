@@ -20,7 +20,7 @@ const ProfilePage: NextPage = () => {
         <div className="space-y-6">
           <Form
             title="Your Name"
-            description="This will be your display name on Papermark."
+            description="This will be your display name on BF Fund Dataroom."
             inputAttrs={{
               name: "name",
               placeholder: "Dino Hems",
@@ -48,7 +48,7 @@ const ProfilePage: NextPage = () => {
           />
           <Form
             title="Your Email"
-            description="This will be the email you use to log in to Papermark and receive notification. A confirmation is required for changes."
+            description="This will be the email you use to log in to BF Fund Dataroom and receive notifications. A confirmation is required for changes."
             inputAttrs={{
               name: "email",
               placeholder: "name@example.com",
@@ -81,7 +81,7 @@ const ProfilePage: NextPage = () => {
           />
           <UploadAvatar
             title="Your Avatar"
-            description="This is your avatar image on Papermark."
+            description="This is your avatar image on BF Fund Dataroom."
             helpText="Square image recommended. Accepted file types: .png, .jpg. Max file
           size: 2MB."
           />

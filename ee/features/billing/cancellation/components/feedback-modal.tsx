@@ -61,7 +61,7 @@ export function FeedbackModal({
       case "too_expensive":
         return "What would make the pricing work better for your budget?";
       case "unused":
-        return "Help us understand how we can make Papermark more valuable for your workflow.";
+        return "Help us understand how we can make BF Fund Dataroom more valuable for your workflow.";
       case "missing_features":
         return "What features are you missing? This helps us prioritize our roadmap.";
       case "switched_service":
@@ -82,7 +82,7 @@ export function FeedbackModal({
       case "too_expensive":
         return "Tell us about your budget constraints or what pricing would work...";
       case "unused":
-        return "Share how you use Papermark and what would make it more valuable...";
+        return "Share how you use BF Fund Dataroom and what would make it more valuable...";
       case "missing_features":
         return "Tell us about the features you need...";
       case "switched_service":

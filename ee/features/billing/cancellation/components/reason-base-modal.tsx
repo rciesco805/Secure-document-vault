@@ -70,7 +70,7 @@ export function CancellationBaseModal({
               onClick={() => onOpenChange(false)}
               className="flex items-center gap-2"
             >
-              Stay on Papermark
+              Stay on BF Fund Dataroom
             </Button>
           )}
           {onDecline && (

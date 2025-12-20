@@ -406,7 +406,7 @@ export default function OGSection({
                 id="title"
                 maxLength={120}
                 className="focus:ring-inset"
-                placeholder={`Papermark - open-source document sharing infrastructure.`}
+                placeholder={`BF Fund Dataroom - secure investor document sharing.`}
                 value={metaTitle || ""}
                 onChange={(e) => {
                   setData({ ...data, metaTitle: e.target.value });
@@ -437,7 +437,7 @@ export default function OGSection({
                 rows={3}
                 maxLength={240}
                 className="focus:ring-inset"
-                placeholder={`Papermark is an open-source document sharing infrastructure for modern teams.`}
+                placeholder={`BF Fund Dataroom is a secure investor document sharing platform.`}
                 value={metaDescription || ""}
                 onChange={(e) => {
                   setData({

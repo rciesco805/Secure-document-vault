@@ -32,7 +32,7 @@ export default function ConversationTeamNotification({
         <Body className="mx-auto my-auto bg-white font-sans">
           <Container className="mx-auto my-10 w-[465px] p-5">
             <Text className="mx-0 mb-8 mt-4 p-0 text-center text-2xl font-normal">
-              <span className="font-bold tracking-tighter">Papermark</span>
+              <span className="font-bold tracking-tighter">BF Fund Dataroom</span>
             </Text>
             <Text className="mx-0 mb-8 mt-4 p-0 text-center text-xl font-semibold">
               {`New message in ${dataroomName}`}
@@ -41,8 +41,7 @@ export default function ConversationTeamNotification({
               A visitor (<span className="font-semibold">{senderEmail}</span>)
               has sent a new message in the conversation{" "}
               <span className="font-semibold">{conversationTitle}</span> in your
-              dataroom <span className="font-semibold">{dataroomName}</span> on
-              Papermark.
+              dataroom <span className="font-semibold">{dataroomName}</span>.
             </Text>
             <Text className="text-sm leading-6 text-black">
               As a manager, you&apos;re receiving this notification to stay
@@ -61,11 +60,11 @@ export default function ConversationTeamNotification({
               or copy and paste this URL into your browser: <br />
               {`${url}`}
             </Text>
-            <Text className="text-sm text-gray-400">Papermark</Text>
+            <Text className="text-sm text-gray-400">The BF Fund Team</Text>
             <Hr />
             <Section className="mt-8 text-gray-400">
               <Text className="text-xs">
-                © {new Date().getFullYear()} Papermark, Inc.
+                © {new Date().getFullYear()} Bermuda Franchise Group.
               </Text>
               <Text className="text-xs">
                 If you have any feedback or questions about this email, simply

@@ -170,7 +170,7 @@ export default function DataroomTemplates({
         className="flex flex-col items-center space-y-10 text-center"
       >
         <p className="text-2xl font-bold tracking-tighter text-foreground">
-          Papermark
+          BF Fund Dataroom
         </p>
         <h1 className="font-display max-w-md text-3xl font-semibold transition-colors sm:text-4xl">
           Select a template to get started

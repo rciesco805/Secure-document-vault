@@ -46,6 +46,9 @@ Preferred communication style: Simple, everyday language.
 - Completed comprehensive email template rebranding: all 30+ email templates updated from Papermark to BF Fund Dataroom branding with correct contact info and team signatures
 - Disabled all upgrade prompts and plan upsell modals (self-hosted deployment with datarooms-plus plan)
 - Comprehensive code cleanup: removed old demo pages, simplified upgrade modal code, updated remaining Papermark branding references to BF Fund Dataroom throughout the codebase
+- Final pre-launch review: Fixed all remaining hardcoded papermark.com URLs and support emails to use bermudafranchisegroup.com
+- Updated all user-facing help/support links to route to investors@bermudafranchisegroup.com
+- All admin users configured: rciesco@gmail.com, richard@bermudafranchisegroup.com, investors@bermudafranchisegroup.com
 
 ## Platform Testing Status (Dec 2024)
 

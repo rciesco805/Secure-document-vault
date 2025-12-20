@@ -48,7 +48,7 @@ const SubscriptionRenewalReminderEmail = ({
               If you need to update your billing details or have any questions,
               please visit your{" "}
               <a
-                href="https://app.papermark.com/settings/billing"
+                href="https://dataroom.bermudafranchisegroup.com/settings/billing"
                 className="underline"
                 target="_blank"
                 rel="noopener noreferrer"

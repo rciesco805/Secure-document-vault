@@ -68,7 +68,7 @@ export default async function middleware(req: NextRequest, ev: NextFetchEvent) {
     return DomainMiddleware(req);
   }
 
-  // Handle standard papermark.io paths
+  // Handle standard app paths
   if (
     !path.startsWith("/view/") &&
     !path.startsWith("/verify") &&

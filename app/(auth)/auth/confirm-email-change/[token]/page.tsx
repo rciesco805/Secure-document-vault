@@ -26,7 +26,7 @@ const data = {
 };
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || "https://bfg-dataroom.replit.app"),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || "https://dataroom.bermudafranchisegroup.com"),
   title: data.title,
   description: data.description,
   openGraph: {

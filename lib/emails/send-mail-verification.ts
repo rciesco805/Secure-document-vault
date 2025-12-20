@@ -19,7 +19,7 @@ export const sendEmailChangeVerificationRequestEmail = async (params: {
     await sendEmail({
       to: email,
       system: true,
-      subject: "Confirm your email address change for Papermark!",
+      subject: "Confirm your email address change for BF Fund Dataroom",
       react: emailTemplate,
       test: process.env.NODE_ENV === "development",
     });

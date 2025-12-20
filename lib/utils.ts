@@ -368,9 +368,9 @@ export const calculateDaysLeft = (accountCreationDate: Date): number => {
 };
 
 export function constructMetadata({
-  title = "Papermark | The Open Source DocSend Alternative",
-  description = "Papermark is an open-source document sharing alternative to DocSend with built-in engagement analytics and 100% white-labeling.",
-  image = "https://www.papermark.com/_static/meta-image.png",
+  title = "BF Fund Dataroom | Investor Portal",
+  description = "Secure access to Bermuda Franchise Group investor documents and data room.",
+  image = "/_static/bfg-logo-black.png",
   favicon = "/favicon.ico",
   noIndex = false,
 }: {
@@ -397,7 +397,7 @@ export function constructMetadata({
       title,
       description,
       images: [image],
-      creator: "@papermarkio",
+      creator: "@bermudafranchise",
     },
     favicon,
     ...(noIndex && {

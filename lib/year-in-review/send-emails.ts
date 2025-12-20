@@ -145,9 +145,9 @@ export async function processEmailQueue() {
 
                   return {
                     email: {
-                      from: "Papermark <system@papermark.io>",
+                      from: "BF Fund <noreply@investors.bermudafranchisegroup.com>",
                       to: userTeam.user.email || "delivered@resend.dev",
-                      subject: "2024 in Review: Your Year with Papermark",
+                      subject: "2024 in Review: Your Year with BF Fund Dataroom",
                       react,
                       text: plainText,
                       headers: {

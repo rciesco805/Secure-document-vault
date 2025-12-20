@@ -22,7 +22,7 @@ export const sendSixMonthMilestoneEmail = async (
   try {
     await sendEmail({
       to: email as string,
-      subject: "6 months with Papermark",
+      subject: "6 months with BF Fund Dataroom",
       from: "BF Fund <investors@bermudafranchisegroup.com>",
       react: emailTemplate,
       test: process.env.NODE_ENV === "development",

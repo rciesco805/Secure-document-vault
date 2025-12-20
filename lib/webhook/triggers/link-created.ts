@@ -65,13 +65,14 @@ export async function sendLinkCreatedWebhook({
     }
 
     // Prepare link data for webhook
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://dataroom.bermudafranchisegroup.com";
     const linkData = {
       id: link.id,
       url: link.domainId
         ? `https://${link.domainSlug}/${link.slug}`
-        : `https://www.papermark.com/view/${link.id}`,
+        : `${baseUrl}/view/${link.id}`,
       domain:
-        link.domainId && link.domainSlug ? link.domainSlug : "papermark.com",
+        link.domainId && link.domainSlug ? link.domainSlug : "dataroom.bermudafranchisegroup.com",
       key: link.domainId && link.slug ? link.slug : `view/${link.id}`,
       name: link.name,
       expiresAt: link.expiresAt?.toISOString() || null,

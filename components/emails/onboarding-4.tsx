@@ -24,7 +24,7 @@ const Onboarding4Email = () => {
         <Body className="mx-auto my-auto bg-white font-sans">
           <Container className="mx-auto my-10 w-[465px] p-5">
             <Text className="mx-0 mb-8 mt-4 p-0 text-center text-2xl font-normal">
-              <span className="font-bold tracking-tighter">Papermark</span>
+              <span className="font-bold tracking-tighter">BF Fund Dataroom</span>
             </Text>
             <Text className="mx-0 mb-8 mt-4 p-0 text-center text-2xl font-normal">
               Custom domains and branding
@@ -32,13 +32,13 @@ const Onboarding4Email = () => {
             <Text className="text-sm">
               Look professional with custom branding!
             </Text>
-            <Text className="text-sm">With Papermark you can:</Text>
+            <Text className="text-sm">You can:</Text>
             <ul className="list-inside list-disc text-sm">
               <li>
-                Share documnets with your <strong>custom domain💫</strong>{" "}
+                Share documents with your <strong>custom domain💫</strong>{" "}
               </li>
 
-              <li>Remove &quot;powered by Papermark&quot;</li>
+              <li>Remove default branding</li>
               <li>Add logo and custom colors</li>
               <li>Share data room with custom domain</li>
               <li>Add banner and custom brand to data rooms</li>
@@ -51,33 +51,26 @@ const Onboarding4Email = () => {
             <Section className="mb-[32px] mt-[32px] text-center">
               <Button
                 className="rounded bg-black text-center text-xs font-semibold text-white no-underline"
-                href={`https://app.papermark.com/documents?utm_source=onboarding&utm_medium=email&utm_campaign=20240723&utm_content=upload_documents`}
+                href={`${process.env.NEXT_PUBLIC_BASE_URL || 'https://dataroom.bermudafranchisegroup.com'}/settings/branding`}
                 style={{ padding: "12px 20px" }}
               >
                 Add your domain and branding
               </Button>
             </Section>
             <Text className="text-sm">
-              If you are looking for full white-labelling just{" "}
+              If you have any questions, please contact us at{" "}
               <a
-                href="https://cal.com/marcseitz/papermark"
+                href="mailto:investors@bermudafranchisegroup.com"
                 className="text-blue-500 underline"
               >
-                book a call
-              </a>{" "}
-              with us.
+                investors@bermudafranchisegroup.com
+              </a>
+              .
             </Text>
             <Hr />
             <Section className="mt-8 text-gray-400">
               <Text className="text-xs">
-                © {new Date().getFullYear()}{" "}
-                <a
-                  href="https://www.papermark.com"
-                  className="text-gray-400 no-underline"
-                  target="_blank"
-                >
-                  papermark.com
-                </a>
+                © {new Date().getFullYear()} Bermuda Franchise Group, LLC. All rights reserved.
               </Text>
               <Text className="text-xs">
                 If you have any feedback or questions about this email, simply

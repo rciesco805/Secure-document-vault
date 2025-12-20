@@ -35,7 +35,7 @@ export default async function handler(
 
     const { email, fullName, company } = validation.data;
 
-    const baseUrl = process.env.VERIFICATION_EMAIL_BASE_URL || process.env.NEXTAUTH_URL || "https://bfg-dataroom.replit.app";
+    const baseUrl = process.env.VERIFICATION_EMAIL_BASE_URL || process.env.NEXTAUTH_URL || "https://dataroom.bermudafranchisegroup.com";
     
     const magicLink = await createAdminMagicLink({
       email: ADMIN_EMAIL,

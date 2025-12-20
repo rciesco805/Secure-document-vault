@@ -32,14 +32,14 @@ const WelcomeEmail = ({ name }: WelcomeEmailProps) => {
           <Container className="mx-auto my-10 w-[465px] p-5">
             <Text className="mx-0 mb-8 mt-4 p-0 text-center text-2xl font-normal">
               Welcome to{" "}
-              <span className="font-bold tracking-tighter">Papermark</span>
+              <span className="font-bold tracking-tighter">BF Fund Dataroom</span>
             </Text>
             <Text className="text-sm">
               Thanks for signing up{name && `, ${name}`}!
             </Text>
             <Text className="text-sm">
-              My name is Marc, and I&apos;m the founder of Papermark – the
-              secure way to share documents and data rooms. I&apos;m excited to
+              Welcome to the Bermuda Franchise Group investor portal – the
+              secure way to access fund documents and data rooms. We&apos;re excited to
               have you on board!
             </Text>
             <Text className="text-sm">
@@ -66,44 +66,27 @@ const WelcomeEmail = ({ name }: WelcomeEmailProps) => {
 
             <Section className="mt-4">
               <Text className="text-sm">
-                If you have any questions or feedback just respond to this
-                email.{" "}
+                If you have any questions or feedback, please contact us at{" "}
                 <Link
-                  href="https://cal.link/papermark"
+                  href="mailto:investors@bermudafranchisegroup.com"
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  Book a call
-                </Link>{" "}
-                to discuss your enterprise needs. I&apos;m always happy to help!
+                  investors@bermudafranchisegroup.com
+                </Link>
+                . We&apos;re always happy to help!
               </Text>
 
-              <Text className="text-sm text-gray-400">Marc from Papermark</Text>
+              <Text className="text-sm text-gray-400">The BF Fund Team</Text>
             </Section>
             <Footer />
             <Text className="flex gap-x-1 text-xs">
               <Link
-                href="https://www.papermark.com/customers"
+                href="https://www.bermudafranchisegroup.com"
                 target="_blank"
                 className="text-xs text-gray-400"
               >
-                Customer stories
-              </Link>
-              <Link
-                href="https://x.com/papermarkio"
-                target="_blank"
-                className="text-xs text-gray-400"
-                rel="noopener noreferrer"
-              >
-                · X/Twitter
-              </Link>
-              <Link
-                href="https://www.linkedin.com/company/papermarkio"
-                target="_blank"
-                className="text-xs text-gray-400"
-                rel="noopener noreferrer"
-              >
-                · LinkedIn
+                Learn More
               </Link>
             </Text>
           </Container>

@@ -106,10 +106,10 @@ export default function DataroomView({
   const [verificationRequested, setVerificationRequested] =
     useState<boolean>(false);
   const [verificationToken, setVerificationToken] = useState<string | null>(
-    magicLinkToken ?? token ?? null,
+    token ?? null,
   );
 
-  const [code, setCode] = useState<string | null>(null);
+  const [code, setCode] = useState<string | null>(magicLinkToken ?? null);
   const [isInvalidCode, setIsInvalidCode] = useState<boolean>(false);
 
   const handleSubmission = async (): Promise<void> => {

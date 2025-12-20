@@ -67,28 +67,6 @@ export default function PapermarkYearInReviewEmail({
                 What a year it&apos;s been! Let&apos;s take a look at how
                 you&apos;ve shared your important documents.
               </Text>
-              <Link
-                href={`https://x.com/intent/post?text=In%202024%2C%20my%20documents%20have%20been%20viewed%20${minutesSpentOnDocs}%20minutes%20on%20%40papermarkio%2C%20by%3A%0A%0A%E2%80%A2%20Uploading%20${uploadedDocuments}%20documents%0A%E2%80%A2%20Sharing%20${sharedLinks}%20links%0A%E2%80%A2%20Receiving%20${receivedViews}%20views%0A%0A&url=https%3A%2F%2Fwww.papermark.com%2Fyear-in-review`}
-                className="inline-flex items-center rounded-full bg-gray-900 px-12 py-4 text-center text-sm font-bold text-white no-underline"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="lucide lucide-upload mr-2 h-4 w-4"
-                >
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                  <polyline points="17 8 12 3 7 8" />
-                  <line x1="12" x2="12" y1="3" y2="15" />
-                </svg>
-                Share your stats
-              </Link>
             </Section>
 
             <Section className="my-6 rounded-2xl bg-[#fb7a00]/10 bg-[radial-gradient(circle_at_bottom_right,#fb7a00_0%,transparent_60%)] p-8 text-center">
@@ -181,11 +159,11 @@ export default function PapermarkYearInReviewEmail({
                     {sharerPercentile}%
                   </Text>
                   <Text className="mb-4 text-xl font-medium text-gray-900">
-                    of sharers on Papermark
+                    of sharers on BF Fund Dataroom
                   </Text>
                   <Text className="text-sm leading-5 text-gray-900">
                     You&apos;re one of our most active users. Thank you for
-                    sharing with Papermark!
+                    sharing with BF Fund Dataroom!
                   </Text>
                 </>
               ) : (
@@ -228,33 +206,11 @@ export default function PapermarkYearInReviewEmail({
             <Section className="pb-6 text-center">
               <Text className="text-xl leading-8 text-gray-900">
                 We&apos;re excited to support you next year! <br />
-                Happy Holidays from the Papermark team :)
+                Happy Holidays from the BF Fund Team :)
               </Text>
               <Link
-                href={`https://x.com/intent/post?text=In%202024%2C%20my%20documents%20have%20been%20viewed%20${minutesSpentOnDocs}%20minutes%20on%20%40papermarkio%2C%20by%3A%0A%0A%E2%80%A2%20Uploading%20${uploadedDocuments}%20documents%0A%E2%80%A2%20Sharing%20${sharedLinks}%20links%0A%E2%80%A2%20Receiving%20${receivedViews}%20views%0A%0A&url=https%3A%2F%2Fwww.papermark.com%2Fyear-in-review`}
+                href={`${process.env.NEXT_PUBLIC_BASE_URL}/documents`}
                 className="mt-4 inline-flex items-center rounded-full bg-gray-900 px-12 py-4 text-center text-sm font-bold text-white no-underline"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="lucide lucide-upload mr-2 h-4 w-4"
-                >
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                  <polyline points="17 8 12 3 7 8" />
-                  <line x1="12" x2="12" y1="3" y2="15" />
-                </svg>
-                Share your stats
-              </Link>
-              <Link
-                href="https://app.papermark.com/documents"
-                className="mt-4 block items-center text-center text-sm font-bold text-gray-900 no-underline"
               >
                 Go to your dashboard
               </Link>
@@ -263,19 +219,12 @@ export default function PapermarkYearInReviewEmail({
             <Hr />
             <Section className="mt-8 text-gray-400">
               <Text className="text-xs">
-                © {new Date().getFullYear()}{" "}
-                <a
-                  href="https://www.papermark.com"
-                  className="text-gray-400 no-underline"
-                  target="_blank"
-                >
-                  papermark.com
-                </a>
+                © {new Date().getFullYear()} Bermuda Franchise Group, LLC. All rights reserved.
               </Text>
               <Text className="text-xs">
                 You received this Year in Review email because you have an
-                account with Papermark during 2024. If you have any feedback or
-                questions about this email, simply reply to it. To unsubscribe
+                account with BF Fund Dataroom during {year}. If you have any feedback or
+                questions about this email, please contact investors@bermudafranchisegroup.com. To unsubscribe
                 from future Year in Review emails,{" "}
                 <a
                   href={unsubscribeUrl}

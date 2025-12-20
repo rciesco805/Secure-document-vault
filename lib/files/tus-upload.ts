@@ -41,8 +41,9 @@ export function resumableUpload({
         completeResolve = res;
       });
 
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || (typeof window !== 'undefined' ? window.location.origin : '');
       const upload = new tus.Upload(file, {
-        endpoint: `${process.env.NEXT_PUBLIC_BASE_URL}/api/file/tus`,
+        endpoint: `${baseUrl}/api/file/tus`,
         retryDelays: [0, 3000, 5000, 10000],
         uploadDataDuringCreation: true,
         removeFingerprintOnSuccess: true,

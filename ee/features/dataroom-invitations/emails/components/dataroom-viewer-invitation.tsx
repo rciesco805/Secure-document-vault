@@ -16,7 +16,7 @@ import {
 export default function DataroomViewerInvitation({
   dataroomName = "BF Fund Investor Documents",
   senderEmail = "investors@bermudafranchisegroup.com",
-  url = "https://dataroom.bermudafranchisegroup.com/view/123",
+  url = "https://bfg-dataroom.replit.app/view/123",
   recipientEmail = "recipient@example.com",
   customMessage,
 }: {

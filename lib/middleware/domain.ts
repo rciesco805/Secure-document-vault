@@ -34,7 +34,7 @@ export default async function DomainMiddleware(req: NextRequest) {
 
     if (host === "dataroom.bermudafranchisegroup.com") {
       return NextResponse.redirect(
-        new URL("https://dataroom.bermudafranchisegroup.com/login", req.url),
+        new URL("/login", req.url),
       );
     }
 

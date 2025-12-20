@@ -32,6 +32,12 @@ export default async function DomainMiddleware(req: NextRequest) {
       );
     }
 
+    if (host === "dataroom.bermudafranchisegroup.com") {
+      return NextResponse.redirect(
+        new URL("https://dataroom.bermudafranchisegroup.com/login", req.url),
+      );
+    }
+
     return NextResponse.redirect(
       new URL("https://www.bermudafranchisegroup.com", req.url),
     );

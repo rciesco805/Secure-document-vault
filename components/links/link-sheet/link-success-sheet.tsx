@@ -50,10 +50,11 @@ export default function LinkSuccessSheet({
 }: LinkSuccessSheetProps) {
   const [copied, setCopied] = useState(false);
 
+  const marketingUrl = process.env.NEXT_PUBLIC_MARKETING_URL || (typeof window !== 'undefined' ? window.location.origin : 'https://dataroom.bermudafranchisegroup.com');
   const linkUrl =
     link.domainId && link.slug
       ? `https://${link.domainSlug}/${link.slug}`
-      : `${process.env.NEXT_PUBLIC_MARKETING_URL}/view/${link.id}`;
+      : `${marketingUrl}/view/${link.id}`;
 
   const copyToClipboard = async () => {
     try {

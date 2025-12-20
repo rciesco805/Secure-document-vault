@@ -281,7 +281,8 @@ export default function LinksTable({
     }
 
     const { previewToken } = await response.json();
-    const previewLink = `${process.env.NEXT_PUBLIC_MARKETING_URL}/view/${link.id}?previewToken=${previewToken}`;
+    const marketingUrl = process.env.NEXT_PUBLIC_MARKETING_URL || (typeof window !== 'undefined' ? window.location.origin : '');
+    const previewLink = `${marketingUrl}/view/${link.id}?previewToken=${previewToken}`;
 
     window.open(previewLink, "_blank");
   };
@@ -733,13 +734,14 @@ export default function LinksTable({
                             ) : (
                               <button
                                 className="absolute bottom-0 left-0 right-0 top-0 z-10 hidden w-full whitespace-nowrap text-center text-xs group-hover/cell:block group-hover/cell:text-primary-foreground sm:text-sm"
-                                onClick={() =>
+                                onClick={() => {
+                                  const marketingUrl = process.env.NEXT_PUBLIC_MARKETING_URL || window.location.origin;
                                   handleCopyToClipboard(
                                     link.domainId
                                       ? `https://${link.domainSlug}/${link.slug}`
-                                      : `${process.env.NEXT_PUBLIC_MARKETING_URL}/view/${link.id}`,
-                                  )
-                                }
+                                      : `${marketingUrl}/view/${link.id}`,
+                                  );
+                                }}
                                 title="Copy & Share"
                               >
                                 Copy & Share

@@ -83,8 +83,9 @@ const putFileInVercel = async (file: File) => {
 
 const putFileInReplit = async (file: File) => {
   // Step 1: Request presigned URL from Replit Object Storage
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || (typeof window !== 'undefined' ? window.location.origin : '');
   const presignedResponse = await fetch(
-    `${process.env.NEXT_PUBLIC_BASE_URL}/api/file/replit-upload`,
+    `${baseUrl}/api/file/replit-upload`,
     {
       method: "POST",
       headers: {
@@ -182,8 +183,9 @@ const putFileSingle = async ({
   teamId: string;
   docId: string;
 }) => {
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || (typeof window !== 'undefined' ? window.location.origin : '');
   const presignedResponse = await fetch(
-    `${process.env.NEXT_PUBLIC_BASE_URL}/api/file/s3/get-presigned-post-url`,
+    `${baseUrl}/api/file/s3/get-presigned-post-url`,
     {
       method: "POST",
       headers: {
@@ -250,10 +252,11 @@ const putFileMultipart = async ({
   teamId: string;
   docId: string;
 }) => {
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || (typeof window !== 'undefined' ? window.location.origin : '');
   try {
     // Step 1: Initiate multipart upload
     const initiateResponse = await fetch(
-      `${process.env.NEXT_PUBLIC_BASE_URL}/api/file/s3/multipart`,
+      `${baseUrl}/api/file/s3/multipart`,
       {
         method: "POST",
         headers: {
@@ -279,7 +282,7 @@ const putFileMultipart = async ({
 
     // Step 2: Get pre-signed URLs for parts
     const partUrlsResponse = await fetch(
-      `${process.env.NEXT_PUBLIC_BASE_URL}/api/file/s3/multipart`,
+      `${baseUrl}/api/file/s3/multipart`,
       {
         method: "POST",
         headers: {
@@ -349,7 +352,7 @@ const putFileMultipart = async ({
 
     // Step 4: Complete multipart upload
     const completeResponse = await fetch(
-      `${process.env.NEXT_PUBLIC_BASE_URL}/api/file/s3/multipart`,
+      `${baseUrl}/api/file/s3/multipart`,
       {
         method: "POST",
         headers: {

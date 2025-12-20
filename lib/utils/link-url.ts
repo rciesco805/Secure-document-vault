@@ -8,7 +8,8 @@ export function constructLinkUrl(link: {
     return `https://${link.domainSlug}/${link.slug}`;
   }
 
-  return `${process.env.NEXT_PUBLIC_MARKETING_URL}/view/${link.id}`;
+  const marketingUrl = process.env.NEXT_PUBLIC_MARKETING_URL || (typeof window !== 'undefined' ? window.location.origin : 'https://dataroom.bermudafranchisegroup.com');
+  return `${marketingUrl}/view/${link.id}`;
 }
 
 

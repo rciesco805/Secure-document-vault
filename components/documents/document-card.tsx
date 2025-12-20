@@ -84,8 +84,9 @@ export default function DocumentsCard({
   const currentFolderPath = router.query.name as string[] | undefined;
 
   function handleCopyToClipboard(id: string) {
+    const marketingUrl = process.env.NEXT_PUBLIC_MARKETING_URL || (typeof window !== 'undefined' ? window.location.origin : 'https://dataroom.bermudafranchisegroup.com');
     copyToClipboard(
-      `${process.env.NEXT_PUBLIC_MARKETING_URL}/view/${id}`,
+      `${marketingUrl}/view/${id}`,
       "Link copied to clipboard.",
     );
   }

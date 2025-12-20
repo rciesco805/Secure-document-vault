@@ -224,7 +224,8 @@ export default function LinkSheet({
     }
 
     const { previewToken } = await response.json();
-    const previewLink = `${process.env.NEXT_PUBLIC_MARKETING_URL}/view/${link.id}?previewToken=${previewToken}`;
+    const marketingUrl = process.env.NEXT_PUBLIC_MARKETING_URL || (typeof window !== 'undefined' ? window.location.origin : '');
+    const previewLink = `${marketingUrl}/view/${link.id}?previewToken=${previewToken}`;
     setIsLoading(false);
     const linkElement = document.createElement("a");
     linkElement.href = previewLink;

@@ -47,6 +47,7 @@ export const putFile = async ({
   )
     .with("s3", async () => putFileInS3({ file, teamId, docId }))
     .with("vercel", async () => putFileInVercel(file))
+    .with("replit", async () => putFileInReplit(file))
     .otherwise(() => {
       return {
         type: null,
@@ -75,6 +76,61 @@ const putFileInVercel = async (file: File) => {
   return {
     type: DocumentStorageType.VERCEL_BLOB,
     data: newBlob.url,
+    numPages: numPages,
+    fileSize: file.size,
+  };
+};
+
+const putFileInReplit = async (file: File) => {
+  // Step 1: Request presigned URL from Replit Object Storage
+  const presignedResponse = await fetch(
+    `${process.env.NEXT_PUBLIC_BASE_URL}/api/file/replit-upload`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        fileName: file.name,
+        contentType: file.type,
+        fileSize: file.size,
+      }),
+    },
+  );
+
+  if (!presignedResponse.ok) {
+    throw new Error(
+      `Failed to get presigned URL, status: ${presignedResponse.status}`,
+    );
+  }
+
+  const { uploadURL, objectPath } = await presignedResponse.json();
+
+  // Step 2: Upload file directly to the presigned URL
+  const uploadResponse = await fetch(uploadURL, {
+    method: "PUT",
+    body: file,
+    headers: {
+      "Content-Type": file.type,
+    },
+  });
+
+  if (!uploadResponse.ok) {
+    throw new Error(
+      `Failed to upload file, status: ${uploadResponse.status}`,
+    );
+  }
+
+  let numPages: number = 1;
+  // get page count for pdf files
+  if (file.type === "application/pdf") {
+    const body = await file.arrayBuffer();
+    numPages = await getPagesCount(body);
+  }
+
+  return {
+    type: DocumentStorageType.S3_PATH, // Reuse S3_PATH type for Replit storage
+    data: objectPath,
     numPages: numPages,
     fileSize: file.size,
   };

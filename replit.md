@@ -15,6 +15,10 @@ Preferred communication style: Simple, everyday language.
 ## Recent Changes
 
 **December 2024:**
+- Migrated document storage from Vercel Blob to Replit App Storage for enhanced security
+  - Files now use AES-256 encryption and are private by default
+  - Storage path format: /objects/documents/{uuid}/{filename}
+  - Added presigned URL upload flow for secure file transfers
 - Applied BFG branding (logos, colors, tagline) to login page and navigation
 - Configured security defaults: email required for all access, downloads disabled
 - Set up PostgreSQL database with Prisma migrations
@@ -45,7 +49,7 @@ Preferred communication style: Simple, everyday language.
 **Verified Working:**
 - Login page with BFG branding
 - Document upload (PDF, images, all file types)
-- Vercel Blob storage for file hosting
+- Replit App Storage for secure file hosting (AES-256 encrypted)
 - Database connectivity (PostgreSQL)
 - API health endpoints
 - Session management (NextAuth)

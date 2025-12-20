@@ -21,7 +21,13 @@ export const getFile = async ({
         return data;
       }
     })
-    .with(DocumentStorageType.S3_PATH, async () => getFileFromS3(data))
+    .with(DocumentStorageType.S3_PATH, async () => {
+      // Check if this is a Replit Object Storage path
+      if (data.startsWith("/objects/")) {
+        return getFileFromReplit(data);
+      }
+      return getFileFromS3(data);
+    })
     .exhaustive();
 
   return url;
@@ -81,6 +87,30 @@ const getFileFromS3 = async (key: string) => {
   } else {
     return fetchPresignedUrl(
       `/api/file/s3/get-presigned-get-url-proxy`,
+      {
+        "Content-Type": "application/json",
+      },
+      key,
+    );
+  }
+};
+
+const getFileFromReplit = async (key: string) => {
+  const isServer =
+    typeof window === "undefined" && !!process.env.INTERNAL_API_KEY;
+
+  if (isServer) {
+    return fetchPresignedUrl(
+      `${process.env.NEXT_PUBLIC_BASE_URL}/api/file/replit-get`,
+      {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${process.env.INTERNAL_API_KEY}`,
+      },
+      key,
+    );
+  } else {
+    return fetchPresignedUrl(
+      `/api/file/replit-get-proxy`,
       {
         "Content-Type": "application/json",
       },

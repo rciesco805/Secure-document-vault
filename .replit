@@ -16,6 +16,7 @@ build = ["npm", "run", "build"]
 
 [agent]
 expertMode = true
+integrations = ["javascript_object_storage:2.0.0"]
 
 [userenv]
 
@@ -24,7 +25,6 @@ NEXTAUTH_URL = "https://df50c344-693e-455c-bef7-f789d56774bd-00-jcveq2hx1o9i.spo
 NEXT_PUBLIC_BASE_URL = "https://df50c344-693e-455c-bef7-f789d56774bd-00-jcveq2hx1o9i.spock.replit.dev"
 NEXT_PUBLIC_MARKETING_URL = "https://df50c344-693e-455c-bef7-f789d56774bd-00-jcveq2hx1o9i.spock.replit.dev"
 NEXT_PUBLIC_APP_BASE_HOST = "df50c344-693e-455c-bef7-f789d56774bd-00-jcveq2hx1o9i.spock.replit.dev"
-NEXT_PUBLIC_UPLOAD_TRANSPORT = "vercel"
 NEXT_PRIVATE_DOCUMENT_PASSWORD_KEY = "bermuda-franchise-secure-key-2025"
 NEXT_PRIVATE_VERIFICATION_SECRET = "bermuda-franchise-secure-verification-2025"
 
@@ -32,11 +32,13 @@ NEXT_PRIVATE_VERIFICATION_SECRET = "bermuda-franchise-secure-verification-2025"
 NEXTAUTH_URL = "https://bfg-dataroom.replit.app"
 NEXT_PUBLIC_BASE_URL = "https://bfg-dataroom.replit.app"
 NEXT_PUBLIC_MARKETING_URL = "https://www.bermudafranchisegroup.com"
-NEXT_PUBLIC_UPLOAD_TRANSPORT = "vercel"
 NEXT_PRIVATE_DOCUMENT_PASSWORD_KEY = "bermuda-franchise-secure-key-2025"
 NEXT_PRIVATE_VERIFICATION_SECRET = "bermuda-franchise-secure-verification-2025"
 VERIFICATION_EMAIL_BASE_URL = "https://bfg-dataroom.replit.app"
 NEXT_PUBLIC_APP_BASE_HOST = "dataroom.bermudafranchisegroup.com"
+
+[userenv.shared]
+NEXT_PUBLIC_UPLOAD_TRANSPORT = "replit"
 
 [workflows]
 runButton = "Project"

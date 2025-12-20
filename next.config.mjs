@@ -7,7 +7,11 @@ const nextConfig = {
     remotePatterns: prepareRemotePatterns(),
   },
   skipTrailingSlashRedirect: true,
-  // Removed assetPrefix - not needed for Replit deployments
+  assetPrefix:
+    process.env.NODE_ENV === "production" &&
+    process.env.VERCEL_ENV === "production"
+      ? process.env.NEXT_PUBLIC_BASE_URL
+      : undefined,
   async redirects() {
     return [
       ...(process.env.NEXT_PUBLIC_APP_BASE_HOST
@@ -214,20 +218,24 @@ function prepareRemotePatterns() {
     });
   }
 
-  // Vercel blob storage patterns (always include for Replit deployment)
-  patterns.push({
-    protocol: "https",
-    hostname: "yoywvlh29jppecbh.public.blob.vercel-storage.com",
-  });
-  patterns.push({
-    protocol: "https",
-    hostname: "36so9a8uzykxknsu.public.blob.vercel-storage.com",
-  });
-  // Generic vercel blob pattern
-  patterns.push({
-    protocol: "https",
-    hostname: "*.public.blob.vercel-storage.com",
-  });
+  if (process.env.VERCEL_ENV === "production") {
+    patterns.push({
+      // production vercel blob
+      protocol: "https",
+      hostname: "yoywvlh29jppecbh.public.blob.vercel-storage.com",
+    });
+  }
+
+  if (
+    process.env.VERCEL_ENV === "preview" ||
+    process.env.NODE_ENV === "development"
+  ) {
+    patterns.push({
+      // staging vercel blob
+      protocol: "https",
+      hostname: "36so9a8uzykxknsu.public.blob.vercel-storage.com",
+    });
+  }
 
   return patterns;
 }

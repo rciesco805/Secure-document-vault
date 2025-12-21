@@ -134,9 +134,12 @@ const createFilePathValidator = () => {
         }
 
         // Case 2: file storage paths - must match pattern: <id>/doc_<someId>/<name>.<ext>
+        // Also support Replit Object Storage paths: /objects/documents/<uuid>/<filename>
         const s3PathPattern =
           /^[a-zA-Z0-9_-]+\/doc_[a-zA-Z0-9_-]+\/[a-zA-Z0-9_.-]+\.[a-zA-Z0-9]+$/;
-        return s3PathPattern.test(path);
+        const replitPathPattern =
+          /^\/objects\/documents\/[a-zA-Z0-9-]+\/[a-zA-Z0-9_.%-]+\.[a-zA-Z0-9]+$/;
+        return s3PathPattern.test(path) || replitPathPattern.test(path);
       },
       {
         message:
@@ -355,10 +358,10 @@ export const documentUploadSchema = z
             return false;
           }
         }
-        // Or an S3 path (allowed for migration)
-        return /^[a-zA-Z0-9_-]+\/doc_[a-zA-Z0-9_-]+\/[a-zA-Z0-9_.-]+\.[a-zA-Z0-9]+$/.test(
-          data.url,
-        );
+        // Or an S3 path or Replit path (allowed for migration/replit storage)
+        const s3PathPattern = /^[a-zA-Z0-9_-]+\/doc_[a-zA-Z0-9_-]+\/[a-zA-Z0-9_.-]+\.[a-zA-Z0-9]+$/;
+        const replitPathPattern = /^\/objects\/documents\/[a-zA-Z0-9-]+\/[a-zA-Z0-9_.%-]+\.[a-zA-Z0-9]+$/;
+        return s3PathPattern.test(data.url) || replitPathPattern.test(data.url);
       }
       return false;
     },

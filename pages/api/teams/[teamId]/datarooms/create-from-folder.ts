@@ -152,32 +152,7 @@ export default async function handle(
         return res.status(401).end("Unauthorized");
       }
 
-      const limits = await getLimits({ teamId, userId });
-      const stripedTeamPlan = team.plan.replace("+old", "");
-
-      if (
-        !team.plan.includes("drtrial") &&
-        ["business", "datarooms", "datarooms-plus"].includes(stripedTeamPlan) &&
-        limits &&
-        team._count.datarooms >= limits.datarooms
-      ) {
-        return res.status(403).json({
-          message:
-            "You've reached the limit of datarooms. Consider upgrading your plan.",
-        });
-      }
-
-      if (team.plan.includes("drtrial") && team._count.datarooms > 0) {
-        return res
-          .status(400)
-          .json({ message: "Trial data room already exists" });
-      }
-
-      if (["free", "pro"].includes(team.plan) && !team.plan.includes("drtrial")) {
-        return res
-          .status(400)
-          .json({ message: "You need a Business plan to create a data room" });
-      }
+      // All plan/limit checks removed for self-hosted deployment - unlimited datarooms allowed
 
       // Fetch the folder structure
       const folderContents = await fetchFolderContents(folderId);

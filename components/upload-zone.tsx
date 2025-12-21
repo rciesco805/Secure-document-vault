@@ -16,7 +16,7 @@ import {
   SUPPORTED_DOCUMENT_MIME_TYPES,
 } from "@/lib/constants";
 import { DocumentData, createDocument } from "@/lib/documents/create-document";
-import { putFile } from "@/lib/files/put-file";
+import { getUploadTransport, putFile } from "@/lib/files/put-file";
 import { resumableUpload } from "@/lib/files/tus-upload";
 import {
   createFolderInBoth,
@@ -322,18 +322,8 @@ export default function UploadZone({
           }
         }
 
-        // Fetch upload transport config from API (env vars not reliable client-side)
-        let uploadTransport = 'vercel';
-        try {
-          const configResponse = await fetch(`${window.location.origin}/api/file/upload-config`);
-          if (configResponse.ok) {
-            const config = await configResponse.json();
-            uploadTransport = config.transport || 'vercel';
-          }
-        } catch (error) {
-          console.log('Using default upload transport: vercel');
-        }
-        
+        // Get upload transport using shared helper
+        const uploadTransport = await getUploadTransport();
         const useTusUpload = uploadTransport === "s3";
         
         let uploadKey: string;

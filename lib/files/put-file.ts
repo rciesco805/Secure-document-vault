@@ -15,8 +15,9 @@ import { SUPPORTED_DOCUMENT_MIME_TYPES } from "../constants";
 /**
  * Gets the upload transport configuration.
  * Uses process.env on server-side, fetches from API on client-side if needed.
+ * Exported for use by upload-zone.tsx to determine upload method.
  */
-async function getUploadTransport(): Promise<string> {
+export async function getUploadTransport(): Promise<string> {
   // Try process.env first (works on server-side and if env was available at build time)
   if (process.env.NEXT_PUBLIC_UPLOAD_TRANSPORT) {
     return process.env.NEXT_PUBLIC_UPLOAD_TRANSPORT;
@@ -127,9 +128,9 @@ const putFileInVercel = async (file: File) => {
 
 const putFileInReplit = async (file: File) => {
   // Step 1: Request presigned URL from Replit Object Storage
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || (typeof window !== 'undefined' ? window.location.origin : '');
+  // Use relative URL in browser (works for client-side calls)
   const presignedResponse = await fetch(
-    `${baseUrl}/api/file/replit-upload`,
+    `/api/file/replit-upload`,
     {
       method: "POST",
       headers: {

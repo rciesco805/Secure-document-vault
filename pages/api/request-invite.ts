@@ -70,8 +70,13 @@ export default async function handler(
     await Promise.all(emailPromises);
 
     return res.status(200).json({ message: "Request sent successfully" });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error sending invite request:", error);
-    return res.status(500).json({ message: "Failed to send request" });
+    console.error("Error details:", error?.message || "Unknown error");
+    console.error("Error name:", error?.name || "Unknown");
+    return res.status(500).json({ 
+      message: "Failed to send request",
+      error: process.env.NODE_ENV === "development" ? error?.message : undefined,
+    });
   }
 }

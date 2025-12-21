@@ -231,14 +231,18 @@ export default function DataroomView({
   }, [submitted, isProtected, token, preview, previewToken]);
 
   // Handle magic link tokens separately to account for Next.js hydration timing
-  // router.query may be empty on initial mount, so we need to react when magicLinkToken becomes available
+  // router.query may be empty on initial mount, so we need to wait for router.isReady
+  // and ensure both token and email are available from the URL
   useEffect(() => {
-    if (magicLinkToken && !magicLinkProcessed && !submitted) {
+    if (!router.isReady) return; // Wait for router to be ready with query params
+    
+    if (magicLinkToken && verifiedEmail && !magicLinkProcessed && !submitted) {
+      console.log("[MAGIC_LINK] Processing token with email:", verifiedEmail);
       setCode(magicLinkToken);
       setMagicLinkProcessed(true);
       handleSubmission(magicLinkToken);
     }
-  }, [magicLinkToken, magicLinkProcessed, submitted]);
+  }, [router.isReady, magicLinkToken, verifiedEmail, magicLinkProcessed, submitted]);
 
   // Components to render when email is submitted but verification is pending
   if (verificationRequested) {

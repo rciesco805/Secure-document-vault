@@ -41,8 +41,8 @@ export default async function handler(
     const baseUrl = process.env.NEXTAUTH_URL || "https://dataroom.bermudafranchisegroup.com";
     const signInUrl = `${baseUrl}/login`;
     
-    // Send notification to all admin emails
-    const emailPromises = ADMIN_EMAILS.map(async (adminEmail) => {
+    // Send notification to all admin emails (sequentially to avoid rate limits)
+    for (const adminEmail of ADMIN_EMAILS) {
       const emailTemplate = InviteRequest({
         email,
         fullName,
@@ -50,16 +50,17 @@ export default async function handler(
         signInUrl,
       });
 
-      return sendEmail({
+      await sendEmail({
         to: adminEmail,
         from: "BF Fund Dataroom <noreply@investors.bermudafranchisegroup.com>",
         subject: `New Investor Access Request: ${fullName}`,
         react: emailTemplate,
         replyTo: email,
       });
-    });
-
-    await Promise.all(emailPromises);
+      
+      // Small delay to respect Resend rate limits (2 req/sec)
+      await new Promise(resolve => setTimeout(resolve, 600));
+    }
 
     return res.status(200).json({ message: "Request sent successfully" });
   } catch (error: any) {

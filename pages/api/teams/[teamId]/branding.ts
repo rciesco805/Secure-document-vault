@@ -1,6 +1,5 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
-import { del } from "@vercel/blob";
 import { getServerSession } from "next-auth";
 
 import { errorhandler } from "@/lib/errorHandler";
@@ -138,14 +137,9 @@ export default async function handle(
     });
 
     if (brand) {
-      // delete the logo from vercel blob
-      if (brand.logo) {
-        await del(brand.logo);
-      }
-      // delete the banner from vercel blob
-      if (brand.banner) {
-        await del(brand.banner);
-      }
+      // Skip file deletion - files are either on Replit storage or old Vercel account
+      // The database records will be deleted which is what matters
+      console.log("Skipping branding file deletion (Vercel Blob not configured)");
     }
 
     // delete the branding from database

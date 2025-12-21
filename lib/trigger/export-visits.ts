@@ -1,5 +1,4 @@
 import { logger, task } from "@trigger.dev/sdk/v3";
-import { put } from "@vercel/blob";
 import Bottleneck from "bottleneck";
 
 import { sendExportReadyEmail } from "@/lib/emails/send-export-ready-email";
@@ -103,65 +102,27 @@ export const exportVisitsTask = task({
         throw new Error("Invalid export type");
       }
 
-      // Create timestamp for filename
-      const currentTime = new Date().toISOString().split("T")[0];
-
-      // Upload CSV to Vercel Blob
-      const filename = `visits-${resourceName.replace(/[^a-zA-Z0-9]/g, "_")}-${currentTime}.csv`;
-      const blob = await put(filename, csvData, {
-        access: "public",
-        addRandomSuffix: true,
-        contentType: "text/csv",
-      });
-
-      logger.info("CSV uploaded to Vercel Blob", {
-        filename,
-        url: blob.downloadUrl,
-        size: csvData.length,
-      });
-
-      // Store the blob URL in Redis
-      const updatedJob = await jobStore.updateJob(exportId, {
-        status: "COMPLETED",
-        result: blob.downloadUrl,
-        resourceName,
-        completedAt: new Date().toISOString(),
-      });
-
-      // Send email notification if requested
-      if (updatedJob?.emailNotification && updatedJob.emailAddress) {
-        try {
-          await sendExportReadyEmail({
-            to: updatedJob.emailAddress,
-            resourceName: resourceName,
-            downloadUrl: `${process.env.NEXTAUTH_URL}/api/teams/${teamId}/export-jobs/${exportId}?download=true`,
-          });
-          logger.info("Export ready email sent", {
-            exportId,
-            emailAddress: updatedJob.emailAddress,
-          });
-        } catch (error) {
-          logger.error("Failed to send export ready email", {
-            exportId,
-            error: error instanceof Error ? error.message : String(error),
-          });
-        }
-      }
-
-      logger.info("Export visits task completed successfully", {
+      // Export storage not configured - Vercel Blob removed
+      // This feature requires external blob storage which is not available
+      logger.error("Export storage not configured - Vercel Blob has been removed", {
         exportId,
         type,
         resourceId,
         csvSize: csvData.length,
-        blobUrl: blob.downloadUrl,
+      });
+
+      // Update job status to failed
+      await jobStore.updateJob(exportId, {
+        status: "FAILED",
+        error: "Export storage not configured. Contact administrator.",
       });
 
       return {
-        success: true,
+        success: false,
         exportId,
         resourceName,
         csvSize: csvData.length,
-        blobUrl: blob.downloadUrl,
+        error: "Export storage not configured",
       };
     } catch (error) {
       logger.error("Export visits task failed", {

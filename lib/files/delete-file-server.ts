@@ -1,6 +1,5 @@
 import { DeleteObjectsCommand, ListObjectsV2Command } from "@aws-sdk/client-s3";
 import { DocumentStorageType } from "@prisma/client";
-import { del } from "@vercel/blob";
 import { match } from "ts-pattern";
 
 import { getTeamS3ClientAndConfig } from "./aws-client";

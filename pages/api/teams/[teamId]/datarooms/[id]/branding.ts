@@ -1,7 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
-import { del } from "@vercel/blob";
 import { getServerSession } from "next-auth";
 
 import { errorhandler } from "@/lib/errorHandler";
@@ -124,13 +123,9 @@ export default async function handle(
       select: { id: true, logo: true, banner: true },
     });
 
-    if (brand && brand.logo) {
-      // delete the logo from vercel blob
-      await del(brand.logo);
-    }
-    if (brand && brand.banner) {
-      // delete the logo from vercel blob
-      await del(brand.banner);
+    if (brand) {
+      // Skip file deletion - Vercel Blob not configured
+      console.log("Skipping branding file deletion (Vercel Blob not configured)");
     }
 
     // delete the branding from database

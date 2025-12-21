@@ -1,6 +1,5 @@
 import { CopyObjectCommand, ListObjectsV2Command } from "@aws-sdk/client-s3";
 import { DocumentStorageType } from "@prisma/client";
-import { copy } from "@vercel/blob";
 import { match } from "ts-pattern";
 
 import { newId } from "@/lib/id-helper";
@@ -40,16 +39,11 @@ const copyFileInVercelServer = async ({
   fileName: string;
   fileUrl: string;
 }) => {
-  const newFileName = fileName + "-copy";
-
-  const blob = await copy(fileUrl, newFileName, {
-    access: "public",
-    addRandomSuffix: true,
-  });
-
+  // Vercel Blob copy not supported - files on old Vercel account
+  console.log("Vercel Blob copy not supported (not configured):", fileUrl);
   return {
-    type: DocumentStorageType.VERCEL_BLOB,
-    data: { fromLocation: fileUrl, toLocation: blob.url },
+    type: null,
+    data: null,
   };
 };
 

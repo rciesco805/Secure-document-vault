@@ -1,5 +1,4 @@
 import { logger, schedules } from "@trigger.dev/sdk/v3";
-import { del } from "@vercel/blob";
 
 import { jobStore } from "@/lib/redis-job-store";
 
@@ -8,63 +7,32 @@ export const cleanupExpiredExports = schedules.task({
   // Run daily at 2 AM UTC
   cron: "0 2 * * *",
   run: async (payload) => {
-    logger.info("Starting cleanup of expired export blobs", {
+    logger.info("Cleanup task skipped - Vercel Blob not configured", {
       timestamp: payload.timestamp,
     });
 
+    // Vercel Blob has been removed - cleanup not needed
+    // Just clean up the Redis queue entries without actual blob deletion
     try {
-      // Get all blob URLs that are due for cleanup
       const blobsToCleanup = await jobStore.getBlobsForCleanup();
 
       if (blobsToCleanup.length === 0) {
-        logger.info("No blobs due for cleanup");
+        logger.info("No cleanup entries found");
         return { deletedCount: 0 };
       }
 
-      logger.info(`Found ${blobsToCleanup.length} blobs to delete`);
+      // Remove entries from cleanup queue (blobs don't exist anyway)
+      for (const blob of blobsToCleanup) {
+        await jobStore.removeBlobFromCleanupQueue(blob.blobUrl, blob.jobId);
+      }
 
-      // Delete blobs from Vercel Blob
-      const deletionResults = await Promise.allSettled(
-        blobsToCleanup.map(async (blob) => {
-          try {
-            await del(blob.blobUrl);
-
-            // Remove from cleanup queue after successful deletion
-            await jobStore.removeBlobFromCleanupQueue(blob.blobUrl, blob.jobId);
-
-            logger.info("Successfully deleted blob", {
-              blobUrl: blob.blobUrl,
-              jobId: blob.jobId,
-            });
-
-            return { blob, success: true };
-          } catch (error) {
-            logger.error("Failed to delete blob", {
-              blobUrl: blob.blobUrl,
-              jobId: blob.jobId,
-              error: error instanceof Error ? error.message : String(error),
-            });
-            return { blob, success: false, error };
-          }
-        }),
-      );
-
-      const successCount = deletionResults.filter(
-        (result) => result.status === "fulfilled" && result.value.success,
-      ).length;
-
-      const failureCount = deletionResults.length - successCount;
-
-      logger.info("Cleanup completed", {
-        totalBlobs: blobsToCleanup.length,
-        successCount,
-        failureCount,
+      logger.info("Cleanup queue cleared", {
+        entriesRemoved: blobsToCleanup.length,
       });
 
       return {
-        deletedCount: successCount,
-        failureCount,
-        totalProcessed: blobsToCleanup.length,
+        deletedCount: 0,
+        entriesCleared: blobsToCleanup.length,
       };
     } catch (error) {
       logger.error("Cleanup task failed", {

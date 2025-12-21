@@ -1,24 +1,18 @@
 import { DeleteObjectsCommand, ListObjectsV2Command } from "@aws-sdk/client-s3";
-import { del } from "@vercel/blob";
 
 import { getTeamS3ClientAndConfig } from "./aws-client";
 
 export type DeleteFilesOptions = {
   teamId: string;
-  data?: string[]; // urls for vercel, not needed for s3
+  data?: string[]; // urls for vercel (ignored - not configured)
 };
 
 export const deleteFiles = async ({ teamId, data }: DeleteFilesOptions) => {
-  // run both delete functions in parallel
-  await Promise.allSettled([
-    deleteAllFilesFromS3Server(teamId),
-    data && deleteFileFromVercelServer(data),
-  ]);
-};
-
-const deleteFileFromVercelServer = async (urls: string[]) => {
-  const deleteUrlsPromises = urls.map((url) => del(url));
-  await Promise.allSettled(deleteUrlsPromises);
+  // Only delete from S3/Replit storage - Vercel Blob not configured
+  if (data && data.length > 0) {
+    console.log("Skipping Vercel Blob deletion (not configured):", data.length, "files");
+  }
+  await deleteAllFilesFromS3Server(teamId);
 };
 
 const deleteAllFilesFromS3Server = async (teamId: string) => {

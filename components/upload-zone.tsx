@@ -322,17 +322,18 @@ export default function UploadZone({
           }
         }
 
-        // Check upload transport method
-        const useVercelBlob = process.env.NEXT_PUBLIC_UPLOAD_TRANSPORT === "vercel";
+        // Check upload transport method - TUS only works with S3
+        const uploadTransport = process.env.NEXT_PUBLIC_UPLOAD_TRANSPORT;
+        const useTusUpload = uploadTransport === "s3";
         
         let uploadKey: string;
         let uploadStorageType: DocumentStorageType;
         let uploadContentType = file.type;
         
-        if (useVercelBlob) {
-          // Use Vercel Blob upload
+        if (!useTusUpload) {
+          // Use putFile for Vercel Blob or Replit storage
           try {
-            console.log("Starting Vercel Blob upload for:", file.name);
+            console.log(`Starting ${uploadTransport} upload for:`, file.name);
             const result = await putFile({
               file,
               teamId: teamInfo?.currentTeam?.id as string,
@@ -359,7 +360,7 @@ export default function UploadZone({
               onUploadProgress(index, 99, undefined);
               return updatedUploads;
             });
-            console.log("Vercel Blob upload successful, key:", uploadKey);
+            console.log(`${uploadTransport} upload successful, key:`, uploadKey);
           } catch (error) {
             console.error("Vercel Blob upload error:", error);
             setUploads((prev) =>

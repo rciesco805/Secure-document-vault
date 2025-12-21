@@ -101,9 +101,17 @@ const tusServer = new Server({
   },
 });
 
-export default function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  // TUS upload only works with S3 transport
+  const uploadTransport = process.env.NEXT_PUBLIC_UPLOAD_TRANSPORT;
+  if (uploadTransport !== "s3") {
+    return res.status(501).json({ 
+      message: `TUS upload not supported for transport: ${uploadTransport}. Use browser upload instead.` 
+    });
+  }
+
   // Get the session
-  const session = getServerSession(req, res, authOptions);
+  const session = await getServerSession(req, res, authOptions);
   if (!session) {
     return res.status(401).json({ message: "Unauthorized" });
   }

@@ -246,27 +246,30 @@ export async function POST(
         viewer.id,
       );
 
-      cookies().set(
-        `pm_drs_${executionResult.targetLinkId}`,
-        dataroomSession.token,
-        {
-          httpOnly: true,
+      // Only set cookies if session was successfully created (requires Redis)
+      if (dataroomSession) {
+        cookies().set(
+          `pm_drs_${executionResult.targetLinkId}`,
+          dataroomSession.token,
+          {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "lax",
+            expires: new Date(dataroomSession.expiresAt),
+            path: "/",
+          },
+        );
+
+        // Set client-readable flag cookie for dataroom
+        const dataroomFlagId = `pm_drs_flag_${cookieFlagId}`;
+        cookies().set(dataroomFlagId, "true", {
+          httpOnly: false, // Client-readable
           secure: process.env.NODE_ENV === "production",
           sameSite: "lax",
           expires: new Date(dataroomSession.expiresAt),
-          path: "/",
-        },
-      );
-
-      // Set client-readable flag cookie for dataroom
-      const dataroomFlagId = `pm_drs_flag_${cookieFlagId}`;
-      cookies().set(dataroomFlagId, "true", {
-        httpOnly: false, // Client-readable
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        expires: new Date(dataroomSession.expiresAt),
-        path: targetPath,
-      });
+          path: targetPath,
+        });
+      }
     }
 
     return NextResponse.json({

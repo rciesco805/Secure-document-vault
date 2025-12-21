@@ -130,45 +130,49 @@ export default async function handle(
         },
       });
 
-      if (type === "docs") {
-        await convertFilesToPdfTask.trigger(
-          {
-            documentId: document.id,
-            documentVersionId: document.versions[0].id,
-            teamId,
-          },
-          {
-            idempotencyKey: `${teamId}-${document.versions[0].id}-docs`,
-            tags: [
-              `team_${teamId}`,
-              `document_${document.id}`,
-              `version:${document.versions[0].id}`,
-            ],
-            queue: conversionQueue(team.plan),
-            concurrencyKey: teamId,
-          },
-        );
-      }
+      // Only trigger background jobs if Trigger.dev is configured
+      const triggerConfigured = !!process.env.TRIGGER_SECRET_KEY;
+      
+      if (triggerConfigured) {
+        if (type === "docs") {
+          await convertFilesToPdfTask.trigger(
+            {
+              documentId: document.id,
+              documentVersionId: document.versions[0].id,
+              teamId,
+            },
+            {
+              idempotencyKey: `${teamId}-${document.versions[0].id}-docs`,
+              tags: [
+                `team_${teamId}`,
+                `document_${document.id}`,
+                `version:${document.versions[0].id}`,
+              ],
+              queue: conversionQueue(team.plan),
+              concurrencyKey: teamId,
+            },
+          );
+        }
 
-      if (type === "pdf") {
-        await convertPdfToImageRoute.trigger(
-          {
-            documentId: document.id,
-            documentVersionId: document.versions[0].id,
-            teamId,
-            // docId: fileUrl.split("/")[1],
-          },
-          {
-            idempotencyKey: `${teamId}-${document.versions[0].id}`,
-            tags: [
-              `team_${teamId}`,
-              `document_${document.id}`,
-              `version:${document.versions[0].id}`,
-            ],
-            queue: conversionQueue(team.plan),
-            concurrencyKey: teamId,
-          },
-        );
+        if (type === "pdf") {
+          await convertPdfToImageRoute.trigger(
+            {
+              documentId: document.id,
+              documentVersionId: document.versions[0].id,
+              teamId,
+            },
+            {
+              idempotencyKey: `${teamId}-${document.versions[0].id}`,
+              tags: [
+                `team_${teamId}`,
+                `document_${document.id}`,
+                `version:${document.versions[0].id}`,
+              ],
+              queue: conversionQueue(team.plan),
+              concurrencyKey: teamId,
+            },
+          );
+        }
       }
 
       return res.status(201).json(serializeFileSize(document));

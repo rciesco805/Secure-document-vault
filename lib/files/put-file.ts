@@ -14,7 +14,7 @@ import { SUPPORTED_DOCUMENT_MIME_TYPES } from "../constants";
 
 /**
  * Gets the upload transport configuration.
- * Fetches from API if not available in process.env (for client-side runtime).
+ * Uses process.env on server-side, fetches from API on client-side if needed.
  */
 async function getUploadTransport(): Promise<string> {
   // Try process.env first (works on server-side and if env was available at build time)
@@ -22,10 +22,28 @@ async function getUploadTransport(): Promise<string> {
     return process.env.NEXT_PUBLIC_UPLOAD_TRANSPORT;
   }
   
-  // Fallback: fetch from API (for client-side when env not baked into bundle)
+  // On server-side, we must have the env var set, so default to vercel
+  if (typeof window === 'undefined') {
+    // Server-side: try to use NEXT_PUBLIC_BASE_URL for absolute URL
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+    if (baseUrl) {
+      try {
+        const response = await fetch(`${baseUrl}/api/file/upload-config`);
+        if (response.ok) {
+          const config = await response.json();
+          return config.transport || 'vercel';
+        }
+      } catch (error) {
+        console.error('Failed to fetch upload config on server:', error);
+      }
+    }
+    // Default for server-side when env not configured
+    return 'vercel';
+  }
+  
+  // Client-side: fetch from API (when env not baked into bundle)
   try {
-    const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
-    const response = await fetch(`${baseUrl}/api/file/upload-config`);
+    const response = await fetch(`${window.location.origin}/api/file/upload-config`);
     if (response.ok) {
       const config = await response.json();
       return config.transport || 'vercel';

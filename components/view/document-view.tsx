@@ -119,9 +119,11 @@ export default function DocumentView({
   );
   const [code, setCode] = useState<string | null>(magicLinkToken ?? null);
   const [isInvalidCode, setIsInvalidCode] = useState<boolean>(false);
+  const [magicLinkProcessed, setMagicLinkProcessed] = useState<boolean>(false);
 
-  const handleSubmission = async (): Promise<void> => {
+  const handleSubmission = async (overrideCode?: string): Promise<void> => {
     setIsLoading(true);
+    const effectiveCode = overrideCode ?? code;
     const response = await fetch("/api/views", {
       method: "POST",
       headers: {
@@ -139,7 +141,7 @@ export default function DocumentView({
         hasPages: document.versions[0].hasPages,
         useAdvancedExcelViewer,
         previewToken,
-        code: code ?? undefined,
+        code: effectiveCode ?? undefined,
         token: verificationToken ?? undefined,
         verifiedEmail: verifiedEmail ?? undefined,
       }),
@@ -231,15 +233,24 @@ export default function DocumentView({
 
   // If token is present, run handle submit which will verify token and get document
   // If link is not submitted and does not have email / password protection, show the access form
-  // Also handle magic link tokens for direct access
   useEffect(() => {
     if (!didMount.current) {
-      if ((!submitted && !isProtected) || token || previewToken || magicLinkToken) {
+      if ((!submitted && !isProtected) || token || previewToken) {
         handleSubmission();
       }
       didMount.current = true;
     }
-  }, [submitted, isProtected, token, previewToken, magicLinkToken]);
+  }, [submitted, isProtected, token, previewToken]);
+
+  // Handle magic link tokens separately to account for Next.js hydration timing
+  // router.query may be empty on initial mount, so we need to react when magicLinkToken becomes available
+  useEffect(() => {
+    if (magicLinkToken && !magicLinkProcessed && !submitted) {
+      setCode(magicLinkToken);
+      setMagicLinkProcessed(true);
+      handleSubmission(magicLinkToken);
+    }
+  }, [magicLinkToken, magicLinkProcessed, submitted]);
 
   // Components to render when email is submitted but verification is pending
   if (verificationRequested) {

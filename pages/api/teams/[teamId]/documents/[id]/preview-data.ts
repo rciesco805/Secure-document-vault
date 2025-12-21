@@ -159,13 +159,18 @@ export default async function handle(
     }
 
     return res.status(200).json(returnData);
-  } catch (error) {
+  } catch (error: any) {
     log({
       message: "Error fetching document preview data",
       type: "error",
       mention: true,
     });
-    console.error(error);
-    return res.status(500).json({ message: "Internal server error" });
+    console.error("Preview data error:", error);
+    console.error("Error message:", error?.message);
+    console.error("Error stack:", error?.stack);
+    return res.status(500).json({ 
+      message: "Internal server error",
+      details: process.env.NODE_ENV === "development" ? error?.message : undefined,
+    });
   }
 }

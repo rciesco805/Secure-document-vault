@@ -1,5 +1,4 @@
 import { DocumentStorageType } from "@prisma/client";
-import { getDownloadUrl } from "@vercel/blob";
 import { match } from "ts-pattern";
 
 export type GetFileOptions = {
@@ -14,12 +13,15 @@ export const getFile = async ({
   isDownload = false,
 }: GetFileOptions): Promise<string> => {
   const url = await match(type)
-    .with(DocumentStorageType.VERCEL_BLOB, () => {
-      if (isDownload) {
-        return getDownloadUrl(data);
-      } else {
-        return data;
+    .with(DocumentStorageType.VERCEL_BLOB, async () => {
+      // For Vercel Blob, just return the URL directly
+      // Download URLs require ?download=1 query param for public blobs
+      if (isDownload && data.includes("blob.vercel-storage.com")) {
+        const downloadUrl = new URL(data);
+        downloadUrl.searchParams.set("download", "1");
+        return downloadUrl.toString();
       }
+      return data;
     })
     .with(DocumentStorageType.S3_PATH, async () => {
       // Check if this is a Replit Object Storage path

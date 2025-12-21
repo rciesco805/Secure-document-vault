@@ -50,11 +50,6 @@ export default async function handler(
         return res.status(404).json({ error: "Team not found" });
       }
 
-      if (team.plan === "free") {
-        return res.status(403).json({ 
-          error: "This feature is not available for your plan" 
-        });
-      }
 
       // Create export job record
       const exportJob = await jobStore.createJob({

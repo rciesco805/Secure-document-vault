@@ -97,11 +97,6 @@ export default async function handler(
       return res.status(404).end("Team not found");
     }
 
-    if (team.plan === "free") {
-      return res
-        .status(403)
-        .json({ message: "This feature is not available for your plan" });
-    }
 
     // Fetching Dataroom based on dataroom.id
     const dataroom = await prisma.dataroom.findUnique({

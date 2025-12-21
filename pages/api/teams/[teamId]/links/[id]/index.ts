@@ -50,13 +50,6 @@ export default async function handle(
         return res.status(401).end("Unauthorized");
       }
 
-      // Check if team is on free plan
-      if (teamAccess.team.plan === "free") {
-        return res.status(403).json({
-          error:
-            "Link deletion is not available on the free plan. Please upgrade to delete links.",
-        });
-      }
 
       // Find the link and verify it belongs to this team
       const linkToDelete = await prisma.link.findUnique({

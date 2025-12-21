@@ -523,13 +523,6 @@ export default async function handle(
         return res.status(404).json({ error: "Link not found" });
       }
 
-      // Check if team is on free plan
-      if (linkToBeDeleted.team?.plan === "free") {
-        return res.status(403).json({
-          error:
-            "Link deletion is not available on the free plan. Please upgrade to delete links.",
-        });
-      }
 
       // Check authorization based on link type
       let isAuthorized = false;

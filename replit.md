@@ -228,10 +228,20 @@ All upgrade prompts, trial banners, and blocking modals are disabled because:
 ### Files Modified for Self-Hosted
 | File | Change |
 |------|--------|
-| `lib/swr/use-billing.ts` | Hardcoded datarooms-plus plan response |
+| `lib/swr/use-billing.ts` | Hardcoded datarooms-plus plan with all flags true (isPro, isBusiness, isDatarooms, isDataroomsPlus, isDataroomsPremium) |
 | `ee/limits/swr-handler.ts` | Always returns unlimited flags |
 | `pages/settings/people.tsx` | Simplified to direct AddTeamMembers modal |
 | `components/settings/settings-header.tsx` | Removed Billing tab |
+| `components/sidebar/team-switcher.tsx` | Removed plan checks for "Add new team" button |
+| `pages/api/teams/[teamId]/datarooms/index.ts` | Removed plan restrictions for dataroom creation |
+| `pages/api/teams/[teamId]/viewers/index.ts` | Removed free plan restriction |
+| `pages/api/teams/[teamId]/viewers/[id]/index.ts` | Removed free plan restriction |
+| `pages/api/teams/[teamId]/links/[id]/index.ts` | Removed free plan restriction for link deletion |
+| `pages/api/links/[id]/index.ts` | Removed free plan restriction for link deletion |
+| `pages/api/teams/[teamId]/export-jobs.ts` | Removed free plan restriction |
+| `pages/api/teams/[teamId]/datarooms/[id]/export-visits.ts` | Removed free plan restriction |
+| `pages/api/teams/[teamId]/datarooms/[id]/groups/[groupId]/export-visits.ts` | Removed free plan restriction |
+| `app/(auth)/verify/page.tsx` | Auto-redirect for magic link login (no second click needed) |
 
 ## Production Deployment
 

@@ -90,9 +90,7 @@ export default function DataroomsPage() {
 
   const hasActiveFilters = searchQuery || tagsFilter?.length;
 
-  useEffect(() => {
-    if (!isTrial && (isFree || isPro)) router.push("/documents");
-  }, [isTrial, isFree, isPro]);
+  // Redirect disabled for self-hosted deployment - all plans have dataroom access
 
   return (
     <AppLayout>

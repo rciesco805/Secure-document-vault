@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 
 import { formatDistanceToNow } from "date-fns";
+import { EyeIcon } from "lucide-react";
 
 import { TagColorProps } from "@/lib/types";
 
@@ -193,6 +194,34 @@ export default function DataroomCard({ dataroom }: DataroomCardProps) {
             </div>
 
             <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+              {/* View as Visitor button - only show if there are active links */}
+              {isActive && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-8 gap-2 text-muted-foreground hover:text-foreground"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          const firstActiveLink = activeLinks[0];
+                          if (firstActiveLink) {
+                            window.open(`/view/${firstActiveLink.id}`, '_blank');
+                          }
+                        }}
+                      >
+                        <EyeIcon className="h-4 w-4" />
+                        <span className="hidden sm:inline">View as Visitor</span>
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Preview how visitors see this dataroom</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
               {!hasDocuments ? (
                 <TooltipProvider>
                   <Tooltip>

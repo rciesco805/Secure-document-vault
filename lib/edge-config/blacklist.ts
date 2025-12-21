@@ -8,12 +8,11 @@ export const isBlacklistedEmail = async (email: string) => {
   let blacklistedEmails: string[] = [];
   try {
     const result = await get("emails");
-    // Make sure we only use string arrays
     blacklistedEmails = Array.isArray(result)
       ? result.filter((item): item is string => typeof item === "string")
       : [];
   } catch (e) {
-    // Already initialized as empty array
+    console.error("Failed to fetch blacklisted emails from edge config:", e);
   }
 
   if (blacklistedEmails.length === 0) return false;

@@ -73,11 +73,6 @@ export function SettingsHeader() {
             segment: "incoming-webhooks",
             disabled: !features?.incomingWebhooks,
           },
-          {
-            label: "Billing",
-            href: `/settings/billing`,
-            segment: "billing",
-          },
         ]}
       />
     </header>

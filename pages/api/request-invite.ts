@@ -7,7 +7,11 @@ import { sendEmail } from "@/lib/resend";
 
 import InviteRequest from "@/components/emails/invite-request";
 
-const ADMIN_EMAIL = "investors@bermudafranchisegroup.com";
+const ADMIN_EMAILS = [
+  "investors@bermudafranchisegroup.com",
+  "richard@bermudafranchisegroup.com",
+  "rciesco@gmail.com",
+];
 
 const inviteRequestSchema = z.object({
   email: z.string().trim().email("Invalid email address").min(1),
@@ -37,28 +41,33 @@ export default async function handler(
 
     const baseUrl = process.env.VERIFICATION_EMAIL_BASE_URL || process.env.NEXTAUTH_URL || "https://dataroom.bermudafranchisegroup.com";
     
-    const magicLink = await createAdminMagicLink({
-      email: ADMIN_EMAIL,
-      callbackUrl: "/dashboard",
-      baseUrl,
-    });
-    
-    const signInUrl = magicLink || `${baseUrl}/login`;
+    // Send notification to all admin emails
+    const emailPromises = ADMIN_EMAILS.map(async (adminEmail) => {
+      const magicLink = await createAdminMagicLink({
+        email: adminEmail,
+        callbackUrl: "/dashboard",
+        baseUrl,
+      });
+      
+      const signInUrl = magicLink || `${baseUrl}/login`;
 
-    const emailTemplate = InviteRequest({
-      email,
-      fullName,
-      company,
-      signInUrl,
+      const emailTemplate = InviteRequest({
+        email,
+        fullName,
+        company,
+        signInUrl,
+      });
+
+      return sendEmail({
+        to: adminEmail,
+        from: "BF Fund Portal <noreply@investors.bermudafranchisegroup.com>",
+        subject: `New Investor Access Request: ${fullName}`,
+        react: emailTemplate,
+        replyTo: email,
+      });
     });
 
-    await sendEmail({
-      to: ADMIN_EMAIL,
-      from: "BF Fund Portal <noreply@investors.bermudafranchisegroup.com>",
-      subject: `New Investor Access Request: ${fullName}`,
-      react: emailTemplate,
-      replyTo: email,
-    });
+    await Promise.all(emailPromises);
 
     return res.status(200).json({ message: "Request sent successfully" });
   } catch (error) {

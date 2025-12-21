@@ -209,6 +209,30 @@ Ensure these are set in all environments:
 - `UNSUBSCRIBE_BASE_URL` - Required for unsubscribe links
 - `TINYBIRD_TOKEN` - Optional, analytics limited without it
 
+## Self-Hosted Simplifications (December 2024)
+
+The following SaaS-specific features were removed/disabled for self-hosted deployment:
+
+### Billing & Plan Gating Removed
+- **usePlan hook** (`lib/swr/use-billing.ts`) - Always returns `datarooms-plus` plan with all features enabled
+- **useLimits hook** (`ee/limits/swr-handler.ts`) - Always returns unlimited (no document/link/user limits)
+- **People page** (`pages/settings/people.tsx`) - Simple "Add Member" button replaces complex seat/checkout flow
+- **Billing settings tab** - Removed from settings navigation
+
+### Upgrade Prompts Disabled
+All upgrade prompts, trial banners, and blocking modals are disabled because:
+- `isFree: false` and `isTrial: false` always
+- `isDataroomsPlus: true` always
+- `canAddUsers/canAddDocuments/canAddLinks: true` always
+
+### Files Modified for Self-Hosted
+| File | Change |
+|------|--------|
+| `lib/swr/use-billing.ts` | Hardcoded datarooms-plus plan response |
+| `ee/limits/swr-handler.ts` | Always returns unlimited flags |
+| `pages/settings/people.tsx` | Simplified to direct AddTeamMembers modal |
+| `components/settings/settings-header.tsx` | Removed Billing tab |
+
 ## Production Deployment
 
 After deploying to production, run the SQL script to enable all features:

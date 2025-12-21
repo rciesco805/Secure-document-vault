@@ -35,9 +35,11 @@ async function createDataroomSession(
   ipAddress: string,
   verified: boolean,
   viewerId?: string,
-): Promise<{ token: string; expiresAt: number }> {
+): Promise<{ token: string; expiresAt: number } | null> {
   if (!redis) {
-    throw new Error("Session storage not configured");
+    // Redis not configured - session storage unavailable but dataroom still works
+    console.log("Redis not configured - dataroom sessions will not persist across page loads");
+    return null;
   }
 
   const sessionToken = crypto.randomBytes(32).toString("hex");

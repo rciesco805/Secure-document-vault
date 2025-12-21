@@ -170,7 +170,7 @@ export default function DataroomCard({ dataroom }: DataroomCardProps) {
           </div>
 
           {/* Footer */}
-          <div className="flex items-center justify-between border-t pt-3">
+          <div className="flex items-center justify-between gap-3 border-t pt-4">
             <div className="text-xs text-muted-foreground">
               {lastViewedAt ? (
                 <TooltipProvider>

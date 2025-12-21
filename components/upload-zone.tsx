@@ -322,8 +322,18 @@ export default function UploadZone({
           }
         }
 
-        // Check upload transport method - TUS only works with S3
-        const uploadTransport = process.env.NEXT_PUBLIC_UPLOAD_TRANSPORT;
+        // Fetch upload transport config from API (env vars not reliable client-side)
+        let uploadTransport = 'vercel';
+        try {
+          const configResponse = await fetch(`${window.location.origin}/api/file/upload-config`);
+          if (configResponse.ok) {
+            const config = await configResponse.json();
+            uploadTransport = config.transport || 'vercel';
+          }
+        } catch (error) {
+          console.log('Using default upload transport: vercel');
+        }
+        
         const useTusUpload = uploadTransport === "s3";
         
         let uploadKey: string;
@@ -362,7 +372,7 @@ export default function UploadZone({
             });
             console.log(`${uploadTransport} upload successful, key:`, uploadKey);
           } catch (error) {
-            console.error("Vercel Blob upload error:", error);
+            console.error(`${uploadTransport} upload error:`, error);
             setUploads((prev) =>
               prev.filter(
                 (upload) => upload.uploadId !== newUploads[index].uploadId,

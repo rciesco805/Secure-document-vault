@@ -13,6 +13,32 @@ import type {
 import { SUPPORTED_DOCUMENT_MIME_TYPES } from "../constants";
 
 /**
+ * Gets the upload transport configuration.
+ * Fetches from API if not available in process.env (for client-side runtime).
+ */
+async function getUploadTransport(): Promise<string> {
+  // Try process.env first (works on server-side and if env was available at build time)
+  if (process.env.NEXT_PUBLIC_UPLOAD_TRANSPORT) {
+    return process.env.NEXT_PUBLIC_UPLOAD_TRANSPORT;
+  }
+  
+  // Fallback: fetch from API (for client-side when env not baked into bundle)
+  try {
+    const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
+    const response = await fetch(`${baseUrl}/api/file/upload-config`);
+    if (response.ok) {
+      const config = await response.json();
+      return config.transport || 'vercel';
+    }
+  } catch (error) {
+    console.error('Failed to fetch upload config:', error);
+  }
+  
+  // Default fallback
+  return 'vercel';
+}
+
+/**
  * Uploads a file to the configured storage backend (S3 or Vercel).
  *
  * For S3 uploads:
@@ -40,15 +66,15 @@ export const putFile = async ({
   numPages: number | undefined;
   fileSize: number | undefined;
 }> => {
-  const NEXT_PUBLIC_UPLOAD_TRANSPORT = process.env.NEXT_PUBLIC_UPLOAD_TRANSPORT;
+  const uploadTransport = await getUploadTransport();
+  console.log('[putFile] Using transport:', uploadTransport);
 
-  const { type, data, numPages, fileSize } = await match(
-    NEXT_PUBLIC_UPLOAD_TRANSPORT,
-  )
+  const { type, data, numPages, fileSize } = await match(uploadTransport)
     .with("s3", async () => putFileInS3({ file, teamId, docId }))
     .with("vercel", async () => putFileInVercel(file))
     .with("replit", async () => putFileInReplit(file))
     .otherwise(() => {
+      console.error('[putFile] Unknown transport:', uploadTransport);
       return {
         type: null,
         data: null,

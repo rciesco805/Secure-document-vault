@@ -52,7 +52,7 @@ export default async function handler(
 
       return sendEmail({
         to: adminEmail,
-        from: "BF Fund Dataroom <investors@bermudafranchisegroup.com>",
+        from: "BF Fund Dataroom <noreply@investors.bermudafranchisegroup.com>",
         subject: `New Investor Access Request: ${fullName}`,
         react: emailTemplate,
         replyTo: email,

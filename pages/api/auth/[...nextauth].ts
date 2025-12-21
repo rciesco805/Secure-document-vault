@@ -70,6 +70,7 @@ const providers: Provider[] = [
     allowDangerousEmailAccountLinking: true,
   }),
   EmailProvider({
+    maxAge: 20 * 60, // 20 minutes - magic link expiration
     async sendVerificationRequest({ identifier, url }) {
       const hasValidNextAuthUrl = !!process.env.NEXTAUTH_URL;
       let finalUrl = url;

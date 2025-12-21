@@ -208,6 +208,19 @@ Ensure these are set in all environments:
 - `JWT_SECRET` - Required for unsubscribe link generation
 - `UNSUBSCRIBE_BASE_URL` - Required for unsubscribe links
 - `TINYBIRD_TOKEN` - Optional, analytics limited without it
+- `NEXT_PUBLIC_UPLOAD_TRANSPORT` - Set to `replit` for secure storage (production)
+
+### Security Configuration (December 2024)
+
+**Magic Link Authentication:**
+- Token expiration: 20 minutes (`maxAge: 20 * 60` in EmailProvider)
+- Admin allowlist enforced: Only rciesco@gmail.com, investors@bermudafranchisegroup.com, richard@bermudafranchisegroup.com
+- Auto-redirect on verification (no second click needed)
+
+**Document Storage Security:**
+- Production: Replit Object Storage with presigned URLs (private by default)
+- Development: Replit Object Storage with presigned URLs
+- Files are AES-256 encrypted and require authenticated access
 
 ## Self-Hosted Simplifications (December 2024)
 

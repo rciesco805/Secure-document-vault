@@ -3,20 +3,16 @@ import { useRouter } from "next/router";
 import { useMemo, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
-import { PlanEnum } from "@/ee/stripe/constants";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
 import { useAnalytics } from "@/lib/analytics";
-import { usePlan } from "@/lib/swr/use-billing";
 import { useInvitations } from "@/lib/swr/use-invitations";
-import useLimits from "@/lib/swr/use-limits";
 import { useGetTeam } from "@/lib/swr/use-team";
 import { useTeams } from "@/lib/swr/use-teams";
 import { CustomUser } from "@/lib/types";
 
-import { AddSeatModal } from "@/components/billing/add-seat-modal";
 import AppLayout from "@/components/layouts/app";
 import { SettingsHeader } from "@/components/settings/settings-header";
 import Folder from "@/components/shared/icons/folder";
@@ -31,19 +27,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
-import { UpgradeButton } from "@/components/ui/upgrade-button";
 
-export default function Billing() {
+export default function People() {
   const [isTeamMemberInviteModalOpen, setTeamMemberInviteModalOpen] =
     useState<boolean>(false);
-  const [isAddSeatModalOpen, setAddSeatModalOpen] = useState<boolean>(false);
   const [leavingUserId, setLeavingUserId] = useState<string>("");
 
   const { data: session } = useSession();
   const { team, loading } = useGetTeam()!;
   const teamInfo = useTeam();
-  const { isTrial } = usePlan();
-  const { canAddUsers, showUpgradePlanModal } = useLimits();
   const { teams } = useTeams();
   const analytics = useAnalytics();
 
@@ -219,7 +211,6 @@ export default function Billing() {
 
     toast.success("Invitation revoked successfully!");
   };
-  const showInvite = canAddUsers;
 
   return (
     <AppLayout>
@@ -244,29 +235,12 @@ export default function Billing() {
                   Teammates that have access to this project.
                 </p>
               </div>
-              {showUpgradePlanModal ? (
-                <UpgradeButton
-                  text="Invite Members"
-                  clickedPlan={isTrial ? PlanEnum.Business : PlanEnum.Pro}
-                  trigger="invite_team_members"
-                />
-              ) : showInvite ? (
-                <AddTeamMembers
-                  open={isTeamMemberInviteModalOpen}
-                  setOpen={setTeamMemberInviteModalOpen}
-                >
-                  <Button>Invite</Button>
-                </AddTeamMembers>
-              ) : (
-                <AddSeatModal
-                  open={isAddSeatModalOpen}
-                  setOpen={setAddSeatModalOpen}
-                >
-                  <Button className="whitespace-nowrap px-1 text-xs sm:px-4 sm:text-sm">
-                    Add a seat to invite member
-                  </Button>
-                </AddSeatModal>
-              )}
+              <AddTeamMembers
+                open={isTeamMemberInviteModalOpen}
+                setOpen={setTeamMemberInviteModalOpen}
+              >
+                <Button>Add Member</Button>
+              </AddTeamMembers>
             </div>
           </div>
 
@@ -317,11 +291,6 @@ export default function Billing() {
                     <span className="text-sm capitalize text-foreground">
                       {member.role.toLowerCase()}
                     </span>
-                    {member.status === "BLOCKED_TRIAL_EXPIRED" && (
-                      <span className="text-xs font-medium text-red-500">
-                        Blocked (Trial Expired)
-                      </span>
-                    )}
                   </div>
                   {leavingUserId === member.userId ? (
                     <span className="text-xs">leaving...</span>

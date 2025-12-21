@@ -25,7 +25,19 @@ export const deleteFile = async ({ type, data, teamId }: DeleteFileOptions) => {
 };
 
 const deleteFileFromVercelServer = async (url: string) => {
-  await del(url);
+  try {
+    // Check if this is a Replit Object Storage URL (migrated from Vercel Blob)
+    if (url.includes('/objects/') || url.includes('replit')) {
+      // Files in Replit Object Storage are managed differently
+      // Skip Vercel deletion for these URLs
+      console.log("Skipping Vercel delete for Replit storage URL:", url);
+      return;
+    }
+    await del(url);
+  } catch (error) {
+    // Log but don't throw - file may have already been deleted or migrated
+    console.error("Error deleting file from Vercel (may be expected if migrated):", error);
+  }
 };
 
 const deleteAllFilesFromS3Server = async (data: string, teamId: string) => {

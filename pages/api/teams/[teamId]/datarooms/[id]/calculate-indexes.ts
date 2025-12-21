@@ -3,7 +3,6 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { getServerSession } from "next-auth/next";
 
-import { getFeatureFlags } from "@/lib/featureFlags";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 import { calculateAndUpdateHierarchicalIndexes } from "@/lib/utils/calculate-hierarchical-indexes";
@@ -68,17 +67,6 @@ export default async function handler(
       return res.status(404).json({ message: "Dataroom not found" });
     }
 
-    // Check if user has access: feature flag enabled OR datarooms-plus plan
-    const featureFlags = await getFeatureFlags({ teamId });
-    const hasDataroomsPlusPlan =
-      dataroom.team.plan === "datarooms-plus" ||
-      dataroom.team.plan === "datarooms-plus+old";
-
-    if (!featureFlags.dataroomIndex && !hasDataroomsPlusPlan) {
-      return res.status(403).json({
-        message: "This feature requires a Data Rooms Plus plan",
-      });
-    }
 
     // Calculate and update hierarchical indexes
     const result = await calculateAndUpdateHierarchicalIndexes(dataroomId);

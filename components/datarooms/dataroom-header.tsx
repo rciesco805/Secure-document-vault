@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import { useState } from "react";
 
-import { BellRingIcon } from "lucide-react";
+import { BellRingIcon, EyeIcon } from "lucide-react";
 
 import { useDataroom, useDataroomLinks } from "@/lib/swr/use-dataroom";
 
@@ -64,7 +64,31 @@ export const DataroomHeader = ({
             </Tooltip>
           ) : null}
         </div>
-        <div>
+        <div className="flex gap-2">
+          {/* View as Visitor button - only show if there are active links */}
+          {links && links.filter(link => !link.isArchived && (!link.expiresAt || new Date(link.expiresAt) > new Date())).length > 0 && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    const activeLinks = links.filter(link => !link.isArchived && (!link.expiresAt || new Date(link.expiresAt) > new Date()));
+                    if (activeLinks[0]) {
+                      window.open(`/view/${activeLinks[0].id}`, '_blank');
+                    }
+                  }}
+                >
+                  <EyeIcon className="h-4 w-4 mr-2" />
+                  View as Visitor
+                </Button>
+              </TooltipTrigger>
+              <TooltipPortal>
+                <TooltipContent>
+                  <p>Preview how visitors see this dataroom</p>
+                </TooltipContent>
+              </TooltipPortal>
+            </Tooltip>
+          )}
           <Button onClick={() => setIsLinkSheetOpen(true)} key={1}>
             Share
           </Button>

@@ -293,11 +293,13 @@ export default async function handle(
     }
 
     // Validate request body using Zod schema for security
+    console.log('[Document Upload] Received body:', JSON.stringify(req.body, null, 2));
     const validationResult = await documentUploadSchema.safeParseAsync(
       req.body,
     );
 
     if (!validationResult.success) {
+      console.error('[Document Upload] Validation failed:', JSON.stringify(validationResult.error.errors, null, 2));
       log({
         message: `Document upload validation failed for teamId: ${teamId}. Errors: ${JSON.stringify(validationResult.error.errors)}`,
         type: "error",

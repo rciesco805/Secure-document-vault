@@ -177,9 +177,19 @@ export default async function handler(
         }
       });
 
-      // Get team-specific Lambda client and storage config
-      const client = await getLambdaClientForTeam(teamId);
+      // Get storage config first to check if Lambda is configured
       const storageConfig = await getTeamStorageConfigById(teamId);
+
+      // Check if Lambda function is configured (not available with Replit storage)
+      if (!storageConfig.lambdaFunctionName) {
+        return res.status(501).json({
+          error: "Bulk download is not available",
+          message: "This feature requires AWS Lambda configuration. Individual documents can still be downloaded from their detail pages.",
+        });
+      }
+
+      // Get team-specific Lambda client (only after confirming Lambda is configured)
+      const client = await getLambdaClientForTeam(teamId);
 
       const params = {
         FunctionName: storageConfig.lambdaFunctionName,

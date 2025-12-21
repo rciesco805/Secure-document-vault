@@ -259,15 +259,18 @@ export const documentUploadSchema = z
         },
       )
       .or(z.literal("text/html")) // Allow text/html for Notion documents
+      .or(z.literal("")) // Allow empty string (browser fallback for unknown types)
       .nullish(), // Make contentType optional for Notion files
     createLink: z.boolean().optional(),
     fileSize: z.number().int().positive().optional(),
   })
   .refine(
     (data) => {
-      // Skip content type validation if it's not provided (e.g., for Notion files)
-      if (!data.contentType) {
-        return data.type === "notion";
+      // Skip content type validation if it's not provided or empty (e.g., for Notion files or unknown types)
+      if (!data.contentType || data.contentType === "") {
+        // For files without content type, allow if type is notion OR if type is valid
+        // This handles browsers that return empty string for unknown file types
+        return data.type === "notion" || (SUPPORTED_DOCUMENT_SIMPLE_TYPES as readonly string[]).includes(data.type);
       }
 
       // Validate that content type matches the declared file type

@@ -15,6 +15,11 @@ Preferred communication style: Simple, everyday language.
 ## Recent Changes
 
 **December 2024:**
+- Fixed document upload validation to accept empty content types (browser compatibility fix)
+- Added "View as Visitor" button to dataroom header for easy preview when active links exist
+- Created branding preview demo pages (room_ppreview_demo and entrance_ppreview_demo)
+- Added graceful error message for bulk download feature (requires AWS Lambda, not available with Replit storage)
+- Removed plan restriction from calculate-indexes API endpoint
 - Migrated document storage from Vercel Blob to Replit App Storage for enhanced security
   - Files now use AES-256 encryption and are private by default
   - Storage path format: /objects/documents/{uuid}/{filename}

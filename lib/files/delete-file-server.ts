@@ -11,10 +11,18 @@ export type DeleteFileOptions = {
 };
 
 export const deleteFile = async ({ type, data, teamId }: DeleteFileOptions) => {
+  const uploadTransport = process.env.NEXT_PUBLIC_UPLOAD_TRANSPORT;
+  
   return await match(type)
-    .with(DocumentStorageType.S3_PATH, async () =>
-      deleteAllFilesFromS3Server(data, teamId),
-    )
+    .with(DocumentStorageType.S3_PATH, async () => {
+      // Only attempt S3 deletion if we're configured for S3
+      // Otherwise skip (file may be on Replit Object Storage or old S3)
+      if (uploadTransport === "s3") {
+        return deleteAllFilesFromS3Server(data, teamId);
+      }
+      console.log("Skipping S3 deletion (not configured for S3):", data);
+      return;
+    })
     .with(DocumentStorageType.VERCEL_BLOB, async () =>
       deleteFileFromVercelServer(data),
     )

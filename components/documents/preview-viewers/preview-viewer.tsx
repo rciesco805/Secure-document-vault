@@ -2,6 +2,7 @@ import { DocumentPreviewData } from "@/lib/types/document-preview";
 
 import { PreviewImageViewer } from "./preview-image-viewer";
 import { PreviewPagesViewer } from "./preview-pages-viewer";
+import { PreviewPdfViewer } from "./preview-pdf-viewer";
 
 interface PreviewViewerProps {
   documentData: DocumentPreviewData;
@@ -15,6 +16,11 @@ export function PreviewViewer({ documentData, onClose }: PreviewViewerProps) {
       return (
         <PreviewPagesViewer documentData={documentData} onClose={onClose} />
       );
+    }
+
+    // PDF files without pre-converted pages (fallback viewer)
+    if (documentData.fileType === "pdf" && documentData.file) {
+      return <PreviewPdfViewer documentData={documentData} onClose={onClose} />;
     }
 
     // Single image files

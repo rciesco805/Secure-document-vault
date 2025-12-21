@@ -134,9 +134,16 @@ export default async function handle(
       return res.status(400).json({
         message: "Notion document preview coming soon",
       });
+    } else if (primaryVersion.type === "pdf") {
+      // PDF without pages - return file URL for direct PDF viewing
+      returnData.file = await getFile({
+        data: primaryVersion.file,
+        type: primaryVersion.storageType,
+      });
+      returnData.numPages = primaryVersion.numPages || 1;
     } else {
       // Check if document should be processed but isn't
-      const shouldHavePages = ["pdf", "docs", "slides", "cad"].includes(
+      const shouldHavePages = ["docs", "slides", "cad"].includes(
         primaryVersion.type || "",
       );
 

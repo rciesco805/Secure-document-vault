@@ -41,6 +41,9 @@ export function DocumentPreviewButton({
     // Support documents with pages (PDFs, docs, slides, etc.)
     if (primaryVersion.hasPages) return true;
 
+    // Support PDF documents (fallback viewer works without pages)
+    if (primaryVersion.type === "pdf") return true;
+
     // Support image documents
     if (primaryVersion.type === "image") return true;
 

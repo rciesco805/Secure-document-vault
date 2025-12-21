@@ -2,7 +2,6 @@ import { NextApiRequest, NextApiResponse } from "next";
 
 import { z } from "zod";
 
-import { createAdminMagicLink } from "@/lib/auth/create-admin-magic-link";
 import { sendEmail } from "@/lib/resend";
 
 import InviteRequest from "@/components/emails/invite-request";
@@ -39,18 +38,11 @@ export default async function handler(
 
     const { email, fullName, company } = validation.data;
 
-    const baseUrl = process.env.VERIFICATION_EMAIL_BASE_URL || process.env.NEXTAUTH_URL || "https://dataroom.bermudafranchisegroup.com";
+    const baseUrl = process.env.NEXTAUTH_URL || "https://dataroom.bermudafranchisegroup.com";
+    const signInUrl = `${baseUrl}/login`;
     
     // Send notification to all admin emails
     const emailPromises = ADMIN_EMAILS.map(async (adminEmail) => {
-      const magicLink = await createAdminMagicLink({
-        email: adminEmail,
-        callbackUrl: "/dashboard",
-        baseUrl,
-      });
-      
-      const signInUrl = magicLink || `${baseUrl}/login`;
-
       const emailTemplate = InviteRequest({
         email,
         fullName,
@@ -60,7 +52,7 @@ export default async function handler(
 
       return sendEmail({
         to: adminEmail,
-        from: "BF Fund Portal <noreply@investors.bermudafranchisegroup.com>",
+        from: "BF Fund Dataroom <investors@bermudafranchisegroup.com>",
         subject: `New Investor Access Request: ${fullName}`,
         react: emailTemplate,
         replyTo: email,

@@ -1,6 +1,5 @@
 import { useState } from "react";
 
-import { PlanEnum } from "@/ee/stripe/constants";
 import {
   FileJson,
   FileSlidersIcon,
@@ -10,11 +9,9 @@ import {
 import { toast } from "sonner";
 
 import { useAnalytics } from "@/lib/analytics";
-import { usePlan } from "@/lib/swr/use-billing";
 import { useDataroomLinks } from "@/lib/swr/use-dataroom";
 import { IndexFileFormat } from "@/lib/types/index-file";
 
-import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -47,7 +44,6 @@ export default function GenerateIndexDialog({
   disabled = false,
 }: GenerateIndexDialogProps) {
   const { links } = useDataroomLinks();
-  const { isDatarooms, isDataroomsPlus, isTrial } = usePlan();
   const analytics = useAnalytics();
 
   const [isLoading, setIsLoading] = useState(false);
@@ -56,14 +52,7 @@ export default function GenerateIndexDialog({
     useState<IndexFileFormat>("excel");
   const [isOpen, setIsOpen] = useState(false);
 
-  const hasDataroomsPlan = isDatarooms || isDataroomsPlus || isTrial;
-
   const handleGenerateIndex = async () => {
-    if (!hasDataroomsPlan) {
-      toast.error("Upgrade to a Data Rooms plan to generate index files.");
-      return;
-    }
-
     if (!selectedLinkId) {
       toast.error("Please select a link first");
       return;
@@ -148,9 +137,7 @@ export default function GenerateIndexDialog({
         <DialogHeader>
           <DialogTitle>Generate Dataroom Index File</DialogTitle>
           <DialogDescription>
-            {hasDataroomsPlan
-              ? "Select a link and format to generate the index file."
-              : "Upgrade to a Data Rooms plan to generate index files."}
+            Select a link and format to generate the index file.
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
@@ -216,21 +203,12 @@ export default function GenerateIndexDialog({
           </div>
         </div>
         <DialogFooter>
-          {hasDataroomsPlan ? (
-            <Button
-              onClick={handleGenerateIndex}
-              disabled={!selectedLinkId || isLoading}
-            >
-              {isLoading ? "Generating..." : "Generate"}
-            </Button>
-          ) : (
-            <UpgradePlanModal
-              clickedPlan={PlanEnum.DataRooms}
-              trigger="datarooms_generate_index_button"
-            >
-              <Button>Upgrade to generate</Button>
-            </UpgradePlanModal>
-          )}
+          <Button
+            onClick={handleGenerateIndex}
+            disabled={!selectedLinkId || isLoading}
+          >
+            {isLoading ? "Generating..." : "Generate"}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

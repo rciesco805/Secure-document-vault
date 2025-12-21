@@ -2,12 +2,9 @@ import { useRouter } from "next/router";
 
 import { useState } from "react";
 
-import { useLimits } from "@/ee/limits/swr-handler";
-import { PlanEnum } from "@/ee/stripe/constants";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
-import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -18,9 +15,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-import { usePlan } from "@/lib/swr/use-billing";
-import useDatarooms from "@/lib/swr/use-datarooms";
-
 export default function DuplicateDataroom({
   dataroomId,
   teamId,
@@ -30,18 +24,6 @@ export default function DuplicateDataroom({
 }) {
   const router = useRouter();
   const [loading, setLoading] = useState<boolean>(false);
-  const [planModalOpen, setPlanModalOpen] = useState<boolean>(false);
-  const { limits } = useLimits();
-  const { isBusiness, isDatarooms, isDataroomsPlus, isTrial } = usePlan();
-  const { datarooms: dataRooms } = useDatarooms();
-  const numDatarooms = dataRooms?.length ?? 0;
-  const limitDatarooms = limits?.datarooms ?? 1;
-
-  const isTrialDatarooms = isTrial;
-  const canCreateUnlimitedDatarooms =
-    isDatarooms ||
-    isDataroomsPlus ||
-    (isBusiness && numDatarooms < limitDatarooms);
 
   const handleDuplicateDataroom = async (
     e: React.MouseEvent<HTMLButtonElement>,
@@ -91,26 +73,12 @@ export default function DuplicateDataroom({
   };
 
   const ButtonList = () => {
-    if (
-      (isBusiness && !canCreateUnlimitedDatarooms) ||
-      (isTrialDatarooms &&
-        dataRooms &&
-        !isBusiness &&
-        !isDatarooms &&
-        !isDataroomsPlus)
-    ) {
-      return (
-        <Button onClick={(e) => setPlanModalOpen(true)} loading={loading}>
-          Upgrade to Duplicate Datarooms
-        </Button>
-      );
-    } else {
-      return (
-        <Button onClick={(e) => handleDuplicateDataroom(e)} loading={loading}>
-          Duplicate Dataroom
-        </Button>
-      );
-    }
+    // Self-hosted: always allow duplicate (no plan restrictions)
+    return (
+      <Button onClick={(e) => handleDuplicateDataroom(e)} loading={loading}>
+        Duplicate Dataroom
+      </Button>
+    );
   };
 
   return (
@@ -128,14 +96,6 @@ export default function DuplicateDataroom({
           <div className="shrink-0">{ButtonList()}</div>
         </CardFooter>
       </Card>
-      {planModalOpen ? (
-        <UpgradePlanModal
-          clickedPlan={PlanEnum.DataRooms}
-          trigger="datarooms"
-          open={planModalOpen}
-          setOpen={setPlanModalOpen}
-        />
-      ) : null}
     </div>
   );
 }

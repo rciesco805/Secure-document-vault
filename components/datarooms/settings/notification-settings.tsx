@@ -3,10 +3,8 @@ import { BadgeCheckIcon } from "lucide-react";
 import { toast } from "sonner";
 import useSWR from "swr";
 
-import { usePlan } from "@/lib/swr/use-billing";
 import { fetcher } from "@/lib/utils";
 
-import PlanBadge from "@/components/billing/plan-badge";
 import {
   Card,
   CardContent,
@@ -27,7 +25,6 @@ export default function NotificationSettings({
 }: NotificationSettingsProps) {
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
-  const { isDataroomsPlus, isTrial } = usePlan();
 
   const { data: dataroomData, mutate: mutateDataroom } = useSWR<{
     id: string;
@@ -39,20 +36,10 @@ export default function NotificationSettings({
     fetcher,
   );
 
-  const { data: features } = useSWR<{ roomChangeNotifications: boolean }>(
-    teamInfo?.currentTeam?.id
-      ? `/api/feature-flags?teamId=${teamInfo.currentTeam.id}`
-      : null,
-    fetcher,
-  );
-
   const handleNotificationToggle = async (checked: boolean) => {
     if (!dataroomId || !teamId) return;
 
-    if (!isDataroomsPlus && !isTrial && !features?.roomChangeNotifications) {
-      toast.error("This feature is not available in your plan");
-      return;
-    }
+    // Self-hosted: always allow (no plan restrictions)
 
     toast.promise(
       fetch(`/api/teams/${teamId}/datarooms/${dataroomId}`, {
@@ -80,12 +67,7 @@ export default function NotificationSettings({
   return (
     <Card className="bg-transparent">
       <CardHeader>
-        <CardTitle>
-          Notifications{" "}
-          {!isDataroomsPlus && !features?.roomChangeNotifications ? (
-            <PlanBadge plan="data rooms plus" />
-          ) : null}
-        </CardTitle>
+        <CardTitle>Notifications</CardTitle>
         <CardDescription>
           {!dataroomData?.enableChangeNotifications ? "Enable" : "Disable"}{" "}
           change notification for this dataroom.

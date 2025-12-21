@@ -165,6 +165,50 @@ Generate Prisma client:
 npx prisma generate
 ```
 
+## Security Audit Notes (December 2024)
+
+### Fixed Issues
+
+| Issue | File | Status | Notes |
+|-------|------|--------|-------|
+| Missing env var check for NEXT_PRIVATE_VERIFICATION_SECRET | `lib/utils/generate-checksum.ts` | ✅ Fixed | Now throws clear error if missing |
+| Missing env var checks for JWT_SECRET and UNSUBSCRIBE_BASE_URL | `lib/utils/unsubscribe.ts` | ✅ Fixed | Now throws clear errors if missing |
+| Silent failure in email blacklist check | `lib/edge-config/blacklist.ts` | ✅ Fixed | Now logs errors to console |
+| Hardcoded Replit sidecar endpoint | `pages/api/file/replit-upload.ts`, `pages/api/file/replit-get.ts` | ✅ Fixed | Now configurable via REPLIT_SIDECAR_ENDPOINT env var |
+| Deprecated Stripe webhook file | `pages/api/stripe/webhook-old.ts` | ✅ Fixed | File deleted |
+| Tinybird token missing causes silent failure | `lib/tinybird/pipes.ts` | ✅ Fixed | Now logs warning when token not configured |
+| js-yaml vulnerability | npm dependency | ✅ Fixed | Patched via npm audit fix |
+
+### Known Vulnerabilities (Deferred - Require Breaking Changes)
+
+| Vulnerability | Package | Severity | Required Fix | Notes |
+|---------------|---------|----------|--------------|-------|
+| DoS with Server Components | next 14.2.33 | High | Upgrade to Next.js 15.x | Major version upgrade, needs full testing |
+| Command injection in CLI | glob 10.2.0-10.4.5 | High | Upgrade eslint-config-next to 16.x | Breaking change in ESLint config |
+| Arbitrary JS execution in PDF | pdfjs-dist <=4.1.392 | High | Upgrade react-pdf to 10.x | Breaking change in PDF rendering |
+
+### Code Quality Notes (64 ESLint Warnings)
+
+Most warnings are minor and don't affect functionality:
+- Unused variables in catch blocks (intentional empty catches)
+- Missing dependencies in useEffect hooks (some are intentional)
+- Prefer-const suggestions
+
+### Recommended Future Actions
+
+1. **Schedule Next.js 15 upgrade** - Test thoroughly in development first
+2. **Update react-pdf** - May require changes to PDF viewer components
+3. **Review ESLint warnings** - Address when doing related code changes
+4. **Add monitoring** - Consider adding error tracking (e.g., Sentry) for production
+
+### Required Environment Variables
+
+Ensure these are set in all environments:
+- `NEXT_PRIVATE_VERIFICATION_SECRET` - Required for email verification checksums
+- `JWT_SECRET` - Required for unsubscribe link generation
+- `UNSUBSCRIBE_BASE_URL` - Required for unsubscribe links
+- `TINYBIRD_TOKEN` - Optional, analytics limited without it
+
 ## Production Deployment
 
 After deploying to production, run the SQL script to enable all features:

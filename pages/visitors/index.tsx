@@ -1,7 +1,5 @@
 import { useRouter } from "next/router";
 
-
-
 import { useEffect, useState } from "react";
 
 import { usePlan } from "@/lib/swr/use-billing";
@@ -20,7 +18,7 @@ export default function Visitors() {
   const [sortBy, setSortBy] = useState("lastViewed");
   const [sortOrder, setSortOrder] = useState("desc");
 
-  const { viewers, pagination, isValidating } = useViewers(
+  const { viewers, pagination, isValidating, mutate } = useViewers(
     currentPage,
     pageSize,
     sortBy,
@@ -85,6 +83,7 @@ export default function Visitors() {
           onPageChange={handlePageChange}
           onPageSizeChange={handlePageSizeChange}
           onSortChange={handleSortChange}
+          onDelete={async () => { await mutate(); }}
         />
       </div>
     </AppLayout>

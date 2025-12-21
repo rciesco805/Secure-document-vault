@@ -1,7 +1,5 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
-import { generateTriggerPublicAccessToken } from "@/lib/utils/generate-trigger-auth-token";
-
 export default async function handle(
   req: NextApiRequest,
   res: NextApiResponse,
@@ -17,12 +15,22 @@ export default async function handle(
   }
 
   try {
+    // Try to use Trigger.dev if configured
+    const { generateTriggerPublicAccessToken } = await import(
+      "@/lib/utils/generate-trigger-auth-token"
+    );
+    
     const publicAccessToken = await generateTriggerPublicAccessToken(
       `version:${documentVersionId}`,
     );
     return res.status(200).json({ publicAccessToken });
-  } catch (error) {
-    console.error("Error generating token:", error);
-    return res.status(500).json({ error: "Failed to generate token" });
+  } catch (error: any) {
+    // If Trigger.dev is not configured or fails, return a graceful fallback
+    console.warn("Trigger.dev not configured or failed:", error?.message);
+    return res.status(200).json({ 
+      publicAccessToken: null,
+      status: "not_configured",
+      message: "Document processing status not available"
+    });
   }
 }

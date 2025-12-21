@@ -1,6 +1,6 @@
 import { useRouter } from "next/router";
 
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import React from "react";
 
 import {
@@ -13,12 +13,32 @@ import {
   ChevronDownIcon,
   ChevronUpIcon,
   ChevronsUpDownIcon,
+  MoreHorizontal,
+  Trash2,
 } from "lucide-react";
+import { toast } from "sonner";
 
 import { timeAgo } from "@/lib/utils";
+import { useTeam } from "@/context/team-context";
 
 import { Pagination } from "@/components/documents/pagination";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Table,
   TableBody,
@@ -49,6 +69,7 @@ export function ContactsTable({
   onPageChange,
   onPageSizeChange,
   onSortChange,
+  onDelete,
 }: {
   viewers: Viewer[] | null | undefined;
   pagination?: {
@@ -66,10 +87,51 @@ export function ContactsTable({
   onPageChange?: (page: number) => void;
   onPageSizeChange?: (size: number) => void;
   onSortChange?: (sortBy: string, sortOrder: string) => void;
+  onDelete?: (viewerId: string) => Promise<void>;
 }) {
   const router = useRouter();
+  const teamInfo = useTeam();
+  const teamId = teamInfo?.currentTeam?.id;
+
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [viewerToDelete, setViewerToDelete] = useState<Viewer | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const data = useMemo(() => viewers || [], [viewers]);
+
+  const handleDeleteClick = (e: React.MouseEvent, viewer: Viewer) => {
+    e.stopPropagation();
+    setViewerToDelete(viewer);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!viewerToDelete || !teamId) return;
+
+    setIsDeleting(true);
+    try {
+      const response = await fetch(
+        `/api/teams/${teamId}/viewers/${viewerToDelete.id}`,
+        { method: "DELETE" }
+      );
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to delete visitor");
+      }
+
+      toast.success("Visitor deleted successfully");
+      if (onDelete) {
+        await onDelete(viewerToDelete.id);
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Failed to delete visitor");
+    } finally {
+      setIsDeleting(false);
+      setDeleteDialogOpen(false);
+      setViewerToDelete(null);
+    }
+  };
 
   const handlePageChange = (page: number) => {
     if (onPageChange) {
@@ -216,8 +278,31 @@ export function ContactsTable({
           </div>
         ),
       },
+      {
+        id: "actions",
+        header: "",
+        cell: ({ row }) => (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <span className="sr-only">Open menu</span>
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem
+                className="text-destructive focus:text-destructive"
+                onClick={(e) => handleDeleteClick(e, row.original)}
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ),
+      },
     ],
-    [handleSort, getSortIcon, getSortClass],
+    [handleSort, getSortIcon, getSortClass, handleDeleteClick],
   );
 
   const table = useReactTable({
@@ -331,6 +416,29 @@ export function ContactsTable({
           itemName="visitors"
         />
       )}
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Visitor</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete {viewerToDelete?.email}? This will
+              permanently remove this visitor and all their viewing history.
+              This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDelete}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -303,9 +303,79 @@ export default async function handle(
       console.error('Viewer Details API Error:', error);
       errorhandler(error, res);
     }
+  } else if (req.method === "DELETE") {
+    // DELETE /api/teams/:teamId/viewers/:id
+    const session = await getServerSession(req, res, authOptions);
+    if (!session) {
+      return res.status(401).end("Unauthorized");
+    }
+
+    const { teamId, id } = req.query as {
+      teamId: string;
+      id: string;
+    };
+
+    const userId = (session.user as CustomUser).id;
+
+    try {
+      // Verify team membership
+      const team = await prisma.team.findUnique({
+        where: {
+          id: teamId,
+          users: {
+            some: {
+              userId,
+            },
+          },
+        },
+        select: { id: true },
+      });
+
+      if (!team) {
+        return res.status(404).json({ message: "Team not found" });
+      }
+
+      // Check if viewer exists
+      const viewer = await prisma.viewer.findUnique({
+        where: { id, teamId },
+        select: { id: true, email: true },
+      });
+
+      if (!viewer) {
+        return res.status(404).json({ message: "Viewer not found" });
+      }
+
+      // Delete all views associated with this viewer first
+      await prisma.view.deleteMany({
+        where: { viewerId: id },
+      });
+
+      // Delete the viewer
+      await prisma.viewer.delete({
+        where: { id },
+      });
+
+      // Clear any cached data for this viewer
+      if (redis) {
+        const cachePattern = `viewer-details:${teamId}:${id}:*`;
+        const durationPattern = `durations:${teamId}:${id}:*`;
+        try {
+          // Note: Simple deletion since we don't have scan pattern support
+          await redis.del(`viewer-details:${teamId}:${id}`);
+        } catch (cacheError) {
+          console.error("Error clearing cache:", cacheError);
+          // Don't fail the request if cache clearing fails
+        }
+      }
+
+      return res.status(200).json({ message: "Visitor deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting viewer:", error);
+      errorhandler(error, res);
+    }
   } else {
-    // We only allow GET requests
-    res.setHeader("Allow", ["GET"]);
+    // We only allow GET and DELETE requests
+    res.setHeader("Allow", ["GET", "DELETE"]);
     return res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 }

@@ -35,6 +35,71 @@ export const getFile = async ({
   return url;
 };
 
+// Parse Replit Object Storage path into bucket and object name
+function parseReplitObjectPath(path: string): {
+  bucketName: string;
+  objectName: string;
+} {
+  if (!path.startsWith("/")) {
+    path = `/${path}`;
+  }
+  const pathParts = path.split("/");
+  if (pathParts.length < 3) {
+    throw new Error("Invalid path: must contain at least a bucket name");
+  }
+
+  const bucketName = pathParts[1];
+  const objectName = pathParts.slice(2).join("/");
+
+  return { bucketName, objectName };
+}
+
+// Direct call to Replit sidecar for server-side file access
+async function getSignedUrlFromSidecar(key: string): Promise<string> {
+  const REPLIT_SIDECAR_ENDPOINT = process.env.REPLIT_SIDECAR_ENDPOINT || "http://127.0.0.1:1106";
+  const privateObjectDir = process.env.PRIVATE_OBJECT_DIR;
+  
+  if (!privateObjectDir) {
+    throw new Error("PRIVATE_OBJECT_DIR not configured");
+  }
+
+  let objectEntityDir = privateObjectDir;
+  if (!objectEntityDir.endsWith("/")) {
+    objectEntityDir = `${objectEntityDir}/`;
+  }
+
+  let entityPath = key;
+  if (key.startsWith("/objects/")) {
+    entityPath = key.slice("/objects/".length);
+  }
+
+  const fullPath = `${objectEntityDir}${entityPath}`;
+  const { bucketName, objectName } = parseReplitObjectPath(fullPath);
+
+  const request = {
+    bucket_name: bucketName,
+    object_name: objectName,
+    method: "GET",
+    expires_at: new Date(Date.now() + 3600 * 1000).toISOString(),
+  };
+
+  const response = await fetch(
+    `${REPLIT_SIDECAR_ENDPOINT}/object-storage/signed-object-url`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(request),
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error(`Failed to sign object URL, errorcode: ${response.status}`);
+  }
+
+  const { signed_url: signedURL } = await response.json();
+  return signedURL;
+}
+
 const fetchPresignedUrl = async (
   endpoint: string,
   headers: Record<string, string>,
@@ -98,19 +163,13 @@ const getFileFromS3 = async (key: string) => {
 };
 
 const getFileFromReplit = async (key: string) => {
-  const isServer =
-    typeof window === "undefined" && !!process.env.INTERNAL_API_KEY;
+  const isServer = typeof window === "undefined";
 
   if (isServer) {
-    return fetchPresignedUrl(
-      `${process.env.NEXT_PUBLIC_BASE_URL}/api/file/replit-get`,
-      {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${process.env.INTERNAL_API_KEY}`,
-      },
-      key,
-    );
+    // Server-side: directly call the Replit sidecar without needing INTERNAL_API_KEY
+    return getSignedUrlFromSidecar(key);
   } else {
+    // Client-side: use the proxy endpoint which handles team authorization
     return fetchPresignedUrl(
       `/api/file/replit-get-proxy`,
       {

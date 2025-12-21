@@ -7,6 +7,70 @@ import { CustomUser } from "@/lib/types";
 
 import { authOptions } from "../auth/[...nextauth]";
 
+const REPLIT_SIDECAR_ENDPOINT = process.env.REPLIT_SIDECAR_ENDPOINT || "http://127.0.0.1:1106";
+
+function parseObjectPath(path: string): {
+  bucketName: string;
+  objectName: string;
+} {
+  if (!path.startsWith("/")) {
+    path = `/${path}`;
+  }
+  const pathParts = path.split("/");
+  if (pathParts.length < 3) {
+    throw new Error("Invalid path: must contain at least a bucket name");
+  }
+
+  const bucketName = pathParts[1];
+  const objectName = pathParts.slice(2).join("/");
+
+  return { bucketName, objectName };
+}
+
+async function signObjectURL(key: string): Promise<string> {
+  const privateObjectDir = process.env.PRIVATE_OBJECT_DIR;
+  
+  if (!privateObjectDir) {
+    throw new Error("PRIVATE_OBJECT_DIR not configured");
+  }
+
+  let objectEntityDir = privateObjectDir;
+  if (!objectEntityDir.endsWith("/")) {
+    objectEntityDir = `${objectEntityDir}/`;
+  }
+
+  let entityPath = key;
+  if (key.startsWith("/objects/")) {
+    entityPath = key.slice("/objects/".length);
+  }
+
+  const fullPath = `${objectEntityDir}${entityPath}`;
+  const { bucketName, objectName } = parseObjectPath(fullPath);
+
+  const request = {
+    bucket_name: bucketName,
+    object_name: objectName,
+    method: "GET",
+    expires_at: new Date(Date.now() + 3600 * 1000).toISOString(),
+  };
+
+  const response = await fetch(
+    `${REPLIT_SIDECAR_ENDPOINT}/object-storage/signed-object-url`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(request),
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error(`Failed to sign object URL, errorcode: ${response.status}`);
+  }
+
+  const { signed_url: signedURL } = await response.json();
+  return signedURL;
+}
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse,
@@ -63,27 +127,9 @@ export default async function handler(
         .json({ error: "Forbidden: You are not a member of this team" });
     }
 
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_BASE_URL}/api/file/replit-get`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${process.env.INTERNAL_API_KEY}`,
-        },
-        body: JSON.stringify({ key }),
-      },
-    );
-
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({
-        error: `Request failed with status ${response.status}`,
-      }));
-      return res.status(response.status).json(error);
-    }
-
-    const data = await response.json();
-    return res.status(200).json(data);
+    // Directly call the Replit sidecar to generate signed URL
+    const url = await signObjectURL(key);
+    return res.status(200).json({ url });
   } catch (error) {
     console.error("Proxy error:", error);
     return errorhandler(error, res);

@@ -4,7 +4,6 @@ import { getLimits } from "@/ee/limits/server";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { getServerSession } from "next-auth/next";
 
-import { getFeatureFlags } from "@/lib/featureFlags";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 
@@ -39,16 +38,12 @@ export default async function handle(
       });
 
       const limits = await getLimits({ teamId, userId });
-      const isTrial = team?.plan.includes("drtrial");
-      const featureFlags = await getFeatureFlags({ teamId });
-      const conversationsInDataroom =
-        featureFlags.conversations || limits.conversationsInDataroom || isTrial;
-      const dataroomUpload = featureFlags.dataroomUpload || isTrial;
 
+      // Self-hosted: always enable all features
       return res.status(200).json({
         ...limits,
-        conversationsInDataroom,
-        dataroomUpload,
+        conversationsInDataroom: true,
+        dataroomUpload: true,
       });
     } catch (error) {
       return res.status(500).json((error as Error).message);

@@ -1,9 +1,6 @@
-import useLimits from "@/lib/swr/use-limits";
-
 import { NavMenu } from "../navigation-menu";
 
 export const DataroomNavigation = ({ dataroomId }: { dataroomId?: string }) => {
-  const { limits } = useLimits();
   if (!dataroomId) {
     return null;
   }
@@ -29,7 +26,6 @@ export const DataroomNavigation = ({ dataroomId }: { dataroomId?: string }) => {
           label: "Q&A",
           href: `/datarooms/${dataroomId}/conversations`,
           segment: "conversations",
-          limited: !limits?.conversationsInDataroom,
         },
         {
           label: "Branding",

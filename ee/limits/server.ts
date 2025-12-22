@@ -111,6 +111,8 @@ export async function getLimits({
       return {
         ...defaultLimits,
         ...parsedData,
+        // Self-hosted: always enable Q&A conversations
+        conversationsInDataroom: true,
         usage: { documents: documentCount, links: linkCount, users: userCount },
         ...(isTrial && {
           users: 3,
@@ -124,6 +126,8 @@ export async function getLimits({
         links: parsedData.links === 50 ? Infinity : parsedData.links,
         documents:
           parsedData.documents === 50 ? Infinity : parsedData.documents,
+        // Self-hosted: always enable Q&A conversations
+        conversationsInDataroom: true,
         usage: { documents: documentCount, links: linkCount, users: userCount },
       };
     }
@@ -134,7 +138,8 @@ export async function getLimits({
     const defaultLimits = planLimitsMap[basePlan] || FREE_PLAN_LIMITS;
     return {
       ...defaultLimits,
-      conversationsInDataroom: false,
+      // Self-hosted: always enable Q&A conversations
+      conversationsInDataroom: true,
       usage: { documents: documentCount, links: linkCount, users: userCount },
       ...(isTrial && {
         users: 3,

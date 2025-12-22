@@ -4,10 +4,8 @@ import { useTeam } from "@/context/team-context";
 import { CircleHelpIcon, WebhookIcon } from "lucide-react";
 import useSWR from "swr";
 
-import { usePlan } from "@/lib/swr/use-billing";
 import { fetcher } from "@/lib/utils";
 
-import PlanBadge from "@/components/billing/plan-badge";
 import AppLayout from "@/components/layouts/app";
 import { SettingsHeader } from "@/components/settings/settings-header";
 import { Button } from "@/components/ui/button";
@@ -22,7 +20,6 @@ interface Webhook {
 
 export default function WebhookSettings() {
   const teamInfo = useTeam();
-  const { isFree, isPro, isTrial } = usePlan();
   const teamId = teamInfo?.currentTeam?.id;
 
   const { data: webhooks } = useSWR<Webhook[]>(
@@ -38,10 +35,7 @@ export default function WebhookSettings() {
           <div className="mb-4 flex items-center justify-between md:mb-8 lg:mb-12">
             <div className="space-y-1">
               <h3 className="flex items-center gap-2 text-2xl font-semibold tracking-tight text-foreground">
-                Webhooks{" "}
-                {(isFree || isPro) && !isTrial ? (
-                  <PlanBadge plan="Business" />
-                ) : null}
+                Webhooks
               </h3>
               <p className="flex flex-row items-center gap-2 text-sm text-muted-foreground">
                 Send data to external services when events happen in BF Fund

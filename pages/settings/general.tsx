@@ -1,16 +1,11 @@
-import { useState } from "react";
-
 import { useTeam } from "@/context/team-context";
-import { PlanEnum } from "@/ee/stripe/constants";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
 import { useAnalytics } from "@/lib/analytics";
-import { usePlan } from "@/lib/swr/use-billing";
 import { useTeamSettings } from "@/lib/swr/use-team-settings";
 import { validateContent } from "@/lib/utils/sanitize-html";
 
-import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import AppLayout from "@/components/layouts/app";
 import DeleteTeam from "@/components/settings/delete-team";
 import GlobalBlockListForm from "@/components/settings/global-block-list-form";
@@ -22,32 +17,13 @@ export default function General() {
   const analytics = useAnalytics();
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
-  const { isFree, isPro, isTrial, isStarter } = usePlan();
-  const [selectedPlan, setSelectedPlan] = useState<PlanEnum>(PlanEnum.Pro);
-  const [planModalTrigger, setPlanModalTrigger] = useState<string>("");
-  const [planModalOpen, setPlanModalOpen] = useState<boolean>(false);
 
   // Fetch fresh team settings with proper revalidation
   const { settings: teamSettings } = useTeamSettings(teamId);
 
-  const showUpgradeModal = (plan: PlanEnum, trigger: string) => {
-    setSelectedPlan(plan);
-    setPlanModalTrigger(trigger);
-    setPlanModalOpen(true);
-  };
-
   const handleExcelAdvancedModeChange = async (data: {
     enableExcelAdvancedMode: string;
   }) => {
-    if (
-      (isFree || isPro || isStarter) &&
-      !isTrial &&
-      data.enableExcelAdvancedMode === "true"
-    ) {
-      showUpgradeModal(PlanEnum.Business, "advanced-excel-mode");
-      return;
-    }
-
     analytics.capture("Toggle Excel Advanced Mode", {
       teamId,
       enableExcelAdvancedMode: data.enableExcelAdvancedMode === "true",
@@ -204,7 +180,6 @@ export default function General() {
             )}
             helpText="When enabled, newly uploaded Excel files will be viewed using the Microsoft Office viewer for better formatting and compatibility."
             handleSubmit={handleExcelAdvancedModeChange}
-            plan={(isFree && !isTrial) || isPro ? "Business" : undefined}
           />
 
           <Form
@@ -226,15 +201,6 @@ export default function General() {
 
           <DeleteTeam />
         </div>
-
-        {planModalOpen ? (
-          <UpgradePlanModal
-            clickedPlan={selectedPlan}
-            trigger={planModalTrigger}
-            open={planModalOpen}
-            setOpen={setPlanModalOpen}
-          />
-        ) : null}
       </main>
     </AppLayout>
   );

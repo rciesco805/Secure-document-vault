@@ -161,13 +161,27 @@ export default async function handle(
 
       const verifyUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/verify/invitation?token=${jwtToken}`;
 
-      sendTeammateInviteEmail({
-        senderName: sender.name || "",
-        senderEmail: sender.email || "",
-        teamName: team?.name || "",
-        to: email,
-        url: verifyUrl,
-      });
+      try {
+        await sendTeammateInviteEmail({
+          senderName: sender.name || "",
+          senderEmail: sender.email || "",
+          teamName: team?.name || "",
+          to: email,
+          url: verifyUrl,
+        });
+      } catch (emailError) {
+        // If email fails, delete the invitation so user can retry
+        await prisma.invitation.delete({
+          where: {
+            email_teamId: {
+              teamId,
+              email,
+            },
+          },
+        });
+        console.error("Failed to send invitation email:", emailError);
+        return res.status(500).json("Failed to send invitation email. Please try again.");
+      }
 
       return res.status(200).json("Invitation sent!");
     } catch (error) {

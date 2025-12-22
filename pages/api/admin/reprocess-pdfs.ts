@@ -29,17 +29,31 @@ export default async function handler(
     const stuckPdfs = await prisma.documentVersion.findMany({
       where: {
         type: "pdf",
-        numPages: null,
+        isPrimary: true,
+        OR: [
+          { numPages: null },
+          { hasPages: false },
+          {
+            pages: {
+              none: {},
+            },
+          },
+        ],
       },
       select: {
         id: true,
         file: true,
+        numPages: true,
+        hasPages: true,
         document: {
           select: {
             id: true,
             name: true,
             teamId: true,
           },
+        },
+        _count: {
+          select: { pages: true },
         },
       },
       take: 50,

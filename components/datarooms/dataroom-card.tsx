@@ -84,7 +84,7 @@ export default function DataroomCard({ dataroom }: DataroomCardProps) {
   };
 
   return (
-    <Card className="group relative overflow-hidden duration-500 hover:border-primary/50">
+    <Card className="group relative min-w-[320px] overflow-hidden duration-500 hover:border-primary/50">
       <Link href={`/datarooms/${dataroom.id}/documents`}>
         <CardHeader>
           <div className="flex items-start justify-between gap-2">
@@ -202,7 +202,7 @@ export default function DataroomCard({ dataroom }: DataroomCardProps) {
                       <Button
                         variant="outline"
                         size="sm"
-                        className="h-8 gap-2 text-muted-foreground hover:text-foreground"
+                        className="h-8 gap-2 whitespace-nowrap text-muted-foreground hover:text-foreground"
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();

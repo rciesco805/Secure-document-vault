@@ -40,6 +40,7 @@ NEXT_PUBLIC_APP_BASE_HOST = "dataroom.bermudafranchisegroup.com"
 NEXT_PUBLIC_UPLOAD_TRANSPORT = "replit"
 
 [userenv.shared]
+INTERNAL_API_KEY = "3a7c175095f67508534bed6edd171bfa94e713d810080003b7007514222d806d"
 
 [workflows]
 runButton = "Project"

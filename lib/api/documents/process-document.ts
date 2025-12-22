@@ -17,6 +17,29 @@ import { conversionQueue } from "@/lib/utils/trigger-utils";
 import { sendDocumentCreatedWebhook } from "@/lib/webhook/triggers/document-created";
 import { sendLinkCreatedWebhook } from "@/lib/webhook/triggers/link-created";
 
+async function processLocalPdf(documentVersionId: string, teamId: string) {
+  try {
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXTAUTH_URL;
+    const response = await fetch(`${baseUrl}/api/mupdf/process-pdf-local`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${process.env.INTERNAL_API_KEY}`,
+      },
+      body: JSON.stringify({ documentVersionId, teamId }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      console.error("Local PDF processing failed:", error);
+    } else {
+      console.log("Local PDF processing completed successfully");
+    }
+  } catch (error) {
+    console.error("Local PDF processing error:", error);
+  }
+}
+
 type ProcessDocumentParams = {
   documentData: DocumentData;
   teamId: string;
@@ -236,29 +259,34 @@ export const processDocument = async ({
     }
   }
 
-  // skip triggering convert-pdf-to-image job for "notion" / "excel" documents
-  // Also skip if Trigger.dev is not configured
-  if (type === "pdf" && process.env.TRIGGER_SECRET_KEY) {
-    try {
-      await convertPdfToImageRoute.trigger(
-        {
-          documentId: document.id,
-          documentVersionId: document.versions[0].id,
-          teamId,
-        },
-        {
-          idempotencyKey: `${teamId}-${document.versions[0].id}`,
-          tags: [
-            `team_${teamId}`,
-            `document_${document.id}`,
-            `version:${document.versions[0].id}`,
-          ],
-          queue: conversionQueue(teamPlan),
-          concurrencyKey: teamId,
-        },
-      );
-    } catch (error) {
-      console.log("PDF to image conversion skipped (Trigger.dev not configured)");
+  // Process PDF documents - use Trigger.dev if available, otherwise use local processing
+  if (type === "pdf") {
+    if (process.env.TRIGGER_SECRET_KEY) {
+      try {
+        await convertPdfToImageRoute.trigger(
+          {
+            documentId: document.id,
+            documentVersionId: document.versions[0].id,
+            teamId,
+          },
+          {
+            idempotencyKey: `${teamId}-${document.versions[0].id}`,
+            tags: [
+              `team_${teamId}`,
+              `document_${document.id}`,
+              `version:${document.versions[0].id}`,
+            ],
+            queue: conversionQueue(teamPlan),
+            concurrencyKey: teamId,
+          },
+        );
+      } catch (error) {
+        console.log("Trigger.dev PDF conversion failed, falling back to local processing");
+        await processLocalPdf(document.versions[0].id, teamId);
+      }
+    } else {
+      // Use local PDF processing when Trigger.dev is not configured
+      await processLocalPdf(document.versions[0].id, teamId);
     }
   }
 

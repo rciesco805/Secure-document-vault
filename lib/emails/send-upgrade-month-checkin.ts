@@ -19,7 +19,7 @@ export const sendUpgradeOneMonthCheckinEmail = async (
     await sendEmail({
       to: email as string,
       subject: "Check-in from BF Fund Dataroom",
-      from: "BF Fund <investors@bermudafranchisegroup.com>",
+      from: "BF Fund <noreply@investors.bermudafranchisegroup.com>",
       react: emailTemplate,
       test: process.env.NODE_ENV === "development",
     });

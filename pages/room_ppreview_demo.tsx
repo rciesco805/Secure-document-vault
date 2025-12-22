@@ -1,5 +1,6 @@
 import { useRouter } from "next/router";
-import Image from "next/image";
+
+import { determineTextColor } from "@/lib/utils/determine-text-color";
 
 export default function RoomPreviewDemo() {
   const router = useRouter();
@@ -11,7 +12,7 @@ export default function RoomPreviewDemo() {
   };
 
   const bgColor = accentColor || "#030712";
-  const textColor = brandColor || "#FFFFFF";
+  const textColor = determineTextColor(bgColor);
   const showBanner = brandBanner && brandBanner !== "no-banner";
 
   return (
@@ -20,33 +21,35 @@ export default function RoomPreviewDemo() {
       style={{ backgroundColor: bgColor }}
     >
       <div className="mx-auto max-w-4xl">
-        {brandLogo && !brandLogo.startsWith("blob:") && (
+        {brandLogo && (
           <div className="mb-6 flex justify-center">
-            <Image
+            <img
               src={brandLogo}
               alt="Logo"
-              width={120}
-              height={40}
-              className="object-contain"
-              unoptimized
+              className="h-10 max-w-[120px] object-contain"
             />
           </div>
         )}
 
-        {showBanner && !brandBanner.startsWith("blob:") && (
+        {showBanner && (
           <div className="mb-6 overflow-hidden rounded-lg">
-            <Image
+            <img
               src={brandBanner}
               alt="Banner"
-              width={800}
-              height={200}
-              className="w-full object-cover"
-              unoptimized
+              className="h-auto w-full object-cover"
+              style={{ maxHeight: "200px" }}
             />
           </div>
         )}
 
-        <div className="rounded-lg border border-gray-700 bg-gray-800/50 p-6">
+        <div
+          className="rounded-lg p-6"
+          style={{
+            backgroundColor: `${textColor}10`,
+            borderColor: `${textColor}20`,
+            borderWidth: "1px",
+          }}
+        >
           <h2
             className="mb-4 text-xl font-semibold"
             style={{ color: textColor }}
@@ -55,17 +58,41 @@ export default function RoomPreviewDemo() {
           </h2>
 
           <div className="space-y-3">
-            <div className="flex items-center gap-3 rounded-md bg-gray-700/50 p-3">
-              <div className="h-8 w-8 rounded bg-gray-600" />
-              <span className="text-gray-300">Sample Document 1.pdf</span>
+            <div
+              className="flex items-center gap-3 rounded-md p-3"
+              style={{ backgroundColor: `${textColor}10` }}
+            >
+              <div
+                className="h-8 w-8 rounded"
+                style={{ backgroundColor: `${textColor}20` }}
+              />
+              <span style={{ color: textColor, opacity: 0.8 }}>
+                Sample Document 1.pdf
+              </span>
             </div>
-            <div className="flex items-center gap-3 rounded-md bg-gray-700/50 p-3">
-              <div className="h-8 w-8 rounded bg-gray-600" />
-              <span className="text-gray-300">Sample Document 2.pdf</span>
+            <div
+              className="flex items-center gap-3 rounded-md p-3"
+              style={{ backgroundColor: `${textColor}10` }}
+            >
+              <div
+                className="h-8 w-8 rounded"
+                style={{ backgroundColor: `${textColor}20` }}
+              />
+              <span style={{ color: textColor, opacity: 0.8 }}>
+                Sample Document 2.pdf
+              </span>
             </div>
-            <div className="flex items-center gap-3 rounded-md bg-gray-700/50 p-3">
-              <div className="h-8 w-8 rounded bg-gray-600" />
-              <span className="text-gray-300">Financials Folder</span>
+            <div
+              className="flex items-center gap-3 rounded-md p-3"
+              style={{ backgroundColor: `${textColor}10` }}
+            >
+              <div
+                className="h-8 w-8 rounded"
+                style={{ backgroundColor: `${textColor}20` }}
+              />
+              <span style={{ color: textColor, opacity: 0.8 }}>
+                Financials Folder
+              </span>
             </div>
           </div>
         </div>

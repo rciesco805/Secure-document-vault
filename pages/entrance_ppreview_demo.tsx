@@ -1,5 +1,6 @@
 import { useRouter } from "next/router";
-import Image from "next/image";
+
+import { determineTextColor } from "@/lib/utils/determine-text-color";
 
 export default function EntrancePreviewDemo() {
   const router = useRouter();
@@ -11,7 +12,9 @@ export default function EntrancePreviewDemo() {
   };
 
   const bgColor = accentColor || "#030712";
-  const textColor = brandColor || "#FFFFFF";
+  const textColor = determineTextColor(bgColor);
+  const buttonBgColor = textColor;
+  const buttonTextColor = bgColor;
   const message = welcomeMessage || "Your action is requested to continue";
 
   return (
@@ -20,15 +23,12 @@ export default function EntrancePreviewDemo() {
       style={{ backgroundColor: bgColor }}
     >
       <div className="w-full max-w-md text-center">
-        {brandLogo && !brandLogo.startsWith("blob:") && (
+        {brandLogo && (
           <div className="mb-8 flex justify-center">
-            <Image
+            <img
               src={brandLogo}
               alt="Logo"
-              width={150}
-              height={50}
-              className="object-contain"
-              unoptimized
+              className="h-12 max-w-[150px] object-contain"
             />
           </div>
         )}
@@ -40,21 +40,28 @@ export default function EntrancePreviewDemo() {
           Welcome
         </h1>
 
-        <p className="mb-8 text-gray-400">{message}</p>
+        <p className="mb-8" style={{ color: textColor, opacity: 0.7 }}>
+          {message}
+        </p>
 
         <div className="space-y-4">
           <input
             type="email"
             placeholder="Enter your email"
-            className="w-full rounded-md border border-gray-600 bg-gray-800 px-4 py-3 text-white placeholder-gray-500 focus:border-gray-500 focus:outline-none"
+            className="w-full rounded-md border px-4 py-3 focus:outline-none"
+            style={{
+              backgroundColor: bgColor,
+              borderColor: `${textColor}40`,
+              color: textColor,
+            }}
             disabled
           />
 
           <button
             className="w-full rounded-md px-4 py-3 font-medium transition-colors"
             style={{
-              backgroundColor: textColor,
-              color: bgColor,
+              backgroundColor: buttonBgColor,
+              color: buttonTextColor,
             }}
             disabled
           >

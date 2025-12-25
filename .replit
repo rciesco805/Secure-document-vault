@@ -32,7 +32,7 @@ NEXT_PUBLIC_UPLOAD_TRANSPORT = "replit"
 [userenv.production]
 NEXTAUTH_URL = "https://dataroom.bermudafranchisegroup.com"
 NEXT_PUBLIC_BASE_URL = "https://dataroom.bermudafranchisegroup.com"
-NEXT_PUBLIC_MARKETING_URL = "https://www.bermudafranchisegroup.com"
+NEXT_PUBLIC_MARKETING_URL = "https://dataroom.bermudafranchisegroup.com"
 NEXT_PRIVATE_DOCUMENT_PASSWORD_KEY = "bermuda-franchise-secure-key-2025"
 NEXT_PRIVATE_VERIFICATION_SECRET = "bermuda-franchise-secure-verification-2025"
 VERIFICATION_EMAIL_BASE_URL = "https://dataroom.bermudafranchisegroup.com"

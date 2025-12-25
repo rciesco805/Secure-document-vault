@@ -2,6 +2,7 @@ import React from "react";
 
 import {
   Body,
+  Button,
   Container,
   Head,
   Hr,
@@ -20,6 +21,7 @@ export default function BlockedEmailAttempt({
   timestamp,
   locationString,
   accessType,
+  adminUrl,
 }: {
   blockedEmail: string;
   linkName: string;
@@ -28,6 +30,7 @@ export default function BlockedEmailAttempt({
   timestamp?: string;
   locationString?: string;
   accessType?: "global" | "allow" | "deny";
+  adminUrl?: string;
 }) {
   const accessTypeTexts = {
     global:
@@ -83,6 +86,22 @@ export default function BlockedEmailAttempt({
             <Text className="mt-4 text-sm leading-6 text-black">
               {accessTypeText}
             </Text>
+            {accessType === "allow" && adminUrl && (
+              <Section className="mt-6 text-center">
+                <Text className="mb-2 text-sm text-gray-600">
+                  To grant access, click the button below:
+                </Text>
+                <Button
+                  href={adminUrl}
+                  className="rounded-md bg-black px-6 py-3 text-center text-sm font-medium text-white"
+                >
+                  Add to Approved List
+                </Button>
+                <Text className="mt-4 text-xs text-gray-500">
+                  Email to add: <strong>{blockedEmail}</strong>
+                </Text>
+              </Section>
+            )}
             <Hr />
             <Section className="mt-8 text-gray-400">
               <Text className="text-xs">

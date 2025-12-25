@@ -10,6 +10,7 @@ import { useDataroomViewers } from "@/lib/swr/use-dataroom";
 import { timeAgo } from "@/lib/utils";
 
 import ChevronDown from "@/components/shared/icons/chevron-down";
+import { CopyButton } from "@/components/ui/copy-button";
 import {
   Collapsible,
   CollapsibleContent,
@@ -78,6 +79,11 @@ export default function DataroomViewersTable({
                                 {viewer.email ? (
                                   <>
                                     {(viewer as any).viewerName || viewer.email}{" "}
+                                    <CopyButton
+                                      value={viewer.email}
+                                      className="opacity-0 transition-opacity group-hover/row:opacity-100"
+                                      successMessage="Email copied!"
+                                    />
                                     {viewer.verified && (
                                       <BadgeTooltip
                                         content="Verified visitor"
@@ -108,9 +114,14 @@ export default function DataroomViewersTable({
                                 )}
                               </p>
                               {(viewer as any).viewerName && viewer.email && (
-                                <p className="text-xs text-muted-foreground/60">
+                                <div className="flex items-center gap-x-1 text-xs text-muted-foreground/60">
                                   {viewer.email}
-                                </p>
+                                  <CopyButton
+                                    value={viewer.email}
+                                    className="opacity-0 transition-opacity group-hover/row:opacity-100"
+                                    successMessage="Email copied!"
+                                  />
+                                </div>
                               )}
                               <p className="text-xs text-muted-foreground/60 sm:text-sm">
                                 {/* {view.link.name ? view.link.name : view.linkId} */}

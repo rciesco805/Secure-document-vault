@@ -12,6 +12,7 @@ export const sendBlockedEmailAttemptNotification = async ({
   timestamp,
   locationString,
   accessType,
+  adminUrl,
 }: {
   to: string;
   cc?: string[];
@@ -22,6 +23,7 @@ export const sendBlockedEmailAttemptNotification = async ({
   timestamp?: string;
   locationString?: string;
   accessType: "global" | "allow" | "deny";
+  adminUrl?: string;
 }) => {
   const emailTemplate = BlockedEmailAttempt({
     blockedEmail,
@@ -31,6 +33,7 @@ export const sendBlockedEmailAttemptNotification = async ({
     timestamp,
     locationString,
     accessType,
+    adminUrl,
   });
   try {
     await sendEmail({

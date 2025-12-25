@@ -70,6 +70,18 @@ export async function reportDeniedAccessAttempt(
   // Send email to all recipients
   if (allRecipients.length > 0) {
     const [to, ...cc] = allRecipients;
+    
+    // Build admin URL for direct access to link permissions
+    let adminUrl: string | undefined;
+    if (accessType === "allow" && link.id) {
+      const baseUrl = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_BASE_URL || "";
+      if (link.dataroomId) {
+        adminUrl = `${baseUrl}/datarooms/${link.dataroomId}?linkId=${link.id}&tab=links`;
+      } else if (link.documentId) {
+        adminUrl = `${baseUrl}/documents/${link.documentId}?linkId=${link.id}`;
+      }
+    }
+    
     await sendBlockedEmailAttemptNotification({
       to,
       cc: cc.length > 0 ? cc : undefined,
@@ -79,6 +91,7 @@ export async function reportDeniedAccessAttempt(
       resourceType,
       timestamp: new Date().toLocaleString(),
       accessType,
+      adminUrl,
     });
   }
 }

@@ -25,6 +25,7 @@ import { useDocumentVisits } from "@/lib/swr/use-document";
 import { durationFormat, timeAgo } from "@/lib/utils";
 
 import ChevronDown from "@/components/shared/icons/chevron-down";
+import { CopyButton } from "@/components/ui/copy-button";
 import {
   Collapsible,
   CollapsibleContent,
@@ -177,15 +178,25 @@ export default function VisitorsTable({
                                     {view.viewerEmail ? (
                                       <>
                                         {view.viewerName || view.viewerEmail}
+                                        <CopyButton
+                                          value={view.viewerEmail}
+                                          className="opacity-0 transition-opacity group-hover/row:opacity-100"
+                                          successMessage="Email copied!"
+                                        />
                                       </>
                                     ) : (
                                       "Anonymous"
                                     )}
                                   </p>
                                   {view.viewerName && view.viewerEmail && (
-                                    <p className="text-xs text-muted-foreground/60">
+                                    <div className="flex items-center gap-x-1 text-xs text-muted-foreground/60">
                                       {view.viewerEmail}
-                                    </p>
+                                      <CopyButton
+                                        value={view.viewerEmail}
+                                        className="opacity-0 transition-opacity group-hover/row:opacity-100"
+                                        successMessage="Email copied!"
+                                      />
+                                    </div>
                                   )}
                                   <p className="text-xs text-muted-foreground/60 sm:text-sm">
                                     {view.link && view.link.name
@@ -285,6 +296,11 @@ export default function VisitorsTable({
                                     {view.viewerEmail ? (
                                       <>
                                         {view.viewerName || view.viewerEmail}{" "}
+                                        <CopyButton
+                                          value={view.viewerEmail}
+                                          className="opacity-0 transition-opacity group-hover/row:opacity-100"
+                                          successMessage="Email copied!"
+                                        />
                                         {view.verified && (
                                           <BadgeTooltip
                                             content="Verified visitor"
@@ -344,9 +360,14 @@ export default function VisitorsTable({
                                     )}
                                   </p>
                                   {view.viewerName && view.viewerEmail && (
-                                    <p className="text-xs text-muted-foreground/60">
+                                    <div className="flex items-center gap-x-1 text-xs text-muted-foreground/60">
                                       {view.viewerEmail}
-                                    </p>
+                                      <CopyButton
+                                        value={view.viewerEmail}
+                                        className="opacity-0 transition-opacity group-hover/row:opacity-100"
+                                        successMessage="Email copied!"
+                                      />
+                                    </div>
                                   )}
                                   <p className="text-xs text-muted-foreground/60 sm:text-sm">
                                     {view.link && view.link.name

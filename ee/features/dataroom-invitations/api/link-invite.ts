@@ -133,6 +133,17 @@ export default async function handle(
       skipDuplicates: true,
     });
 
+    // Add invited emails to the link's allowList so they can access it
+    const currentAllowList = link.allowList ?? [];
+    const newAllowList = Array.from(new Set([...currentAllowList, ...targetEmails]));
+    
+    if (newAllowList.length !== currentAllowList.length) {
+      await prisma.link.update({
+        where: { id: linkId },
+        data: { allowList: newAllowList },
+      });
+    }
+
     const viewers = await prisma.viewer.findMany({
       where: {
         teamId,

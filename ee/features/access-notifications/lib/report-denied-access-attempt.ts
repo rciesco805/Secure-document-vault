@@ -10,6 +10,9 @@ export async function reportDeniedAccessAttempt(
   accessType: "global" | "allow" | "deny" = "global",
 ) {
   if (!link || !link.teamId) return;
+  
+  // Ensure email is present - use placeholder if empty
+  const blockedEmail = email && email.trim() ? email.trim() : "(no email provided)";
 
   // Get all admin and manager emails
   const users = await prisma.userTeam.findMany({
@@ -85,7 +88,7 @@ export async function reportDeniedAccessAttempt(
     await sendBlockedEmailAttemptNotification({
       to,
       cc: cc.length > 0 ? cc : undefined,
-      blockedEmail: email,
+      blockedEmail,
       linkName: link.name || `Link #${link.id?.slice(-5)}`,
       resourceName,
       resourceType,

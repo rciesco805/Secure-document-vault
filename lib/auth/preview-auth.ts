@@ -1,6 +1,7 @@
 import crypto from "crypto";
 import { z } from "zod";
 
+import prisma from "@/lib/prisma";
 import { redis } from "@/lib/redis";
 
 export const PREVIEW_EXPIRATION_TIME = 20 * 60 * 1000; // 20 minutes
@@ -17,10 +18,6 @@ async function createPreviewSession(
   linkId: string,
   userId: string,
 ): Promise<{ token: string; expiresAt: number }> {
-  if (!redis) {
-    throw new Error("Redis is not configured. Preview sessions require Redis.");
-  }
-
   const sessionToken = crypto.randomBytes(32).toString("hex");
   const expiresAt = Date.now() + PREVIEW_EXPIRATION_TIME;
 
@@ -33,12 +30,25 @@ async function createPreviewSession(
   // Validate session data before storing
   ZPreviewSessionSchema.parse(sessionData);
 
-  // Store session in Redis
-  await redis.set(
-    `preview_session:${sessionToken}`,
-    JSON.stringify(sessionData),
-    { pxat: expiresAt },
-  );
+  if (redis) {
+    // Store session in Redis
+    await redis.set(
+      `preview_session:${sessionToken}`,
+      JSON.stringify(sessionData),
+      { pxat: expiresAt },
+    );
+  } else {
+    // Fallback to database storage using VerificationToken table
+    // Store sessionToken as the token field (unique key for lookup)
+    // Store JSON payload in identifier field with prefix
+    await prisma.verificationToken.create({
+      data: {
+        identifier: `preview_data:${JSON.stringify(sessionData)}`,
+        token: sessionToken,
+        expires: new Date(expiresAt),
+      },
+    });
+  }
 
   return {
     token: sessionToken,
@@ -51,43 +61,86 @@ async function verifyPreviewSession(
   userId: string,
   linkId: string,
 ): Promise<PreviewSession | null> {
-  if (!redis) {
-    return null;
-  }
-
   const sessionToken = previewToken;
   if (!sessionToken) return null;
 
-  const session = await redis.get(`preview_session:${sessionToken}`);
-  if (!session) return null;
+  let sessionData: PreviewSession | null = null;
 
-  try {
-    const sessionData = ZPreviewSessionSchema.parse(session);
-
-    // Check if the session is for the correct user
-    if (sessionData.userId !== userId) {
-      await redis.del(`preview_session:${sessionToken}`);
-      return null;
+  if (redis) {
+    const session = await redis.get(`preview_session:${sessionToken}`);
+    if (session) {
+      try {
+        sessionData = ZPreviewSessionSchema.parse(
+          typeof session === "string" ? JSON.parse(session) : session
+        );
+      } catch {
+        await redis.del(`preview_session:${sessionToken}`);
+        return null;
+      }
     }
+  } else {
+    // Database fallback: lookup by token field (the sessionToken)
+    const dbSession = await prisma.verificationToken.findFirst({
+      where: {
+        token: sessionToken,
+        identifier: { startsWith: "preview_data:" },
+      },
+    });
 
-    // Check if session is expired
-    if (sessionData.expiresAt < Date.now()) {
-      await redis.del(`preview_session:${sessionToken}`);
-      return null;
+    if (dbSession) {
+      try {
+        // Extract JSON from identifier (format: "preview_data:{json}")
+        const jsonStr = dbSession.identifier.replace("preview_data:", "");
+        sessionData = ZPreviewSessionSchema.parse(JSON.parse(jsonStr));
+      } catch {
+        await prisma.verificationToken.delete({
+          where: {
+            identifier_token: {
+              identifier: dbSession.identifier,
+              token: sessionToken,
+            },
+          },
+        });
+        return null;
+      }
     }
+  }
 
-    // Check if the session is for the correct link and dataroom
-    if (sessionData.linkId !== linkId) {
+  if (!sessionData) return null;
+
+  // Helper to delete session
+  const deleteSession = async () => {
+    if (redis) {
       await redis.del(`preview_session:${sessionToken}`);
-      return null;
+    } else {
+      await prisma.verificationToken.deleteMany({
+        where: {
+          token: sessionToken,
+          identifier: { startsWith: "preview_data:" },
+        },
+      });
     }
+  };
 
-    return sessionData;
-  } catch (error) {
-    console.error("Preview session verification error:", error);
-    await redis.del(`preview_session:${sessionToken}`);
+  // Check if the session is for the correct user
+  if (sessionData.userId !== userId) {
+    await deleteSession();
     return null;
   }
+
+  // Check if session is expired
+  if (sessionData.expiresAt < Date.now()) {
+    await deleteSession();
+    return null;
+  }
+
+  // Check if the session is for the correct link
+  if (sessionData.linkId !== linkId) {
+    await deleteSession();
+    return null;
+  }
+
+  return sessionData;
 }
 
 export { createPreviewSession, verifyPreviewSession };

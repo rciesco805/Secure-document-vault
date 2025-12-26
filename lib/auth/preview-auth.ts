@@ -39,12 +39,12 @@ async function createPreviewSession(
     );
   } else {
     // Fallback to database storage using VerificationToken table
-    // Store sessionToken as the token field (unique key for lookup)
-    // Store JSON payload in identifier field with prefix
+    // identifier: short key for lookups (preview:sessionToken)
+    // token: JSON payload (token field has no length limit)
     await prisma.verificationToken.create({
       data: {
-        identifier: `preview_data:${JSON.stringify(sessionData)}`,
-        token: sessionToken,
+        identifier: `preview:${sessionToken}`,
+        token: JSON.stringify(sessionData),
         expires: new Date(expiresAt),
       },
     });
@@ -79,25 +79,23 @@ async function verifyPreviewSession(
       }
     }
   } else {
-    // Database fallback: lookup by token field (the sessionToken)
+    // Database fallback: lookup by identifier (preview:sessionToken)
     const dbSession = await prisma.verificationToken.findFirst({
       where: {
-        token: sessionToken,
-        identifier: { startsWith: "preview_data:" },
+        identifier: `preview:${sessionToken}`,
       },
     });
 
     if (dbSession) {
       try {
-        // Extract JSON from identifier (format: "preview_data:{json}")
-        const jsonStr = dbSession.identifier.replace("preview_data:", "");
-        sessionData = ZPreviewSessionSchema.parse(JSON.parse(jsonStr));
+        // Parse JSON from token field
+        sessionData = ZPreviewSessionSchema.parse(JSON.parse(dbSession.token));
       } catch {
         await prisma.verificationToken.delete({
           where: {
             identifier_token: {
               identifier: dbSession.identifier,
-              token: sessionToken,
+              token: dbSession.token,
             },
           },
         });
@@ -115,8 +113,7 @@ async function verifyPreviewSession(
     } else {
       await prisma.verificationToken.deleteMany({
         where: {
-          token: sessionToken,
-          identifier: { startsWith: "preview_data:" },
+          identifier: `preview:${sessionToken}`,
         },
       });
     }

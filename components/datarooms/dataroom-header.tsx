@@ -2,7 +2,8 @@ import Link from "next/link";
 
 import { useState } from "react";
 
-import { BellRingIcon, EyeIcon } from "lucide-react";
+import { BellRingIcon, EyeIcon, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 import { useDataroom, useDataroomLinks } from "@/lib/swr/use-dataroom";
 
@@ -25,8 +26,35 @@ export const DataroomHeader = ({
   actions?: React.ReactNode[];
 }) => {
   const [isLinkSheetOpen, setIsLinkSheetOpen] = useState<boolean>(false);
+  const [isLoadingPreview, setIsLoadingPreview] = useState<boolean>(false);
   const { dataroom } = useDataroom();
   const { links } = useDataroomLinks();
+
+  const handleViewAsVisitor = async () => {
+    const activeLinks = links?.filter(link => !link.isArchived && (!link.expiresAt || new Date(link.expiresAt) > new Date()));
+    if (!activeLinks || activeLinks.length === 0) return;
+    
+    const linkId = activeLinks[0].id;
+    setIsLoadingPreview(true);
+    
+    try {
+      const response = await fetch(`/api/links/${linkId}/preview`, {
+        method: "POST",
+      });
+      
+      if (!response.ok) {
+        throw new Error("Failed to create preview session");
+      }
+      
+      const { previewToken } = await response.json();
+      window.open(`/view/${linkId}?previewToken=${previewToken}`, '_blank');
+    } catch (error) {
+      console.error("Error creating preview:", error);
+      toast.error("Failed to open preview. Please try again.");
+    } finally {
+      setIsLoadingPreview(false);
+    }
+  };
 
   const actionRows: React.ReactNode[][] = [];
   if (actions) {
@@ -71,14 +99,14 @@ export const DataroomHeader = ({
               <TooltipTrigger asChild>
                 <Button
                   variant="outline"
-                  onClick={() => {
-                    const activeLinks = links.filter(link => !link.isArchived && (!link.expiresAt || new Date(link.expiresAt) > new Date()));
-                    if (activeLinks[0]) {
-                      window.open(`/view/${activeLinks[0].id}`, '_blank');
-                    }
-                  }}
+                  onClick={handleViewAsVisitor}
+                  disabled={isLoadingPreview}
                 >
-                  <EyeIcon className="h-4 w-4 mr-2" />
+                  {isLoadingPreview ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <EyeIcon className="h-4 w-4 mr-2" />
+                  )}
                   View as Visitor
                 </Button>
               </TooltipTrigger>

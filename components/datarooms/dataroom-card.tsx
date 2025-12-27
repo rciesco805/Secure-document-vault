@@ -3,8 +3,11 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
 
+import { useState } from "react";
+
 import { formatDistanceToNow } from "date-fns";
-import { EyeIcon } from "lucide-react";
+import { EyeIcon, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 import { TagColorProps } from "@/lib/types";
 
@@ -57,6 +60,7 @@ interface DataroomCardProps {
 
 export default function DataroomCard({ dataroom }: DataroomCardProps) {
   const router = useRouter();
+  const [isLoadingPreview, setIsLoadingPreview] = useState<boolean>(false);
 
   // Calculate active links
   const activeLinks = dataroom.links.filter((link) => {
@@ -75,11 +79,37 @@ export default function DataroomCard({ dataroom }: DataroomCardProps) {
     e.stopPropagation();
 
     if (!hasDocuments) {
-      // If no documents, go to documents tab
       router.push(`/datarooms/${dataroom.id}/documents`);
     } else if (!isActive) {
-      // If has documents but inactive, go to permissions/share
       router.push(`/datarooms/${dataroom.id}/permissions`);
+    }
+  };
+
+  const handleViewAsVisitor = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const firstActiveLink = activeLinks[0];
+    if (!firstActiveLink) return;
+    
+    setIsLoadingPreview(true);
+    
+    try {
+      const response = await fetch(`/api/links/${firstActiveLink.id}/preview`, {
+        method: "POST",
+      });
+      
+      if (!response.ok) {
+        throw new Error("Failed to create preview session");
+      }
+      
+      const { previewToken } = await response.json();
+      window.open(`/view/${firstActiveLink.id}?previewToken=${previewToken}`, '_blank');
+    } catch (error) {
+      console.error("Error creating preview:", error);
+      toast.error("Failed to open preview. Please try again.");
+    } finally {
+      setIsLoadingPreview(false);
     }
   };
 
@@ -203,16 +233,14 @@ export default function DataroomCard({ dataroom }: DataroomCardProps) {
                         variant="outline"
                         size="sm"
                         className="h-8 gap-2 whitespace-nowrap text-muted-foreground hover:text-foreground"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          const firstActiveLink = activeLinks[0];
-                          if (firstActiveLink) {
-                            window.open(`/view/${firstActiveLink.id}`, '_blank');
-                          }
-                        }}
+                        onClick={handleViewAsVisitor}
+                        disabled={isLoadingPreview}
                       >
-                        <EyeIcon className="h-4 w-4" />
+                        {isLoadingPreview ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <EyeIcon className="h-4 w-4" />
+                        )}
                         <span className="hidden sm:inline">View as Visitor</span>
                       </Button>
                     </TooltipTrigger>

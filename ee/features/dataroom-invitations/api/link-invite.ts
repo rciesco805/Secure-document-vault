@@ -113,9 +113,9 @@ export default async function handle(
 
     const targetEmails = Array.from(
       new Set(
-        (emails ?? defaultEmails).filter(
-          (email) => invitationEmailSchema.safeParse(email).success,
-        ),
+        (emails ?? defaultEmails)
+          .filter((email) => invitationEmailSchema.safeParse(email).success)
+          .map((email) => email.trim().toLowerCase()),
       ),
     );
 
@@ -127,14 +127,15 @@ export default async function handle(
 
     await prisma.viewer.createMany({
       data: targetEmails.map((email) => ({
-        email,
+        email: email.trim().toLowerCase(),
         teamId,
       })),
       skipDuplicates: true,
     });
 
     // Add invited emails to the link's allowList so they can access it
-    const currentAllowList = link.allowList ?? [];
+    // Normalize all emails in the allowList for consistent matching
+    const currentAllowList = (link.allowList ?? []).map(e => e.trim().toLowerCase());
     const newAllowList = Array.from(new Set([...currentAllowList, ...targetEmails]));
     
     if (newAllowList.length !== currentAllowList.length) {

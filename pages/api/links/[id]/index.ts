@@ -321,6 +321,13 @@ export default async function handle(
       }
     }
 
+    const normalizedAllowList = linkData.allowList?.map((email: string) => 
+      email.trim().toLowerCase()
+    ) ?? null;
+    const normalizedDenyList = linkData.denyList?.map((email: string) => 
+      email.trim().toLowerCase()
+    ) ?? null;
+
     const updatedLink = await prisma.$transaction(async (tx) => {
       const link = await tx.link.update({
         where: { id, teamId },
@@ -335,8 +342,8 @@ export default async function handle(
               : linkData.emailProtected,
           emailAuthenticated: linkData.emailAuthenticated,
           allowDownload: linkData.allowDownload,
-          allowList: linkData.allowList,
-          denyList: linkData.denyList,
+          allowList: normalizedAllowList,
+          denyList: normalizedDenyList,
           expiresAt: exat,
           domainId: domainObj?.id || null,
           domainSlug: domain || null,

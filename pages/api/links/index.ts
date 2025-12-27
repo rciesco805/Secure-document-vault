@@ -145,6 +145,13 @@ export default async function handler(
         }
       }
 
+      const normalizedAllowList = linkData.allowList?.map((email: string) => 
+        email.trim().toLowerCase()
+      ) ?? null;
+      const normalizedDenyList = linkData.denyList?.map((email: string) => 
+        email.trim().toLowerCase()
+      ) ?? null;
+
       // Fetch the link and its related document from the database
       const updatedLink = await prisma.$transaction(async (tx) => {
         const link = await tx.link.create({
@@ -175,8 +182,8 @@ export default async function handler(
             metaImage: linkData.metaImage || null,
             metaFavicon: linkData.metaFavicon || null,
             welcomeMessage: linkData.welcomeMessage || null,
-            allowList: linkData.allowList,
-            denyList: linkData.denyList,
+            allowList: normalizedAllowList,
+            denyList: normalizedDenyList,
             audienceType: linkData.audienceType,
             groupId:
               linkData.audienceType === LinkAudienceType.GROUP

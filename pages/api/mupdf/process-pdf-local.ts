@@ -192,6 +192,11 @@ export default async function handler(
 
     doc.destroy();
 
+    await prisma.documentVersion.update({
+      where: { id: documentVersionId },
+      data: { hasPages: true },
+    });
+
     return res.status(200).json({
       success: true,
       numPages,

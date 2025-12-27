@@ -23,6 +23,7 @@ A secure investor dataroom portal for **Bermuda Franchise Group (BFG)**, built o
 | Magic link auth only | No passwords; 20-minute expiration for security |
 | Admin allowlist | Only 3 emails can access admin: rciesco@gmail.com, richard@bermudafranchisegroup.com, investors@bermudafranchisegroup.com |
 | Email required for all access | `emailProtected=true` default in Prisma schema |
+| Session-based auth by default | `emailAuthenticated=false` - visitors verify email once per session, not every document |
 | Downloads disabled by default | `allowDownload=false` default in Prisma schema |
 | Replit Object Storage | AES-256 encrypted, presigned URLs, replaced Vercel Blob |
 

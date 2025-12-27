@@ -193,6 +193,6 @@
     "react-notion-x": {
       "react-pdf": "$react-pdf"
     },
-    "pdfjs-dist": "^5.0.375"
+    "pdfjs-dist": "^4.2.67"
   }
 }

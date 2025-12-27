@@ -1,0 +1,77 @@
+import { NextApiRequest, NextApiResponse } from "next";
+
+import { verifyAdminMagicLink } from "@/lib/auth/admin-magic-link";
+import prisma from "@/lib/prisma";
+
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse,
+) {
+  if (req.method !== "GET") {
+    return res.status(405).json({ message: "Method not allowed" });
+  }
+
+  const { token, email, redirect } = req.query as {
+    token?: string;
+    email?: string;
+    redirect?: string;
+  };
+
+  if (!token || !email) {
+    return res.redirect("/login?error=InvalidLink");
+  }
+
+  try {
+    const isValid = await verifyAdminMagicLink({ token, email });
+
+    if (!isValid) {
+      return res.redirect("/login?error=ExpiredLink");
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { email: email.toLowerCase() },
+    });
+
+    if (!user) {
+      return res.redirect("/login?error=UserNotFound");
+    }
+
+    const sessionToken = crypto.randomUUID();
+    const expires = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+
+    await prisma.session.create({
+      data: {
+        sessionToken,
+        userId: user.id,
+        expires,
+      },
+    });
+
+    const isProduction = process.env.NODE_ENV === "production";
+    const cookieName = isProduction
+      ? "__Secure-next-auth.session-token"
+      : "next-auth.session-token";
+
+    const cookieOptions = [
+      `${cookieName}=${sessionToken}`,
+      `Path=/`,
+      `HttpOnly`,
+      `SameSite=Lax`,
+      `Expires=${expires.toUTCString()}`,
+    ];
+
+    if (isProduction) {
+      cookieOptions.push("Secure");
+    }
+
+    res.setHeader("Set-Cookie", cookieOptions.join("; "));
+
+    const redirectPath = redirect || "/datarooms";
+    console.log("[ADMIN_MAGIC_VERIFY] Success for:", email, "redirecting to:", redirectPath);
+    
+    return res.redirect(redirectPath);
+  } catch (error) {
+    console.error("[ADMIN_MAGIC_VERIFY] Error:", error);
+    return res.redirect("/login?error=VerificationFailed");
+  }
+}

@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 
 import { z } from "zod";
 
+import { createAdminMagicLink } from "@/lib/auth/admin-magic-link";
 import { sendEmail } from "@/lib/resend";
 
 import InviteRequest from "@/components/emails/invite-request";
@@ -39,10 +40,16 @@ export default async function handler(
     const { email, fullName, company } = validation.data;
 
     const baseUrl = process.env.NEXTAUTH_URL || "https://dataroom.bermudafranchisegroup.com";
-    const signInUrl = `${baseUrl}/login`;
     
-    // Send notification to all admin emails (sequentially to avoid rate limits)
     for (const adminEmail of ADMIN_EMAILS) {
+      const magicLinkResult = await createAdminMagicLink({
+        email: adminEmail,
+        redirectPath: "/datarooms",
+        baseUrl,
+      });
+      
+      const signInUrl = magicLinkResult?.magicLink || `${baseUrl}/login`;
+
       const emailTemplate = InviteRequest({
         email,
         fullName,
@@ -58,7 +65,6 @@ export default async function handler(
         replyTo: email,
       });
       
-      // Small delay to respect Resend rate limits (2 req/sec)
       await new Promise(resolve => setTimeout(resolve, 600));
     }
 

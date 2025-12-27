@@ -56,11 +56,11 @@ export default function InviteRequest({
                 className="rounded-md bg-black px-6 py-3 text-center text-sm font-medium text-white no-underline"
                 href={signInUrl}
               >
-                Sign In to Add Investor
+                Enter Fund Dataroom
               </Button>
             </Section>
             <Text className="text-sm leading-6 text-gray-600 text-center">
-              Click the button above to sign in and grant access to this investor.
+              Click the button above to access the dataroom and grant access to this investor.
             </Text>
           </Container>
         </Body>

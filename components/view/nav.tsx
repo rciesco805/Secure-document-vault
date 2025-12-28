@@ -6,6 +6,7 @@ import React, { useEffect, useState } from "react";
 import { useViewerChatSafe } from "@/ee/features/ai/components/viewer-chat-provider";
 import { Brand, DataroomBrand } from "@prisma/client";
 import {
+  ArrowLeft,
   ArrowUpRight,
   BadgeInfoIcon,
   Download,
@@ -284,6 +285,19 @@ export default function Nav({
                 </Link>
               )}
             </div>
+            {/* Mobile back button - only shown on small screens for dataroom documents */}
+            {isDataroom && (
+              <Link
+                href={`${dataroomPath}${isPreview ? "?previewToken=" + previewToken + "&preview=" + preview : ""}`}
+                className="ml-2 flex items-center gap-1 rounded-md bg-gray-800/50 px-2 py-1.5 text-sm font-medium text-white hover:bg-gray-700/50 sm:hidden"
+                style={{
+                  color: determineTextColor(brand?.brandColor),
+                }}
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Back
+              </Link>
+            )}
             {isDataroom ? (
               <Breadcrumb className="ml-2 hidden sm:ml-6 sm:block">
                 <BreadcrumbList>

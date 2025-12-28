@@ -274,18 +274,30 @@ export async function fetchDataroomDocumentLinkData({
 
   if (effectiveGroupId) {
     let hasAccess = false;
+    let groupAllowsAll = false;
 
     if (groupId) {
-      // This is a ViewerGroup (legacy behavior)
-      groupPermissions = await prisma.viewerGroupAccessControls.findMany({
-        where: {
-          groupId: groupId,
-          itemId: dataroomDocumentId,
-          itemType: ItemType.DATAROOM_DOCUMENT,
-          OR: [{ canView: true }, { canDownload: true }],
-        },
+      // Check if the ViewerGroup has allowAll set to true
+      const viewerGroup = await prisma.viewerGroup.findUnique({
+        where: { id: groupId },
+        select: { allowAll: true },
       });
-      hasAccess = groupPermissions.length > 0;
+      groupAllowsAll = viewerGroup?.allowAll ?? false;
+
+      if (!groupAllowsAll) {
+        // This is a ViewerGroup (legacy behavior) - only check permissions if not allowAll
+        groupPermissions = await prisma.viewerGroupAccessControls.findMany({
+          where: {
+            groupId: groupId,
+            itemId: dataroomDocumentId,
+            itemType: ItemType.DATAROOM_DOCUMENT,
+            OR: [{ canView: true }, { canDownload: true }],
+          },
+        });
+        hasAccess = groupPermissions.length > 0;
+      } else {
+        hasAccess = true;
+      }
     } else if (permissionGroupId) {
       // This is a PermissionGroup (new behavior)
       groupPermissions = await prisma.permissionGroupAccessControls.findMany({

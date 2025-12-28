@@ -74,14 +74,6 @@ export default function DataroomDocumentViewPage({
     }
   }, [router.query.linkId]);
 
-  if (router.isFallback) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-black">
-        <LoadingSpinner className="h-20 w-20" />
-      </div>
-    );
-  }
-
   const {
     email: verifiedEmail,
     d: disableEditEmail,
@@ -96,7 +88,7 @@ export default function DataroomDocumentViewPage({
   const { link, brand } = linkData;
 
   // Render the document view for DATAROOM_LINK
-  if (!linkData || status === "loading" || router.isFallback) {
+  if (!linkData || status === "loading") {
     return (
       <>
         <CustomMetaTag
@@ -194,6 +186,12 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
     const res = await fetch(
       `${process.env.NEXTAUTH_URL}/api/links/${linkId}/documents/${documentId}`,
     );
+    
+    if (!res.ok) {
+      console.error(`API error: ${res.status} ${res.statusText}`);
+      return { notFound: true };
+    }
+    
     const { linkType, link, brand } =
       (await res.json()) as DataroomDocumentLinkData;
 
@@ -202,6 +200,11 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
     }
 
     if (linkType !== "DATAROOM_LINK") {
+      return { notFound: true };
+    }
+
+    if (!link.dataroomDocument?.document?.versions?.[0]) {
+      console.error("Document data not found in link response");
       return { notFound: true };
     }
 

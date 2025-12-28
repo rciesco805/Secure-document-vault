@@ -9,7 +9,7 @@ import InviteRequest from "@/components/emails/invite-request";
 
 const ADMIN_EMAILS = [
   "investors@bermudafranchisegroup.com",
-  "richard@bermudafranchisegroup.com",
+  "rciesco@gmail.com",
 ];
 
 const inviteRequestSchema = z.object({

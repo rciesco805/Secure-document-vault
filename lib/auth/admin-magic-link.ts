@@ -6,7 +6,7 @@ const ADMIN_MAGIC_LINK_EXPIRY_MINUTES = 20;
 
 const ADMIN_EMAILS = [
   "investors@bermudafranchisegroup.com",
-  "richard@bermudafranchisegroup.com",
+  "rciesco@gmail.com",
 ];
 
 export async function createAdminMagicLink({

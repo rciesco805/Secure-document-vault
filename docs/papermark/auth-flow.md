@@ -19,8 +19,8 @@
 
 ### Admin Allowlist
 Only these emails can access admin:
-1. richard@bermudafranchisegroup.com
-2. investors@bermudafranchisegroup.com
+1. investors@bermudafranchisegroup.com
+2. rciesco@gmail.com
 
 ## Viewer Authentication (Document Access)
 

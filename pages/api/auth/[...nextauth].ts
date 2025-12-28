@@ -27,7 +27,7 @@ const IS_REPLIT = !!process.env.REPL_ID;
 
 const ALLOWED_ADMIN_EMAILS = [
   "investors@bermudafranchisegroup.com",
-  "richard@bermudafranchisegroup.com",
+  "rciesco@gmail.com",
 ];
 
 function getMainDomainUrl(): string {

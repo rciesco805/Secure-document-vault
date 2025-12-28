@@ -6,7 +6,7 @@ import prisma from "@/lib/prisma";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 
 const ADMIN_EMAILS = [
-  "richard@bermudafranchisegroup.com",
+  "rciesco@gmail.com",
   "investors@bermudafranchisegroup.com",
 ];
 

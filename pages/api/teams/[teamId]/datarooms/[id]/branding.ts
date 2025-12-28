@@ -67,8 +67,9 @@ export default async function handle(
     }
 
     return res.status(200).json(brand);
-  } else if (req.method === "POST") {
-    // POST /api/teams/:teamId/datarooms/:id/branding
+  } else if (req.method === "POST" || req.method === "PUT") {
+    // POST/PUT /api/teams/:teamId/datarooms/:id/branding
+    // Use upsert to handle both create and update
     const { logo, banner, brandColor, accentColor, welcomeMessage } = req.body as {
       logo?: string;
       banner?: string;
@@ -77,9 +78,11 @@ export default async function handle(
       welcomeMessage?: string;
     };
 
-    // update team with new branding
-    const brand = await prisma.dataroomBrand.create({
-      data: {
+    const brand = await prisma.dataroomBrand.upsert({
+      where: {
+        dataroomId,
+      },
+      create: {
         logo,
         banner,
         brandColor,
@@ -87,24 +90,7 @@ export default async function handle(
         welcomeMessage,
         dataroomId,
       },
-    });
-
-    return res.status(200).json(brand);
-  } else if (req.method === "PUT") {
-    // PUT /api/teams/:teamId/datarooms/:id/branding
-    const { logo, banner, brandColor, accentColor, welcomeMessage } = req.body as {
-      logo?: string;
-      banner?: string;
-      brandColor?: string;
-      accentColor?: string;
-      welcomeMessage?: string;
-    };
-
-    const brand = await prisma.dataroomBrand.update({
-      where: {
-        dataroomId,
-      },
-      data: {
+      update: {
         logo,
         banner,
         brandColor,

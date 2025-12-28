@@ -55,7 +55,7 @@ A secure investor dataroom portal for **Bermuda Franchise Group (BFG)**, built o
 |----------|-----------|
 | Self-hosted, not SaaS | All billing/upgrade code disabled; `datarooms-plus` plan hardcoded |
 | Magic link auth only | No passwords; 20-minute expiration for security |
-| Admin allowlist | Only 3 emails can access admin: rciesco@gmail.com, richard@bermudafranchisegroup.com, investors@bermudafranchisegroup.com |
+| Admin allowlist | Only 2 emails can access admin: richard@bermudafranchisegroup.com, investors@bermudafranchisegroup.com |
 | Email required for all access | `emailProtected=true` default in Prisma schema |
 | Session-based auth by default | `emailAuthenticated=false` - visitors verify email once per session, not every document |
 | Downloads disabled by default | `allowDownload=false` default in Prisma schema |
@@ -301,9 +301,8 @@ npx prisma studio        # Visual database browser
 | `/api/teams/[teamId]/links` | Link management |
 
 ### Approved Admin Emails
-1. rciesco@gmail.com
-2. richard@bermudafranchisegroup.com
-3. investors@bermudafranchisegroup.com
+1. richard@bermudafranchisegroup.com
+2. investors@bermudafranchisegroup.com
 
 ---
 

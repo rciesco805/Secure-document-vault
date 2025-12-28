@@ -26,7 +26,6 @@ const VERCEL_DEPLOYMENT = !!process.env.VERCEL_URL;
 const IS_REPLIT = !!process.env.REPL_ID;
 
 const ALLOWED_ADMIN_EMAILS = [
-  "rciesco@gmail.com",
   "investors@bermudafranchisegroup.com",
   "richard@bermudafranchisegroup.com",
 ];

@@ -14,6 +14,27 @@ export async function reportDeniedAccessAttempt(
   // Ensure email is present - use placeholder if empty
   const blockedEmail = email && email.trim() ? email.trim() : "(no email provided)";
 
+  // Check if the blocked email belongs to a team member - don't send notifications for team members
+  if (blockedEmail !== "(no email provided)") {
+    const teamMember = await prisma.userTeam.findFirst({
+      where: {
+        teamId: link.teamId,
+        status: "ACTIVE",
+        user: {
+          email: {
+            equals: blockedEmail,
+            mode: "insensitive",
+          },
+        },
+      },
+    });
+    
+    if (teamMember) {
+      // Skip sending blocked notification for team members
+      return;
+    }
+  }
+
   // Get all admin and manager emails
   const users = await prisma.userTeam.findMany({
     where: {

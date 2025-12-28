@@ -94,22 +94,24 @@ export const DataroomHeader = ({
             </Tooltip>
           ) : null}
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-1 sm:gap-2">
           {/* View as Visitor button - only show if there are active links */}
           {links && links.filter(link => !link.isArchived && (!link.expiresAt || new Date(link.expiresAt) > new Date())).length > 0 && (
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
                   variant="outline"
+                  size="sm"
                   onClick={handleViewAsVisitor}
                   disabled={isLoadingPreview}
+                  className="h-8 px-2 sm:h-9 sm:px-3"
                 >
                   {isLoadingPreview ? (
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    <Loader2 className="h-4 w-4 animate-spin sm:mr-2" />
                   ) : (
-                    <EyeIcon className="h-4 w-4 mr-2" />
+                    <EyeIcon className="h-4 w-4 sm:mr-2" />
                   )}
-                  View as Visitor
+                  <span className="hidden sm:inline">View as Visitor</span>
                 </Button>
               </TooltipTrigger>
               <TooltipPortal>
@@ -123,11 +125,12 @@ export const DataroomHeader = ({
             <TooltipTrigger asChild>
               <Button
                 variant="outline"
+                size="sm"
                 onClick={() => setIsQuickAddOpen(true)}
-                className="border-amber-500/50 text-amber-600 hover:bg-amber-50 hover:text-amber-700 dark:text-amber-400 dark:hover:bg-amber-950/50"
+                className="h-8 px-2 sm:h-9 sm:px-3 border-amber-500/50 text-amber-600 hover:bg-amber-50 hover:text-amber-700 dark:text-amber-400 dark:hover:bg-amber-950/50"
               >
-                <Zap className="h-4 w-4 mr-2" />
-                Quick Add
+                <Zap className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Quick Add</span>
               </Button>
             </TooltipTrigger>
             <TooltipPortal>
@@ -136,7 +139,11 @@ export const DataroomHeader = ({
               </TooltipContent>
             </TooltipPortal>
           </Tooltip>
-          <Button onClick={() => setIsLinkSheetOpen(true)} key={1}>
+          <Button 
+            onClick={() => setIsLinkSheetOpen(true)} 
+            size="sm"
+            className="h-8 px-2 sm:h-9 sm:px-3"
+          >
             Share
           </Button>
         </div>

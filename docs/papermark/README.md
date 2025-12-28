@@ -6,7 +6,7 @@
 
 | Document | Description |
 |----------|-------------|
-| [Architecture](./architecture.md) | System design and component relationships |
+| [Architecture](./architecture.md) | System design, component relationships, PDF rendering |
 | [Data Models](./data-models.md) | Entity relationships and database schema |
 | [Auth Flow](./auth-flow.md) | Magic link authentication and session management |
 | [File Storage](./file-storage.md) | Replit Object Storage integration |

@@ -89,3 +89,48 @@ const teamId = teamInfo?.currentTeam?.id;
 const session = await getServerSession(req, res, authOptions);
 if (!session) return res.status(401).end("Unauthorized");
 ```
+
+## PDF Rendering
+
+### Overview
+PDFs are rendered using `react-pdf` (v10.x), which wraps Mozilla's PDF.js library. The library requires a Web Worker to process PDFs in a background thread.
+
+### Worker Configuration
+The PDF.js worker must be configured before rendering any PDFs. For react-pdf v10, the worker uses ES modules (`.mjs` extension):
+
+```typescript
+import { pdfjs } from "react-pdf";
+
+// REQUIRED: Configure worker URL (must use .mjs for react-pdf v10+)
+pdfjs.GlobalWorkerOptions.workerSrc = 
+  `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+```
+
+### Files Using PDF Rendering
+| File | Purpose |
+|------|---------|
+| `components/view/viewer/pdf-default-viewer.tsx` | Main viewer for visitors |
+| `components/documents/preview-viewers/preview-pdf-viewer.tsx` | Admin preview modal |
+| `lib/utils/get-page-number-count.ts` | Page count extraction |
+
+### Content Security Policy
+The CSP in `next.config.mjs` must allow the worker source:
+
+```javascript
+`worker-src 'self' blob: https://unpkg.com; `
+```
+
+### Common Issues
+
+**"Failed to load PDF file" / "Setting up fake worker"**
+- **Cause**: Worker URL incorrect or blocked by CSP
+- **Fix**: Ensure worker URL uses `.mjs` extension and CSP allows unpkg.com
+
+**Version Mismatch Error**
+- **Cause**: Worker version doesn't match pdfjs-dist version
+- **Fix**: Always use `${pdfjs.version}` template literal to keep versions in sync
+
+**react-pdf v10 Breaking Changes**
+- Worker file extension changed from `.js` to `.mjs`
+- CDN source changed from cdnjs.cloudflare.com to unpkg.com
+- ES module format required

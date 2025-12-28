@@ -1,4 +1,4 @@
-import { GetStaticPropsContext } from "next";
+import { GetServerSidePropsContext } from "next";
 import { useRouter } from "next/router";
 
 import { useEffect, useState } from "react";
@@ -69,8 +69,14 @@ export interface ViewPageProps {
   annotationsEnabled?: boolean;
 }
 
-export const getStaticProps = async (context: GetStaticPropsContext) => {
+export const getServerSideProps = async (context: GetServerSidePropsContext) => {
   const { linkId: linkIdParam } = context.params as { linkId: string };
+
+  // Set cache headers to prevent aggressive caching
+  context.res.setHeader(
+    'Cache-Control',
+    'private, no-cache, no-store, must-revalidate'
+  );
 
   try {
     const linkId = z.string().cuid().parse(linkIdParam);
@@ -115,7 +121,6 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
           useCustomAccessForm: false,
           logoOnAccessForm: false,
         },
-        revalidate: 60,
       };
     }
 
@@ -150,7 +155,6 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
           // Return a temporary error page instead of 404
           return {
             props: { notionError: true },
-            revalidate: 30,
           };
         }
       }
@@ -205,7 +209,6 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
             teamId === "clup33by90000oewh4rfvp2eg",
           annotationsEnabled,
         },
-        revalidate: brand || recordMap ? 10 : 60,
       };
     }
 
@@ -289,21 +292,13 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
           dataroomIndexEnabled,
           annotationsEnabled,
         },
-        revalidate: 10,
       };
     }
   } catch (error) {
     console.error("Fetching error:", error);
-    return { props: { error: true }, revalidate: 30 };
+    return { props: { error: true } };
   }
 };
-
-export async function getStaticPaths() {
-  return {
-    paths: [],
-    fallback: true,
-  };
-}
 
 export default function ViewPage({
   linkData,

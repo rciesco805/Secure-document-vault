@@ -1,4 +1,4 @@
-import { GetStaticPropsContext } from "next";
+import { GetServerSidePropsContext } from "next";
 import { useRouter } from "next/router";
 
 import React, { useEffect, useState } from "react";
@@ -175,12 +175,18 @@ export default function DataroomDocumentViewPage({
   );
 }
 
-export async function getStaticProps(context: GetStaticPropsContext) {
+export async function getServerSideProps(context: GetServerSidePropsContext) {
   const { linkId: linkIdParam, documentId: documentIdParam } =
     context.params as {
       linkId: string;
       documentId: string;
     };
+
+  // Set cache headers to prevent aggressive caching
+  context.res.setHeader(
+    'Cache-Control',
+    'private, no-cache, no-store, must-revalidate'
+  );
 
   try {
     const linkId = z.string().cuid().parse(linkIdParam);
@@ -217,7 +223,6 @@ export async function getStaticProps(context: GetStaticPropsContext) {
 
       pageId = notionPageId;
       recordMap = await notion.getPage(pageId, { signFileUrls: false });
-      // TODO: separately sign the file urls until PR merged and published; ref: https://github.com/NotionX/react-notion-x/issues/580#issuecomment-2542823817
       await addSignedUrls({ recordMap });
     }
 
@@ -244,7 +249,7 @@ export async function getStaticProps(context: GetStaticPropsContext) {
           brand,
         },
         notionData: {
-          rootNotionPageId: null, // do not pass rootNotionPageId to the client
+          rootNotionPageId: null,
           recordMap,
           theme,
         },
@@ -265,17 +270,9 @@ export async function getStaticProps(context: GetStaticPropsContext) {
           teamId === "cm76hfyvy0002q623hmen99pf",
         logoOnAccessForm: teamId === "cm7nlkrhm0000qgh0nvyrrywr",
       },
-      revalidate: brand || recordMap ? 10 : 60,
     };
   } catch (error) {
     console.error("Fetching error:", error);
-    return { props: { error: true }, revalidate: 30 };
+    return { props: { error: true } };
   }
-}
-
-export async function getStaticPaths() {
-  return {
-    paths: [],
-    fallback: true,
-  };
 }

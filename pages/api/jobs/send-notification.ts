@@ -135,6 +135,37 @@ export default async function handle(
         }
       }
     }
+
+    // Rate limit: Only send one notification per viewer email per resource per 24 hours
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const resourceId = view.viewType === "DOCUMENT_VIEW" 
+      ? view.document?.id 
+      : view.dataroom?.id;
+    
+    if (resourceId) {
+      const recentNotifiedView = await prisma.view.findFirst({
+        where: {
+          viewerEmail: view.viewerEmail,
+          viewType: view.viewType,
+          ...(view.viewType === "DOCUMENT_VIEW" 
+            ? { documentId: resourceId }
+            : { dataroomId: resourceId }
+          ),
+          viewedAt: { gte: twentyFourHoursAgo },
+          id: { not: viewId }, // Exclude current view
+        },
+        orderBy: { viewedAt: "desc" },
+        select: { id: true, viewedAt: true },
+      });
+
+      if (recentNotifiedView) {
+        return res.status(200).json({
+          message: "Notification skipped - already notified for this visitor within 24 hours.",
+          viewId,
+          lastNotifiedViewId: recentNotifiedView.id,
+        });
+      }
+    }
   }
 
   // Get all active team members who are admins or managers to be notified

@@ -217,6 +217,7 @@ export async function fetchDataroomLinkData({
     select: {
       logo: true,
       banner: true,
+      favicon: true,
       brandColor: true,
       accentColor: true,
       welcomeMessage: true,
@@ -239,6 +240,7 @@ export async function fetchDataroomLinkData({
   const brand = {
     logo: dataroomBrand?.logo || teamBrand?.logo,
     banner: dataroomBrand?.banner || teamBrand?.banner || null,
+    favicon: dataroomBrand?.favicon || null,
     brandColor: dataroomBrand?.brandColor || teamBrand?.brandColor,
     accentColor: dataroomBrand?.accentColor || teamBrand?.accentColor,
     welcomeMessage: dataroomBrand?.welcomeMessage || teamBrand?.welcomeMessage,
@@ -373,6 +375,7 @@ export async function fetchDataroomDocumentLinkData({
     select: {
       logo: true,
       banner: true,
+      favicon: true,
       brandColor: true,
       accentColor: true,
       welcomeMessage: true,
@@ -395,6 +398,7 @@ export async function fetchDataroomDocumentLinkData({
   const brand = {
     logo: dataroomBrand?.logo || teamBrand?.logo,
     banner: dataroomBrand?.banner || teamBrand?.banner || null,
+    favicon: dataroomBrand?.favicon || null,
     brandColor: dataroomBrand?.brandColor || teamBrand?.brandColor,
     accentColor: dataroomBrand?.accentColor || teamBrand?.accentColor,
     welcomeMessage: dataroomBrand?.welcomeMessage || teamBrand?.welcomeMessage,

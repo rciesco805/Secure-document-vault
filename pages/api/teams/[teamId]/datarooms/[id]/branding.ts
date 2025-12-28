@@ -70,9 +70,10 @@ export default async function handle(
   } else if (req.method === "POST" || req.method === "PUT") {
     // POST/PUT /api/teams/:teamId/datarooms/:id/branding
     // Use upsert to handle both create and update
-    const { logo, banner, brandColor, accentColor, welcomeMessage } = req.body as {
+    const { logo, banner, favicon, brandColor, accentColor, welcomeMessage } = req.body as {
       logo?: string;
       banner?: string;
+      favicon?: string;
       brandColor?: string;
       accentColor?: string;
       welcomeMessage?: string;
@@ -85,6 +86,7 @@ export default async function handle(
       create: {
         logo,
         banner,
+        favicon,
         brandColor,
         accentColor,
         welcomeMessage,
@@ -93,6 +95,7 @@ export default async function handle(
       update: {
         logo,
         banner,
+        favicon,
         brandColor,
         accentColor,
         welcomeMessage,

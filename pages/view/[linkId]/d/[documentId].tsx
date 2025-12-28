@@ -261,7 +261,7 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
           metaTitle: link.metaTitle,
           metaDescription: link.metaDescription,
           metaImage: link.metaImage,
-          metaFavicon: link.metaFavicon ?? "/favicon.ico",
+          metaFavicon: brand?.favicon || link.metaFavicon || "/favicon.ico",
           metaUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/view/${linkId}`,
         },
         showPoweredByBanner: false,

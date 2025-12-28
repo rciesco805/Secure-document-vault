@@ -261,7 +261,8 @@ export default function DataroomView({
   }
 
   // If link is not submitted and does not have email / password protection, show the access form
-  if (!submitted && isProtected) {
+  // But skip showing access form if we have a valid token (session cookie) - auto-submit will handle it
+  if (!submitted && isProtected && !token && !previewToken && !preview) {
     return (
       <AccessForm
         data={data}

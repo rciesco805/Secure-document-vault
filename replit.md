@@ -4,6 +4,40 @@
 
 ---
 
+## SESSION START PROTOCOL
+
+**At the start of each session, perform these checks:**
+
+### 1. Environment Health Check
+```bash
+# Check workflow status - should show "RUNNING"
+# Review recent workflow logs for errors
+# Verify no red error messages in console
+```
+
+### 2. Code State Review
+```bash
+git log --oneline -5        # Recent commits
+git status                  # Uncommitted changes
+```
+
+### 3. Quick Validation (if changes were made previously)
+```bash
+npx prisma generate --schema=prisma/schema   # Regenerate Prisma client
+```
+
+### 4. Reference Documentation
+- **Papermark Reference:** `/docs/papermark/README.md`
+- **Session Checks Runbook:** `/docs/runbooks/session-checks.md`
+
+### Escalate to User If:
+- Production site down
+- Database migration risks data loss
+- Authentication system broken
+- Multiple TypeScript errors in core files
+
+---
+
 ## HIGH LEVEL OVERVIEW
 
 ### What Is This Project?

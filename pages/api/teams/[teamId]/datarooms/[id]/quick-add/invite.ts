@@ -4,10 +4,10 @@ import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { getServerSession } from "next-auth/next";
 
 import { sendDataroomViewerInvite } from "@/ee/features/dataroom-invitations/emails/lib/send-dataroom-viewer-invite";
+import { createVisitorMagicLink, INVITATION_MAGIC_LINK_EXPIRY_MINUTES } from "@/lib/auth/create-visitor-magic-link";
 import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
-import { constructLinkUrl } from "@/lib/utils/link-url";
 
 export default async function handle(
   req: NextApiRequest,
@@ -83,9 +83,9 @@ export default async function handle(
       }
 
       const link = quickAddGroup.links[0];
-      const linkUrl = constructLinkUrl(link);
       const senderUser = session.user as CustomUser;
       const senderEmail = senderUser.email || "investors@bermudafranchisegroup.com";
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXTAUTH_URL || "https://dataroom.bermudafranchisegroup.com";
       
       const normalizedEmails = emails.map((e) => e.trim().toLowerCase());
 
@@ -111,11 +111,22 @@ export default async function handle(
               });
             }
 
+            // Create a pre-authenticated magic link with 1-hour expiration
+            const magicLinkResult = await createVisitorMagicLink({
+              email: email,
+              linkId: link.id,
+              isDataroom: true,
+              baseUrl: baseUrl,
+              expiryMinutes: INVITATION_MAGIC_LINK_EXPIRY_MINUTES,
+            });
+
+            const invitationUrl = magicLinkResult?.magicLink || `${baseUrl}/view/${link.id}`;
+
             await sendDataroomViewerInvite({
               dataroomName: dataroom.name,
               senderEmail: senderEmail,
               to: email,
-              url: linkUrl,
+              url: invitationUrl,
             });
 
             return { email, sent: true };

@@ -3,22 +3,26 @@ import { randomUUID } from "crypto";
 import prisma from "@/lib/prisma";
 
 const VISITOR_MAGIC_LINK_EXPIRY_MINUTES = 20;
+export const INVITATION_MAGIC_LINK_EXPIRY_MINUTES = 60; // 1 hour for email invitations
 
 export async function createVisitorMagicLink({
   email,
   linkId,
   isDataroom,
   baseUrl,
+  expiryMinutes,
 }: {
   email: string;
   linkId: string;
   isDataroom: boolean;
   baseUrl: string;
+  expiryMinutes?: number;
 }): Promise<{ magicLink: string; token: string } | null> {
   try {
     const normalizedEmail = email.trim().toLowerCase();
     const token = randomUUID();
-    const expires = new Date(Date.now() + VISITOR_MAGIC_LINK_EXPIRY_MINUTES * 60 * 1000);
+    const expiryTime = expiryMinutes || VISITOR_MAGIC_LINK_EXPIRY_MINUTES;
+    const expires = new Date(Date.now() + expiryTime * 60 * 1000);
 
     await prisma.verificationToken.create({
       data: {

@@ -12,8 +12,8 @@ import DocumentView from "@/components/view/document-view";
 
 import { ViewPageProps } from "./index";
 
-// Reuse the same getStaticProps and getStaticPaths from the main view page
-export { getStaticProps, getStaticPaths } from "./index";
+// Reuse the same getServerSideProps from the main view page
+export { getServerSideProps } from "./index";
 
 export default function EmbedPage(props: ViewPageProps) {
   const router = useRouter();
@@ -47,7 +47,7 @@ export default function EmbedPage(props: ViewPageProps) {
   }, [router.isReady, router.query.linkId]);
 
   // Show loading state while checking
-  if (isEmbedded === null || router.isFallback) {
+  if (isEmbedded === null) {
     return (
       <div className="flex h-screen items-center justify-center">
         <LoadingSpinner className="h-20 w-20" />
@@ -76,7 +76,7 @@ export default function EmbedPage(props: ViewPageProps) {
   // Render the document view for DOCUMENT_LINK
   if (linkType === "DOCUMENT_LINK") {
     const { link } = props.linkData;
-    if (!props.linkData || router.isFallback) {
+    if (!props.linkData) {
       return (
         <div className="flex h-screen items-center justify-center">
           <LoadingSpinner className="h-20 w-20" />
@@ -131,7 +131,7 @@ export default function EmbedPage(props: ViewPageProps) {
   // Render the dataroom view for DATAROOM_LINK
   if (linkType === "DATAROOM_LINK") {
     const { link } = props.linkData;
-    if (!link || router.isFallback) {
+    if (!link) {
       return (
         <div className="flex h-screen items-center justify-center">
           <LoadingSpinner className="h-20 w-20" />

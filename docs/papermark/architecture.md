@@ -134,3 +134,26 @@ The CSP in `next.config.mjs` must allow the worker source:
 - Worker file extension changed from `.js` to `.mjs`
 - CDN source changed from cdnjs.cloudflare.com to unpkg.com
 - ES module format required
+
+## Viewer Group Permissions
+
+### AllowAll Flag
+ViewerGroups have an `allowAll` boolean field that bypasses per-item access control filtering:
+
+```prisma
+model ViewerGroup {
+  allowAll  Boolean @default(false)  // Full access to all items
+  isQuickAdd Boolean @default(false)  // Quick Add group marker
+}
+```
+
+### Permission Logic (lib/api/links/link-data.ts)
+1. If `groupId` is specified, check if group has `allowAll: true`
+2. If `allowAll: true`, return ALL documents and folders (no filtering)
+3. If `allowAll: false`, filter by ViewerGroupAccessControls entries
+4. Groups created via Quick Add have `allowAll: true` by default
+
+### Common Issue
+**"No items available" in visitor view**
+- **Cause**: ViewerGroup has no access controls AND `allowAll: false`
+- **Fix**: Set `allowAll: true` on the group, or add specific access controls

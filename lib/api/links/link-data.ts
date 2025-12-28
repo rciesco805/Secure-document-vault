@@ -60,6 +60,7 @@ export async function fetchDataroomLinkData({
   let documentIds: string[] = [];
   let folderIds: string[] = [];
   let allRequiredFolderIds: string[] = [];
+  let groupAllowsAll = false;
 
   const effectiveGroupId = groupId || permissionGroupId;
 
@@ -67,13 +68,22 @@ export async function fetchDataroomLinkData({
     // Check if this is a ViewerGroup (legacy) or PermissionGroup
     // First try to find ViewerGroup permissions (for backwards compatibility)
     if (groupId) {
-      // This is a ViewerGroup (legacy behavior)
-      groupPermissions = await prisma.viewerGroupAccessControls.findMany({
-        where: {
-          groupId: groupId,
-          OR: [{ canView: true }, { canDownload: true }],
-        },
+      // Check if the ViewerGroup has allowAll set to true
+      const viewerGroup = await prisma.viewerGroup.findUnique({
+        where: { id: groupId },
+        select: { allowAll: true },
       });
+      groupAllowsAll = viewerGroup?.allowAll ?? false;
+
+      if (!groupAllowsAll) {
+        // This is a ViewerGroup (legacy behavior) - only fetch permissions if not allowAll
+        groupPermissions = await prisma.viewerGroupAccessControls.findMany({
+          where: {
+            groupId: groupId,
+            OR: [{ canView: true }, { canDownload: true }],
+          },
+        });
+      }
     } else if (permissionGroupId) {
       // This is a PermissionGroup (new behavior)
       groupPermissions = await prisma.permissionGroupAccessControls.findMany({
@@ -84,23 +94,29 @@ export async function fetchDataroomLinkData({
       });
     }
 
-    documentIds = groupPermissions
-      .filter(
-        (permission) => permission.itemType === ItemType.DATAROOM_DOCUMENT,
-      )
-      .map((permission) => permission.itemId);
-    folderIds = groupPermissions
-      .filter((permission) => permission.itemType === ItemType.DATAROOM_FOLDER)
-      .map((permission) => permission.itemId);
+    if (!groupAllowsAll) {
+      documentIds = groupPermissions
+        .filter(
+          (permission) => permission.itemType === ItemType.DATAROOM_DOCUMENT,
+        )
+        .map((permission) => permission.itemId);
+      folderIds = groupPermissions
+        .filter((permission) => permission.itemType === ItemType.DATAROOM_FOLDER)
+        .map((permission) => permission.itemId);
 
-    // Include parent folders if we have group permissions and they're actually being applied
-    // This ensures that if a group has access to a subfolder, all parent folders
-    // are also included to maintain proper hierarchy (even without explicit permissions)
-    allRequiredFolderIds = folderIds;
-    if (dataroomId && folderIds.length > 0) {
-      allRequiredFolderIds = await getAllParentFolderIds(folderIds, dataroomId);
+      // Include parent folders if we have group permissions and they're actually being applied
+      // This ensures that if a group has access to a subfolder, all parent folders
+      // are also included to maintain proper hierarchy (even without explicit permissions)
+      allRequiredFolderIds = folderIds;
+      if (dataroomId && folderIds.length > 0) {
+        allRequiredFolderIds = await getAllParentFolderIds(folderIds, dataroomId);
+      }
     }
   }
+
+  // Determine if we should filter documents/folders
+  // Don't filter if: no group specified, OR group has allowAll=true
+  const shouldFilterByPermissions = effectiveGroupId && !groupAllowsAll && (groupPermissions.length > 0 || documentIds.length > 0 || folderIds.length > 0);
 
   const linkData = await prisma.link.findUnique({
     where: { id: linkId, teamId },
@@ -115,10 +131,9 @@ export async function fetchDataroomLinkData({
           showLastUpdated: true,
           createdAt: true,
           documents: {
-            where:
-              groupPermissions.length > 0 || effectiveGroupId
-                ? { id: { in: documentIds } }
-                : undefined,
+            where: shouldFilterByPermissions
+              ? { id: { in: documentIds } }
+              : undefined,
             select: {
               id: true,
               folderId: true,
@@ -155,10 +170,9 @@ export async function fetchDataroomLinkData({
             ],
           },
           folders: {
-            where:
-              groupPermissions.length > 0 || effectiveGroupId
-                ? { id: { in: allRequiredFolderIds } }
-                : undefined,
+            where: shouldFilterByPermissions
+              ? { id: { in: allRequiredFolderIds } }
+              : undefined,
             select: {
               id: true,
               name: true,

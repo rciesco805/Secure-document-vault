@@ -185,7 +185,11 @@ const form = useForm<FormType>({
 | `components/datarooms/settings/duplicate-dataroom.tsx` | Removed useLimits, usePlan, UpgradePlanModal |
 | `components/links/link-sheet/link-options.tsx` | Removed usePlan, useLimits; all isAllowed=true |
 | `components/sidebar/team-switcher.tsx` | Removed plan checks |
-| `components/settings/settings-header.tsx` | Removed Billing tab |
+| `components/sidebar/app-sidebar.tsx` | Removed Billing from Settings menu |
+| `components/ui/upgrade-button.tsx` | Returns null (no upgrade prompts) |
+| `pages/settings/billing.tsx` | Redirects to /settings/general |
+| `pages/settings/billing/invoices.tsx` | Redirects to /settings/general |
+| `pages/settings/upgrade.tsx` | Redirects to /settings/general |
 
 **API Routes with Plan Gating REMOVED**
 | Route | Change |
@@ -306,6 +310,13 @@ npx prisma studio        # Visual database browser
 ## CHANGE LOG
 
 **December 2024:**
+- **Billing/Plan UI Completely Removed**:
+  - Billing tab removed from sidebar Settings menu
+  - /settings/billing, /settings/billing/invoices, /settings/upgrade all redirect to /settings/general
+  - UpgradeButton component returns null (no upgrade prompts anywhere)
+  - usePlan() always returns datarooms-plus with all features enabled
+  - useLimits() always returns canAddDocuments/Links/Users = true
+- **PDF Viewer Fixed**: Updated worker URL for react-pdf v10 (uses .mjs from unpkg.com)
 - **Quick Add Feature**: One-click user access workflow
   - Auto-creates "Quick Add" group with default link for new datarooms
   - "Quick Add" button in dataroom header (amber colored, next to Share)

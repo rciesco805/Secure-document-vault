@@ -2,12 +2,13 @@ import Link from "next/link";
 
 import { useState } from "react";
 
-import { BellRingIcon, EyeIcon, Loader2 } from "lucide-react";
+import { BellRingIcon, EyeIcon, Loader2, Zap } from "lucide-react";
 import { toast } from "sonner";
 
 import { useDataroom, useDataroomLinks } from "@/lib/swr/use-dataroom";
 
 import { DataroomLinkSheet } from "@/components/links/link-sheet/dataroom-link-sheet";
+import { QuickAddModal } from "@/components/datarooms/quick-add-modal";
 import { Button } from "@/components/ui/button";
 import {
   Tooltip,
@@ -26,6 +27,7 @@ export const DataroomHeader = ({
   actions?: React.ReactNode[];
 }) => {
   const [isLinkSheetOpen, setIsLinkSheetOpen] = useState<boolean>(false);
+  const [isQuickAddOpen, setIsQuickAddOpen] = useState<boolean>(false);
   const [isLoadingPreview, setIsLoadingPreview] = useState<boolean>(false);
   const { dataroom } = useDataroom();
   const { links } = useDataroomLinks();
@@ -117,6 +119,23 @@ export const DataroomHeader = ({
               </TooltipPortal>
             </Tooltip>
           )}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                onClick={() => setIsQuickAddOpen(true)}
+                className="border-amber-500/50 text-amber-600 hover:bg-amber-50 hover:text-amber-700 dark:text-amber-400 dark:hover:bg-amber-950/50"
+              >
+                <Zap className="h-4 w-4 mr-2" />
+                Quick Add
+              </Button>
+            </TooltipTrigger>
+            <TooltipPortal>
+              <TooltipContent>
+                <p>Add users with one-click access</p>
+              </TooltipContent>
+            </TooltipPortal>
+          </Tooltip>
           <Button onClick={() => setIsLinkSheetOpen(true)} key={1}>
             Share
           </Button>
@@ -127,6 +146,13 @@ export const DataroomHeader = ({
           setIsOpen={setIsLinkSheetOpen}
           existingLinks={links}
         />
+        {dataroom?.id && (
+          <QuickAddModal
+            open={isQuickAddOpen}
+            setOpen={setIsQuickAddOpen}
+            dataroomId={dataroom.id}
+          />
+        )}
       </div>
     </section>
   );

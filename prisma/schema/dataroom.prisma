@@ -123,6 +123,7 @@ model ViewerGroup {
   links          Link[]
   accessControls ViewerGroupAccessControls[]
   allowAll       Boolean                     @default(false)
+  isQuickAdd     Boolean                     @default(false) // Quick Add group for one-click access
 
   dataroomId String
   dataroom   Dataroom @relation(fields: [dataroomId], references: [id], onDelete: Cascade)
@@ -139,6 +140,7 @@ model ViewerGroup {
   @@index([dataroomId])
   @@index([teamId])
   @@index([dataroomId, createdAt])
+  @@index([dataroomId, isQuickAdd])
 }
 
 model ViewerGroupMembership {

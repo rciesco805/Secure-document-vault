@@ -190,16 +190,49 @@ export default async function handle(
 
       const pId = newId("dataroom");
 
-      const dataroom = await prisma.dataroom.create({
-        data: {
-          name: name,
-          teamId: teamId,
-          pId: pId,
-        },
+      // Create dataroom with Quick Add group and default link in a transaction
+      const result = await prisma.$transaction(async (tx) => {
+        // 1. Create the dataroom
+        const dataroom = await tx.dataroom.create({
+          data: {
+            name: name,
+            teamId: teamId,
+            pId: pId,
+          },
+        });
+
+        // 2. Create the Quick Add group with allowAll=true for full access
+        const quickAddGroup = await tx.viewerGroup.create({
+          data: {
+            name: "Quick Add",
+            dataroomId: dataroom.id,
+            teamId: teamId,
+            isQuickAdd: true,
+            allowAll: true, // Full access to all folders and files
+          },
+        });
+
+        // 3. Create default link for the Quick Add group
+        await tx.link.create({
+          data: {
+            name: "Quick Add Link",
+            linkType: "DATAROOM_LINK",
+            dataroomId: dataroom.id,
+            groupId: quickAddGroup.id,
+            audienceType: "GROUP",
+            teamId: teamId,
+            emailProtected: true, // Require email
+            emailAuthenticated: false, // Session-based (no re-verification during session)
+            allowDownload: false, // No downloads by default
+            enableNotification: true,
+          },
+        });
+
+        return dataroom;
       });
 
       const dataroomWithCount = {
-        ...dataroom,
+        ...result,
         _count: { documents: 0 },
       };
 

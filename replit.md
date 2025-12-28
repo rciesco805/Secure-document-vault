@@ -272,6 +272,14 @@ npx prisma studio        # Visual database browser
 ## CHANGE LOG
 
 **December 2024:**
+- **Quick Add Feature**: One-click user access workflow
+  - Auto-creates "Quick Add" group with default link for new datarooms
+  - "Quick Add" button in dataroom header (amber colored, next to Share)
+  - Session-based access (no re-verification during session)
+  - Users get full access to all folders and files
+  - API: `/api/teams/[teamId]/datarooms/[id]/quick-add`
+  - API: `/api/teams/[teamId]/datarooms/[id]/ensure-quick-add`
+  - Schema: `isQuickAdd` Boolean field on ViewerGroup model
 - Removed ALL plan restrictions from UI and API
 - Fixed document upload validation (empty content types)
 - Added "View as Visitor" button to dataroom header

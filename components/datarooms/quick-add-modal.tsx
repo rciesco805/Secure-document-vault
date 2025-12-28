@@ -120,7 +120,7 @@ export function QuickAddModal({
             Quick Add Users
           </DialogTitle>
           <DialogDescription>
-            Add users with one-click access to this dataroom. They'll receive a
+            Add users with one-click access to this dataroom. They will receive a
             magic link email and have full access for their session.
           </DialogDescription>
         </DialogHeader>

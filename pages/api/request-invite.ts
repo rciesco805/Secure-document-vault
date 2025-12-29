@@ -3,14 +3,10 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { z } from "zod";
 
 import { createAdminMagicLink } from "@/lib/auth/admin-magic-link";
+import { ADMIN_EMAILS } from "@/lib/constants/admins";
 import { sendEmail } from "@/lib/resend";
 
 import InviteRequest from "@/components/emails/invite-request";
-
-const ADMIN_EMAILS = [
-  "investors@bermudafranchisegroup.com",
-  "rciesco@gmail.com",
-];
 
 const inviteRequestSchema = z.object({
   email: z.string().trim().email("Invalid email address").min(1),

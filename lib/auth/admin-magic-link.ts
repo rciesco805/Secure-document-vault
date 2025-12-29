@@ -1,13 +1,9 @@
 import { randomUUID } from "crypto";
 
+import { ADMIN_EMAILS, isAdminEmail } from "@/lib/constants/admins";
 import prisma from "@/lib/prisma";
 
 const ADMIN_MAGIC_LINK_EXPIRY_MINUTES = 20;
-
-const ADMIN_EMAILS = [
-  "investors@bermudafranchisegroup.com",
-  "rciesco@gmail.com",
-];
 
 export async function createAdminMagicLink({
   email,
@@ -21,7 +17,7 @@ export async function createAdminMagicLink({
   try {
     const normalizedEmail = email.trim().toLowerCase();
     
-    if (!ADMIN_EMAILS.map(e => e.toLowerCase()).includes(normalizedEmail)) {
+    if (!isAdminEmail(normalizedEmail)) {
       console.error("[ADMIN_MAGIC_LINK] Email not in admin list:", normalizedEmail);
       return null;
     }
@@ -66,7 +62,7 @@ export async function verifyAdminMagicLink({
   try {
     const normalizedEmail = email.trim().toLowerCase();
     
-    if (!ADMIN_EMAILS.map(e => e.toLowerCase()).includes(normalizedEmail)) {
+    if (!isAdminEmail(normalizedEmail)) {
       return false;
     }
 

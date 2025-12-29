@@ -4,12 +4,8 @@ import { getServerSession } from "next-auth";
 
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 
+import { isAdminEmail } from "@/lib/constants/admins";
 import prisma from "@/lib/prisma";
-
-const ADMIN_EMAILS = [
-  "rciesco@gmail.com",
-  "investors@bermudafranchisegroup.com",
-];
 
 export default async function handler(
   req: NextApiRequest,
@@ -20,7 +16,7 @@ export default async function handler(
   }
 
   const session = await getServerSession(req, res, authOptions);
-  if (!session?.user?.email || !ADMIN_EMAILS.includes(session.user.email)) {
+  if (!session?.user?.email || !isAdminEmail(session.user.email)) {
     return res.status(403).json({ error: "Admin access required" });
   }
 

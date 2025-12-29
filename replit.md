@@ -301,8 +301,13 @@ npx prisma studio        # Visual database browser
 | `/api/teams/[teamId]/links` | Link management |
 
 ### Approved Admin Emails
+Admin emails are managed in a single file: `lib/constants/admins.ts`
+
+Current admins:
 1. investors@bermudafranchisegroup.com
 2. rciesco@gmail.com
+
+To add/remove admins: Edit only `lib/constants/admins.ts` - all other files import from there.
 
 ---
 

@@ -2,13 +2,9 @@ import { NextApiRequest, NextApiResponse } from "next";
 
 import { getServerSession } from "next-auth/next";
 
+import { ADMIN_EMAILS, isAdminEmail } from "@/lib/constants/admins";
 import prisma from "@/lib/prisma";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
-
-const ADMIN_EMAILS = [
-  "rciesco@gmail.com",
-  "investors@bermudafranchisegroup.com",
-];
 
 export default async function handler(
   req: NextApiRequest,
@@ -19,7 +15,7 @@ export default async function handler(
   }
 
   const session = await getServerSession(req, res, authOptions);
-  if (!session?.user?.email || !ADMIN_EMAILS.includes(session.user.email)) {
+  if (!session?.user?.email || !isAdminEmail(session.user.email)) {
     return res.status(401).json({ error: "Unauthorized - admin access required" });
   }
 
@@ -182,7 +178,7 @@ export default async function handler(
     const finalAdminCheck = await prisma.userTeam.findMany({
       where: {
         user: {
-          email: { in: ADMIN_EMAILS },
+          email: { in: [...ADMIN_EMAILS] },
         },
       },
       include: {

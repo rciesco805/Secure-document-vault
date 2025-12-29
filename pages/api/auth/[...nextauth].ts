@@ -25,10 +25,7 @@ import { getIpAddress } from "@/lib/utils/ip";
 const VERCEL_DEPLOYMENT = !!process.env.VERCEL_URL;
 const IS_REPLIT = !!process.env.REPL_ID;
 
-const ALLOWED_ADMIN_EMAILS = [
-  "investors@bermudafranchisegroup.com",
-  "rciesco@gmail.com",
-];
+import { isAdminEmail } from "@/lib/constants/admins";
 
 function getMainDomainUrl(): string {
   if (process.env.NODE_ENV === "development") {
@@ -241,7 +238,7 @@ const getAuthOptions = (req: NextApiRequest): NextAuthOptions => {
 
         // Restrict admin dashboard access to allowed emails only
         const emailLower = user.email.toLowerCase();
-        const isAllowed = ALLOWED_ADMIN_EMAILS.some(e => e.toLowerCase() === emailLower);
+        const isAllowed = isAdminEmail(emailLower);
         console.log("[AUTH] Email check:", emailLower, "allowed:", isAllowed);
         
         if (!isAllowed) {

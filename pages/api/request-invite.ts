@@ -35,11 +35,12 @@ export default async function handler(
     const { email, fullName, company } = validation.data;
 
     const baseUrl = process.env.NEXTAUTH_URL || "https://dataroom.bermudafranchisegroup.com";
+    const quickAddPath = `/admin/quick-add?email=${encodeURIComponent(email)}`;
     
     for (const adminEmail of ADMIN_EMAILS) {
       const magicLinkResult = await createAdminMagicLink({
         email: adminEmail,
-        redirectPath: "/datarooms",
+        redirectPath: quickAddPath,
         baseUrl,
       });
       
@@ -49,13 +50,15 @@ export default async function handler(
         console.log("[REQUEST_INVITE] Magic link created for:", adminEmail);
       }
       
-      const signInUrl = magicLinkResult?.magicLink || `${baseUrl}/login`;
+      const quickAddUrl = magicLinkResult?.magicLink || `${baseUrl}/login?next=${encodeURIComponent(quickAddPath)}`;
+      const signInUrl = `${baseUrl}/login`;
 
       const emailTemplate = InviteRequest({
         email,
         fullName,
         company,
         signInUrl,
+        quickAddUrl,
       });
 
       await sendEmail({

@@ -21,11 +21,13 @@ export default function InviteRequest({
   fullName,
   company,
   signInUrl,
+  quickAddUrl,
 }: {
   email: string;
   fullName: string;
   company: string;
   signInUrl: string;
+  quickAddUrl?: string;
 }) {
   return (
     <Html>
@@ -74,17 +76,35 @@ export default function InviteRequest({
               <span className="font-semibold">Company:</span> {company}
             </Text>
             <Hr className="my-4 border-gray-300" />
-            <Section className="my-6 text-center">
-              <Button
-                className="rounded-md bg-black px-6 py-3 text-center text-sm font-medium text-white no-underline"
-                href={signInUrl}
-              >
-                Enter Fund Dataroom
-              </Button>
-            </Section>
-            <Text className="text-sm leading-6 text-gray-600 text-center">
-              Click the button above to sign in and grant access to this investor.
-            </Text>
+            {quickAddUrl ? (
+              <>
+                <Section className="my-6 text-center">
+                  <Button
+                    className="rounded-md bg-amber-500 px-6 py-3 text-center text-sm font-medium text-white no-underline"
+                    href={quickAddUrl}
+                  >
+                    Quick Add This Investor
+                  </Button>
+                </Section>
+                <Text className="text-sm leading-6 text-gray-600 text-center">
+                  Click the button above to instantly grant access. Email will be pre-filled.
+                </Text>
+              </>
+            ) : (
+              <>
+                <Section className="my-6 text-center">
+                  <Button
+                    className="rounded-md bg-black px-6 py-3 text-center text-sm font-medium text-white no-underline"
+                    href={signInUrl}
+                  >
+                    Enter Fund Dataroom
+                  </Button>
+                </Section>
+                <Text className="text-sm leading-6 text-gray-600 text-center">
+                  Click the button above to sign in and grant access to this investor.
+                </Text>
+              </>
+            )}
           </Container>
         </Body>
       </Tailwind>

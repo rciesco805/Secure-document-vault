@@ -43,6 +43,12 @@ export default async function handler(
         baseUrl,
       });
       
+      if (!magicLinkResult) {
+        console.error("[REQUEST_INVITE] Failed to create magic link for:", adminEmail);
+      } else {
+        console.log("[REQUEST_INVITE] Magic link created for:", adminEmail);
+      }
+      
       const signInUrl = magicLinkResult?.magicLink || `${baseUrl}/login`;
 
       const emailTemplate = InviteRequest({

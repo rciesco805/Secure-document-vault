@@ -17,14 +17,25 @@ export default async function handler(
     redirect?: string;
   };
 
+  console.log("[ADMIN_MAGIC_VERIFY] Request received:", { 
+    token: token ? "present" : "missing", 
+    email,
+    redirect,
+    host: req.headers.host,
+    protocol: req.headers["x-forwarded-proto"] || "http",
+  });
+
   if (!token || !email) {
+    console.log("[ADMIN_MAGIC_VERIFY] Missing token or email");
     return res.redirect("/login?error=InvalidLink");
   }
 
   try {
     const isValid = await verifyAdminMagicLink({ token, email });
+    console.log("[ADMIN_MAGIC_VERIFY] Token validation result:", isValid);
 
     if (!isValid) {
+      console.log("[ADMIN_MAGIC_VERIFY] Token invalid or expired");
       return res.redirect("/login?error=ExpiredLink");
     }
 
@@ -33,8 +44,11 @@ export default async function handler(
     });
 
     if (!user) {
+      console.log("[ADMIN_MAGIC_VERIFY] User not found:", email);
       return res.redirect("/login?error=UserNotFound");
     }
+
+    console.log("[ADMIN_MAGIC_VERIFY] User found:", user.id);
 
     const sessionToken = crypto.randomUUID();
     const expires = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
@@ -47,8 +61,13 @@ export default async function handler(
       },
     });
 
-    const isProduction = process.env.NODE_ENV === "production";
-    const cookieName = isProduction
+    console.log("[ADMIN_MAGIC_VERIFY] Session created");
+
+    const isHttps = req.headers["x-forwarded-proto"] === "https" || 
+                    req.headers.host?.includes("bermudafranchisegroup.com") ||
+                    req.headers.host?.includes("replit");
+    
+    const cookieName = isHttps
       ? "__Secure-next-auth.session-token"
       : "next-auth.session-token";
 
@@ -60,9 +79,11 @@ export default async function handler(
       `Expires=${expires.toUTCString()}`,
     ];
 
-    if (isProduction) {
+    if (isHttps) {
       cookieOptions.push("Secure");
     }
+
+    console.log("[ADMIN_MAGIC_VERIFY] Setting cookie:", cookieName, "isHttps:", isHttps);
 
     res.setHeader("Set-Cookie", cookieOptions.join("; "));
 

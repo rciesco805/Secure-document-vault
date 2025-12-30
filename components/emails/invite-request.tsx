@@ -8,9 +8,12 @@ import {
   Hr,
   Html,
   Preview,
+  Row,
+  Column,
   Section,
   Tailwind,
   Text,
+  Link,
 } from "@react-email/components";
 
 export default function InviteRequest({
@@ -44,8 +47,28 @@ export default function InviteRequest({
             <Text className="text-sm leading-6 text-black">
               <span className="font-semibold">Full Name:</span> {fullName}
             </Text>
-            <Text className="text-sm leading-6 text-black">
-              <span className="font-semibold">Email:</span> {email}
+            <Section className="my-2">
+              <Row>
+                <Column>
+                  <Text className="text-sm leading-6 text-black m-0">
+                    <span className="font-semibold">Email:</span>{" "}
+                    <span 
+                      style={{ 
+                        backgroundColor: "#f3f4f6", 
+                        padding: "4px 8px", 
+                        borderRadius: "4px",
+                        fontFamily: "monospace",
+                        fontSize: "14px",
+                      }}
+                    >
+                      {email}
+                    </span>
+                  </Text>
+                </Column>
+              </Row>
+            </Section>
+            <Text className="text-xs text-gray-500 mt-1 mb-4">
+              Select and copy the email above to add to Quick Add
             </Text>
             <Text className="text-sm leading-6 text-black">
               <span className="font-semibold">Company:</span> {company}
@@ -60,7 +83,7 @@ export default function InviteRequest({
               </Button>
             </Section>
             <Text className="text-sm leading-6 text-gray-600 text-center">
-              Click the button above to access the dataroom and grant access to this investor.
+              Click the button above to sign in and grant access to this investor.
             </Text>
           </Container>
         </Body>

@@ -3,7 +3,7 @@ import { randomUUID } from "crypto";
 import { ADMIN_EMAILS, isAdminEmail } from "@/lib/constants/admins";
 import prisma from "@/lib/prisma";
 
-const ADMIN_MAGIC_LINK_EXPIRY_MINUTES = 20;
+const ADMIN_MAGIC_LINK_EXPIRY_MINUTES = 60; // 1 hour expiry for admin magic links
 
 export async function createAdminMagicLink({
   email,

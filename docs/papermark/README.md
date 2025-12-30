@@ -18,11 +18,24 @@
 | Area | Stock Papermark | BF Fund Customization |
 |------|-----------------|----------------------|
 | Plan System | Multi-tier (Free, Pro, Business, Enterprise) | Always `datarooms-plus` (all features enabled) |
-| Auth | Multiple providers | Magic link only, 20-min expiration |
-| Admin Access | Any registered user | Allowlist: 3 specific emails only |
+| Auth | Multiple providers | Magic link only, **1-hour expiration** |
+| Admin Access | Any registered user | Allowlist: 2 specific emails only |
 | File Storage | Vercel Blob / S3 | Replit Object Storage (AES-256) |
+| Analytics | Tinybird (required) | **PostgreSQL fallback** (Tinybird optional) |
 | Branding | Papermark branding | BF Fund / Bermuda Franchise Group |
 | Billing | Stripe integration | Completely disabled |
+| Rate Limiting | Upstash Redis (required) | Upstash optional (graceful fallback) |
+| Bulk Download | AWS Lambda ZIP creation | Disabled (not supported on Replit) |
+
+### Analytics System Difference
+
+**Stock Papermark** requires Tinybird for page-level analytics (time spent, completion %).
+
+**BF Fund** uses PostgreSQL-based tracking when `TINYBIRD_TOKEN` is not configured:
+- `PageView` model stores page-level duration data
+- Stats queries use SQL aggregation instead of Tinybird API
+- Helper functions in `lib/tracking/postgres-stats.ts`
+- Same data displayed in dashboard, fully self-contained
 
 ## Core Entities Relationship
 

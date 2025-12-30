@@ -6,7 +6,7 @@
 ```
 1. User enters email on /login
 2. System sends magic link via Resend
-3. Link valid for 20 minutes
+3. Link valid for 1 hour
 4. Click link → auto-redirect to dashboard
 5. Session managed by NextAuth.js
 ```
@@ -78,7 +78,7 @@ Quick Add uses session-based auth with these settings:
 
 ## Security Considerations
 
-- Magic links expire after 20 minutes
+- Magic links expire after 1 hour
 - No password authentication
 - HTTPS required in production
 - Session cookies are HttpOnly

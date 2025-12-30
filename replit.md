@@ -13,7 +13,7 @@ The project is built on **Next.js 14** using the **Pages Router** (not App Route
 
 **Key Design Decisions:**
 - **Self-hosted**: All billing, payment, and plan restriction code is disabled; hardcoded to `datarooms-plus` plan.
-- **Authentication**: Magic link authentication only, with a 20-minute expiration.
+- **Authentication**: Magic link authentication only, with a 1-hour expiration.
 - **Admin Access**: Restricted to an allowlist of specific email addresses.
 - **Email Verification**: All document access requires email verification (`emailProtected=true`).
 - **Session-based Access**: Email verification is required once per session (`emailAuthenticated=false`).

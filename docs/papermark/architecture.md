@@ -12,7 +12,7 @@
 | Auth | NextAuth.js | Prisma adapter, magic links |
 | Email | Resend | Transactional emails |
 | File Storage | Replit Object Storage | AES-256 encrypted |
-| Analytics | Tinybird (optional) | Page-level view tracking |
+| Analytics | PostgreSQL / Tinybird | Page-level view tracking (PostgreSQL fallback when no Tinybird) |
 
 ## Directory Structure
 
@@ -157,3 +157,45 @@ model ViewerGroup {
 **"No items available" in visitor view**
 - **Cause**: ViewerGroup has no access controls AND `allowAll: false`
 - **Fix**: Set `allowAll: true` on the group, or add specific access controls
+
+## Analytics & Tracking
+
+### Overview
+BF Fund tracks page-level view analytics (time spent, completion %) for all document views. Unlike stock Papermark which requires Tinybird, this deployment uses PostgreSQL as the primary tracking store.
+
+### How It Works
+1. When a visitor views a page, `pages/api/record_view.ts` is called
+2. Data is stored in the `PageView` model in PostgreSQL
+3. If `TINYBIRD_TOKEN` is configured, data is also sent to Tinybird (optional)
+4. Stats APIs check for Tinybird token and fall back to PostgreSQL queries
+
+### Key Files
+| File | Purpose |
+|------|---------|
+| `prisma/schema/schema.prisma` | `PageView` model definition |
+| `pages/api/record_view.ts` | Stores page view events |
+| `lib/tracking/postgres-stats.ts` | PostgreSQL query helpers |
+| `pages/api/teams/[teamId]/documents/[id]/stats.ts` | Document stats API |
+| `pages/api/teams/[teamId]/documents/[id]/views/index.ts` | Views list API |
+
+### PageView Model
+```prisma
+model PageView {
+  id            String   @id @default(cuid())
+  viewId        String
+  documentId    String
+  pageNumber    Int
+  duration      Int      // milliseconds spent on page
+  versionNumber Int
+  ...
+  
+  @@index([documentId, viewId])
+  @@index([documentId, pageNumber])
+  @@index([documentId, versionNumber, pageNumber])
+}
+```
+
+### Stats Queries (PostgreSQL)
+- **Average page duration**: Aggregates duration by page number
+- **Total document duration**: SUM of all page durations per view
+- **Completion %**: COUNT DISTINCT pages viewed / total pages

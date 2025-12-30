@@ -146,6 +146,9 @@ model View {
   // AI chats
   chats Chat[]
 
+  // Page-level tracking
+  pageViews PageView[]
+
   teamId String?
   team   Team?   @relation(fields: [teamId], references: [id], onDelete: Cascade)
 
@@ -166,6 +169,37 @@ model View {
 enum ViewType {
   DOCUMENT_VIEW
   DATAROOM_VIEW
+}
+
+model PageView {
+  id            String   @id @default(cuid())
+  viewId        String
+  view          View     @relation(fields: [viewId], references: [id], onDelete: Cascade)
+  linkId        String
+  documentId    String
+  dataroomId    String?
+  versionNumber Int      @default(1)
+  pageNumber    Int
+  duration      Int      @default(0) // Duration in milliseconds
+  viewedAt      DateTime @default(now())
+
+  // Geo data
+  country   String @default("Unknown")
+  city      String @default("Unknown")
+  region    String @default("Unknown")
+
+  // User agent data
+  browser String @default("Unknown")
+  os      String @default("Unknown")
+  device  String @default("Desktop")
+
+  @@index([viewId])
+  @@index([documentId])
+  @@index([linkId])
+  @@index([dataroomId])
+  @@index([documentId, viewId])
+  @@index([documentId, pageNumber])
+  @@index([documentId, versionNumber, pageNumber])
 }
 
 enum DownloadType {

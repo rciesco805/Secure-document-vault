@@ -10,6 +10,7 @@ import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
 import { getViewPageDuration } from "@/lib/tinybird";
 import { getVideoEventsByDocument } from "@/lib/tinybird/pipes";
+import { getViewDurationStatsPg } from "@/lib/tracking/postgres-stats";
 import { CustomUser } from "@/lib/types";
 import { log } from "@/lib/utils";
 
@@ -132,11 +133,18 @@ async function getVideoViews(
 
 async function getDocumentViews(views: ViewWithExtras[], document: Document) {
   const durationsPromises = views.map((view) => {
-    return getViewPageDuration({
-      documentId: document.id,
-      viewId: view.id,
-      since: 0,
-    });
+    if (process.env.TINYBIRD_TOKEN) {
+      return getViewPageDuration({
+        documentId: document.id,
+        viewId: view.id,
+        since: 0,
+      });
+    } else {
+      return getViewDurationStatsPg({
+        documentId: document.id,
+        viewId: view.id,
+      });
+    }
   });
 
   const durations = await Promise.all(durationsPromises);

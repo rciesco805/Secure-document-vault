@@ -14,6 +14,11 @@ import {
   getVideoEventsByDocument,
   getViewCompletionStats,
 } from "@/lib/tinybird/pipes";
+import {
+  getTotalAvgPageDurationPg,
+  getTotalDocumentDurationPg,
+  getViewCompletionStatsPg,
+} from "@/lib/tracking/postgres-stats";
 import { CustomUser } from "@/lib/types";
 
 export default async function handle(
@@ -134,20 +139,38 @@ export default async function handle(
         (view) => !allExcludedViews.map((view) => view.id).includes(view.id),
       );
 
-      const [duration, totalDocumentDuration] = await Promise.all([
-        getTotalAvgPageDuration({
-          documentId: docId,
-          excludedLinkIds: "",
-          excludedViewIds: allExcludedViews.map((view) => view.id).join(","),
-          since: 0,
-        }),
-        getTotalDocumentDuration({
-          documentId: docId,
-          excludedLinkIds: "",
-          excludedViewIds: allExcludedViews.map((view) => view.id).join(","),
-          since: 0,
-        }),
-      ]);
+      const excludedViewIdsList = allExcludedViews.map((view) => view.id);
+      
+      let duration: { data: { pageNumber: string; versionNumber: number; avg_duration: number }[] };
+      let totalDocumentDuration: { data: { sum_duration: number }[] };
+
+      if (process.env.TINYBIRD_TOKEN) {
+        [duration, totalDocumentDuration] = await Promise.all([
+          getTotalAvgPageDuration({
+            documentId: docId,
+            excludedLinkIds: "",
+            excludedViewIds: excludedViewIdsList.join(","),
+            since: 0,
+          }),
+          getTotalDocumentDuration({
+            documentId: docId,
+            excludedLinkIds: "",
+            excludedViewIds: excludedViewIdsList.join(","),
+            since: 0,
+          }),
+        ]);
+      } else {
+        [duration, totalDocumentDuration] = await Promise.all([
+          getTotalAvgPageDurationPg({
+            documentId: docId,
+            excludedViewIds: excludedViewIdsList,
+          }),
+          getTotalDocumentDurationPg({
+            documentId: docId,
+            excludedViewIds: excludedViewIdsList,
+          }),
+        ]);
+      }
 
       // Calculate average completion rate for all filtered views
       let avgCompletionRate = 0;
@@ -190,11 +213,20 @@ export default async function handle(
             completionRates.length;
         } else {
           // For document type, calculate based on pages viewed
-          const completionStats = await getViewCompletionStats({
-            documentId: docId,
-            excludedViewIds: allExcludedViews.map((v) => v.id).join(","),
-            since: 0,
-          });
+          let completionStats: { data: { viewId: string; versionNumber: number; pages_viewed: number }[] };
+          
+          if (process.env.TINYBIRD_TOKEN) {
+            completionStats = await getViewCompletionStats({
+              documentId: docId,
+              excludedViewIds: excludedViewIdsList.join(","),
+              since: 0,
+            });
+          } else {
+            completionStats = await getViewCompletionStatsPg({
+              documentId: docId,
+              excludedViewIds: excludedViewIdsList,
+            });
+          }
 
           // Build lookup map for O(1) access: viewId -> { versionNumber, pages_viewed }
           const statsMap = new Map(
@@ -208,7 +240,7 @@ export default async function handle(
             const viewStats = statsMap.get(view.id);
             if (!viewStats) return 0;
 
-            // Find the version that matches the versionNumber from Tinybird
+            // Find the version that matches the versionNumber from database
             const relevantVersion = document.versions.find(
               (version) => version.versionNumber === viewStats.versionNumber,
             );

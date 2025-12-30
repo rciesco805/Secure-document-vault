@@ -55,14 +55,34 @@ Quick Add uses session-based auth with these settings:
 - `allowAll: true` - Full access to all content
 - Viewer added to `allowList` automatically
 
-### Flow
+### Standard Flow (from admin dashboard)
 ```
-1. Admin adds email via Quick Add
-2. Viewer receives invitation email
-3. Click link → verify email once
-4. Session cookie grants access
-5. Navigate freely within dataroom
+1. Admin opens dataroom → clicks "Quick Add" button
+2. Enters investor email(s)
+3. Viewer receives invitation email with magic link
+4. Click link → verify email once
+5. Session cookie grants access
+6. Navigate freely within dataroom
 ```
+
+### Deep-Link Flow (from access request email)
+```
+1. Investor submits access request form
+2. Admin receives email with "Quick Add This Investor" button
+3. Button contains magic link to /admin/quick-add?email=<investor_email>
+4. Admin clicks → authenticated and redirected to Quick Add page
+5. Email pre-filled, dataroom auto-selected if only one exists
+6. Admin clicks "Add & Send Invite"
+7. Investor receives magic link invitation
+```
+
+### Key Files
+| File | Purpose |
+|------|---------|
+| `pages/admin/quick-add.tsx` | Quick Add landing page |
+| `pages/api/request-invite.ts` | Generates admin magic link with redirect |
+| `components/emails/invite-request.tsx` | Email template with Quick Add button |
+| `lib/auth/admin-magic-link.ts` | Magic link generation with redirect path |
 
 ## Session Management
 

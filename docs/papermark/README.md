@@ -37,6 +37,17 @@
 - Helper functions in `lib/tracking/postgres-stats.ts`
 - Same data displayed in dashboard, fully self-contained
 
+### Quick Add Email Workflow
+
+**Stock Papermark** sends basic admin notifications when visitors request access.
+
+**BF Fund** streamlines investor onboarding:
+- Access request emails include "Quick Add This Investor" button
+- Button contains magic link + pre-filled email parameter
+- Redirects to `/admin/quick-add?email=<investor_email>`
+- Admin selects dataroom, clicks "Add & Send Invite"
+- Investor receives magic link instantly
+
 ## Core Entities Relationship
 
 ```

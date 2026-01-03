@@ -176,14 +176,8 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
           },
           showAccountCreationSlide: link.showBanner || teamPlan === "free",
           useAdvancedExcelViewer: advancedExcelEnabled,
-          useCustomAccessForm:
-            teamId === "cm0154tiv0000lr2t6nr5c6kp" ||
-            teamId === "clup33by90000oewh4rfvp2eg" ||
-            teamId === "cm76hfyvy0002q623hmen99pf" ||
-            teamId === "cm9ztf0s70005js04i689gefn",
-          logoOnAccessForm:
-            teamId === "cm7nlkrhm0000qgh0nvyrrywr" ||
-            teamId === "clup33by90000oewh4rfvp2eg",
+          useCustomAccessForm: true,
+          logoOnAccessForm: true,
         },
         revalidate: 10,
       };
@@ -257,14 +251,8 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
           showPoweredByBanner: false,
           showAccountCreationSlide: false,
           useAdvancedExcelViewer: false, // INFO: this is managed in the API route
-          useCustomAccessForm:
-            teamId === "cm0154tiv0000lr2t6nr5c6kp" ||
-            teamId === "clup33by90000oewh4rfvp2eg" ||
-            teamId === "cm76hfyvy0002q623hmen99pf" ||
-            teamId === "cm9ztf0s70005js04i689gefn",
-          logoOnAccessForm:
-            teamId === "cm7nlkrhm0000qgh0nvyrrywr" ||
-            teamId === "clup33by90000oewh4rfvp2eg",
+          useCustomAccessForm: true,
+          logoOnAccessForm: true,
           dataroomIndexEnabled,
         },
         revalidate: 10,

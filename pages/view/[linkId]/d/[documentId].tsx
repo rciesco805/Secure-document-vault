@@ -267,11 +267,8 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
         showPoweredByBanner: false,
         showAccountCreationSlide: false,
         useAdvancedExcelViewer: advancedExcelEnabled,
-        useCustomAccessForm:
-          teamId === "cm0154tiv0000lr2t6nr5c6kp" ||
-          teamId === "clup33by90000oewh4rfvp2eg" ||
-          teamId === "cm76hfyvy0002q623hmen99pf",
-        logoOnAccessForm: teamId === "cm7nlkrhm0000qgh0nvyrrywr",
+        useCustomAccessForm: true,
+        logoOnAccessForm: true,
       },
     };
   } catch (error) {

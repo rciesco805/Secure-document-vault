@@ -61,6 +61,11 @@ export default function QuickAddPage() {
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
 
+    if (!teamId) {
+      toast.error("Team not loaded. Please refresh the page.");
+      return;
+    }
+
     if (!selectedDataroom) {
       toast.error("Please select a dataroom");
       return;
@@ -79,10 +84,14 @@ export default function QuickAddPage() {
     setLoading(true);
 
     try {
-      await fetch(
+      const ensureResponse = await fetch(
         `/api/teams/${teamId}/datarooms/${selectedDataroom}/ensure-quick-add`,
         { method: "POST" }
       );
+      
+      if (!ensureResponse.ok) {
+        console.error("Failed to ensure quick add group");
+      }
 
       const response = await fetch(
         `/api/teams/${teamId}/datarooms/${selectedDataroom}/quick-add`,
@@ -154,7 +163,7 @@ export default function QuickAddPage() {
                 <Label htmlFor="dataroom" className="text-sm font-medium">
                   Select Dataroom
                 </Label>
-                {dataroomsLoading ? (
+                {dataroomsLoading || !teamId ? (
                   <div className="mt-1.5 flex items-center gap-2 text-sm text-muted-foreground">
                     <Loader2 className="h-4 w-4 animate-spin" />
                     Loading datarooms...
@@ -176,9 +185,19 @@ export default function QuickAddPage() {
                     </SelectContent>
                   </Select>
                 ) : (
-                  <p className="mt-1.5 text-sm text-muted-foreground">
-                    No datarooms found. Create one first.
-                  </p>
+                  <div className="mt-1.5 space-y-2">
+                    <p className="text-sm text-muted-foreground">
+                      No datarooms found. You need to create a dataroom first before adding investors.
+                    </p>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => router.push("/datarooms")}
+                    >
+                      Go to Datarooms
+                    </Button>
+                  </div>
                 )}
               </div>
 

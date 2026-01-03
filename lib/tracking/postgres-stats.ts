@@ -9,6 +9,10 @@ export async function getTotalAvgPageDurationPg({
   documentId: string;
   excludedViewIds: string[];
 }) {
+  if (!documentId) {
+    return { data: [] };
+  }
+  
   const result = await prisma.pageView.groupBy({
     by: ["pageNumber", "versionNumber"],
     where: {
@@ -36,6 +40,10 @@ export async function getTotalDocumentDurationPg({
   documentId: string;
   excludedViewIds: string[];
 }) {
+  if (!documentId) {
+    return { data: [{ sum_duration: 0 }] };
+  }
+  
   const result = await prisma.pageView.aggregate({
     where: {
       documentId,
@@ -62,6 +70,10 @@ export async function getViewDurationStatsPg({
   documentId: string;
   viewId: string;
 }) {
+  if (!documentId || !viewId) {
+    return { data: [] };
+  }
+  
   const result = await prisma.pageView.groupBy({
     by: ["pageNumber"],
     where: {
@@ -88,6 +100,10 @@ export async function getViewCompletionStatsPg({
   documentId: string;
   excludedViewIds: string[];
 }) {
+  if (!documentId) {
+    return { data: [] };
+  }
+  
   let distinctPages: Array<{ viewId: string; versionNumber: number; pages_viewed: bigint }>;
   
   if (excludedViewIds.length > 0) {
@@ -121,6 +137,10 @@ export async function getViewTotalDurationPg({
 }: {
   viewId: string;
 }) {
+  if (!viewId) {
+    return 0;
+  }
+  
   const result = await prisma.pageView.aggregate({
     where: {
       viewId,
@@ -138,6 +158,10 @@ export async function getViewPagesViewedPg({
 }: {
   viewId: string;
 }) {
+  if (!viewId) {
+    return 0;
+  }
+  
   const result = await prisma.pageView.groupBy({
     by: ["pageNumber"],
     where: {

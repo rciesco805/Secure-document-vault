@@ -106,11 +106,10 @@ async function handleGet(
 
     let fileUrl = null;
     try {
-      const fileResult = await getFile({ 
+      fileUrl = await getFile({ 
         type: document.storageType, 
         data: document.file 
       });
-      fileUrl = fileResult?.url || null;
     } catch (error) {
       console.error("Error getting file URL:", error);
     }
@@ -188,12 +187,6 @@ async function handlePost(
             team: {
               select: {
                 name: true,
-              },
-            },
-            owner: {
-              select: {
-                name: true,
-                email: true,
               },
             },
           },

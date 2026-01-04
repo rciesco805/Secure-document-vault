@@ -90,3 +90,15 @@ A critical architectural decision is the **platform-agnostic design**, ensuring 
 - Select recipient to generate their unique QR code
 - Download QR as PNG or copy signing link
 - Key files: `components/signature/qr-code-dialog.tsx`
+
+### Document Expiration Handling
+- Documents with expiration dates are automatically blocked from signing after the date passes
+- API returns HTTP 410 for expired documents
+- Signing page shows distinct "Document Expired" UI with clock icon
+- Message instructs signer to contact sender for a new link
+
+### Signing Page Branding
+- "BF Fund Sign" branding displayed on all signing page states (loading, error, success, main UI)
+- Header includes shield icon and "BF Fund Sign" text with document title
+- Footer shows "Powered by BF Fund Dataroom | Secure Document Signing"
+- Page title includes "BF Fund Sign" suffix

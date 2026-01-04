@@ -133,6 +133,12 @@ The BF Fund Investor Dataroom is a secure, self-hosted investor portal for Bermu
 - Quick Add links use group-based access without email verification by default
 - Session-based access: Once verified, visitors navigate without re-entering email
 
+**Access Request Email - Dual Button Options**
+- Investor access request emails now show BOTH buttons:
+  - "Quick Add This Investor" (amber) - one-click add with pre-filled email
+  - "Enter The Dataroom" (black) - sign in and review dataroom first
+- Gives admins the choice of how to handle each request
+
 **Favicon Upload & Group Member Display**
 - Added favicon upload to dataroom branding settings
 - Group link edit modal now displays member emails in scrollable list

@@ -1,6 +1,8 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/lib/prisma";
 import { getFile } from "@/lib/files/get-file";
+import { sendEmail } from "@/lib/resend";
+import SignatureCompletedEmail from "@/components/emails/signature-completed";
 
 export default async function handler(
   req: NextApiRequest,
@@ -163,6 +165,17 @@ async function handlePost(
           include: {
             recipients: true,
             fields: true,
+            team: {
+              select: {
+                name: true,
+              },
+            },
+            owner: {
+              select: {
+                name: true,
+                email: true,
+              },
+            },
           },
         },
       },
@@ -323,8 +336,65 @@ async function handlePost(
         }
       }
 
-      return { allSigned, newStatus };
+      return { allSigned, newStatus, allRecipients };
     });
+
+    if (result.allSigned && result.newStatus === "COMPLETED") {
+      const completedAt = new Date().toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+
+      const signersList = result.allRecipients
+        .filter((r) => r.status === "SIGNED")
+        .map((r) => `${r.name} (${r.email})`);
+
+      const baseUrl = process.env.NEXTAUTH_URL || `https://${req.headers.host}`;
+
+      const emailPromises: Promise<any>[] = [];
+
+      for (const r of result.allRecipients) {
+        emailPromises.push(
+          sendEmail({
+            to: r.email,
+            subject: `Completed: ${document.title}`,
+            react: SignatureCompletedEmail({
+              recipientName: r.name,
+              documentTitle: document.title,
+              teamName: document.team.name,
+              completedAt,
+              signersList,
+            }),
+          }).catch((err) => {
+            console.error(`Failed to send completion email to ${r.email}:`, err);
+          })
+        );
+      }
+
+      if (document.owner?.email) {
+        emailPromises.push(
+          sendEmail({
+            to: document.owner.email,
+            subject: `Document Completed: ${document.title}`,
+            react: SignatureCompletedEmail({
+              recipientName: document.owner.name || "Document Owner",
+              documentTitle: document.title,
+              teamName: document.team.name,
+              completedAt,
+              signersList,
+              documentUrl: `${baseUrl}/sign/${document.id}`,
+            }),
+          }).catch((err) => {
+            console.error(`Failed to send completion email to owner:`, err);
+          })
+        );
+      }
+
+      await Promise.all(emailPromises);
+    }
 
     return res.status(200).json({
       message: "Document signed successfully",

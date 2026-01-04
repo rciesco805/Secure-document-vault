@@ -4,6 +4,8 @@
 The BF Fund Investor Dataroom is a secure, self-hosted investor portal for Bermuda Franchise Group (BFG), built on the Papermark platform. Its purpose is to securely share confidential investment documents with verified investors, featuring email-verified access, custom branding, and detailed page-by-page analytics. The platform also includes a comprehensive e-signature system (BF Fund Sign) for handling NDAs, contracts, and legal documents. It operates under the tagline "Work Well. Play Well. Be Well." and is deployed on Replit with all premium features unlocked and billing functionalities disabled.
 
 ## Recent Changes
+- **2026-01-04:** Added reusable templates system (save documents as templates, use templates to create new documents)
+- **2026-01-04:** Added rate limiting on public signing API (10 POST/min, 30 GET/min per IP)
 - **2026-01-04:** Fixed bulk send API to use correct field name for file storage
 - **2026-01-04:** Added PDF preview to prepare page using iframe with signed URLs
 - **2026-01-04:** Added `fileUrl` to document API response for PDF preview
@@ -44,6 +46,7 @@ All phases complete. The e-signature platform is fully functional with:
 - **Phase 2:** Public signing workflow with secure token-based access, signature canvas, email notifications
 - **Phase 3:** Completion notifications, audit trails, PDF download with embedded signatures, reminders, sequential signing
 - **Phase 4:** Bulk sending, in-person signing via QR codes, document expiration, edit/correct features, typed signatures
+- **Phase 5:** Reusable templates, rate limiting on public API
 
 ### Key Files
 
@@ -55,6 +58,7 @@ All phases complete. The e-signature platform is fully functional with:
 | `pages/sign/bulk.tsx` | Bulk send to multiple recipients |
 | `pages/sign/[id]/index.tsx` | Document detail with recipients and audit trail |
 | `pages/sign/[id]/prepare.tsx` | Field placement editor with PDF preview |
+| `pages/sign/templates/index.tsx` | Templates management page |
 | `pages/view/sign/[token].tsx` | Public signing page (no auth required) |
 
 #### APIs
@@ -67,7 +71,10 @@ All phases complete. The e-signature platform is fully functional with:
 | `pages/api/teams/[teamId]/signature-documents/[documentId]/download.ts` | Download signed PDF |
 | `pages/api/teams/[teamId]/signature-documents/[documentId]/correct.ts` | Correct & resend |
 | `pages/api/teams/[teamId]/signature-documents/bulk.ts` | Bulk send |
-| `pages/api/sign/[token].ts` | Public signing API |
+| `pages/api/teams/[teamId]/signature-templates/index.ts` | List/create templates |
+| `pages/api/teams/[teamId]/signature-templates/[templateId]/index.ts` | Get/delete template |
+| `pages/api/teams/[teamId]/signature-templates/[templateId]/use.ts` | Create document from template |
+| `pages/api/sign/[token].ts` | Public signing API (rate limited) |
 
 #### Components
 | File | Description |

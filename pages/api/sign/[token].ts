@@ -4,6 +4,7 @@ import { getFile } from "@/lib/files/get-file";
 import { sendEmail } from "@/lib/resend";
 import SignatureCompletedEmail from "@/components/emails/signature-completed";
 import { sendToNextSigners } from "@/pages/api/teams/[teamId]/signature-documents/[documentId]/send";
+import { ratelimit } from "@/lib/redis";
 
 export default async function handler(
   req: NextApiRequest,
@@ -13,6 +14,24 @@ export default async function handler(
 
   if (!token) {
     return res.status(400).json({ message: "Token is required" });
+  }
+
+  const ipAddress = (req.headers["x-forwarded-for"] as string)?.split(",")[0] 
+    || req.socket.remoteAddress 
+    || "unknown";
+  
+  const limiter = ratelimit(req.method === "POST" ? 10 : 30, "1 m");
+  const { success, limit, remaining, reset } = await limiter.limit(`sign:${ipAddress}`);
+  
+  if (!success) {
+    const resetTime = typeof reset === 'number' && reset > 1e12 ? reset : reset * 1000;
+    res.setHeader("X-RateLimit-Limit", limit);
+    res.setHeader("X-RateLimit-Remaining", remaining);
+    res.setHeader("X-RateLimit-Reset", Math.floor(resetTime / 1000));
+    return res.status(429).json({ 
+      message: "Too many requests. Please try again later.",
+      retryAfter: Math.max(1, Math.ceil((resetTime - Date.now()) / 1000))
+    });
   }
 
   if (req.method === "GET") {

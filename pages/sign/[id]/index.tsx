@@ -13,6 +13,7 @@ import {
   EditIcon,
   EyeIcon,
   FileTextIcon,
+  LayoutTemplateIcon,
   MailIcon,
   MoreHorizontalIcon,
   RefreshCwIcon,
@@ -186,6 +187,7 @@ export default function SignatureDocumentDetail() {
   const [isEditing, setIsEditing] = useState(false);
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [isCreatingCopy, setIsCreatingCopy] = useState(false);
+  const [isSavingTemplate, setIsSavingTemplate] = useState(false);
   const [editForm, setEditForm] = useState({
     title: "",
     description: "",
@@ -379,6 +381,66 @@ export default function SignatureDocumentDetail() {
     }
   };
 
+  const handleSaveAsTemplate = async () => {
+    if (!teamId || !document) return;
+    setIsSavingTemplate(true);
+    try {
+      const fieldsResponse = await fetch(
+        `/api/teams/${teamId}/signature-documents/${document.id}`
+      );
+      if (!fieldsResponse.ok) throw new Error("Failed to fetch document details");
+      const docData = await fieldsResponse.json();
+
+      const templateFields = docData.fields?.map((f: any, index: number) => {
+        const recipientIndex = docData.recipients?.findIndex((r: any) => r.id === f.recipientId);
+        return {
+          type: f.type,
+          pageNumber: f.pageNumber,
+          x: f.x,
+          y: f.y,
+          width: f.width,
+          height: f.height,
+          required: f.required,
+          placeholder: f.placeholder,
+          recipientIndex: recipientIndex >= 0 ? recipientIndex : 0,
+        };
+      }) || [];
+
+      const defaultRecipients = docData.recipients?.map((r: any) => ({
+        name: r.name,
+        email: r.email,
+        role: r.role,
+        signingOrder: r.signingOrder,
+      })) || [];
+
+      const response = await fetch(
+        `/api/teams/${teamId}/signature-templates`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: document.title,
+            description: document.description,
+            file: docData.file,
+            storageType: docData.storageType,
+            numPages: document.numPages,
+            fields: templateFields,
+            defaultRecipients,
+            defaultEmailSubject: document.emailSubject,
+            defaultEmailMessage: document.emailMessage,
+          }),
+        }
+      );
+      if (!response.ok) throw new Error("Failed to save template");
+      toast.success("Template saved successfully");
+      router.push("/sign/templates");
+    } catch (error) {
+      toast.error("Failed to save template");
+    } finally {
+      setIsSavingTemplate(false);
+    }
+  };
+
   if (loading) {
     return (
       <AppLayout>
@@ -517,6 +579,13 @@ export default function SignatureDocumentDetail() {
                     </AlertDialog>
                   </>
                 )}
+                <DropdownMenuItem
+                  onClick={handleSaveAsTemplate}
+                  disabled={isSavingTemplate}
+                >
+                  <LayoutTemplateIcon className="mr-2 h-4 w-4" />
+                  {isSavingTemplate ? "Saving..." : "Save as Template"}
+                </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 {document.status !== "DRAFT" &&
                   document.status !== "COMPLETED" &&

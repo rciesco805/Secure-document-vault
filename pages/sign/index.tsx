@@ -5,6 +5,7 @@ import {
   CheckCircle2Icon,
   ClockIcon,
   FileTextIcon,
+  LayoutTemplateIcon,
   MailIcon,
   PlusIcon,
   XCircleIcon,
@@ -153,6 +154,12 @@ export default function SignatureDashboard() {
             </p>
           </div>
           <div className="flex items-center gap-2">
+            <Link href="/sign/templates">
+              <Button variant="outline" className="gap-x-1 whitespace-nowrap px-1 sm:gap-x-2 sm:px-3">
+                <LayoutTemplateIcon className="h-5 w-5 shrink-0" aria-hidden="true" />
+                <span className="hidden text-xs sm:inline sm:text-base">Templates</span>
+              </Button>
+            </Link>
             <Link href="/sign/bulk">
               <Button variant="outline" className="gap-x-1 whitespace-nowrap px-1 sm:gap-x-2 sm:px-3">
                 <UsersIcon className="h-5 w-5 shrink-0" aria-hidden="true" />

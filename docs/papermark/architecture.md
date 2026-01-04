@@ -12,7 +12,7 @@
 | Auth | NextAuth.js | Prisma adapter, magic links |
 | Email | Resend | Transactional emails |
 | File Storage | Replit Object Storage | AES-256 encrypted |
-| Analytics | PostgreSQL / Tinybird | Page-level view tracking (PostgreSQL fallback when no Tinybird) |
+| Analytics | PostgreSQL only | Page-level view tracking (Tinybird NOT used) |
 
 ## Directory Structure
 
@@ -161,13 +161,13 @@ model ViewerGroup {
 ## Analytics & Tracking
 
 ### Overview
-BF Fund tracks page-level view analytics (time spent, completion %) for all document views. Unlike stock Papermark which requires Tinybird, this deployment uses PostgreSQL as the primary tracking store.
+BF Fund tracks page-level view analytics (time spent, completion %) for all document views. Unlike stock Papermark which requires Tinybird, this deployment uses PostgreSQL as the **only** tracking store (Tinybird is NOT used).
 
 ### How It Works
 1. When a visitor views a page, `pages/api/record_view.ts` is called
 2. Data is stored in the `PageView` model in PostgreSQL
-3. If `TINYBIRD_TOKEN` is configured, data is also sent to Tinybird (optional)
-4. Stats APIs check for Tinybird token and fall back to PostgreSQL queries
+3. Tinybird code exists but is gracefully skipped when `TINYBIRD_TOKEN` not set
+4. Stats APIs query PostgreSQL directly for all analytics data
 
 ### Key Files
 | File | Purpose |

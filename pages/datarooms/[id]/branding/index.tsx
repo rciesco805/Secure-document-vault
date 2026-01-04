@@ -45,8 +45,10 @@ export default function DataroomBrandPage() {
   const [logo, setLogo] = useState<string | null>(null);
   const [banner, setBanner] = useState<string | null>(null);
   const [originalBanner, setOriginalBanner] = useState<string | null>(null);
+  const [favicon, setFavicon] = useState<string | null>(null);
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
   const [bannerBlobUrl, setBannerBlobUrl] = useState<string | null>(null);
+  const [faviconBlobUrl, setFaviconBlobUrl] = useState<string | null>(null);
   const [welcomeMessage, setWelcomeMessage] = useState<string>(
     "Your action is requested to continue",
   );
@@ -139,6 +141,36 @@ export default function DataroomBrandPage() {
     [setBanner],
   );
 
+  const onChangeFavicon = useCallback(
+    (e: any) => {
+      setFileError(null);
+      const file = e.target.files[0];
+      if (file) {
+        if (file.size / 1024 / 1024 > 1) {
+          setFileError("File size too big (max 1MB)");
+        } else if (
+          file.type !== "image/png" &&
+          file.type !== "image/x-icon" &&
+          file.type !== "image/svg+xml"
+        ) {
+          setFileError("File type not supported (.png, .ico, .svg only)");
+        } else {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            const dataUrl = e.target?.result as string;
+            setFavicon(dataUrl);
+            // create a blob url for preview
+            const blob = convertDataUrlToFile({ dataUrl });
+            const faviconBlobUrl = URL.createObjectURL(blob);
+            setFaviconBlobUrl(faviconBlobUrl);
+          };
+          reader.readAsDataURL(file);
+        }
+      }
+    },
+    [setFavicon],
+  );
+
   useEffect(() => {
     // Merge dataroom brand with global brand as fallback
     if (dataroomBrand || globalBrand) {
@@ -152,6 +184,7 @@ export default function DataroomBrandPage() {
       const bannerValue = dataroomBrand?.banner || globalBrand?.banner || null;
       setBanner(bannerValue);
       setOriginalBanner(bannerValue);
+      setFavicon(dataroomBrand?.favicon || null);
       const message =
         dataroomBrand?.welcomeMessage ||
         globalBrand?.welcomeMessage ||
@@ -211,6 +244,15 @@ export default function DataroomBrandPage() {
       bannerBlobUrl = "no-banner";
     }
 
+    // Upload favicon if it's a data URL
+    let faviconUrl: string | null =
+      favicon && favicon.startsWith("data:") ? null : favicon;
+    if (favicon && favicon.startsWith("data:")) {
+      const blob = convertDataUrlToFile({ dataUrl: favicon });
+      faviconUrl = await uploadImage(blob);
+      setFavicon(faviconUrl);
+    }
+
     const data = {
       welcomeMessage:
         welcomeMessage.trim() || "Your action is requested to continue",
@@ -218,6 +260,7 @@ export default function DataroomBrandPage() {
       accentColor: accentColor,
       logo: blobUrl,
       banner: bannerBlobUrl,
+      favicon: faviconUrl,
     };
 
     const res = await fetch(
@@ -541,6 +584,70 @@ export default function DataroomBrandPage() {
                     </div>
                     {fileError && (
                       <p className="text-sm text-red-500">{fileError}</p>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Favicon Card */}
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="favicon">
+                      Favicon Icon{" "}
+                      <span className="font-normal text-muted-foreground">
+                        (max 1 MB, 16-48px)
+                      </span>
+                    </Label>
+                    <p className="text-xs text-muted-foreground">
+                      The icon shown in visitor browser tabs
+                    </p>
+                    <label
+                      htmlFor="favicon"
+                      className="group relative mt-2 flex h-14 w-14 cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 transition-all hover:border-gray-400 hover:bg-gray-100"
+                      style={{
+                        backgroundImage: !favicon
+                          ? "linear-gradient(45deg, #ccc 25%, transparent 25%), linear-gradient(135deg, #ccc 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #ccc 75%), linear-gradient(135deg, transparent 75%, #ccc 75%)"
+                          : undefined,
+                        backgroundSize: "10px 10px",
+                        backgroundPosition: "0 0, 5px 0, 5px -5px, 0px 5px",
+                      }}
+                    >
+                      {!favicon ? (
+                        <div className="flex flex-col items-center justify-center">
+                          <UploadIcon
+                            className="h-6 w-6 text-gray-400"
+                            aria-hidden="true"
+                          />
+                        </div>
+                      ) : (
+                        <div className="relative flex h-full w-full items-center justify-center p-1">
+                          <img
+                            src={favicon}
+                            alt="Favicon preview"
+                            className="max-h-full max-w-full object-contain"
+                          />
+                        </div>
+                      )}
+                    </label>
+                    <input
+                      id="favicon"
+                      name="favicon"
+                      type="file"
+                      accept="image/png,image/x-icon,image/svg+xml"
+                      className="sr-only"
+                      onChange={onChangeFavicon}
+                    />
+                    {favicon && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setFavicon(null)}
+                        className="text-xs"
+                      >
+                        Remove Favicon
+                      </Button>
                     )}
                   </div>
                 </CardContent>

@@ -127,6 +127,17 @@ export function DataroomLinkSheet({
     isDatarooms ||
     isDataroomsPlus;
 
+  // Fetch group member details when a group is selected
+  const { data: selectedGroupDetails } = useSWR<{
+    members: { viewer: { email: string } }[];
+  }>(
+    teamId && targetId && data.groupId
+      ? `/api/teams/${teamId}/datarooms/${targetId}/groups/${data.groupId}`
+      : null,
+    fetcher,
+    { dedupingInterval: 30000 },
+  );
+
   // Presets
   const { data: presets } = useSWR<LinkPreset[]>(
     teamId ? `/api/teams/${teamId}/presets` : null,
@@ -872,6 +883,22 @@ export function DataroomLinkSheet({
                                 )}
                               </SelectContent>
                             </Select>
+
+                            {/* Display group member emails */}
+                            {data.groupId && selectedGroupDetails?.members && selectedGroupDetails.members.length > 0 && (
+                              <div className="mt-2 rounded-md border border-border bg-muted/30 p-3">
+                                <p className="mb-2 text-xs font-medium text-muted-foreground">
+                                  Group Members ({selectedGroupDetails.members.length})
+                                </p>
+                                <div className="max-h-24 overflow-y-auto text-sm">
+                                  {selectedGroupDetails.members.map((member, idx) => (
+                                    <div key={idx} className="text-foreground">
+                                      {member.viewer.email}
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
                           </div>
 
                           <div className="space-y-2">

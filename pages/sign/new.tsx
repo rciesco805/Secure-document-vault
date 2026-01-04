@@ -119,7 +119,7 @@ export default function NewSignatureDocument() {
     );
   };
 
-  const handleSubmit = async (asDraft: boolean = true) => {
+  const handleSubmit = async (navigateToPrepare: boolean = false) => {
     if (!teamId) {
       toast.error("Team not found");
       return;
@@ -138,7 +138,7 @@ export default function NewSignatureDocument() {
     const validRecipients = recipients.filter(
       (r) => r.email.trim() && r.name.trim()
     );
-    if (validRecipients.length === 0 && !asDraft) {
+    if (validRecipients.length === 0 && navigateToPrepare) {
       toast.error("Please add at least one recipient with name and email");
       return;
     }
@@ -173,7 +173,7 @@ export default function NewSignatureDocument() {
               role: r.role,
               signingOrder: r.signingOrder,
             })),
-            status: asDraft ? "DRAFT" : "SENT",
+            status: "DRAFT",
           }),
         }
       );
@@ -188,13 +188,13 @@ export default function NewSignatureDocument() {
       const result = await response.json();
       setUploadProgress(100);
 
-      toast.success(
-        asDraft
-          ? "Document saved as draft"
-          : "Document sent for signature"
-      );
-      
-      router.push(`/sign/${result.id}`);
+      if (navigateToPrepare) {
+        toast.success("Document created. Now place signature fields.");
+        router.push(`/sign/${result.id}/prepare`);
+      } else {
+        toast.success("Document saved as draft");
+        router.push(`/sign/${result.id}`);
+      }
     } catch (error) {
       console.error("Error creating document:", error);
       toast.error(
@@ -448,13 +448,13 @@ export default function NewSignatureDocument() {
           </Link>
           <Button
             variant="outline"
-            onClick={() => handleSubmit(true)}
+            onClick={() => handleSubmit(false)}
             disabled={isLoading || !currentFile}
           >
             Save as Draft
           </Button>
           <Button
-            onClick={() => handleSubmit(false)}
+            onClick={() => handleSubmit(true)}
             disabled={isLoading || !currentFile}
           >
             {isLoading

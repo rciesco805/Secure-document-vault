@@ -11,6 +11,7 @@ import {
   AlertTriangleIcon,
   ClockIcon,
   ShieldCheckIcon,
+  TypeIcon,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -26,6 +27,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
 
 interface RecipientInfo {
   id: string;
@@ -76,7 +79,10 @@ export default function SignDocument() {
   const [showSuccess, setShowSuccess] = useState(false);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const typedCanvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
+  const [signatureMode, setSignatureMode] = useState<"type" | "draw">("type");
+  const [typedSignature, setTypedSignature] = useState("");
 
   useEffect(() => {
     if (token) {
@@ -170,12 +176,41 @@ export default function SignDocument() {
       }
     }
     setSignatureData(null);
+    setTypedSignature("");
   };
+
+  const generateTypedSignatureImage = (text: string): string | null => {
+    const canvas = typedCanvasRef.current;
+    if (!canvas || !text.trim()) return null;
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return null;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "#000";
+    ctx.font = "italic 32px 'Brush Script MT', cursive, serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(text, canvas.width / 2, canvas.height / 2);
+
+    return canvas.toDataURL("image/png");
+  };
+
+  useEffect(() => {
+    if (signatureMode === "type" && typedSignature) {
+      const imageData = generateTypedSignatureImage(typedSignature);
+      setSignatureData(imageData);
+    }
+  }, [typedSignature, signatureMode]);
 
   const handleSubmit = async () => {
     const signatureFields = fields.filter((f) => f.type === "SIGNATURE");
     if (signatureFields.length > 0 && !signatureData) {
-      toast.error("Please draw your signature before submitting");
+      if (signatureMode === "type") {
+        toast.error("Please type your name to create a signature");
+      } else {
+        toast.error("Please draw your signature before submitting");
+      }
       return;
     }
 
@@ -402,26 +437,86 @@ export default function SignDocument() {
                   <PenIcon className="h-5 w-5" />
                   Your Signature
                 </h2>
-                <p className="mb-4 text-sm text-gray-600">
-                  Draw your signature below using your mouse or finger
-                </p>
-                <div className="relative rounded-lg border-2 border-dashed border-gray-300 bg-white">
-                  <canvas
-                    ref={canvasRef}
-                    width={280}
-                    height={120}
-                    className="cursor-crosshair touch-none"
-                    onMouseDown={startDrawing}
-                    onMouseMove={draw}
-                    onMouseUp={stopDrawing}
-                    onMouseLeave={stopDrawing}
-                  />
-                  {!signatureData && (
-                    <div className="pointer-events-none absolute inset-0 flex items-center justify-center text-gray-400">
-                      Sign here
+                
+                <Tabs
+                  value={signatureMode}
+                  onValueChange={(v) => {
+                    setSignatureMode(v as "type" | "draw");
+                    if (v === "type" && typedSignature) {
+                      const imageData = generateTypedSignatureImage(typedSignature);
+                      setSignatureData(imageData);
+                    } else if (v === "draw") {
+                      const canvas = canvasRef.current;
+                      if (canvas) {
+                        setSignatureData(canvas.toDataURL("image/png"));
+                      }
+                    }
+                  }}
+                  className="w-full"
+                >
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="type" className="flex items-center gap-2">
+                      <TypeIcon className="h-4 w-4" />
+                      Type
+                    </TabsTrigger>
+                    <TabsTrigger value="draw" className="flex items-center gap-2">
+                      <PenIcon className="h-4 w-4" />
+                      Draw
+                    </TabsTrigger>
+                  </TabsList>
+                  
+                  <TabsContent value="type" className="mt-4">
+                    <p className="mb-3 text-sm text-gray-600">
+                      Type your name to create a signature
+                    </p>
+                    <Input
+                      value={typedSignature}
+                      onChange={(e) => setTypedSignature(e.target.value)}
+                      placeholder="Type your full name"
+                      className="mb-3"
+                    />
+                    {typedSignature && (
+                      <div className="rounded-lg border-2 border-dashed border-gray-300 bg-white p-4">
+                        <p
+                          className="text-center text-3xl text-black"
+                          style={{ fontFamily: "'Brush Script MT', cursive, serif", fontStyle: "italic" }}
+                        >
+                          {typedSignature}
+                        </p>
+                      </div>
+                    )}
+                    <canvas
+                      ref={typedCanvasRef}
+                      width={280}
+                      height={120}
+                      className="hidden"
+                    />
+                  </TabsContent>
+                  
+                  <TabsContent value="draw" className="mt-4">
+                    <p className="mb-3 text-sm text-gray-600">
+                      Draw your signature using your mouse or finger
+                    </p>
+                    <div className="relative rounded-lg border-2 border-dashed border-gray-300 bg-white">
+                      <canvas
+                        ref={canvasRef}
+                        width={280}
+                        height={120}
+                        className="cursor-crosshair touch-none"
+                        onMouseDown={startDrawing}
+                        onMouseMove={draw}
+                        onMouseUp={stopDrawing}
+                        onMouseLeave={stopDrawing}
+                      />
+                      {signatureMode === "draw" && !signatureData && (
+                        <div className="pointer-events-none absolute inset-0 flex items-center justify-center text-gray-400">
+                          Sign here
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
+                  </TabsContent>
+                </Tabs>
+                
                 <Button
                   variant="ghost"
                   size="sm"

@@ -10,6 +10,31 @@ The BF Fund Investor Dataroom is a secure, self-hosted investor portal for Bermu
 
 ---
 
+## CRITICAL: Platform-Agnostic Build Requirements
+
+> **All features MUST be platform-wide solutions, NOT tied to any specific dataroom.**
+
+### Build Rules
+1. **No hardcoded IDs** - Never use specific dataroom, team, link, or document IDs in code
+2. **Dynamic references only** - All IDs must come from URL parameters, database queries, or user context
+3. **Dataroom lifecycle independent** - If a dataroom is deleted and a new one created, ALL features must work on the new dataroom automatically
+4. **Use parameterized routes** - API routes must use `[teamId]`, `[dataroomId]`, `[linkId]` patterns
+
+### What This Means
+- Quick Add works for ANY dataroom (uses dynamic selector)
+- Analytics track ANY dataroom (uses foreign keys, not hardcoded IDs)
+- Session cookies use dynamic `linkId` (not hardcoded values)
+- Email templates receive dataroom info as props (not hardcoded names)
+- Access requests work for ANY portal request
+
+### Verification Checklist (Before Each Deploy)
+- [ ] No CUID patterns (cmj*, clp*) in source code
+- [ ] All API routes use dynamic parameters
+- [ ] Database queries filter by passed-in IDs, not constants
+- [ ] Email templates use props for all dataroom-specific content
+
+---
+
 ## Key Design Decisions
 
 | Decision | Implementation |
@@ -21,7 +46,7 @@ The BF Fund Investor Dataroom is a secure, self-hosted investor portal for Bermu
 | Session-based Auth | `emailAuthenticated=false` - verify once per session |
 | Downloads Disabled | `allowDownload=false` default |
 | File Storage | Replit Object Storage (AES-256 encrypted, presigned URLs) |
-| Analytics | PostgreSQL-based (Tinybird optional fallback) |
+| Analytics | PostgreSQL only (PageView model) - Tinybird code exists but is NOT used |
 | Branding | All "Papermark" references replaced with "BF Fund Dataroom" |
 
 ---
@@ -61,7 +86,7 @@ The BF Fund Investor Dataroom is a secure, self-hosted investor portal for Bermu
 - **Database**: PostgreSQL via Prisma ORM
 - **Auth**: NextAuth.js (magic links via Resend)
 - **File Storage**: Replit Object Storage (AES-256)
-- **Analytics**: PostgreSQL (PageView model) with optional Tinybird fallback
+- **Analytics**: PostgreSQL only (PageView model) - Tinybird NOT used
 
 **Key Patterns:**
 - Data fetching: SWR hooks
@@ -75,11 +100,13 @@ The BF Fund Investor Dataroom is a secure, self-hosted investor portal for Bermu
 
 | Dependency | Purpose | Required? |
 |------------|---------|-----------|
-| PostgreSQL | Primary database | Yes |
+| PostgreSQL | Primary database + analytics | Yes |
 | Resend API | Magic links and notifications | Yes |
 | Replit Object Storage | Encrypted file storage | Yes |
-| TINYBIRD_TOKEN | Analytics (alternative) | No - PostgreSQL fallback |
-| UPSTASH_REDIS_REST_URL | Rate limiting | No - graceful fallback |
+| UPSTASH_REDIS_REST_URL | Rate limiting, session caching | No - graceful fallback |
+
+**Not Used:**
+- Tinybird (legacy code exists but gracefully skipped when `TINYBIRD_TOKEN` not set)
 
 ---
 
@@ -112,9 +139,30 @@ The BF Fund Investor Dataroom is a secure, self-hosted investor portal for Bermu
 
 ---
 
+## Platform Audit (January 2026)
+
+All features verified as platform-agnostic. No hardcoded dataroom IDs in source code.
+
+| Feature | Status | Notes |
+|---------|--------|-------|
+| Quick Add System | ✅ Pass | Uses dynamic dataroom selector |
+| Analytics/Tracking | ✅ Pass | PostgreSQL with foreign keys |
+| Session Cookies | ✅ Pass | Uses dynamic `linkId` in cookie name |
+| Access Request Emails | ✅ Pass | Receives dataroom info as props |
+| Magic Links | ✅ Pass | Generated per-request with dynamic IDs |
+| API Routes | ✅ Pass | All use parameterized `[id]` patterns |
+| Database Queries | ✅ Pass | Filter by passed-in IDs only |
+
+---
+
 ## Change Log
 
 ### January 2026
+
+**Platform Audit Completed**
+- Verified all features work for ANY dataroom, not tied to specific IDs
+- Added platform-agnostic build requirements to documentation
+- Confirmed: deleting a dataroom and creating a new one = all features work automatically
 
 **Session Cookie Fallback Without Redis**
 - Fixed session flag cookie (`pm_drs_flag_${linkId}`) to set even without Redis

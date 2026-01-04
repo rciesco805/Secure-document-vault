@@ -396,7 +396,12 @@ export default function DataroomViewer({
         isTeamMember={viewData.isTeamMember}
       />
       <ViewerChatLayout>
-        <div className="relative flex flex-1 items-center overflow-hidden bg-white dark:bg-black">
+        <div 
+          className="relative flex flex-1 items-center overflow-hidden"
+          style={{
+            backgroundColor: brand?.accentColor || "rgb(3, 7, 18)",
+          }}
+        >
           <div className="relative mx-auto flex h-full w-full items-start justify-center">
             {/* Tree view */}
             <div className="hidden h-full w-1/4 space-y-8 overflow-auto px-3 pb-4 pt-4 md:flex md:px-6 md:pt-6 lg:px-8 lg:pt-9 xl:px-14">

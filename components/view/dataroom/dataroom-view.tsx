@@ -297,7 +297,12 @@ export default function DataroomView({
 
   if (submitted) {
     return (
-      <div className="bg-gray-950">
+      <div 
+        className="min-h-screen"
+        style={{
+          backgroundColor: brand?.accentColor || "rgb(3, 7, 18)",
+        }}
+      >
         <DataroomViewer
           accessControls={link.accessControls || group?.accessControls || []}
           brand={brand!}
@@ -326,7 +331,12 @@ export default function DataroomView({
   }
 
   return (
-    <div className="bg-gray-950">
+    <div 
+      className="min-h-screen"
+      style={{
+        backgroundColor: brand?.accentColor || "rgb(3, 7, 18)",
+      }}
+    >
       <div className="flex h-screen items-center justify-center">
         <LoadingSpinner className="h-20 w-20" />
       </div>

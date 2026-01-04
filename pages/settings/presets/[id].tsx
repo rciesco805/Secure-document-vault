@@ -480,21 +480,19 @@ export default function EditPreset() {
                 />
               </div>
 
-              <div className="rounded-lg border p-6">
-                <h3 className="mb-4 text-lg font-medium">Branding</h3>
-                <ProBannerSection
-                  data={data as any}
-                  setData={setData as any}
-                  isAllowed={
-                    isTrial ||
-                    (isPro && allowAdvancedLinkControls) ||
-                    isBusiness ||
-                    isDatarooms ||
-                    isDataroomsPlus
-                  }
-                  handleUpgradeStateChange={handleUpgradeStateChange}
-                />
-              </div>
+              {/* Branding section hidden for self-hosted - ProBannerSection returns null */}
+              <ProBannerSection
+                data={data as any}
+                setData={setData as any}
+                isAllowed={
+                  isTrial ||
+                  (isPro && allowAdvancedLinkControls) ||
+                  isBusiness ||
+                  isDatarooms ||
+                  isDataroomsPlus
+                }
+                handleUpgradeStateChange={handleUpgradeStateChange}
+              />
             </div>
 
             <div className="sticky top-0 md:overflow-auto">

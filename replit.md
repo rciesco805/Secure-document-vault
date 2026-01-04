@@ -116,6 +116,16 @@ The BF Fund Investor Dataroom is a secure, self-hosted investor portal for Bermu
 
 ### January 2026
 
+**Session Cookie Fallback Without Redis**
+- Fixed session flag cookie (`pm_drs_flag_${linkId}`) to set even without Redis
+- Enables seamless document navigation within dataroom session (1-hour expiry)
+- Both DATAROOM_VIEW and DOCUMENT_VIEW flows updated
+
+**Tinybird Error Handling Improved**
+- `recordLinkView` now gracefully handles missing `TINYBIRD_TOKEN`
+- No more unhandled rejection errors when Tinybird is not configured
+- PostgreSQL remains the primary analytics storage
+
 **Email Verification Defaults Updated**
 - `emailAuthenticated=false` by default for all link types (Quick Add, General, Group)
 - Visitors enter email once at dataroom entry, then browse documents freely

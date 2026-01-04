@@ -100,9 +100,14 @@ export async function recordLinkView({
     city: geo.city || "Unknown",
   };
 
-  const [, ,] = await Promise.all([
-    // record link view in Tinybird
-    recordLinkViewTB(clickData),
+  await Promise.all([
+    // record link view in Tinybird (optional - gracefully handle if not configured)
+    process.env.TINYBIRD_TOKEN
+      ? recordLinkViewTB(clickData).catch((err) => {
+          console.warn("Tinybird recording failed (optional):", err.message);
+          return null;
+        })
+      : Promise.resolve(null),
 
     // send email notification
     enableNotification ? sendNotification({ viewId, locationData }) : null,

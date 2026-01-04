@@ -51,12 +51,20 @@ async function handleGet(
 
     const { document } = recipient;
 
+    if (document.expirationDate && new Date(document.expirationDate) < new Date()) {
+      return res.status(410).json({ message: "This signing link has expired" });
+    }
+
     if (document.status === "VOIDED") {
       return res.status(410).json({ message: "This document has been voided" });
     }
 
     if (document.status === "EXPIRED") {
       return res.status(410).json({ message: "This document has expired" });
+    }
+
+    if (document.status === "COMPLETED") {
+      return res.status(400).json({ message: "This document has already been completed" });
     }
 
     if (recipient.status === "SIGNED") {
@@ -119,6 +127,7 @@ async function handleGet(
         numPages: document.numPages,
         teamName: document.team.name,
         fileUrl,
+        expirationDate: document.expirationDate,
       },
       fields: recipientFields.map((f) => ({
         id: f.id,
@@ -153,6 +162,7 @@ async function handlePost(
         document: {
           include: {
             recipients: true,
+            fields: true,
           },
         },
       },
@@ -162,8 +172,26 @@ async function handlePost(
       return res.status(404).json({ message: "Invalid signing link" });
     }
 
+    const { document } = recipient;
+
+    if (document.expirationDate && new Date(document.expirationDate) < new Date()) {
+      return res.status(410).json({ message: "This signing link has expired" });
+    }
+
+    if (document.status === "VOIDED" || document.status === "EXPIRED") {
+      return res.status(410).json({ message: "This document is no longer available for signing" });
+    }
+
+    if (document.status === "COMPLETED") {
+      return res.status(400).json({ message: "This document has already been completed" });
+    }
+
     if (recipient.status === "SIGNED") {
-      return res.status(400).json({ message: "Already signed" });
+      return res.status(400).json({ message: "You have already signed this document" });
+    }
+
+    if (recipient.status === "DECLINED") {
+      return res.status(400).json({ message: "You have already declined this document" });
     }
 
     const ipAddress = (req.headers["x-forwarded-for"] as string)?.split(",")[0] 
@@ -172,23 +200,25 @@ async function handlePost(
     const userAgent = req.headers["user-agent"] || null;
 
     if (declined) {
-      await prisma.signatureRecipient.update({
-        where: { id: recipient.id },
-        data: {
-          status: "DECLINED",
-          declinedAt: new Date(),
-          declinedReason: declinedReason || null,
-          ipAddress,
-          userAgent,
-        },
-      });
+      await prisma.$transaction(async (tx) => {
+        await tx.signatureRecipient.update({
+          where: { id: recipient.id },
+          data: {
+            status: "DECLINED",
+            declinedAt: new Date(),
+            declinedReason: declinedReason || null,
+            ipAddress,
+            userAgent,
+          },
+        });
 
-      await prisma.signatureDocument.update({
-        where: { id: recipient.document.id },
-        data: {
-          status: "DECLINED",
-          declinedAt: new Date(),
-        },
+        await tx.signatureDocument.update({
+          where: { id: document.id },
+          data: {
+            status: "DECLINED",
+            declinedAt: new Date(),
+          },
+        });
       });
 
       return res.status(200).json({ 
@@ -197,67 +227,108 @@ async function handlePost(
       });
     }
 
+    const recipientFields = document.fields.filter(
+      (f) => f.recipientId === recipient.id
+    );
+    const recipientFieldIds = new Set(recipientFields.map((f) => f.id));
+
+    const requiredSignatureFields = recipientFields.filter(
+      (f) => f.type === "SIGNATURE" && f.required
+    );
+    if (requiredSignatureFields.length > 0 && !signatureImage) {
+      return res.status(400).json({ 
+        message: "Signature is required to complete signing" 
+      });
+    }
+
     if (fields && Array.isArray(fields)) {
       for (const field of fields) {
-        await prisma.signatureField.update({
-          where: { id: field.id },
-          data: {
-            value: field.value,
-            filledAt: new Date(),
-          },
-        });
+        if (!recipientFieldIds.has(field.id)) {
+          return res.status(403).json({ 
+            message: "You can only update fields assigned to you" 
+          });
+        }
       }
     }
 
-    await prisma.signatureRecipient.update({
-      where: { id: recipient.id },
-      data: {
-        status: "SIGNED",
-        signedAt: new Date(),
-        signatureImage: signatureImage || null,
-        ipAddress,
-        userAgent,
-      },
-    });
+    for (const rf of recipientFields) {
+      if (rf.required && rf.type !== "SIGNATURE" && rf.type !== "CHECKBOX") {
+        const submittedField = fields?.find((f: any) => f.id === rf.id);
+        if (!submittedField?.value && !rf.value) {
+          if (rf.type === "NAME" || rf.type === "EMAIL" || rf.type === "DATE_SIGNED") {
+            continue;
+          }
+          return res.status(400).json({ 
+            message: `Please fill in all required fields before signing` 
+          });
+        }
+      }
+    }
 
-    const allRecipients = recipient.document.recipients;
-    const signersAndApprovers = allRecipients.filter(
-      (r) => r.role === "SIGNER" || r.role === "APPROVER"
-    );
-    
-    const updatedRecipients = await prisma.signatureRecipient.findMany({
-      where: { documentId: recipient.document.id },
-    });
-    
-    const allSigned = signersAndApprovers.every((r) => {
-      const updated = updatedRecipients.find((ur) => ur.id === r.id);
-      return updated?.status === "SIGNED";
-    });
+    const result = await prisma.$transaction(async (tx) => {
+      if (fields && Array.isArray(fields)) {
+        for (const field of fields) {
+          if (recipientFieldIds.has(field.id)) {
+            await tx.signatureField.update({
+              where: { id: field.id },
+              data: {
+                value: field.value,
+                filledAt: new Date(),
+              },
+            });
+          }
+        }
+      }
 
-    if (allSigned) {
-      await prisma.signatureDocument.update({
-        where: { id: recipient.document.id },
+      await tx.signatureRecipient.update({
+        where: { id: recipient.id },
         data: {
-          status: "COMPLETED",
-          completedAt: new Date(),
+          status: "SIGNED",
+          signedAt: new Date(),
+          signatureImage: signatureImage || null,
+          ipAddress,
+          userAgent,
         },
       });
-    } else {
-      const signedCount = updatedRecipients.filter(
-        (r) => r.status === "SIGNED"
-      ).length;
+
+      const allRecipients = await tx.signatureRecipient.findMany({
+        where: { documentId: document.id },
+      });
+
+      const signersAndApprovers = allRecipients.filter(
+        (r) => r.role === "SIGNER" || r.role === "APPROVER"
+      );
       
-      if (signedCount > 0) {
-        await prisma.signatureDocument.update({
-          where: { id: recipient.document.id },
-          data: { status: "PARTIALLY_SIGNED" },
+      const allSigned = signersAndApprovers.every((r) => r.status === "SIGNED");
+      const hasDeclined = allRecipients.some((r) => r.status === "DECLINED");
+
+      let newStatus = document.status;
+      if (allSigned && !hasDeclined) {
+        newStatus = "COMPLETED";
+        await tx.signatureDocument.update({
+          where: { id: document.id },
+          data: {
+            status: "COMPLETED",
+            completedAt: new Date(),
+          },
         });
+      } else if (!hasDeclined) {
+        const signedCount = allRecipients.filter((r) => r.status === "SIGNED").length;
+        if (signedCount > 0) {
+          newStatus = "PARTIALLY_SIGNED";
+          await tx.signatureDocument.update({
+            where: { id: document.id },
+            data: { status: "PARTIALLY_SIGNED" },
+          });
+        }
       }
-    }
+
+      return { allSigned, newStatus };
+    });
 
     return res.status(200).json({
       message: "Document signed successfully",
-      status: allSigned ? "COMPLETED" : "PARTIALLY_SIGNED",
+      status: result.newStatus,
     });
   } catch (error) {
     console.error("Error processing signature:", error);

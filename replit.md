@@ -102,3 +102,16 @@ A critical architectural decision is the **platform-agnostic design**, ensuring 
 - Header includes shield icon and "BF Fund Sign" text with document title
 - Footer shows "Powered by BF Fund Dataroom | Secure Document Signing"
 - Page title includes "BF Fund Sign" suffix
+
+### Document Editing
+- Edit Details option in document dropdown menu for non-completed/non-voided documents
+- Allows editing title, description, email subject, and email message
+- Changes take effect immediately without affecting signing status
+
+### Correct & Resend
+- Available for documents that have been sent but not completed or voided
+- Creates a new draft copy of the document with "(Corrected)" suffix
+- Preserves all recipients (reset to pending) and field placements
+- Automatically voids the original document with reason "Corrected and resent"
+- Admin can then edit the corrected draft and resend to recipients
+- Key file: `pages/api/teams/[teamId]/signature-documents/[documentId]/correct.ts`

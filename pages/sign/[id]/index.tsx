@@ -216,18 +216,20 @@ export default function SignatureDocumentDetail() {
     setIsSending(true);
     try {
       const response = await fetch(
-        `/api/teams/${teamId}/signature-documents/${document.id}`,
+        `/api/teams/${teamId}/signature-documents/${document.id}/send`,
         {
-          method: "PUT",
+          method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ status: "SENT" }),
         }
       );
-      if (!response.ok) throw new Error("Failed to send document");
-      toast.success("Document sent for signature");
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.message || "Failed to send document");
+      }
+      toast.success("Document sent for signature! Recipients will receive an email.");
       mutate();
     } catch (error) {
-      toast.error("Failed to send document");
+      toast.error(error instanceof Error ? error.message : "Failed to send document");
     } finally {
       setIsSending(false);
     }

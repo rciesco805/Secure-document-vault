@@ -76,6 +76,7 @@ model SignatureRecipient {
   declinedReason    String?
   
   // Security & verification
+  signingToken      String?                   @unique // Secure token for signing URL
   accessCode        String?                   // Optional access code for additional security
   ipAddress         String?                   // IP address when signed
   userAgent         String?                   // Browser info when signed

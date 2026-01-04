@@ -15,6 +15,8 @@ import {
   MailIcon,
   Trash2Icon,
   SaveIcon,
+  BriefcaseIcon,
+  BadgeIcon,
 } from "lucide-react";
 
 import { useSignatureDocument } from "@/lib/swr/use-signature-documents";
@@ -42,10 +44,12 @@ const fieldTypes = [
   { type: "SIGNATURE", label: "Signature", icon: PenIcon },
   { type: "INITIALS", label: "Initials", icon: TypeIcon },
   { type: "DATE_SIGNED", label: "Date", icon: CalendarIcon },
-  { type: "TEXT", label: "Text", icon: TypeIcon },
-  { type: "CHECKBOX", label: "Checkbox", icon: CheckSquareIcon },
   { type: "NAME", label: "Name", icon: UserIcon },
   { type: "EMAIL", label: "Email", icon: MailIcon },
+  { type: "TITLE", label: "Title", icon: BadgeIcon },
+  { type: "COMPANY", label: "Company", icon: BriefcaseIcon },
+  { type: "TEXT", label: "Text", icon: TypeIcon },
+  { type: "CHECKBOX", label: "Checkbox", icon: CheckSquareIcon },
 ];
 
 interface PlacedField {

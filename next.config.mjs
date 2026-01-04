@@ -93,6 +93,19 @@ const nextConfig = {
             key: "X-Robots-Tag",
             value: "noindex",
           },
+          {
+            key: "Content-Security-Policy",
+            value:
+              `default-src 'self' https: ${isDev ? "http:" : ""}; ` +
+              `script-src 'self' 'unsafe-inline' 'unsafe-eval' https: blob: ${isDev ? "http:" : ""}; ` +
+              `style-src 'self' 'unsafe-inline' https: ${isDev ? "http:" : ""}; ` +
+              `img-src 'self' data: blob: https: ${isDev ? "http:" : ""}; ` +
+              `font-src 'self' data: https: ${isDev ? "http:" : ""}; ` +
+              `worker-src 'self' blob: https://unpkg.com; ` +
+              `frame-ancestors 'self'; ` +
+              `connect-src 'self' https: ${isDev ? "http: ws: wss:" : ""}; ` +
+              `${isDev ? "" : "upgrade-insecure-requests;"}`,
+          },
         ],
       },
       {

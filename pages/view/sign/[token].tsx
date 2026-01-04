@@ -1,7 +1,10 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/router";
 import Head from "next/head";
 import { toast } from "sonner";
+import { Document, Page, pdfjs } from "react-pdf";
+import "react-pdf/dist/Page/AnnotationLayer.css";
+import "react-pdf/dist/Page/TextLayer.css";
 import {
   CheckCircle2Icon,
   FileTextIcon,
@@ -12,10 +15,19 @@ import {
   ClockIcon,
   ShieldCheckIcon,
   TypeIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  ZoomInIcon,
+  ZoomOutIcon,
+  ImageIcon,
+  ListIcon,
 } from "lucide-react";
+
+pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -83,6 +95,33 @@ export default function SignDocument() {
   const [isDrawing, setIsDrawing] = useState(false);
   const [signatureMode, setSignatureMode] = useState<"type" | "draw">("type");
   const [typedSignature, setTypedSignature] = useState("");
+
+  const [pdfNumPages, setPdfNumPages] = useState<number>(0);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [scale, setScale] = useState<number>(1.0);
+  const [showThumbnails, setShowThumbnails] = useState<boolean>(true);
+  const [pdfLoading, setPdfLoading] = useState<boolean>(true);
+
+  const onDocumentLoadSuccess = useCallback(({ numPages }: { numPages: number }) => {
+    setPdfNumPages(numPages);
+    setPdfLoading(false);
+  }, []);
+
+  const goToPrevPage = useCallback(() => {
+    setCurrentPage((prev) => Math.max(1, prev - 1));
+  }, []);
+
+  const goToNextPage = useCallback(() => {
+    setCurrentPage((prev) => Math.min(pdfNumPages, prev + 1));
+  }, [pdfNumPages]);
+
+  const zoomIn = useCallback(() => {
+    setScale((prev) => Math.min(2.0, prev + 0.1));
+  }, []);
+
+  const zoomOut = useCallback(() => {
+    setScale((prev) => Math.max(0.5, prev - 0.1));
+  }, []);
 
   useEffect(() => {
     if (token) {
@@ -410,23 +449,122 @@ export default function SignDocument() {
         <main className="mx-auto max-w-5xl px-4 py-8">
           <div className="grid gap-8 lg:grid-cols-3">
             <div className="lg:col-span-2">
-              <div className="rounded-lg bg-white p-6 shadow">
-                <h2 className="mb-4 flex items-center gap-2 text-lg font-medium">
-                  <FileTextIcon className="h-5 w-5" />
-                  Document Preview
-                </h2>
-                <div className="aspect-[8.5/11] rounded-lg bg-gray-100">
-                  {document?.fileUrl ? (
-                    <iframe
-                      src={document.fileUrl}
-                      className="h-full w-full rounded-lg"
-                      title="Document Preview"
-                    />
-                  ) : (
-                    <div className="flex h-full items-center justify-center text-gray-500">
-                      Document preview not available
+              <div className="rounded-lg bg-white shadow">
+                <div className="flex items-center justify-between border-b bg-gray-800 px-4 py-2 rounded-t-lg">
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setShowThumbnails(!showThumbnails)}
+                      className="rounded p-1 text-gray-300 hover:bg-gray-700"
+                      title="Toggle thumbnails"
+                    >
+                      <ListIcon className="h-4 w-4" />
+                    </button>
+                    <button className="rounded p-1 text-gray-300 hover:bg-gray-700">
+                      <ImageIcon className="h-4 w-4" />
+                    </button>
+                  </div>
+                  <span className="text-sm text-gray-300 truncate max-w-xs" title={document?.title}>
+                    {document?.title}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1 text-gray-300">
+                      <span className="text-sm">{currentPage}</span>
+                      <span className="text-sm">/</span>
+                      <span className="text-sm">{pdfNumPages}</span>
+                    </div>
+                    <button onClick={zoomOut} className="rounded p-1 text-gray-300 hover:bg-gray-700">
+                      <ZoomOutIcon className="h-4 w-4" />
+                    </button>
+                    <span className="text-sm text-gray-300">{Math.round(scale * 100)}%</span>
+                    <button onClick={zoomIn} className="rounded p-1 text-gray-300 hover:bg-gray-700">
+                      <ZoomInIcon className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+                
+                <div className="flex">
+                  {showThumbnails && (
+                    <div className="w-24 border-r bg-gray-900">
+                      <ScrollArea className="h-[600px]">
+                        <div className="p-2 space-y-2">
+                          {document?.fileUrl && Array.from({ length: pdfNumPages }, (_, i) => (
+                            <button
+                              key={i}
+                              onClick={() => setCurrentPage(i + 1)}
+                              className={`w-full rounded border-2 transition-colors ${
+                                currentPage === i + 1
+                                  ? "border-blue-500"
+                                  : "border-transparent hover:border-gray-600"
+                              }`}
+                            >
+                              <Document file={document.fileUrl} loading={null}>
+                                <Page
+                                  pageNumber={i + 1}
+                                  width={72}
+                                  renderTextLayer={false}
+                                  renderAnnotationLayer={false}
+                                />
+                              </Document>
+                              <span className="block text-xs text-gray-400 mt-1">{i + 1}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </ScrollArea>
                     </div>
                   )}
+                  
+                  <div className="flex-1 bg-gray-200 overflow-auto" style={{ height: "600px" }}>
+                    {document?.fileUrl ? (
+                      <div className="flex flex-col items-center p-4">
+                        {pdfLoading && (
+                          <div className="flex items-center justify-center h-96">
+                            <Loader2Icon className="h-8 w-8 animate-spin text-gray-500" />
+                          </div>
+                        )}
+                        <Document
+                          file={document.fileUrl}
+                          onLoadSuccess={onDocumentLoadSuccess}
+                          loading={null}
+                          className="flex flex-col items-center"
+                        >
+                          <Page
+                            pageNumber={currentPage}
+                            scale={scale}
+                            className="shadow-lg"
+                            renderTextLayer={true}
+                            renderAnnotationLayer={true}
+                          />
+                        </Document>
+                        
+                        {pdfNumPages > 1 && (
+                          <div className="flex items-center gap-4 mt-4">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={goToPrevPage}
+                              disabled={currentPage <= 1}
+                            >
+                              <ChevronLeftIcon className="h-4 w-4 mr-1" />
+                              Previous
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={goToNextPage}
+                              disabled={currentPage >= pdfNumPages}
+                            >
+                              Next
+                              <ChevronRightIcon className="h-4 w-4 ml-1" />
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="flex h-full items-center justify-center text-gray-500">
+                        Document preview not available
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>

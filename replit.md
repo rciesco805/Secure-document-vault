@@ -76,3 +76,17 @@ A critical architectural decision is the **platform-agnostic design**, ensuring 
 - Only lowest order signers receive emails initially
 - After a signer completes, the next signers in order automatically receive their signing emails
 - Sequential signing is enabled by default when sending documents
+
+### Bulk Sending
+- Send the same document to multiple recipients at once (each gets their own copy)
+- Access via "Bulk Send" button on the signature dashboard
+- CSV import support: upload a CSV with name, email columns
+- Perfect for annual policy acknowledgments, company-wide agreements
+- Key files: `pages/sign/bulk.tsx`, `pages/api/teams/[teamId]/signature-documents/bulk.ts`
+
+### In-Person Signing
+- Generate QR codes for recipients to sign on their phone while meeting in person
+- Access via "In-Person Signing" button on document detail page (for sent documents)
+- Select recipient to generate their unique QR code
+- Download QR as PNG or copy signing link
+- Key files: `components/signature/qr-code-dialog.tsx`

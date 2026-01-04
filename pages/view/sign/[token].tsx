@@ -9,6 +9,8 @@ import {
   XIcon,
   Loader2Icon,
   AlertTriangleIcon,
+  ClockIcon,
+  ShieldCheckIcon,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -62,6 +64,7 @@ export default function SignDocument() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [alreadySigned, setAlreadySigned] = useState(false);
+  const [isExpired, setIsExpired] = useState(false);
   const [recipient, setRecipient] = useState<RecipientInfo | null>(null);
   const [document, setDocument] = useState<DocumentInfo | null>(null);
   const [fields, setFields] = useState<FieldInfo[]>([]);
@@ -89,6 +92,9 @@ export default function SignDocument() {
       if (!response.ok) {
         if (data.alreadySigned) {
           setAlreadySigned(true);
+        }
+        if (response.status === 410 || data.message?.includes("expired")) {
+          setIsExpired(true);
         }
         setError(data.message || "Failed to load document");
         return;
@@ -242,7 +248,11 @@ export default function SignDocument() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+      <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50">
+        <div className="mb-8 text-center">
+          <h2 className="text-xl font-bold text-gray-900">BF Fund Sign</h2>
+          <p className="text-xs text-gray-500">Secure Document Signing</p>
+        </div>
         <div className="text-center">
           <Loader2Icon className="mx-auto h-8 w-8 animate-spin text-gray-400" />
           <p className="mt-2 text-sm text-gray-500">Loading document...</p>
@@ -253,13 +263,26 @@ export default function SignDocument() {
 
   if (error) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+      <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50">
+        <div className="mb-8 text-center">
+          <h2 className="text-xl font-bold text-gray-900">BF Fund Sign</h2>
+          <p className="text-xs text-gray-500">Secure Document Signing</p>
+        </div>
         <div className="max-w-md rounded-lg bg-white p-8 text-center shadow-lg">
           {alreadySigned ? (
             <>
               <CheckCircle2Icon className="mx-auto h-12 w-12 text-green-500" />
               <h1 className="mt-4 text-xl font-semibold">Already Signed</h1>
               <p className="mt-2 text-gray-600">{error}</p>
+            </>
+          ) : isExpired ? (
+            <>
+              <ClockIcon className="mx-auto h-12 w-12 text-orange-500" />
+              <h1 className="mt-4 text-xl font-semibold">Document Expired</h1>
+              <p className="mt-2 text-gray-600">{error}</p>
+              <p className="mt-4 text-sm text-gray-500">
+                Please contact the sender to request a new signing link.
+              </p>
             </>
           ) : (
             <>
@@ -269,13 +292,20 @@ export default function SignDocument() {
             </>
           )}
         </div>
+        <p className="mt-8 text-xs text-gray-400">
+          Powered by BF Fund Dataroom
+        </p>
       </div>
     );
   }
 
   if (showSuccess) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+      <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50">
+        <div className="mb-8 text-center">
+          <h2 className="text-xl font-bold text-gray-900">BF Fund Sign</h2>
+          <p className="text-xs text-gray-500">Secure Document Signing</p>
+        </div>
         <div className="max-w-md rounded-lg bg-white p-8 text-center shadow-lg">
           <CheckCircle2Icon className="mx-auto h-16 w-16 text-green-500" />
           <h1 className="mt-4 text-2xl font-semibold">
@@ -285,10 +315,17 @@ export default function SignDocument() {
             Thank you for signing. A copy of the signed document will be sent to
             your email.
           </p>
+          <div className="mt-6 flex items-center justify-center gap-2 text-sm text-gray-500">
+            <ShieldCheckIcon className="h-4 w-4" />
+            <span>Securely signed and recorded</span>
+          </div>
           <p className="mt-4 text-sm text-gray-500">
             You can close this window now.
           </p>
         </div>
+        <p className="mt-8 text-xs text-gray-400">
+          Powered by BF Fund Dataroom
+        </p>
       </div>
     );
   }
@@ -296,17 +333,24 @@ export default function SignDocument() {
   return (
     <>
       <Head>
-        <title>Sign: {document?.title || "Document"}</title>
+        <title>Sign: {document?.title || "Document"} | BF Fund Sign</title>
       </Head>
 
       <div className="min-h-screen bg-gray-100">
         <header className="border-b bg-white shadow-sm">
           <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4">
-            <div>
-              <h1 className="text-lg font-semibold">{document?.title}</h1>
-              <p className="text-sm text-gray-500">
-                From: {document?.teamName}
-              </p>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <ShieldCheckIcon className="h-6 w-6 text-primary" />
+                <span className="font-bold text-gray-900">BF Fund Sign</span>
+              </div>
+              <Separator orientation="vertical" className="h-8" />
+              <div>
+                <h1 className="text-lg font-semibold">{document?.title}</h1>
+                <p className="text-sm text-gray-500">
+                  From: {document?.teamName}
+                </p>
+              </div>
             </div>
             <div className="flex items-center gap-2">
               <Button
@@ -455,6 +499,14 @@ export default function SignDocument() {
             </div>
           </div>
         </main>
+        
+        <footer className="border-t bg-white py-4">
+          <div className="mx-auto max-w-5xl px-4 text-center">
+            <p className="text-xs text-gray-400">
+              Powered by BF Fund Dataroom | Secure Document Signing
+            </p>
+          </div>
+        </footer>
       </div>
 
       <AlertDialog open={showDeclineDialog} onOpenChange={setShowDeclineDialog}>

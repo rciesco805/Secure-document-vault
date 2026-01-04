@@ -62,6 +62,7 @@ export interface SignatureDocument {
   title: string;
   description: string | null;
   file: string;
+  fileUrl?: string | null;
   numPages: number | null;
   status: SignatureDocumentStatus;
   expirationDate: string | null;

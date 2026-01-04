@@ -251,17 +251,22 @@ export default function PrepareDocument() {
                   onClick={handleContainerClick}
                   className="relative aspect-[8.5/11] cursor-crosshair overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800"
                 >
-                  <div className="flex h-full items-center justify-center text-muted-foreground">
-                    <div className="text-center">
-                      <p className="text-lg font-medium">Document Preview</p>
-                      <p className="text-sm">
-                        Click anywhere to place a {selectedFieldType.toLowerCase().replace("_", " ")} field
-                      </p>
-                      <p className="mt-2 text-xs">
-                        (PDF rendering will be implemented with OpenSign integration)
-                      </p>
+                  {document.fileUrl ? (
+                    <iframe
+                      src={document.fileUrl}
+                      className="pointer-events-none h-full w-full"
+                      title="Document Preview"
+                    />
+                  ) : (
+                    <div className="flex h-full items-center justify-center text-muted-foreground">
+                      <div className="text-center">
+                        <p className="text-lg font-medium">Document Preview</p>
+                        <p className="text-sm">
+                          Unable to load document preview
+                        </p>
+                      </div>
                     </div>
-                  </div>
+                  )}
 
                   {fields
                     .filter((f) => f.pageNumber === currentPage)

@@ -11,6 +11,7 @@ import {
   EyeIcon,
   SendIcon,
   AlertCircleIcon,
+  UsersIcon,
 } from "lucide-react";
 
 import {
@@ -151,12 +152,20 @@ export default function SignatureDashboard() {
               Send documents for signature and track their status.
             </p>
           </div>
-          <Link href="/sign/new">
-            <Button className="group flex flex-1 items-center justify-start gap-x-1 whitespace-nowrap px-1 text-left sm:gap-x-3 sm:px-3">
-              <PlusIcon className="h-5 w-5 shrink-0" aria-hidden="true" />
-              <span className="text-xs sm:text-base">New Document</span>
-            </Button>
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link href="/sign/bulk">
+              <Button variant="outline" className="gap-x-1 whitespace-nowrap px-1 sm:gap-x-2 sm:px-3">
+                <UsersIcon className="h-5 w-5 shrink-0" aria-hidden="true" />
+                <span className="hidden text-xs sm:inline sm:text-base">Bulk Send</span>
+              </Button>
+            </Link>
+            <Link href="/sign/new">
+              <Button className="group flex flex-1 items-center justify-start gap-x-1 whitespace-nowrap px-1 text-left sm:gap-x-3 sm:px-3">
+                <PlusIcon className="h-5 w-5 shrink-0" aria-hidden="true" />
+                <span className="text-xs sm:text-base">New Document</span>
+              </Button>
+            </Link>
+          </div>
         </section>
 
         <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">

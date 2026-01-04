@@ -58,6 +58,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import AuditTrail from "@/components/signature/audit-trail";
+import { QRCodeDialog } from "@/components/signature/qr-code-dialog";
 
 const statusConfig: Record<
   SignatureDocumentStatus,
@@ -366,6 +367,12 @@ export default function SignatureDocumentDetail() {
                   {isSending ? "Sending..." : "Send for Signature"}
                 </Button>
               </>
+            )}
+            {document.status !== "DRAFT" && document.status !== "COMPLETED" && document.status !== "VOIDED" && (
+              <QRCodeDialog
+                recipients={document.recipients}
+                documentTitle={document.title}
+              />
             )}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

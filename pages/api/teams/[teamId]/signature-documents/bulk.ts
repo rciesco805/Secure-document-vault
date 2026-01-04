@@ -81,7 +81,7 @@ export default async function handler(
         data: {
           title: `${title} - ${recipient.name}`,
           description,
-          fileUrl,
+          file: fileUrl,
           storageType: resolvedStorageType,
           numPages,
           emailSubject,

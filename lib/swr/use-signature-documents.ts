@@ -24,6 +24,9 @@ export interface SignatureRecipient {
   signedAt: string | null;
   declinedAt: string | null;
   declinedReason: string | null;
+  ipAddress: string | null;
+  userAgent: string | null;
+  signatureImage: string | null;
 }
 
 export type SignatureFieldType =

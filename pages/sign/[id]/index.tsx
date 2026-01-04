@@ -56,6 +56,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import AuditTrail from "@/components/signature/audit-trail";
 
 const statusConfig: Record<
   SignatureDocumentStatus,
@@ -164,6 +165,36 @@ export default function SignatureDocumentDetail() {
   const [isVoiding, setIsVoiding] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isSending, setIsSending] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
+
+  const handleDownload = async () => {
+    if (!teamId || !document) return;
+    setIsDownloading(true);
+    try {
+      const response = await fetch(
+        `/api/teams/${teamId}/signature-documents/${document.id}/download`
+      );
+      if (!response.ok) {
+        throw new Error("Failed to download document");
+      }
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = window.document.createElement("a");
+      a.href = url;
+      a.download = document.status === "COMPLETED" 
+        ? `${document.title.replace(/[^a-zA-Z0-9-_]/g, "_")}_signed.pdf`
+        : `${document.title.replace(/[^a-zA-Z0-9-_]/g, "_")}.pdf`;
+      window.document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      a.remove();
+      toast.success("Document downloaded successfully");
+    } catch (error) {
+      toast.error("Failed to download document");
+    } finally {
+      setIsDownloading(false);
+    }
+  };
 
   const handleVoid = async () => {
     if (!teamId || !document) return;
@@ -318,9 +349,9 @@ export default function SignatureDocumentDetail() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem>
+                <DropdownMenuItem onClick={handleDownload} disabled={isDownloading}>
                   <DownloadIcon className="mr-2 h-4 w-4" />
-                  Download PDF
+                  {isDownloading ? "Downloading..." : document.status === "COMPLETED" ? "Download Signed PDF" : "Download PDF"}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 {document.status !== "DRAFT" &&
@@ -485,52 +516,7 @@ export default function SignatureDocumentDetail() {
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Activity</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="flex items-start gap-3">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800">
-                      <FileTextIcon className="h-4 w-4 text-gray-500" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">Document created</p>
-                      <p className="text-xs text-muted-foreground">
-                        {timeAgo(new Date(document.createdAt))}
-                      </p>
-                    </div>
-                  </div>
-                  {document.sentAt && (
-                    <div className="flex items-start gap-3">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900">
-                        <SendIcon className="h-4 w-4 text-blue-500" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium">Sent for signature</p>
-                        <p className="text-xs text-muted-foreground">
-                          {timeAgo(new Date(document.sentAt))}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                  {document.completedAt && (
-                    <div className="flex items-start gap-3">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-100 dark:bg-green-900">
-                        <CheckCircle2Icon className="h-4 w-4 text-green-500" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium">All signatures collected</p>
-                        <p className="text-xs text-muted-foreground">
-                          {timeAgo(new Date(document.completedAt))}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+            <AuditTrail document={document} />
           </div>
         </div>
       </div>

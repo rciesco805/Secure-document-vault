@@ -127,25 +127,8 @@ export default async function handle(
       };
 
       const featureFlags = await getFeatureFlags({ teamId: team.id });
-      const isDataroomsPlus = team.plan.includes("datarooms-plus");
-      const isTrial = team.plan.includes("drtrial");
 
-      if (
-        enableChangeNotifications !== undefined &&
-        !isDataroomsPlus &&
-        !isTrial &&
-        !featureFlags.roomChangeNotifications
-      ) {
-        return res.status(403).json({
-          message: "This feature is not available in your plan",
-        });
-      }
-
-      if (agentsEnabled !== undefined && !featureFlags.ai) {
-        return res.status(403).json({
-          message: "This feature is not available in your plan",
-        });
-      }
+      // Self-hosted: All features enabled, skip plan checks
 
       const updatedDataroom = await prisma.$transaction(async (tx) => {
         const dataroom = await tx.dataroom.update({

@@ -787,7 +787,7 @@ export default function DataroomBrandPage() {
                             </svg>
                           </div>
                           <span className="whitespace-normal text-xs text-muted-foreground">
-                            papermark.com/dataroom/...
+                            dataroom.bermudafranchisegroup.com/...
                           </span>
                         </div>
                       </div>
@@ -855,7 +855,7 @@ export default function DataroomBrandPage() {
                             </svg>
                           </div>
                           <span className="whitespace-normal text-xs text-muted-foreground">
-                            papermark.com/view/...
+                            dataroom.bermudafranchisegroup.com/view/...
                           </span>
                         </div>
                       </div>
@@ -922,7 +922,7 @@ export default function DataroomBrandPage() {
                             </svg>
                           </div>
                           <span className="whitespace-normal text-xs text-muted-foreground">
-                            papermark.com/view/...
+                            dataroom.bermudafranchisegroup.com/view/...
                           </span>
                         </div>
                       </div>

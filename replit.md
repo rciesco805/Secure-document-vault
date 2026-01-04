@@ -24,3 +24,35 @@ A critical architectural decision is the **platform-agnostic design**, ensuring 
 - **Replit Object Storage:** Provides encrypted (AES-256) file storage for documents.
 - **UPSTASH_REDIS_REST_URL:** Optional for rate limiting and session caching; graceful fallback if not configured.
 - **OpenSign (API - Future Integration):** Considered for legally compliant e-signatures and certificate generation, requires `OPENSIGN_API_TOKEN`. (Currently, the e-signature platform is self-contained).
+
+## BF Fund Sign - E-Signature Platform
+
+### Implementation Status
+- **Phase 1 (Complete):** Database schema, dashboard, document creation, recipient management, field placement editor
+- **Phase 2 (Complete):** Public signing workflow with secure token-based access, signature canvas, email notifications
+
+### Key Files
+- `pages/sign/[id]/index.tsx` - Document detail page with recipient management
+- `pages/sign/[id]/prepare.tsx` - Field placement editor for positioning signature fields
+- `pages/view/sign/[token].tsx` - Public signing page (no auth required)
+- `pages/api/sign/[token].ts` - API for retrieving/submitting signatures
+- `pages/api/teams/[teamId]/signature-documents/[documentId]/send.ts` - Send document for signing
+- `components/emails/signature-request.tsx` - Email template for signature requests
+- `prisma/schema/signature.prisma` - Database schema
+
+### Signing Flow
+1. Admin creates document and adds recipients
+2. Admin places signature fields on document pages
+3. Admin clicks "Send for Signature"
+4. System generates unique signing tokens per recipient
+5. Recipients receive email with secure signing link
+6. Recipients view document and draw signature
+7. System validates required fields and updates status
+8. Document status: DRAFT → SENT → VIEWED → PARTIALLY_SIGNED → COMPLETED
+
+### Security Features
+- Token-based access (no authentication required for signers)
+- Per-recipient field authorization (can only update own fields)
+- Expiration date enforcement
+- Transactional updates for data integrity
+- IP address and user agent logging for audit trail

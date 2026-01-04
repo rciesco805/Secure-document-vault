@@ -352,7 +352,7 @@ async function handlePost(
         .filter((r) => r.status === "SIGNED")
         .map((r) => `${r.name} (${r.email})`);
 
-      const baseUrl = process.env.NEXTAUTH_URL || `https://${req.headers.host}`;
+      const baseUrl = process.env.NEXTAUTH_URL;
 
       const emailPromises: Promise<any>[] = [];
 
@@ -385,7 +385,7 @@ async function handlePost(
               teamName: document.team.name,
               completedAt,
               signersList,
-              documentUrl: `${baseUrl}/sign/${document.id}`,
+              documentUrl: baseUrl ? `${baseUrl}/sign/${document.id}` : undefined,
             }),
           }).catch((err) => {
             console.error(`Failed to send completion email to owner:`, err);

@@ -159,6 +159,20 @@ All features verified as platform-agnostic. No hardcoded dataroom IDs in source 
 
 ### January 2026
 
+**E-Signature Platform (BF Fund Sign)**
+- Full company-wide e-signature system accessible at `/sign`
+- Database models: SignatureDocument, SignatureRecipient, SignatureField
+- Dashboard: View documents by status (Draft, Sent, Viewed, Completed, etc.)
+- Document creation: Upload PDF, add recipients with roles (Signer, Viewer, Approver)
+- Field placement: Visual editor to place signature, initials, date, and text fields
+- Status tracking: Monitor signature progress per recipient
+- Key files:
+  - `pages/sign/` - E-signature UI pages
+  - `pages/api/teams/[teamId]/signature-documents/` - CRUD API endpoints
+  - `lib/swr/use-signature-documents.ts` - SWR hooks for data fetching
+  - `prisma/schema/signature.prisma` - Database models
+- Platform-agnostic: All routes use dynamic teamId parameters
+
 **Google OAuth Added**
 - Admins can now sign in with Google accounts
 - Requires `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` secrets

@@ -26,6 +26,33 @@ export interface SignatureRecipient {
   declinedReason: string | null;
 }
 
+export type SignatureFieldType =
+  | "SIGNATURE"
+  | "INITIALS"
+  | "DATE_SIGNED"
+  | "TEXT"
+  | "CHECKBOX"
+  | "NAME"
+  | "EMAIL"
+  | "COMPANY"
+  | "TITLE";
+
+export interface SignatureField {
+  id: string;
+  documentId: string;
+  recipientId: string | null;
+  type: SignatureFieldType;
+  pageNumber: number;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  required: boolean;
+  placeholder: string | null;
+  value: string | null;
+  signedAt: string | null;
+}
+
 export interface SignatureDocument {
   id: string;
   title: string;
@@ -44,6 +71,7 @@ export interface SignatureDocument {
   createdAt: string;
   updatedAt: string;
   recipients: SignatureRecipient[];
+  fields?: SignatureField[];
   _count?: {
     recipients: number;
     fields: number;

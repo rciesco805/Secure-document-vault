@@ -109,6 +109,7 @@ const Folder = memo<FolderProps>(
 
     const isFolderOpen = open === undefined ? isOpen : open;
     const hasChildren = React.Children.count(children) > 0;
+    const hasCustomStyles = className?.includes("hover:!bg-white");
 
     return (
       <li
@@ -121,9 +122,11 @@ const Folder = memo<FolderProps>(
           title={name}
           className={cn(
             "inline-flex w-full cursor-pointer items-center overflow-hidden",
-            "rounded-md text-foreground duration-100 hover:bg-gray-100 hover:dark:bg-muted",
+            "rounded-md duration-100",
+            !hasCustomStyles && "text-foreground hover:bg-gray-100 hover:dark:bg-muted",
             "px-3 py-1.5 leading-6",
-            active && "bg-gray-100 font-semibold dark:bg-muted",
+            active && !hasCustomStyles && "bg-gray-100 font-semibold dark:bg-muted",
+            active && hasCustomStyles && "font-semibold",
             disable && "pointer-events-none cursor-auto opacity-50",
             className,
           )}

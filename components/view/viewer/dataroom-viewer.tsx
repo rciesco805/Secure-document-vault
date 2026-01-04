@@ -354,7 +354,7 @@ export default function DataroomViewer({
           allowDownload={allowDownload && item.canDownload}
           isProcessing={isProcessing}
           dataroomIndexEnabled={dataroomIndexEnabled}
-          accentColor={brand?.accentColor}
+          accentColor={brand?.accentColor || undefined}
         />
       );
     }
@@ -370,7 +370,7 @@ export default function DataroomViewer({
         viewId={viewId}
         allowDownload={item.allowDownload}
         dataroomIndexEnabled={dataroomIndexEnabled}
-        accentColor={brand?.accentColor}
+        accentColor={brand?.accentColor || undefined}
       />
     );
   };
@@ -414,6 +414,7 @@ export default function DataroomViewer({
                   setFolderId={setFolderId}
                   folderId={folderId}
                   dataroomIndexEnabled={dataroomIndexEnabled}
+                  accentColor={brand?.accentColor || undefined}
                 />
                 <ScrollBar orientation="horizontal" />
                 <ScrollBar orientation="vertical" />
@@ -454,6 +455,7 @@ export default function DataroomViewer({
                               setFolderId={setFolderId}
                               folderId={folderId}
                               dataroomIndexEnabled={dataroomIndexEnabled}
+                              accentColor={brand?.accentColor || undefined}
                             />
                           </div>
                           <SheetPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary">

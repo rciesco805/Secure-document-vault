@@ -6,6 +6,7 @@ import { DataroomFolder } from "@prisma/client";
 import { HomeIcon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { determineTextColor } from "@/lib/utils/determine-text-color";
 import {
   HIERARCHICAL_DISPLAY_STYLE,
   getHierarchicalDisplayName,
@@ -91,12 +92,14 @@ const FolderComponent = memo(
     setFolderId,
     folderPath,
     dataroomIndexEnabled,
+    textColor,
   }: {
     folder: DataroomFolderWithDocuments;
     folderId: string | null;
     setFolderId: React.Dispatch<React.SetStateAction<string | null>>;
     folderPath: Set<string> | null;
     dataroomIndexEnabled?: boolean;
+    textColor?: string;
   }) => {
     const router = useRouter();
 
@@ -134,6 +137,7 @@ const FolderComponent = memo(
             setFolderId={setFolderId}
             folderPath={folderPath}
             dataroomIndexEnabled={dataroomIndexEnabled}
+            textColor={textColor}
           />
         )),
       [
@@ -142,6 +146,7 @@ const FolderComponent = memo(
         setFolderId,
         folderPath,
         dataroomIndexEnabled,
+        textColor,
       ],
     );
 
@@ -149,6 +154,8 @@ const FolderComponent = memo(
     const isChildActive =
       folderPath?.has(folder.id) ||
       folder.childFolders.some((childFolder) => childFolder.id === folderId);
+
+    const hasCustomColor = !!textColor;
 
     return (
       <div
@@ -164,6 +171,10 @@ const FolderComponent = memo(
           active={isActive}
           childActive={isChildActive}
           onToggle={() => setFolderId(folder.id)}
+          className={hasCustomColor ? cn(
+            "hover:!bg-white/10",
+            isActive && "!bg-white/20"
+          ) : undefined}
         >
           {childFolders}
           {documents}
@@ -178,19 +189,24 @@ const HomeLink = memo(
   ({
     folderId,
     setFolderId,
+    textColor,
   }: {
     folderId: string | null;
     setFolderId: React.Dispatch<React.SetStateAction<string | null>>;
+    textColor?: string;
   }) => {
+    const hasCustomColor = !!textColor;
     return (
       <li
         className={cn(
           "flex list-none",
-          "rounded-md text-foreground transition-all duration-200 ease-in-out",
-          "hover:bg-gray-100 hover:shadow-sm hover:dark:bg-muted",
+          "rounded-md transition-all duration-200 ease-in-out",
+          !hasCustomColor && "text-foreground",
+          hasCustomColor ? "hover:bg-white/10" : "hover:bg-gray-100 hover:shadow-sm hover:dark:bg-muted",
           "px-3 py-1.5 leading-6",
-          folderId === null && "bg-gray-100 font-semibold dark:bg-muted",
+          folderId === null && (hasCustomColor ? "bg-white/20 font-semibold" : "bg-gray-100 font-semibold dark:bg-muted"),
         )}
+        style={hasCustomColor ? { color: textColor } : undefined}
       >
         <span
           className="inline-flex w-full cursor-pointer items-center"
@@ -216,12 +232,14 @@ const SidebarFolders = ({
   folderId,
   setFolderId,
   dataroomIndexEnabled,
+  accentColor,
 }: {
   folders: DataroomFolder[];
   documents: DataroomDocumentWithVersion[];
   folderId: string | null;
   setFolderId: React.Dispatch<React.SetStateAction<string | null>>;
   dataroomIndexEnabled?: boolean;
+  accentColor?: string;
 }) => {
   const nestedFolders = useMemo(() => {
     if (folders) {
@@ -245,20 +263,26 @@ const SidebarFolders = ({
     return null;
   }, [folders, documents, folderId]);
 
+  const hasCustomAccent = !!accentColor;
+  const textColor = hasCustomAccent ? determineTextColor(accentColor) : undefined;
+
   return (
-    <FileTree>
-      <HomeLink folderId={folderId} setFolderId={setFolderId} />
-      {nestedFolders.map((folder) => (
-        <FolderComponent
-          key={folder.id}
-          folder={folder}
-          folderId={folderId}
-          setFolderId={setFolderId}
-          folderPath={folderPath}
-          dataroomIndexEnabled={dataroomIndexEnabled}
-        />
-      ))}
-    </FileTree>
+    <div style={hasCustomAccent ? { color: textColor } : undefined}>
+      <FileTree>
+        <HomeLink folderId={folderId} setFolderId={setFolderId} textColor={textColor} />
+        {nestedFolders.map((folder) => (
+          <FolderComponent
+            key={folder.id}
+            folder={folder}
+            folderId={folderId}
+            setFolderId={setFolderId}
+            folderPath={folderPath}
+            dataroomIndexEnabled={dataroomIndexEnabled}
+            textColor={textColor}
+          />
+        ))}
+      </FileTree>
+    </div>
   );
 };
 
@@ -268,12 +292,14 @@ export function ViewFolderTree({
   setFolderId,
   folderId,
   dataroomIndexEnabled,
+  accentColor,
 }: {
   folders: DataroomFolder[];
   documents: DataroomDocumentWithVersion[];
   setFolderId: React.Dispatch<React.SetStateAction<string | null>>;
   folderId: string | null;
   dataroomIndexEnabled?: boolean;
+  accentColor?: string;
 }) {
   if (!folders) return null;
 
@@ -284,6 +310,7 @@ export function ViewFolderTree({
       setFolderId={setFolderId}
       folderId={folderId}
       dataroomIndexEnabled={dataroomIndexEnabled}
+      accentColor={accentColor}
     />
   );
 }

@@ -30,29 +30,33 @@ A critical architectural decision is the **platform-agnostic design**, ensuring 
 ### Implementation Status
 - **Phase 1 (Complete):** Database schema, dashboard, document creation, recipient management, field placement editor
 - **Phase 2 (Complete):** Public signing workflow with secure token-based access, signature canvas, email notifications
-- **Phase 3 (Complete):** Completion notification emails, audit trail view, download signed documents with embedded signatures
+- **Phase 3 (Complete):** Completion notification emails, audit trail view, download signed documents with embedded signatures, automatic reminders, sequential signing enforcement
 
 ### Key Files
 - `pages/sign/[id]/index.tsx` - Document detail page with recipient management and audit trail
 - `pages/sign/[id]/prepare.tsx` - Field placement editor for positioning signature fields
 - `pages/view/sign/[token].tsx` - Public signing page (no auth required)
 - `pages/api/sign/[token].ts` - API for retrieving/submitting signatures
-- `pages/api/teams/[teamId]/signature-documents/[documentId]/send.ts` - Send document for signing
+- `pages/api/teams/[teamId]/signature-documents/[documentId]/send.ts` - Send document for signing with sequential signing support
+- `pages/api/teams/[teamId]/signature-documents/[documentId]/remind.ts` - Send reminder emails to unsigned recipients
 - `pages/api/teams/[teamId]/signature-documents/[documentId]/download.ts` - Download signed PDF with embedded signatures
 - `components/signature/audit-trail.tsx` - Audit trail component showing document history
 - `components/emails/signature-request.tsx` - Email template for signature requests
 - `components/emails/signature-completed.tsx` - Email template for completion notifications
+- `components/emails/signature-reminder.tsx` - Email template for signing reminders
 - `prisma/schema/signature.prisma` - Database schema
 
 ### Signing Flow
-1. Admin creates document and adds recipients
+1. Admin creates document and adds recipients with signing order
 2. Admin places signature fields on document pages
 3. Admin clicks "Send for Signature"
-4. System generates unique signing tokens per recipient
+4. System sends to lowest signing order first (sequential signing by default)
 5. Recipients receive email with secure signing link
 6. Recipients view document and draw signature
 7. System validates required fields and updates status
-8. Document status: DRAFT → SENT → VIEWED → PARTIALLY_SIGNED → COMPLETED
+8. After each signer completes, next signers in order receive their emails
+9. Admin can send reminders to unsigned recipients
+10. Document status: DRAFT → SENT → VIEWED → PARTIALLY_SIGNED → COMPLETED
 
 ### Security Features
 - Token-based access (no authentication required for signers)
@@ -60,3 +64,15 @@ A critical architectural decision is the **platform-agnostic design**, ensuring 
 - Expiration date enforcement
 - Transactional updates for data integrity
 - IP address and user agent logging for audit trail
+
+### Reminder System
+- Manual reminders: Admin can send reminder emails from the document actions menu
+- Reminder emails include document title, days waiting, and expiration date if set
+- Only unsigned non-viewer recipients receive reminders
+
+### Sequential Signing
+- Signing order numbers displayed as badges on recipient avatars
+- Recipients sorted by signing order in the UI
+- Only lowest order signers receive emails initially
+- After a signer completes, the next signers in order automatically receive their signing emails
+- Sequential signing is enabled by default when sending documents

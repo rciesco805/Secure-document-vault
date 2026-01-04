@@ -245,6 +245,30 @@ export default function LinkSheet({
     setData((prev) => {
       const isGroupLink = prev.audienceType === LinkAudienceType.GROUP;
 
+      // Parse watermarkConfig if it's a string (from database)
+      let parsedWatermarkConfig: WatermarkConfig | null = null;
+      if (preset.enableWatermark && preset.watermarkConfig) {
+        try {
+          parsedWatermarkConfig = typeof preset.watermarkConfig === 'string' 
+            ? JSON.parse(preset.watermarkConfig) 
+            : preset.watermarkConfig as WatermarkConfig;
+        } catch {
+          parsedWatermarkConfig = null;
+        }
+      }
+
+      // Parse customFields if it's a string (from database)
+      let parsedCustomFields: CustomFieldData[] = [];
+      if (preset.customFields) {
+        try {
+          parsedCustomFields = typeof preset.customFields === 'string'
+            ? JSON.parse(preset.customFields)
+            : (preset.customFields as CustomFieldData[]);
+        } catch {
+          parsedCustomFields = [];
+        }
+      }
+
       return {
         ...prev,
         name: prev.name, // Keep existing name
@@ -275,6 +299,11 @@ export default function LinkSheet({
           preset.enableScreenshotProtection || prev.enableScreenshotProtection,
         enableNotification: !!preset.enableNotification,
         showBanner: preset.showBanner ?? prev.showBanner,
+        // Watermark settings from preset
+        enableWatermark: preset.enableWatermark ?? prev.enableWatermark,
+        watermarkConfig: parsedWatermarkConfig || prev.watermarkConfig,
+        // Custom fields from preset
+        customFields: parsedCustomFields.length > 0 ? parsedCustomFields : prev.customFields,
       };
     });
 

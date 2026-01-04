@@ -5,6 +5,7 @@ import { Download, FolderIcon, MoreVerticalIcon } from "lucide-react";
 import { toast } from "sonner";
 
 import { timeAgo } from "@/lib/utils";
+import { determineTextColor } from "@/lib/utils/determine-text-color";
 import {
   HIERARCHICAL_DISPLAY_STYLE,
   getHierarchicalDisplayName,
@@ -28,6 +29,7 @@ type FolderCardProps = {
   viewId?: string;
   allowDownload: boolean;
   dataroomIndexEnabled?: boolean;
+  accentColor?: string | null;
 };
 export default function FolderCard({
   folder,
@@ -38,8 +40,11 @@ export default function FolderCard({
   viewId,
   allowDownload,
   dataroomIndexEnabled,
+  accentColor,
 }: FolderCardProps) {
   const [open, setOpen] = useState(false);
+  const hasCustomAccent = !!accentColor;
+  const textColor = hasCustomAccent ? determineTextColor(accentColor) : undefined;
 
   // Get hierarchical display name
   const displayName = getHierarchicalDisplayName(
@@ -103,14 +108,14 @@ export default function FolderCard({
     <div className="group/row relative flex items-center justify-between rounded-lg border-0 p-3 ring-1 ring-gray-400 transition-all hover:bg-secondary hover:ring-gray-500 dark:bg-secondary dark:ring-gray-500 hover:dark:ring-gray-400 sm:p-4">
       <div className="flex min-w-0 shrink items-center space-x-2 sm:space-x-4">
         <div className="mx-0.5 flex w-8 items-center justify-center text-center sm:mx-1">
-          <FolderIcon className="h-8 w-8" strokeWidth={1} />
+          <FolderIcon className="h-8 w-8" strokeWidth={1} style={hasCustomAccent ? { color: textColor } : undefined} />
         </div>
 
         <div className="flex-col">
           <div className="flex items-center">
             <h2
-              className="min-w-0 max-w-[300px] truncate text-sm font-semibold leading-6 text-foreground sm:max-w-lg"
-              style={HIERARCHICAL_DISPLAY_STYLE}
+              className={`min-w-0 max-w-[300px] truncate text-sm font-semibold leading-6 sm:max-w-lg ${!hasCustomAccent ? "text-foreground" : ""}`}
+              style={{ ...HIERARCHICAL_DISPLAY_STYLE, ...(hasCustomAccent && { color: textColor }) }}
             >
               <div
                 onClick={() => setFolderId(folder.id)}
@@ -121,7 +126,10 @@ export default function FolderCard({
               </div>
             </h2>
           </div>
-          <div className="mt-1 flex items-center space-x-1 text-xs leading-5 text-muted-foreground">
+          <div 
+            className={`mt-1 flex items-center space-x-1 text-xs leading-5 ${!hasCustomAccent ? "text-muted-foreground" : ""}`} 
+            style={hasCustomAccent ? { color: textColor, opacity: 0.7 } : undefined}
+          >
             <p className="truncate">Updated {timeAgo(folder.updatedAt)}</p>
           </div>
         </div>

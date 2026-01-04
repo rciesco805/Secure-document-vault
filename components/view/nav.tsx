@@ -309,7 +309,7 @@ export default function Nav({
                         color: determineTextColor(brand?.brandColor),
                       }}
                     >
-                      Home
+                      Dataroom Home
                     </BreadcrumbLink>
                   </BreadcrumbItem>
                   {type === "notion" ? (

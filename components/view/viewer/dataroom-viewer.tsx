@@ -354,6 +354,7 @@ export default function DataroomViewer({
           allowDownload={allowDownload && item.canDownload}
           isProcessing={isProcessing}
           dataroomIndexEnabled={dataroomIndexEnabled}
+          accentColor={brand?.accentColor}
         />
       );
     }
@@ -369,6 +370,7 @@ export default function DataroomViewer({
         viewId={viewId}
         allowDownload={item.allowDownload}
         dataroomIndexEnabled={dataroomIndexEnabled}
+        accentColor={brand?.accentColor}
       />
     );
   };
@@ -471,7 +473,7 @@ export default function DataroomViewer({
                             onClick={() => setFolderId(null)}
                             className="cursor-pointer"
                           >
-                            Home
+                            Dataroom Home
                           </BreadcrumbLink>
                         </BreadcrumbItem>
 

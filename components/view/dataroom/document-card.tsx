@@ -8,6 +8,7 @@ import { toast } from "sonner";
 
 import { timeAgo } from "@/lib/utils";
 import { cn } from "@/lib/utils";
+import { determineTextColor } from "@/lib/utils/determine-text-color";
 import { fileIcon } from "@/lib/utils/get-file-icon";
 import {
   HIERARCHICAL_DISPLAY_STYLE,
@@ -43,6 +44,7 @@ type DocumentsCardProps = {
   allowDownload: boolean;
   isProcessing?: boolean;
   dataroomIndexEnabled?: boolean;
+  accentColor?: string | null;
 };
 
 export default function DocumentCard({
@@ -53,12 +55,15 @@ export default function DocumentCard({
   allowDownload,
   isProcessing = false,
   dataroomIndexEnabled,
+  accentColor,
 }: DocumentsCardProps) {
   const { theme, systemTheme } = useTheme();
   const canDownload = document.canDownload && allowDownload;
 
+  const hasCustomAccent = !!accentColor;
+  const textColor = hasCustomAccent ? determineTextColor(accentColor) : undefined;
   const isLight =
-    theme === "light" || (theme === "system" && systemTheme === "light");
+    theme === "light" || (theme === "system" && systemTheme === "light") || (hasCustomAccent && textColor === "black");
   const router = useRouter();
 
   // Get hierarchical display name
@@ -201,8 +206,11 @@ export default function DocumentCard({
         <div className="flex-col">
           <div className="flex items-center">
             <h2
-              className="min-w-0 max-w-[300px] truncate text-sm font-semibold leading-6 text-foreground sm:max-w-lg"
-              style={HIERARCHICAL_DISPLAY_STYLE}
+              className={cn(
+                "min-w-0 max-w-[300px] truncate text-sm font-semibold leading-6 sm:max-w-lg",
+                !hasCustomAccent && "text-foreground"
+              )}
+              style={{ ...HIERARCHICAL_DISPLAY_STYLE, ...(hasCustomAccent && { color: textColor }) }}
             >
               <button
                 onClick={handleDocumentClick}
@@ -211,7 +219,7 @@ export default function DocumentCard({
               >
                 <span>{displayName}</span>
                 {isProcessing && (
-                  <span className="ml-2 text-xs text-muted-foreground">
+                  <span className={cn("ml-2 text-xs", !hasCustomAccent && "text-muted-foreground")} style={hasCustomAccent ? { opacity: 0.7 } : undefined}>
                     (Processing...)
                   </span>
                 )}
@@ -219,7 +227,10 @@ export default function DocumentCard({
               </button>
             </h2>
           </div>
-          <div className="mt-1 flex items-center space-x-1 text-xs leading-5 text-muted-foreground">
+          <div 
+            className={cn("mt-1 flex items-center space-x-1 text-xs leading-5", !hasCustomAccent && "text-muted-foreground")} 
+            style={hasCustomAccent ? { color: textColor, opacity: 0.7 } : undefined}
+          >
             <p className="truncate">
               Updated {timeAgo(document.versions[0].updatedAt)}
             </p>

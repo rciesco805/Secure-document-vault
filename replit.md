@@ -40,7 +40,7 @@ The BF Fund Investor Dataroom is a secure, self-hosted investor portal for Bermu
 | Decision | Implementation |
 |----------|----------------|
 | Self-hosted | All billing/upgrade code disabled; `datarooms-plus` plan hardcoded |
-| Authentication | Magic link only, **1-hour expiration** |
+| Authentication | Magic links (1-hour expiration) + Google OAuth for admins |
 | Admin Access | Allowlist: 2 emails (investors@bermudafranchisegroup.com, rciesco@gmail.com) |
 | Email Required | `emailProtected=true` default |
 | Session-based Auth | `emailAuthenticated=false` - verify once per session |
@@ -84,7 +84,7 @@ The BF Fund Investor Dataroom is a secure, self-hosted investor portal for Bermu
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS + shadcn/ui
 - **Database**: PostgreSQL via Prisma ORM
-- **Auth**: NextAuth.js (magic links via Resend)
+- **Auth**: NextAuth.js (magic links via Resend + Google OAuth)
 - **File Storage**: Replit Object Storage (AES-256)
 - **Analytics**: PostgreSQL only (PageView model) - Tinybird NOT used
 
@@ -158,6 +158,17 @@ All features verified as platform-agnostic. No hardcoded dataroom IDs in source 
 ## Change Log
 
 ### January 2026
+
+**Google OAuth Added**
+- Admins can now sign in with Google accounts
+- Requires `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` secrets
+- Redirect URI: `https://dataroom.bermudafranchisegroup.com/api/auth/callback/google`
+
+**UI/UX Improvements**
+- "Home" renamed to "Dataroom Home" in breadcrumb navigation
+- Auto-adjusting text color on document/folder cards based on background brightness
+- Uses luminance calculation to ensure text readability on dark/light backgrounds
+- Utility: `lib/utils/determine-text-color.ts`
 
 **Platform Audit Completed**
 - Verified all features work for ANY dataroom, not tied to specific IDs

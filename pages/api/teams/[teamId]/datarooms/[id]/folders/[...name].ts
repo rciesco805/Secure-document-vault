@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
+import slugify from "@sindresorhus/slugify";
 import { getServerSession } from "next-auth/next";
 
 import prisma from "@/lib/prisma";
@@ -35,7 +36,9 @@ export default async function handle(
     }
 
     const validatedName = nameValidation.data;
-    const path = "/" + validatedName.join("/"); // construct the materialized path
+    // Slugify each path segment to match how folders are stored in the database
+    const slugifiedPath = validatedName.map((segment) => slugify(segment));
+    const path = "/" + slugifiedPath.join("/"); // construct the materialized path
 
     try {
       // Check if the user is part of the team

@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
+import slugify from "@sindresorhus/slugify";
 import { getServerSession } from "next-auth/next";
 
 import prisma from "@/lib/prisma";
@@ -35,6 +36,8 @@ export default async function handle(
     }
 
     const validatedName = nameValidation.data;
+    // Slugify each path segment to match how folders are stored in the database
+    const slugifiedName = validatedName.map((segment) => slugify(segment));
     let folderNames = [];
 
     try {
@@ -54,8 +57,8 @@ export default async function handle(
         return res.status(401).end("Unauthorized");
       }
 
-      for (let i = 0; i < validatedName.length; i++) {
-        const path = "/" + validatedName.slice(0, i + 1).join("/"); // construct the materialized path
+      for (let i = 0; i < slugifiedName.length; i++) {
+        const path = "/" + slugifiedName.slice(0, i + 1).join("/"); // construct the materialized path
         console.log("path", path);
 
         const folder = await prisma.dataroomFolder.findUnique({

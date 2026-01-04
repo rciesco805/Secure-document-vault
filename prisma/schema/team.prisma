@@ -29,6 +29,10 @@ model Team {
   links Link[]
   views View[]
   workflows Workflow[]
+  
+  // E-Signature Platform
+  signatureDocuments  SignatureDocument[]
+  signatureTemplates  SignatureTemplate[]
 
   plan           String    @default("datarooms-plus")
   stripeId       String?   @unique // Stripe customer ID

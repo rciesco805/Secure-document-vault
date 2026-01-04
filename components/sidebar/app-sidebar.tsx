@@ -14,6 +14,7 @@ import {
   FolderIcon,
   HouseIcon,
   Loader,
+  PenLineIcon,
   ServerIcon,
   WorkflowIcon,
 } from "lucide-react";
@@ -93,6 +94,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         url: "/visitors",
         icon: ContactIcon,
         current: router.pathname.includes("visitors"),
+        disabled: false,
+      },
+      {
+        title: "E-Signature",
+        url: "/sign",
+        icon: PenLineIcon,
+        current: router.pathname.includes("/sign"),
         disabled: false,
       },
       {

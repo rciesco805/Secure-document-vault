@@ -5,6 +5,7 @@ import { useTeam } from "@/context/team-context";
 import { toast } from "sonner";
 import {
   ArrowLeftIcon,
+  BellIcon,
   CheckCircle2Icon,
   ClockIcon,
   DownloadIcon,
@@ -166,6 +167,30 @@ export default function SignatureDocumentDetail() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isReminding, setIsReminding] = useState(false);
+
+  const handleRemind = async () => {
+    if (!teamId || !document) return;
+    setIsReminding(true);
+    try {
+      const response = await fetch(
+        `/api/teams/${teamId}/signature-documents/${document.id}/remind`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to send reminders");
+      }
+      toast.success(data.message);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to send reminders");
+    } finally {
+      setIsReminding(false);
+    }
+  };
 
   const handleDownload = async () => {
     if (!teamId || !document) return;
@@ -353,6 +378,15 @@ export default function SignatureDocumentDetail() {
                   <DownloadIcon className="mr-2 h-4 w-4" />
                   {isDownloading ? "Downloading..." : document.status === "COMPLETED" ? "Download Signed PDF" : "Download PDF"}
                 </DropdownMenuItem>
+                {document.status !== "DRAFT" &&
+                  document.status !== "COMPLETED" &&
+                  document.status !== "VOIDED" &&
+                  document.status !== "EXPIRED" && (
+                  <DropdownMenuItem onClick={handleRemind} disabled={isReminding}>
+                    <BellIcon className="mr-2 h-4 w-4" />
+                    {isReminding ? "Sending..." : "Send Reminder"}
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuSeparator />
                 {document.status !== "DRAFT" &&
                   document.status !== "COMPLETED" &&
@@ -442,14 +476,21 @@ export default function SignatureDocumentDetail() {
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {document.recipients.map((recipient) => (
+                    {document.recipients
+                      .sort((a, b) => a.signingOrder - b.signingOrder)
+                      .map((recipient, index) => (
                       <div
                         key={recipient.id}
                         className="flex items-center justify-between rounded-lg border p-4"
                       >
                         <div className="flex items-center gap-3">
-                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800 relative">
                             <UserIcon className="h-5 w-5 text-gray-500" />
+                            {recipient.role !== "VIEWER" && (
+                              <span className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
+                                {recipient.signingOrder}
+                              </span>
+                            )}
                           </div>
                           <div>
                             <p className="font-medium">{recipient.name}</p>

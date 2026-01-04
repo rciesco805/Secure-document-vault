@@ -6,6 +6,65 @@ import { nanoid } from "nanoid";
 import { sendEmail } from "@/lib/resend";
 import SignatureRequestEmail from "@/components/emails/signature-request";
 
+export async function sendToNextSigners(
+  documentId: string,
+  teamName: string,
+  senderName: string
+) {
+  const baseUrl = process.env.NEXTAUTH_URL;
+  if (!baseUrl) {
+    console.error("NEXTAUTH_URL not configured, cannot send signing emails");
+    return;
+  }
+
+  const document = await prisma.signatureDocument.findFirst({
+    where: { id: documentId },
+    include: { recipients: { orderBy: { signingOrder: "asc" } } },
+  });
+
+  if (!document) return;
+
+  const pendingRecipients = document.recipients.filter(
+    (r) => r.status === "PENDING" && r.role !== "VIEWER"
+  );
+
+  if (pendingRecipients.length === 0) return;
+
+  const lowestOrder = Math.min(...pendingRecipients.map((r) => r.signingOrder));
+  const nextSigners = pendingRecipients.filter((r) => r.signingOrder === lowestOrder);
+
+  for (const recipient of nextSigners) {
+    const signingToken = nanoid(32);
+    const signingUrl = `${baseUrl}/view/sign/${signingToken}`;
+
+    await prisma.signatureRecipient.update({
+      where: { id: recipient.id },
+      data: {
+        signingToken,
+        signingUrl,
+        status: "SENT",
+      },
+    });
+
+    try {
+      await sendEmail({
+        to: recipient.email,
+        subject: document.emailSubject || `Please sign: ${document.title}`,
+        react: SignatureRequestEmail({
+          recipientName: recipient.name,
+          documentTitle: document.title,
+          senderName,
+          teamName,
+          message: document.emailMessage || undefined,
+          signingUrl,
+        }),
+      });
+    } catch (emailError) {
+      console.error(`Failed to send email to ${recipient.email}:`, emailError);
+    }
+  }
+}
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
@@ -63,7 +122,22 @@ export default async function handler(
     const senderName = (session.user as any).name || "BF Fund";
     const baseUrl = process.env.NEXTAUTH_URL || `https://${req.headers.host}`;
 
-    for (const recipient of document.recipients) {
+    const { sequentialSigning = true } = req.body as { sequentialSigning?: boolean };
+
+    const signersAndApprovers = document.recipients.filter((r) => r.role !== "VIEWER");
+    const viewers = document.recipients.filter((r) => r.role === "VIEWER");
+
+    const lowestOrder = Math.min(...signersAndApprovers.map((r) => r.signingOrder));
+    
+    const recipientsToSendNow = sequentialSigning
+      ? signersAndApprovers.filter((r) => r.signingOrder === lowestOrder)
+      : signersAndApprovers;
+
+    const recipientsToWait = sequentialSigning
+      ? signersAndApprovers.filter((r) => r.signingOrder > lowestOrder)
+      : [];
+
+    for (const recipient of recipientsToSendNow) {
       const signingToken = nanoid(32);
       const signingUrl = `${baseUrl}/view/sign/${signingToken}`;
 
@@ -76,24 +150,29 @@ export default async function handler(
         },
       });
 
-      if (recipient.role !== "VIEWER") {
-        try {
-          await sendEmail({
-            to: recipient.email,
-            subject: document.emailSubject || `Please sign: ${document.title}`,
-            react: SignatureRequestEmail({
-              recipientName: recipient.name,
-              documentTitle: document.title,
-              senderName,
-              teamName: document.team.name,
-              message: document.emailMessage || undefined,
-              signingUrl,
-            }),
-          });
-        } catch (emailError) {
-          console.error(`Failed to send email to ${recipient.email}:`, emailError);
-        }
+      try {
+        await sendEmail({
+          to: recipient.email,
+          subject: document.emailSubject || `Please sign: ${document.title}`,
+          react: SignatureRequestEmail({
+            recipientName: recipient.name,
+            documentTitle: document.title,
+            senderName,
+            teamName: document.team.name,
+            message: document.emailMessage || undefined,
+            signingUrl,
+          }),
+        });
+      } catch (emailError) {
+        console.error(`Failed to send email to ${recipient.email}:`, emailError);
       }
+    }
+
+    for (const recipient of [...recipientsToWait, ...viewers]) {
+      await prisma.signatureRecipient.update({
+        where: { id: recipient.id },
+        data: { status: "PENDING" },
+      });
     }
 
     const updatedDocument = await prisma.signatureDocument.update({

@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import { getFile } from "@/lib/files/get-file";
 import { sendEmail } from "@/lib/resend";
 import SignatureCompletedEmail from "@/components/emails/signature-completed";
+import { sendToNextSigners } from "@/pages/api/teams/[teamId]/signature-documents/[documentId]/send";
 
 export default async function handler(
   req: NextApiRequest,
@@ -394,6 +395,16 @@ async function handlePost(
       }
 
       await Promise.all(emailPromises);
+    } else {
+      const owner = await prisma.user.findFirst({
+        where: { id: document.createdById },
+        select: { name: true },
+      });
+      await sendToNextSigners(
+        document.id,
+        document.team.name,
+        owner?.name || "BF Fund"
+      );
     }
 
     return res.status(200).json({

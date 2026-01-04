@@ -27,6 +27,7 @@ export interface SignatureRecipient {
   ipAddress: string | null;
   userAgent: string | null;
   signatureImage: string | null;
+  signingUrl: string | null;
 }
 
 export type SignatureFieldType =

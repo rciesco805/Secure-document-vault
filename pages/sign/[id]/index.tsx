@@ -8,11 +8,14 @@ import {
   BellIcon,
   CheckCircle2Icon,
   ClockIcon,
+  CopyIcon,
   DownloadIcon,
+  EditIcon,
   EyeIcon,
   FileTextIcon,
   MailIcon,
   MoreHorizontalIcon,
+  RefreshCwIcon,
   SendIcon,
   Trash2Icon,
   UserIcon,
@@ -57,6 +60,17 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import AuditTrail from "@/components/signature/audit-trail";
 import { QRCodeDialog } from "@/components/signature/qr-code-dialog";
 
@@ -169,6 +183,15 @@ export default function SignatureDocumentDetail() {
   const [isSending, setIsSending] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const [isReminding, setIsReminding] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
+  const [isCreatingCopy, setIsCreatingCopy] = useState(false);
+  const [editForm, setEditForm] = useState({
+    title: "",
+    description: "",
+    emailSubject: "",
+    emailMessage: "",
+  });
 
   const handleRemind = async () => {
     if (!teamId || !document) return;
@@ -292,6 +315,70 @@ export default function SignatureDocumentDetail() {
     }
   };
 
+  const openEditDialog = () => {
+    if (!document) return;
+    setEditForm({
+      title: document.title,
+      description: document.description || "",
+      emailSubject: document.emailSubject || "",
+      emailMessage: document.emailMessage || "",
+    });
+    setIsEditing(true);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!teamId || !document) return;
+    setIsSavingEdit(true);
+    try {
+      const response = await fetch(
+        `/api/teams/${teamId}/signature-documents/${document.id}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            title: editForm.title,
+            description: editForm.description || null,
+            emailSubject: editForm.emailSubject || null,
+            emailMessage: editForm.emailMessage || null,
+          }),
+        }
+      );
+      if (!response.ok) throw new Error("Failed to update document");
+      toast.success("Document updated successfully");
+      setIsEditing(false);
+      mutate();
+    } catch (error) {
+      toast.error("Failed to update document");
+    } finally {
+      setIsSavingEdit(false);
+    }
+  };
+
+  const handleCorrectAndResend = async () => {
+    if (!teamId || !document) return;
+    setIsCreatingCopy(true);
+    try {
+      const response = await fetch(
+        `/api/teams/${teamId}/signature-documents/${document.id}/correct`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.message || "Failed to create corrected copy");
+      }
+      const result = await response.json();
+      toast.success("Corrected copy created. The original has been voided.");
+      router.push(`/sign/${result.id}`);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to create corrected copy");
+    } finally {
+      setIsCreatingCopy(false);
+    }
+  };
+
   if (loading) {
     return (
       <AppLayout>
@@ -385,14 +472,50 @@ export default function SignatureDocumentDetail() {
                   <DownloadIcon className="mr-2 h-4 w-4" />
                   {isDownloading ? "Downloading..." : document.status === "COMPLETED" ? "Download Signed PDF" : "Download PDF"}
                 </DropdownMenuItem>
+                {document.status !== "COMPLETED" && document.status !== "VOIDED" && (
+                  <DropdownMenuItem onClick={openEditDialog}>
+                    <EditIcon className="mr-2 h-4 w-4" />
+                    Edit Details
+                  </DropdownMenuItem>
+                )}
                 {document.status !== "DRAFT" &&
                   document.status !== "COMPLETED" &&
                   document.status !== "VOIDED" &&
                   document.status !== "EXPIRED" && (
-                  <DropdownMenuItem onClick={handleRemind} disabled={isReminding}>
-                    <BellIcon className="mr-2 h-4 w-4" />
-                    {isReminding ? "Sending..." : "Send Reminder"}
-                  </DropdownMenuItem>
+                  <>
+                    <DropdownMenuItem onClick={handleRemind} disabled={isReminding}>
+                      <BellIcon className="mr-2 h-4 w-4" />
+                      {isReminding ? "Sending..." : "Send Reminder"}
+                    </DropdownMenuItem>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <DropdownMenuItem
+                          onSelect={(e) => e.preventDefault()}
+                        >
+                          <RefreshCwIcon className="mr-2 h-4 w-4" />
+                          Correct & Resend
+                        </DropdownMenuItem>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Correct and Resend?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This will void the current document and create a new draft copy
+                            that you can edit and resend. Any existing signatures will be lost.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={handleCorrectAndResend}
+                            disabled={isCreatingCopy}
+                          >
+                            {isCreatingCopy ? "Creating..." : "Create Corrected Copy"}
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </>
                 )}
                 <DropdownMenuSeparator />
                 {document.status !== "DRAFT" &&
@@ -568,6 +691,65 @@ export default function SignatureDocumentDetail() {
           </div>
         </div>
       </div>
+
+      <Dialog open={isEditing} onOpenChange={setIsEditing}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Edit Document Details</DialogTitle>
+            <DialogDescription>
+              Update the document title, description, and email settings.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-title">Title</Label>
+              <Input
+                id="edit-title"
+                value={editForm.title}
+                onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
+                placeholder="Document title"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-description">Description</Label>
+              <Textarea
+                id="edit-description"
+                value={editForm.description}
+                onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                placeholder="Optional description"
+                rows={2}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-subject">Email Subject</Label>
+              <Input
+                id="edit-subject"
+                value={editForm.emailSubject}
+                onChange={(e) => setEditForm({ ...editForm, emailSubject: e.target.value })}
+                placeholder="Email subject line"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-message">Email Message</Label>
+              <Textarea
+                id="edit-message"
+                value={editForm.emailMessage}
+                onChange={(e) => setEditForm({ ...editForm, emailMessage: e.target.value })}
+                placeholder="Message to recipients"
+                rows={3}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditing(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSaveEdit} disabled={isSavingEdit || !editForm.title.trim()}>
+              {isSavingEdit ? "Saving..." : "Save Changes"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AppLayout>
   );
 }

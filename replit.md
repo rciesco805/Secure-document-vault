@@ -114,6 +114,19 @@ The BF Fund Investor Dataroom is a secure, self-hosted investor portal for Bermu
 
 ## Change Log
 
+### January 2026
+
+**Email Verification Defaults Updated**
+- `emailAuthenticated=false` by default for all link types (Quick Add, General, Group)
+- Visitors enter email once at dataroom entry, then browse documents freely
+- Note: Allow/Deny lists still auto-enable email verification for security (verifying restricted emails)
+- Quick Add links use group-based access without email verification by default
+- Session-based access: Once verified, visitors navigate without re-entering email
+
+**Favicon Upload & Group Member Display**
+- Added favicon upload to dataroom branding settings
+- Group link edit modal now displays member emails in scrollable list
+
 ### December 2024 (Week 4)
 
 **PostgreSQL Analytics System**

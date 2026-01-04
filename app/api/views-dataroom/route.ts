@@ -755,17 +755,17 @@ export async function POST(request: NextRequest) {
             viewer?.id,
           );
 
-          // Only set cookies if session was successfully created (requires Redis)
+          let basePath = `/view/${linkId}`;
+          const cookieId = `pm_drs_${linkId}`;
+          let flagCookieId = `pm_drs_flag_${linkId}`;
+
+          if (link.domainId) {
+            basePath = `/${link.slug}`;
+            flagCookieId = `pm_drs_flag_${link.slug}`;
+          }
+
+          // Set Redis session cookie if available
           if (newDataroomSession) {
-            let basePath = `/view/${linkId}`;
-            const cookieId = `pm_drs_${linkId}`;
-            let flagCookieId = `pm_drs_flag_${linkId}`;
-
-            if (link.domainId) {
-              basePath = `/${link.slug}`;
-              flagCookieId = `pm_drs_flag_${link.slug}`;
-            }
-
             response.cookies.set(cookieId, newDataroomSession.token, {
               path: "/",
               expires: new Date(newDataroomSession.expiresAt),
@@ -775,6 +775,14 @@ export async function POST(request: NextRequest) {
             response.cookies.set(flagCookieId, "true", {
               path: basePath,
               expires: new Date(newDataroomSession.expiresAt),
+              sameSite: "strict",
+            });
+          } else {
+            // Redis not available - set flag cookie with 1-hour expiry for session-based navigation
+            const oneHourFromNow = new Date(Date.now() + 60 * 60 * 1000);
+            response.cookies.set(flagCookieId, "true", {
+              path: basePath,
+              expires: oneHourFromNow,
               sameSite: "strict",
             });
           }
@@ -1052,16 +1060,16 @@ export async function POST(request: NextRequest) {
           viewer?.id,
         );
 
-        // Only set cookies if session was successfully created (requires Redis)
-        if (newDataroomSession) {
-          let basePath = `/view/${linkId}`;
-          const cookieId = `pm_drs_${linkId}`;
-          let flagCookieId = `pm_drs_flag_${linkId}`;
-          if (link.domainId) {
-            basePath = `/${link.slug}`;
-            flagCookieId = `pm_drs_flag_${link.slug}`;
-          }
+        let basePath = `/view/${linkId}`;
+        const cookieId = `pm_drs_${linkId}`;
+        let flagCookieId = `pm_drs_flag_${linkId}`;
+        if (link.domainId) {
+          basePath = `/${link.slug}`;
+          flagCookieId = `pm_drs_flag_${link.slug}`;
+        }
 
+        // Set Redis session cookie if available
+        if (newDataroomSession) {
           response.cookies.set(cookieId, newDataroomSession.token, {
             path: "/",
             expires: new Date(newDataroomSession.expiresAt),
@@ -1071,6 +1079,14 @@ export async function POST(request: NextRequest) {
           response.cookies.set(flagCookieId, "true", {
             path: basePath,
             expires: new Date(newDataroomSession.expiresAt),
+            sameSite: "strict",
+          });
+        } else {
+          // Redis not available - set flag cookie with 1-hour expiry for session-based navigation
+          const oneHourFromNow = new Date(Date.now() + 60 * 60 * 1000);
+          response.cookies.set(flagCookieId, "true", {
+            path: basePath,
+            expires: oneHourFromNow,
             sameSite: "strict",
           });
         }

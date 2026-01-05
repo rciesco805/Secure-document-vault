@@ -23,8 +23,6 @@ import {
   ZoomOutIcon,
 } from "lucide-react";
 import { Document, Page, pdfjs } from "react-pdf";
-import "react-pdf/dist/esm/Page/AnnotationLayer.css";
-import "react-pdf/dist/esm/Page/TextLayer.css";
 
 import { useSignatureDocument } from "@/lib/swr/use-signature-documents";
 

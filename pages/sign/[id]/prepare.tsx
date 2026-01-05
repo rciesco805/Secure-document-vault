@@ -21,6 +21,7 @@ import {
   ChevronRightIcon,
   ZoomInIcon,
   ZoomOutIcon,
+  SettingsIcon,
 } from "lucide-react";
 import { Document, Page, pdfjs } from "react-pdf";
 
@@ -30,6 +31,7 @@ import AppLayout from "@/components/layouts/app";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Card,
   CardContent,
@@ -44,6 +46,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Slider } from "@/components/ui/slider";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
@@ -85,11 +88,14 @@ export default function PrepareDocument() {
   const [currentPage, setCurrentPage] = useState(1);
   const [numPages, setNumPages] = useState(1);
   const [scale, setScale] = useState(1.0);
-  const [editingFieldId, setEditingFieldId] = useState<string | null>(null);
-  const [editingLabel, setEditingLabel] = useState("");
+  const [selectedFieldId, setSelectedFieldId] = useState<string | null>(null);
+  const [resizing, setResizing] = useState<string | null>(null);
+  const [resizeStart, setResizeStart] = useState({ x: 0, y: 0, width: 0, height: 0 });
 
   const containerRef = useRef<HTMLDivElement>(null);
   const pageRef = useRef<HTMLDivElement>(null);
+
+  const selectedField = fields.find(f => f.id === selectedFieldId);
 
   useEffect(() => {
     if (document?.recipients?.length && !selectedRecipient) {
@@ -117,7 +123,14 @@ export default function PrepareDocument() {
   }, []);
 
   const handlePageClick = (e: React.MouseEvent) => {
-    if (!pageRef.current || !selectedRecipient || editingFieldId) return;
+    if (!pageRef.current || !selectedRecipient || resizing) return;
+
+    const target = e.target as HTMLElement;
+    if (target.closest('.field-box')) {
+      return;
+    }
+
+    setSelectedFieldId(null);
 
     const rect = pageRef.current.getBoundingClientRect();
     const x = ((e.clientX - rect.left) / rect.width) * 100;
@@ -134,10 +147,11 @@ export default function PrepareDocument() {
       y: Math.max(0, Math.min(y - fieldConfig.height / 2, 100 - fieldConfig.height)),
       width: fieldConfig.width,
       height: fieldConfig.height,
-      label: selectedFieldType === "TEXT" ? "Text" : "",
+      label: "",
     };
 
     setFields([...fields, newField]);
+    setSelectedFieldId(newField.id);
     toast.success(`Added ${selectedFieldType.toLowerCase().replace("_", " ")} field`);
   };
 
@@ -158,28 +172,67 @@ export default function PrepareDocument() {
 
   const removeField = (fieldId: string) => {
     setFields(fields.filter((f) => f.id !== fieldId));
+    if (selectedFieldId === fieldId) {
+      setSelectedFieldId(null);
+    }
     toast.success("Field removed");
   };
 
-  const startEditingLabel = (field: PlacedField, e: React.MouseEvent) => {
+  const selectField = (fieldId: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (field.type === "TEXT") {
-      setEditingFieldId(field.id);
-      setEditingLabel(field.label || "Text");
-    }
+    setSelectedFieldId(fieldId);
   };
 
-  const saveFieldLabel = () => {
-    if (editingFieldId) {
-      setFields(fields.map(f => 
-        f.id === editingFieldId 
-          ? { ...f, label: editingLabel || "Text" }
-          : f
-      ));
-      setEditingFieldId(null);
-      setEditingLabel("");
-    }
+  const updateFieldProperty = (fieldId: string, property: keyof PlacedField, value: any) => {
+    setFields(fields.map(f => 
+      f.id === fieldId ? { ...f, [property]: value } : f
+    ));
   };
+
+  const handleResizeStart = (fieldId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    const field = fields.find(f => f.id === fieldId);
+    if (!field) return;
+    
+    setResizing(fieldId);
+    setResizeStart({
+      x: e.clientX,
+      y: e.clientY,
+      width: field.width,
+      height: field.height,
+    });
+  };
+
+  useEffect(() => {
+    if (!resizing) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!pageRef.current) return;
+      const rect = pageRef.current.getBoundingClientRect();
+      const deltaX = ((e.clientX - resizeStart.x) / rect.width) * 100;
+      const deltaY = ((e.clientY - resizeStart.y) / rect.height) * 100;
+      
+      const newWidth = Math.max(5, Math.min(50, resizeStart.width + deltaX));
+      const newHeight = Math.max(3, Math.min(30, resizeStart.height + deltaY));
+      
+      setFields(fields.map(f => 
+        f.id === resizing ? { ...f, width: newWidth, height: newHeight } : f
+      ));
+    };
+
+    const handleMouseUp = () => {
+      setResizing(null);
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+    
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [resizing, resizeStart, fields]);
 
   const handleSave = async () => {
     if (!teamId || !document) return;
@@ -381,55 +434,42 @@ export default function PrepareDocument() {
                         .map((field) => (
                           <div
                             key={field.id}
-                            className={`absolute flex cursor-move items-center justify-center rounded border-2 border-dashed ${getRecipientBorderColor(
-                              field.recipientId
-                            )} bg-white/80`}
+                            className={`field-box absolute flex cursor-pointer items-center justify-center rounded border-2 ${
+                              selectedFieldId === field.id 
+                                ? 'border-solid border-primary ring-2 ring-primary/50' 
+                                : `border-dashed ${getRecipientBorderColor(field.recipientId)}`
+                            } bg-white/80`}
                             style={{
                               left: `${field.x}%`,
                               top: `${field.y}%`,
                               width: `${field.width}%`,
                               height: `${field.height}%`,
                             }}
-                            onClick={(e) => e.stopPropagation()}
+                            onClick={(e) => selectField(field.id, e)}
                           >
-                            {editingFieldId === field.id ? (
-                              <input
-                                type="text"
-                                value={editingLabel}
-                                onChange={(e) => setEditingLabel(e.target.value)}
-                                onBlur={saveFieldLabel}
-                                onKeyDown={(e) => {
-                                  if (e.key === "Enter") saveFieldLabel();
-                                  if (e.key === "Escape") {
-                                    setEditingFieldId(null);
-                                    setEditingLabel("");
-                                  }
-                                }}
-                                className="w-full bg-transparent px-1 text-xs outline-none"
-                                autoFocus
-                                onClick={(e) => e.stopPropagation()}
-                              />
-                            ) : (
-                              <div 
-                                className="flex items-center gap-1"
-                                onDoubleClick={(e) => startEditingLabel(field, e)}
-                              >
-                                <GripVerticalIcon className="h-3 w-3 text-gray-500" />
-                                <span className="text-xs font-medium">
-                                  {field.type === "TEXT" && field.label 
-                                    ? field.label 
-                                    : field.type.replace("_", " ")}
-                                </span>
+                            <div className="flex items-center gap-1 overflow-hidden px-1">
+                              <GripVerticalIcon className="h-3 w-3 flex-shrink-0 text-gray-500" />
+                              <span className="truncate text-xs font-medium">
+                                {field.label || field.type.replace("_", " ")}
+                              </span>
+                            </div>
+                            
+                            {selectedFieldId === field.id && (
+                              <>
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     removeField(field.id);
                                   }}
-                                  className="ml-1 rounded p-0.5 hover:bg-red-100"
+                                  className="absolute -right-2 -top-2 rounded-full bg-red-500 p-0.5 text-white shadow hover:bg-red-600"
                                 >
-                                  <Trash2Icon className="h-3 w-3 text-red-500" />
+                                  <Trash2Icon className="h-3 w-3" />
                                 </button>
-                              </div>
+                                <div
+                                  className="absolute -bottom-1 -right-1 h-3 w-3 cursor-se-resize rounded-sm bg-primary"
+                                  onMouseDown={(e) => handleResizeStart(field.id, e)}
+                                />
+                              </>
                             )}
                           </div>
                         ))}
@@ -471,38 +511,103 @@ export default function PrepareDocument() {
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base">Field Types</CardTitle>
-                <CardDescription className="text-xs">
-                  Select a field type, then click on the document
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 gap-2">
-                  {fieldTypes.map(({ type, label, icon: Icon }) => (
-                    <button
-                      key={type}
-                      onClick={() => setSelectedFieldType(type)}
-                      className={`flex flex-col items-center gap-1 rounded-lg border p-3 text-xs transition-colors ${
-                        selectedFieldType === type
-                          ? "border-primary bg-primary/10"
-                          : "border-gray-200 hover:border-gray-300 dark:border-gray-700"
-                      }`}
-                    >
-                      <Icon className="h-4 w-4" />
-                      {label}
-                    </button>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+            {selectedField ? (
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <SettingsIcon className="h-4 w-4" />
+                    Field Properties
+                  </CardTitle>
+                  <CardDescription className="text-xs">
+                    Edit the selected field
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <Label className="text-xs">Field Type</Label>
+                    <p className="text-sm font-medium">{selectedField.type.replace("_", " ")}</p>
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="field-label" className="text-xs">Label / Placeholder</Label>
+                    <Input
+                      id="field-label"
+                      value={selectedField.label || ""}
+                      onChange={(e) => updateFieldProperty(selectedField.id, "label", e.target.value)}
+                      placeholder={selectedField.type.replace("_", " ")}
+                      className="mt-1"
+                    />
+                  </div>
+
+                  <div>
+                    <Label className="text-xs">Width: {Math.round(selectedField.width)}%</Label>
+                    <Slider
+                      value={[selectedField.width]}
+                      onValueChange={([value]) => updateFieldProperty(selectedField.id, "width", value)}
+                      min={5}
+                      max={50}
+                      step={1}
+                      className="mt-2"
+                    />
+                  </div>
+
+                  <div>
+                    <Label className="text-xs">Height: {Math.round(selectedField.height)}%</Label>
+                    <Slider
+                      value={[selectedField.height]}
+                      onValueChange={([value]) => updateFieldProperty(selectedField.id, "height", value)}
+                      min={2}
+                      max={20}
+                      step={0.5}
+                      className="mt-2"
+                    />
+                  </div>
+
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    className="w-full"
+                    onClick={() => removeField(selectedField.id)}
+                  >
+                    <Trash2Icon className="mr-2 h-4 w-4" />
+                    Delete Field
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : (
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base">Field Types</CardTitle>
+                  <CardDescription className="text-xs">
+                    Select a field type, then click on the document
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 gap-2">
+                    {fieldTypes.map(({ type, label, icon: Icon }) => (
+                      <button
+                        key={type}
+                        onClick={() => setSelectedFieldType(type)}
+                        className={`flex flex-col items-center gap-1 rounded-lg border p-3 text-xs transition-colors ${
+                          selectedFieldType === type
+                            ? "border-primary bg-primary/10"
+                            : "border-gray-200 hover:border-gray-300 dark:border-gray-700"
+                        }`}
+                      >
+                        <Icon className="h-4 w-4" />
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-base">Placed Fields</CardTitle>
                 <CardDescription className="text-xs">
-                  Double-click TEXT fields to edit label
+                  Click a field to edit its properties
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -519,7 +624,15 @@ export default function PrepareDocument() {
                       return (
                         <div
                           key={field.id}
-                          className="flex items-center justify-between rounded border p-2 text-sm"
+                          onClick={() => {
+                            setSelectedFieldId(field.id);
+                            setCurrentPage(field.pageNumber);
+                          }}
+                          className={`flex cursor-pointer items-center justify-between rounded border p-2 text-sm transition-colors ${
+                            selectedFieldId === field.id
+                              ? "border-primary bg-primary/10"
+                              : "hover:bg-gray-50 dark:hover:bg-gray-800"
+                          }`}
                         >
                           <div className="flex items-center gap-2">
                             <div
@@ -527,14 +640,18 @@ export default function PrepareDocument() {
                                 field.recipientId
                               )}`}
                             />
-                            <span>
-                              {field.type === "TEXT" && field.label
-                                ? field.label
-                                : field.type.replace("_", " ")}
+                            <span className="truncate">
+                              {field.label || field.type.replace("_", " ")}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              (p.{field.pageNumber})
                             </span>
                           </div>
                           <button
-                            onClick={() => removeField(field.id)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              removeField(field.id);
+                            }}
                             className="text-red-500 hover:text-red-700"
                           >
                             <Trash2Icon className="h-4 w-4" />

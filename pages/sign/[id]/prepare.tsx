@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
 import { useTeam } from "@/context/team-context";
@@ -17,14 +17,21 @@ import {
   SaveIcon,
   BriefcaseIcon,
   BadgeIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  ZoomInIcon,
+  ZoomOutIcon,
 } from "lucide-react";
+import { Document, Page, pdfjs } from "react-pdf";
+import "react-pdf/dist/esm/Page/AnnotationLayer.css";
+import "react-pdf/dist/esm/Page/TextLayer.css";
 
 import { useSignatureDocument } from "@/lib/swr/use-signature-documents";
 
 import AppLayout from "@/components/layouts/app";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
 import {
   Card,
   CardContent,
@@ -39,6 +46,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+
+pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
 const fieldTypes = [
   { type: "SIGNATURE", label: "Signature", icon: PenIcon },
@@ -61,6 +70,7 @@ interface PlacedField {
   y: number;
   width: number;
   height: number;
+  label?: string;
 }
 
 export default function PrepareDocument() {
@@ -75,8 +85,13 @@ export default function PrepareDocument() {
   const [fields, setFields] = useState<PlacedField[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [numPages, setNumPages] = useState(1);
+  const [scale, setScale] = useState(1.0);
+  const [editingFieldId, setEditingFieldId] = useState<string | null>(null);
+  const [editingLabel, setEditingLabel] = useState("");
 
   const containerRef = useRef<HTMLDivElement>(null);
+  const pageRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (document?.recipients?.length && !selectedRecipient) {
@@ -93,15 +108,20 @@ export default function PrepareDocument() {
           y: f.y,
           width: f.width,
           height: f.height,
+          label: f.label || "",
         }))
       );
     }
   }, [document]);
 
-  const handleContainerClick = (e: React.MouseEvent) => {
-    if (!containerRef.current || !selectedRecipient) return;
+  const onDocumentLoadSuccess = useCallback(({ numPages }: { numPages: number }) => {
+    setNumPages(numPages);
+  }, []);
 
-    const rect = containerRef.current.getBoundingClientRect();
+  const handlePageClick = (e: React.MouseEvent) => {
+    if (!pageRef.current || !selectedRecipient || editingFieldId) return;
+
+    const rect = pageRef.current.getBoundingClientRect();
     const x = ((e.clientX - rect.left) / rect.width) * 100;
     const y = ((e.clientY - rect.top) / rect.height) * 100;
 
@@ -116,6 +136,7 @@ export default function PrepareDocument() {
       y: Math.max(0, Math.min(y - fieldConfig.height / 2, 100 - fieldConfig.height)),
       width: fieldConfig.width,
       height: fieldConfig.height,
+      label: selectedFieldType === "TEXT" ? "Text" : "",
     };
 
     setFields([...fields, newField]);
@@ -140,6 +161,26 @@ export default function PrepareDocument() {
   const removeField = (fieldId: string) => {
     setFields(fields.filter((f) => f.id !== fieldId));
     toast.success("Field removed");
+  };
+
+  const startEditingLabel = (field: PlacedField, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (field.type === "TEXT") {
+      setEditingFieldId(field.id);
+      setEditingLabel(field.label || "Text");
+    }
+  };
+
+  const saveFieldLabel = () => {
+    if (editingFieldId) {
+      setFields(fields.map(f => 
+        f.id === editingFieldId 
+          ? { ...f, label: editingLabel || "Text" }
+          : f
+      ));
+      setEditingFieldId(null);
+      setEditingLabel("");
+    }
   };
 
   const handleSave = async () => {
@@ -174,6 +215,19 @@ export default function PrepareDocument() {
       "bg-purple-500",
       "bg-orange-500",
       "bg-pink-500",
+    ];
+    const index =
+      document?.recipients?.findIndex((r: any) => r.id === recipientId) || 0;
+    return colors[index % colors.length];
+  };
+
+  const getRecipientBorderColor = (recipientId: string) => {
+    const colors = [
+      "border-blue-500",
+      "border-green-500",
+      "border-purple-500",
+      "border-orange-500",
+      "border-pink-500",
     ];
     const index =
       document?.recipients?.findIndex((r: any) => r.id === recipientId) || 0;
@@ -246,60 +300,143 @@ export default function PrepareDocument() {
           <div className="lg:col-span-3">
             <Card>
               <CardContent className="p-0">
-                <div
+                <div className="flex items-center justify-between border-b bg-gray-100 px-4 py-2 dark:bg-gray-800">
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                      disabled={currentPage <= 1}
+                    >
+                      <ChevronLeftIcon className="h-4 w-4" />
+                    </Button>
+                    <span className="text-sm">
+                      Page {currentPage} of {numPages}
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setCurrentPage(Math.min(numPages, currentPage + 1))}
+                      disabled={currentPage >= numPages}
+                    >
+                      <ChevronRightIcon className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setScale(Math.max(0.5, scale - 0.25))}
+                    >
+                      <ZoomOutIcon className="h-4 w-4" />
+                    </Button>
+                    <span className="text-sm">{Math.round(scale * 100)}%</span>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setScale(Math.min(2, scale + 0.25))}
+                    >
+                      <ZoomInIcon className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+                <div 
                   ref={containerRef}
-                  onClick={handleContainerClick}
-                  className="relative aspect-[8.5/11] cursor-crosshair overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800"
+                  className="max-h-[70vh] overflow-auto bg-gray-200 p-4 dark:bg-gray-700"
                 >
-                  {document.fileUrl ? (
-                    <iframe
-                      src={document.fileUrl}
-                      className="pointer-events-none h-full w-full"
-                      title="Document Preview"
-                    />
-                  ) : (
-                    <div className="flex h-full items-center justify-center text-muted-foreground">
-                      <div className="text-center">
-                        <p className="text-lg font-medium">Document Preview</p>
-                        <p className="text-sm">
-                          Unable to load document preview
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                  {fields
-                    .filter((f) => f.pageNumber === currentPage)
-                    .map((field) => (
-                      <div
-                        key={field.id}
-                        className={`absolute flex cursor-move items-center justify-center rounded border-2 border-dashed ${getRecipientColor(
-                          field.recipientId
-                        )} bg-opacity-20`}
-                        style={{
-                          left: `${field.x}%`,
-                          top: `${field.y}%`,
-                          width: `${field.width}%`,
-                          height: `${field.height}%`,
-                        }}
-                      >
-                        <div className="flex items-center gap-1">
-                          <GripVerticalIcon className="h-3 w-3 text-gray-500" />
-                          <span className="text-xs font-medium">
-                            {field.type.replace("_", " ")}
-                          </span>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              removeField(field.id);
-                            }}
-                            className="ml-1 rounded p-0.5 hover:bg-red-100"
-                          >
-                            <Trash2Icon className="h-3 w-3 text-red-500" />
-                          </button>
+                  <div className="flex justify-center">
+                    <div 
+                      ref={pageRef}
+                      onClick={handlePageClick}
+                      className="relative cursor-crosshair shadow-lg"
+                    >
+                      {document.fileUrl ? (
+                        <Document
+                          file={document.fileUrl}
+                          onLoadSuccess={onDocumentLoadSuccess}
+                          loading={
+                            <div className="flex h-96 w-full items-center justify-center bg-white">
+                              <p>Loading PDF...</p>
+                            </div>
+                          }
+                        >
+                          <Page
+                            pageNumber={currentPage}
+                            scale={scale}
+                            renderTextLayer={false}
+                            renderAnnotationLayer={false}
+                          />
+                        </Document>
+                      ) : (
+                        <div className="flex h-96 w-full items-center justify-center bg-white text-muted-foreground">
+                          <div className="text-center">
+                            <p className="text-lg font-medium">Document Preview</p>
+                            <p className="text-sm">
+                              Unable to load document preview
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      )}
+
+                      {fields
+                        .filter((f) => f.pageNumber === currentPage)
+                        .map((field) => (
+                          <div
+                            key={field.id}
+                            className={`absolute flex cursor-move items-center justify-center rounded border-2 border-dashed ${getRecipientBorderColor(
+                              field.recipientId
+                            )} bg-white/80`}
+                            style={{
+                              left: `${field.x}%`,
+                              top: `${field.y}%`,
+                              width: `${field.width}%`,
+                              height: `${field.height}%`,
+                            }}
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {editingFieldId === field.id ? (
+                              <input
+                                type="text"
+                                value={editingLabel}
+                                onChange={(e) => setEditingLabel(e.target.value)}
+                                onBlur={saveFieldLabel}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") saveFieldLabel();
+                                  if (e.key === "Escape") {
+                                    setEditingFieldId(null);
+                                    setEditingLabel("");
+                                  }
+                                }}
+                                className="w-full bg-transparent px-1 text-xs outline-none"
+                                autoFocus
+                                onClick={(e) => e.stopPropagation()}
+                              />
+                            ) : (
+                              <div 
+                                className="flex items-center gap-1"
+                                onDoubleClick={(e) => startEditingLabel(field, e)}
+                              >
+                                <GripVerticalIcon className="h-3 w-3 text-gray-500" />
+                                <span className="text-xs font-medium">
+                                  {field.type === "TEXT" && field.label 
+                                    ? field.label 
+                                    : field.type.replace("_", " ")}
+                                </span>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    removeField(field.id);
+                                  }}
+                                  className="ml-1 rounded p-0.5 hover:bg-red-100"
+                                >
+                                  <Trash2Icon className="h-3 w-3 text-red-500" />
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                    </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -366,6 +503,9 @@ export default function PrepareDocument() {
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-base">Placed Fields</CardTitle>
+                <CardDescription className="text-xs">
+                  Double-click TEXT fields to edit label
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 {fields.length === 0 ? (
@@ -389,7 +529,11 @@ export default function PrepareDocument() {
                                 field.recipientId
                               )}`}
                             />
-                            <span>{field.type.replace("_", " ")}</span>
+                            <span>
+                              {field.type === "TEXT" && field.label
+                                ? field.label
+                                : field.type.replace("_", " ")}
+                            </span>
                           </div>
                           <button
                             onClick={() => removeField(field.id)}

@@ -65,10 +65,7 @@ export default function NewSignatureDocument() {
     { id: "1", name: "", email: "", role: "SIGNER", signingOrder: 1 },
   ]);
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
+  const processFile = (file: File) => {
     const contentType = file.type;
     const supportedFileType = getSupportedContentType(contentType);
 
@@ -82,6 +79,26 @@ export default function NewSignatureDocument() {
       ...prev,
       title: prev.title || file.name.replace(/\.[^/.]+$/, ""),
     }));
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    processFile(file);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
+      processFile(file);
+    }
   };
 
   const addRecipient = () => {
@@ -258,7 +275,11 @@ export default function NewSignatureDocument() {
                       </Button>
                     </div>
                   ) : (
-                    <label className="flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 p-8 hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700">
+                    <label 
+                      className="flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 p-8 hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700"
+                      onDragOver={handleDragOver}
+                      onDrop={handleDrop}
+                    >
                       <UploadIcon className="mb-2 h-8 w-8 text-gray-400" />
                       <p className="text-sm text-gray-600 dark:text-gray-400">
                         Click to upload or drag and drop

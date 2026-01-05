@@ -103,17 +103,24 @@ export default async function handle(
         (view) => !excludedViews.map((view) => view.id).includes(view.id),
       );
 
-      const duration = await getTotalDataroomDuration({
-        dataroomId: dataroomId,
-        excludedLinkIds: [],
-        excludedViewIds: excludedViews.map((view) => view.id),
-        since: 0,
-      });
+      let duration = { data: [] as { viewId: string; sum_duration: number }[] };
+      let total_duration = 0;
+      
+      try {
+        duration = await getTotalDataroomDuration({
+          dataroomId: dataroomId,
+          excludedLinkIds: [],
+          excludedViewIds: excludedViews.map((view) => view.id),
+          since: 0,
+        });
 
-      const total_duration = duration.data.reduce(
-        (totalDuration, data) => totalDuration + data.sum_duration,
-        0,
-      );
+        total_duration = duration.data.reduce(
+          (totalDuration, data) => totalDuration + data.sum_duration,
+          0,
+        );
+      } catch (tinybirdError) {
+        console.log("Tinybird not configured, skipping duration analytics");
+      }
 
       const stats = {
         dataroomViews: dataroomViews,

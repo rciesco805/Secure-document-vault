@@ -256,10 +256,25 @@ const getAuthOptions = (req: NextApiRequest): NextAuthOptions => {
             select: { id: true, email: true }
           });
           
-          console.log("[AUTH] Viewer group check:", emailLower, "found:", !!viewerWithGroups);
+          console.log("[AUTH] Viewer group membership check:", emailLower, "found:", !!viewerWithGroups);
           
+          // Also check if email is in any link's allowList (UI adds members this way)
+          let isInAllowList = false;
           if (!viewerWithGroups) {
-            console.log("[AUTH] Unauthorized - email not admin and not in any viewer group");
+            const linkWithEmail = await prisma.link.findFirst({
+              where: {
+                allowList: { has: emailLower },
+                deletedAt: null,
+                isArchived: false,
+              },
+              select: { id: true }
+            });
+            isInAllowList = !!linkWithEmail;
+            console.log("[AUTH] Link allowList check:", emailLower, "found:", isInAllowList);
+          }
+          
+          if (!viewerWithGroups && !isInAllowList) {
+            console.log("[AUTH] Unauthorized - email not admin, not in any viewer group, and not in any allowList");
             log({
               message: `Unauthorized login attempt: ${user.email}`,
               type: "error",
@@ -267,7 +282,7 @@ const getAuthOptions = (req: NextApiRequest): NextAuthOptions => {
             return false;
           }
           
-          console.log("[AUTH] Access granted via viewer group membership for:", emailLower);
+          console.log("[AUTH] Access granted via", viewerWithGroups ? "viewer group membership" : "link allowList", "for:", emailLower);
         }
 
         // Apply rate limiting for signin attempts (optional - skip if Redis unavailable)

@@ -236,18 +236,38 @@ const getAuthOptions = (req: NextApiRequest): NextAuthOptions => {
           return false;
         }
 
-        // Restrict admin dashboard access to allowed emails only
+        // Check if user is an admin
         const emailLower = user.email.toLowerCase();
-        const isAllowed = isAdminEmail(emailLower);
-        console.log("[AUTH] Email check:", emailLower, "allowed:", isAllowed);
+        const isAdmin = isAdminEmail(emailLower);
+        console.log("[AUTH] Admin email check:", emailLower, "isAdmin:", isAdmin);
         
-        if (!isAllowed) {
-          console.log("[AUTH] Unauthorized - email not in whitelist");
-          log({
-            message: `Unauthorized login attempt: ${user.email}`,
-            type: "error",
+        // If admin, allow access immediately
+        if (isAdmin) {
+          console.log("[AUTH] Admin access granted for:", emailLower);
+        } else {
+          // Check if user is a member of any viewer group (added via quick link or invite)
+          const viewerWithGroups = await prisma.viewer.findFirst({
+            where: {
+              email: { equals: emailLower, mode: "insensitive" },
+              groups: {
+                some: {}
+              }
+            },
+            select: { id: true, email: true }
           });
-          return false;
+          
+          console.log("[AUTH] Viewer group check:", emailLower, "found:", !!viewerWithGroups);
+          
+          if (!viewerWithGroups) {
+            console.log("[AUTH] Unauthorized - email not admin and not in any viewer group");
+            log({
+              message: `Unauthorized login attempt: ${user.email}`,
+              type: "error",
+            });
+            return false;
+          }
+          
+          console.log("[AUTH] Access granted via viewer group membership for:", emailLower);
         }
 
         // Apply rate limiting for signin attempts (optional - skip if Redis unavailable)

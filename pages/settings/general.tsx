@@ -1,3 +1,4 @@
+import { withAdminGuard } from "@/lib/auth/admin-guard";
 import { useTeam } from "@/context/team-context";
 import { toast } from "sonner";
 import { mutate } from "swr";
@@ -205,3 +206,5 @@ export default function General() {
     </AppLayout>
   );
 }
+
+export const getServerSideProps = withAdminGuard();

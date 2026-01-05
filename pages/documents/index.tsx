@@ -1,5 +1,6 @@
 import { useRouter } from "next/router";
 
+import { withAdminGuard } from "@/lib/auth/admin-guard";
 import { useTeam } from "@/context/team-context";
 import { FolderPlusIcon, PlusIcon } from "lucide-react";
 
@@ -121,3 +122,5 @@ export default function Documents() {
     </AppLayout>
   );
 }
+
+export const getServerSideProps = withAdminGuard();

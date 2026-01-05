@@ -41,11 +41,17 @@ export default async function AppMiddleware(req: NextRequest) {
     return NextResponse.redirect(new URL("/welcome", req.url));
   }
 
-  // AUTHENTICATED if the path is /login, redirect to "/dashboard"
+  // AUTHENTICATED if the path is /login, redirect appropriately
+  // The actual team check happens on the dashboard page via API
   if (token?.email && path === "/login") {
-    const nextPath = url.searchParams.get("next") || "/dashboard"; // Default redirection to "/dashboard" if no next parameter
+    const nextPath = url.searchParams.get("next") || "/dashboard";
     return NextResponse.redirect(
       new URL(decodeURIComponent(nextPath), req.url),
     );
+  }
+
+  // Allow viewer-portal access for all authenticated users
+  if (token?.email && path === "/viewer-portal") {
+    return NextResponse.next();
   }
 }

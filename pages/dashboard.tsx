@@ -8,6 +8,7 @@ import { BarChart3 } from "lucide-react";
 import { toast } from "sonner";
 import useSWR from "swr";
 
+import { withAdminGuard } from "@/lib/auth/admin-guard";
 import { usePlan } from "@/lib/swr/use-billing";
 import { fetcher } from "@/lib/utils";
 
@@ -215,3 +216,5 @@ export default function DashboardPage() {
     </AppLayout>
   );
 }
+
+export const getServerSideProps = withAdminGuard();

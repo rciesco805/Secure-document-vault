@@ -1,8 +1,12 @@
+import { useEffect, useState } from "react";
+import { useRouter } from "next/router";
 import Cookies from "js-cookie";
 
+import { useTeam } from "@/context/team-context";
 import { AppBreadcrumb } from "@/components/layouts/breadcrumb";
 import { AppSidebar } from "@/components/sidebar/app-sidebar";
 import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   SIDEBAR_COOKIE_NAME,
   SidebarInset,
@@ -11,10 +15,35 @@ import {
 } from "@/components/ui/sidebar";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
+  const router = useRouter();
+  const teamInfo = useTeam();
+  const [isAuthorized, setIsAuthorized] = useState(false);
+
   // Default to open (true) if no cookie exists, otherwise use the stored preference
   const cookieValue = Cookies.get(SIDEBAR_COOKIE_NAME);
   const isSidebarOpen =
     cookieValue === undefined ? true : cookieValue === "true";
+
+  useEffect(() => {
+    if (!teamInfo.isLoading) {
+      if (teamInfo.teams.length === 0) {
+        router.replace("/viewer-portal");
+      } else {
+        setIsAuthorized(true);
+      }
+    }
+  }, [teamInfo.isLoading, teamInfo.teams, router]);
+
+  if (teamInfo.isLoading || !isAuthorized) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-black">
+        <div className="space-y-4 text-center">
+          <Skeleton className="mx-auto h-8 w-48" />
+          <Skeleton className="mx-auto h-4 w-32" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <SidebarProvider defaultOpen={isSidebarOpen}>

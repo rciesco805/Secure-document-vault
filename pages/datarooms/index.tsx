@@ -3,6 +3,7 @@ import { useRouter } from "next/router";
 
 import { useEffect, useMemo, useState } from "react";
 
+import { withAdminGuard } from "@/lib/auth/admin-guard";
 import { useTeam } from "@/context/team-context";
 import { PlanEnum } from "@/ee/stripe/constants";
 import { FilterIcon, PlusIcon } from "lucide-react";
@@ -249,3 +250,5 @@ export default function DataroomsPage() {
     </AppLayout>
   );
 }
+
+export const getServerSideProps = withAdminGuard();

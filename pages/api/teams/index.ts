@@ -48,31 +48,55 @@ export default async function handle(
 
       const teams = userTeams.map((userTeam) => userTeam.team);
 
-      // if no teams then create a default one
+      // If no teams, check if user is a viewer-only (added via Quick Add or allowList)
+      // Viewer-only users should NOT get an auto-created team
       if (teams.length === 0) {
-        const defaultTeamName = user.name
-          ? `${user.name}'s Team`
-          : "Personal Team";
-        const defaultTeam = await prisma.team.create({
-          data: {
-            name: defaultTeamName,
-            users: {
-              create: {
-                userId: user.id,
-                role: "ADMIN",
+        const userEmail = user.email?.toLowerCase();
+        
+        // Check if user is a viewer (has viewer group memberships or is in any link allowList)
+        const isViewer = await prisma.viewer.findFirst({
+          where: {
+            email: { equals: userEmail, mode: "insensitive" },
+            groups: { some: {} }
+          },
+          select: { id: true }
+        });
+        
+        const isInAllowList = !isViewer && userEmail ? await prisma.link.findFirst({
+          where: {
+            allowList: { has: userEmail },
+            deletedAt: null,
+            isArchived: false,
+          },
+          select: { id: true }
+        }) : null;
+        
+        // Only create team for non-viewer users (true admins)
+        if (!isViewer && !isInAllowList) {
+          const defaultTeamName = user.name
+            ? `${user.name}'s Team`
+            : "Personal Team";
+          const defaultTeam = await prisma.team.create({
+            data: {
+              name: defaultTeamName,
+              users: {
+                create: {
+                  userId: user.id,
+                  role: "ADMIN",
+                },
               },
             },
-          },
-          select: {
-            id: true,
-            name: true,
-            plan: true,
-            createdAt: true,
-            enableExcelAdvancedMode: true,
-            replicateDataroomFolders: true,
-          },
-        });
-        teams.push(defaultTeam);
+            select: {
+              id: true,
+              name: true,
+              plan: true,
+              createdAt: true,
+              enableExcelAdvancedMode: true,
+              replicateDataroomFolders: true,
+            },
+          });
+          teams.push(defaultTeam);
+        }
       }
 
       return res.status(200).json(teams);

@@ -17,6 +17,7 @@ A critical architectural decision is the **platform-agnostic design**, ensuring 
 - **Investor Dataroom:** Secure document sharing with email-verified access and custom branding. Includes a "Quick Add" system for streamlined investor onboarding and PostgreSQL-based page-level analytics.
 - **BF Fund Sign (E-Signature Platform):** Integrated e-signature system with a dashboard, document creation, recipient management, field placement editor, and audit trails. Supports sequential signing, bulk sending, in-person signing via QR codes, document expiration, and a "Correct & Resend" feature. It also includes reusable templates for efficient document creation.
 - **Security Features:** Token-based access for signers, per-recipient authorization, expiration enforcement, transactional updates, audit logging, and IP-based rate limiting on the public signing API.
+- **Admin/Viewer Separation:** Server-side protection using `withAdminGuard()` on admin pages prevents viewer-only users from accessing admin functionality. Viewers are redirected to `/viewer-portal` which shows their accessible datarooms. Protected pages include: dashboard, documents, datarooms, sign (all routes), and settings.
 
 **UI/UX Decisions:**
 - Custom branding replaces all "Papermark" references with "BF Fund Dataroom" or "BF Fund Sign".

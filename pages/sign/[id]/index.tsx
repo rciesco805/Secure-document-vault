@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
+import { withAdminGuard } from "@/lib/auth/admin-guard";
 import { useTeam } from "@/context/team-context";
 import { toast } from "sonner";
 import {
@@ -822,3 +823,5 @@ export default function SignatureDocumentDetail() {
     </AppLayout>
   );
 }
+
+export const getServerSideProps = withAdminGuard();

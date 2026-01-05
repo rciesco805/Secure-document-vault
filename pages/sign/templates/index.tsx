@@ -2,6 +2,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { toast } from "sonner";
+import { withAdminGuard } from "@/lib/auth/admin-guard";
 import {
   FileTextIcon,
   PlusIcon,
@@ -267,3 +268,5 @@ export default function TemplatesPage() {
     </AppLayout>
   );
 }
+
+export const getServerSideProps = withAdminGuard();

@@ -46,7 +46,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Slider } from "@/components/ui/slider";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
@@ -539,28 +538,37 @@ export default function PrepareDocument() {
                     />
                   </div>
 
-                  <div>
-                    <Label className="text-xs">Width: {Math.round(selectedField.width)}%</Label>
-                    <Slider
-                      value={[selectedField.width]}
-                      onValueChange={([value]) => updateFieldProperty(selectedField.id, "width", value)}
-                      min={5}
-                      max={50}
-                      step={1}
-                      className="mt-2"
-                    />
-                  </div>
-
-                  <div>
-                    <Label className="text-xs">Height: {Math.round(selectedField.height)}%</Label>
-                    <Slider
-                      value={[selectedField.height]}
-                      onValueChange={([value]) => updateFieldProperty(selectedField.id, "height", value)}
-                      min={2}
-                      max={20}
-                      step={0.5}
-                      className="mt-2"
-                    />
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <Label htmlFor="field-width" className="text-xs">Width %</Label>
+                      <Input
+                        id="field-width"
+                        type="number"
+                        value={Math.round(selectedField.width)}
+                        onChange={(e) => {
+                          const value = Math.max(5, Math.min(50, parseInt(e.target.value) || 5));
+                          updateFieldProperty(selectedField.id, "width", value);
+                        }}
+                        min={5}
+                        max={50}
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="field-height" className="text-xs">Height %</Label>
+                      <Input
+                        id="field-height"
+                        type="number"
+                        value={Math.round(selectedField.height)}
+                        onChange={(e) => {
+                          const value = Math.max(2, Math.min(20, parseInt(e.target.value) || 2));
+                          updateFieldProperty(selectedField.id, "height", value);
+                        }}
+                        min={2}
+                        max={20}
+                        className="mt-1"
+                      />
+                    </div>
                   </div>
 
                   <Button

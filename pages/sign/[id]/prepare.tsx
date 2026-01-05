@@ -448,8 +448,8 @@ export default function PrepareDocument() {
                             onClick={(e) => selectField(field.id, e)}
                           >
                             <div className="flex items-center gap-1 overflow-hidden px-1">
-                              <GripVerticalIcon className="h-3 w-3 flex-shrink-0 text-gray-500" />
-                              <span className="truncate text-xs font-medium">
+                              <GripVerticalIcon className="h-3 w-3 flex-shrink-0 text-gray-600" />
+                              <span className="truncate text-xs font-medium text-black">
                                 {field.label || field.type.replace("_", " ")}
                               </span>
                             </div>

@@ -22,6 +22,7 @@ import {
   ZoomInIcon,
   ZoomOutIcon,
   SettingsIcon,
+  MapPinIcon,
 } from "lucide-react";
 import { Document, Page, pdfjs } from "react-pdf";
 
@@ -32,6 +33,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Card,
   CardContent,
@@ -57,6 +59,7 @@ const fieldTypes = [
   { type: "EMAIL", label: "Email", icon: MailIcon },
   { type: "TITLE", label: "Title", icon: BadgeIcon },
   { type: "COMPANY", label: "Company", icon: BriefcaseIcon },
+  { type: "ADDRESS", label: "Address", icon: MapPinIcon },
   { type: "TEXT", label: "Text", icon: TypeIcon },
   { type: "CHECKBOX", label: "Checkbox", icon: CheckSquareIcon },
 ];
@@ -71,6 +74,7 @@ interface PlacedField {
   width: number;
   height: number;
   label?: string;
+  required?: boolean;
 }
 
 export default function PrepareDocument() {
@@ -90,6 +94,8 @@ export default function PrepareDocument() {
   const [selectedFieldId, setSelectedFieldId] = useState<string | null>(null);
   const [resizing, setResizing] = useState<string | null>(null);
   const [resizeStart, setResizeStart] = useState({ x: 0, y: 0, width: 0, height: 0 });
+  const [dragging, setDragging] = useState<string | null>(null);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0, fieldX: 0, fieldY: 0 });
 
   const containerRef = useRef<HTMLDivElement>(null);
   const pageRef = useRef<HTMLDivElement>(null);
@@ -112,6 +118,7 @@ export default function PrepareDocument() {
           width: f.width,
           height: f.height,
           label: f.label || "",
+          required: f.required !== false,
         }))
       );
     }
@@ -122,7 +129,7 @@ export default function PrepareDocument() {
   }, []);
 
   const handlePageClick = (e: React.MouseEvent) => {
-    if (!pageRef.current || !selectedRecipient || resizing) return;
+    if (!pageRef.current || !selectedRecipient || resizing || dragging) return;
 
     const target = e.target as HTMLElement;
     if (target.closest('.field-box')) {
@@ -147,6 +154,7 @@ export default function PrepareDocument() {
       width: fieldConfig.width,
       height: fieldConfig.height,
       label: "",
+      required: true,
     };
 
     setFields([...fields, newField]);
@@ -164,9 +172,26 @@ export default function PrepareDocument() {
         return { width: 15, height: 4 };
       case "CHECKBOX":
         return { width: 4, height: 4 };
+      case "ADDRESS":
+        return { width: 25, height: 6 };
       default:
         return { width: 15, height: 4 };
     }
+  };
+
+  const handleDragStart = (fieldId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    const field = fields.find(f => f.id === fieldId);
+    if (!field) return;
+    
+    setDragging(fieldId);
+    setDragStart({
+      x: e.clientX,
+      y: e.clientY,
+      fieldX: field.x,
+      fieldY: field.y,
+    });
   };
 
   const removeField = (fieldId: string) => {
@@ -232,6 +257,39 @@ export default function PrepareDocument() {
       window.removeEventListener('mouseup', handleMouseUp);
     };
   }, [resizing, resizeStart, fields]);
+
+  useEffect(() => {
+    if (!dragging) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!pageRef.current) return;
+      const rect = pageRef.current.getBoundingClientRect();
+      const deltaX = ((e.clientX - dragStart.x) / rect.width) * 100;
+      const deltaY = ((e.clientY - dragStart.y) / rect.height) * 100;
+      
+      const field = fields.find(f => f.id === dragging);
+      if (!field) return;
+      
+      const newX = Math.max(0, Math.min(100 - field.width, dragStart.fieldX + deltaX));
+      const newY = Math.max(0, Math.min(100 - field.height, dragStart.fieldY + deltaY));
+      
+      setFields(fields.map(f => 
+        f.id === dragging ? { ...f, x: newX, y: newY } : f
+      ));
+    };
+
+    const handleMouseUp = () => {
+      setDragging(null);
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+    
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [dragging, dragStart, fields]);
 
   const handleSave = async () => {
     if (!teamId || !document) return;
@@ -433,11 +491,11 @@ export default function PrepareDocument() {
                         .map((field) => (
                           <div
                             key={field.id}
-                            className={`field-box absolute flex cursor-pointer items-center justify-center rounded border-2 ${
+                            className={`field-box absolute flex items-center justify-center rounded border-2 ${
                               selectedFieldId === field.id 
                                 ? 'border-solid border-primary ring-2 ring-primary/50' 
                                 : `border-dashed ${getRecipientBorderColor(field.recipientId)}`
-                            } bg-white/80`}
+                            } ${dragging === field.id ? 'cursor-grabbing' : 'cursor-grab'} bg-white/80`}
                             style={{
                               left: `${field.x}%`,
                               top: `${field.y}%`,
@@ -445,12 +503,16 @@ export default function PrepareDocument() {
                               height: `${field.height}%`,
                             }}
                             onClick={(e) => selectField(field.id, e)}
+                            onMouseDown={(e) => handleDragStart(field.id, e)}
                           >
-                            <div className="flex items-center gap-1 overflow-hidden px-1">
+                            <div className="pointer-events-none flex items-center gap-1 overflow-hidden px-1">
                               <GripVerticalIcon className="h-3 w-3 flex-shrink-0 text-gray-600" />
                               <span className="truncate text-xs font-medium text-black">
                                 {field.label || field.type.replace("_", " ")}
                               </span>
+                              {field.required && (
+                                <span className="text-red-500">*</span>
+                              )}
                             </div>
                             
                             {selectedFieldId === field.id && (
@@ -461,12 +523,16 @@ export default function PrepareDocument() {
                                     removeField(field.id);
                                   }}
                                   className="absolute -right-2 -top-2 rounded-full bg-red-500 p-0.5 text-white shadow hover:bg-red-600"
+                                  onMouseDown={(e) => e.stopPropagation()}
                                 >
                                   <Trash2Icon className="h-3 w-3" />
                                 </button>
                                 <div
                                   className="absolute -bottom-1 -right-1 h-3 w-3 cursor-se-resize rounded-sm bg-primary"
-                                  onMouseDown={(e) => handleResizeStart(field.id, e)}
+                                  onMouseDown={(e) => {
+                                    e.stopPropagation();
+                                    handleResizeStart(field.id, e);
+                                  }}
                                 />
                               </>
                             )}
@@ -569,6 +635,19 @@ export default function PrepareDocument() {
                         className="mt-1"
                       />
                     </div>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="field-required"
+                      checked={selectedField.required !== false}
+                      onCheckedChange={(checked) => 
+                        updateFieldProperty(selectedField.id, "required", checked === true)
+                      }
+                    />
+                    <Label htmlFor="field-required" className="text-sm cursor-pointer">
+                      Required field
+                    </Label>
                   </div>
 
                   <Button

@@ -155,6 +155,7 @@ enum SignatureFieldType {
   EMAIL             // Auto-filled email
   COMPANY           // Company name
   TITLE             // Job title
+  ADDRESS           // Mailing/physical address
 }
 
 // Signature Templates for reusable documents

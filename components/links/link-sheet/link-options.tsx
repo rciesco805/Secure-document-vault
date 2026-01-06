@@ -187,6 +187,18 @@ export const LinkOptions = ({
         </div>
       </CollapsibleSection>
 
+      {/* Feedback Section */}
+      <CollapsibleSection title="Viewer Feedback" defaultOpen={true}>
+        <div>
+          <FeedbackSection {...{ data, setData }} />
+          <QuestionSection
+            {...{ data, setData }}
+            isAllowed={true}
+            handleUpgradeStateChange={handleUpgradeStateChange}
+          />
+        </div>
+      </CollapsibleSection>
+
       {/* Advanced Section */}
       <CollapsibleSection title="Advanced Controls" defaultOpen={true}>
         <div>

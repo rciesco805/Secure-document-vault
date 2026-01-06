@@ -39,7 +39,7 @@ A critical architectural decision is the **platform-agnostic design**, ensuring 
 - **Server-side admin protection:** Implemented `withAdminGuard()` wrapper in `lib/auth/admin-guard.ts` that checks for `UserTeam` membership before rendering admin pages.
 - **Team auto-creation disabled for viewers:** Modified `/api/teams` to prevent auto-creating teams for viewer-only users (those in `ViewerGroupMembership` or link allowlists).
 - **Viewer portal created:** New `/viewer-portal` page shows investors their accessible datarooms without admin navigation.
-- **Data cleanup performed:** Removed incorrectly assigned ADMIN access from `rciesco@gmail.com` and `investors@bermudafranchisegroup.com`.
+- **Data cleanup performed:** Ensured only authorized admins (`rciesco@gmail.com` and `investors@bermudafranchisegroup.com`) have ADMIN access to the Bermuda Franchise Fund team. Removed `richard@bermudafranchisegroup.com` from team access.
 
 ### User Role Architecture
 - **Admins (Team Members):** Users with a `UserTeam` record can access the full admin interface (dashboard, documents, datarooms, sign, settings).

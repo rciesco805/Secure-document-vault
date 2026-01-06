@@ -1,3 +1,8 @@
+import { useState } from "react";
+
+import { LinkType } from "@prisma/client";
+import { PlusIcon } from "lucide-react";
+
 import { useDataroom } from "@/lib/swr/use-dataroom";
 import {
   useDataroomGroup,
@@ -9,12 +14,15 @@ import { DataroomNavigation } from "@/components/datarooms/dataroom-navigation";
 import { GroupHeader } from "@/components/datarooms/groups/group-header";
 import { GroupNavigation } from "@/components/datarooms/groups/group-navigation";
 import AppLayout from "@/components/layouts/app";
+import { DataroomLinkSheet } from "@/components/links/link-sheet/dataroom-link-sheet";
 import LinksTable from "@/components/links/links-table";
+import { Button } from "@/components/ui/button";
 
 export default function DataroomGroupLinksPage() {
   const { dataroom } = useDataroom();
   const { viewerGroup } = useDataroomGroup();
   const { links, loading } = useDataroomGroupLinks();
+  const [isLinkSheetOpen, setIsLinkSheetOpen] = useState(false);
 
   if (!dataroom || !viewerGroup) {
     return <div>Loading...</div>;
@@ -40,18 +48,51 @@ export default function DataroomGroupLinksPage() {
             viewerGroupId={viewerGroup.id}
           />
           <div className="grid gap-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-medium">Group Links</h3>
+                <p className="text-sm text-muted-foreground">
+                  Links created for this group. Viewers using these links will have the group's permissions.
+                </p>
+              </div>
+              <Button onClick={() => setIsLinkSheetOpen(true)}>
+                <PlusIcon className="mr-2 h-4 w-4" />
+                Create Link
+              </Button>
+            </div>
             {loading ? (
               <div>Loading...</div>
-            ) : (
+            ) : links && links.length > 0 ? (
               <LinksTable
                 links={links}
                 targetType={"DATAROOM"}
                 dataroomName={dataroom.name}
               />
+            ) : (
+              <div className="rounded-lg border border-dashed p-8 text-center">
+                <p className="text-muted-foreground">
+                  No links created for this group yet.
+                </p>
+                <Button 
+                  variant="outline" 
+                  className="mt-4"
+                  onClick={() => setIsLinkSheetOpen(true)}
+                >
+                  <PlusIcon className="mr-2 h-4 w-4" />
+                  Create your first link
+                </Button>
+              </div>
             )}
           </div>
         </div>
       </div>
+
+      <DataroomLinkSheet
+        isOpen={isLinkSheetOpen}
+        setIsOpen={setIsLinkSheetOpen}
+        linkType={LinkType.DATAROOM_LINK}
+        existingLinks={links}
+      />
     </AppLayout>
   );
 }

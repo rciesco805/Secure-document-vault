@@ -141,24 +141,16 @@ export function InviteViewersModal({
       return;
     }
 
-    if (!hasEditedRecipients) {
-      const initialRecipients =
-        defaultEmails.length > 0
-          ? defaultEmails
-          : groupId
-            ? uninvitedEmails
-            : [];
-
-      if (initialRecipients.length > 0) {
-        setRecipientInput(initialRecipients.join("\n"));
-      }
+    // Only auto-populate if defaultEmails are explicitly passed
+    // Do NOT auto-populate with uninvited group members - the user should
+    // manually enter recipients each time they share a link
+    if (!hasEditedRecipients && defaultEmails.length > 0) {
+      setRecipientInput(defaultEmails.join("\n"));
     }
   }, [
     open,
     linkId,
     availableLinks,
-    groupId,
-    uninvitedEmails,
     defaultEmails,
     hasEditedRecipients,
   ]);
@@ -173,11 +165,11 @@ export function InviteViewersModal({
     (link) => link.id === selectedLinkId,
   );
 
-  const defaultRecipients =
-    defaultEmails.length > 0 ? defaultEmails : groupId ? uninvitedEmails : [];
+  // Only use explicitly passed defaultEmails, never auto-populate with uninvited members
+  const defaultRecipients = defaultEmails.length > 0 ? defaultEmails : [];
 
   const currentRecipients =
-    hasEditedRecipients && recipientInput.length > 0
+    recipientInput.length > 0
       ? parseRecipientInput(recipientInput)
       : defaultRecipients;
 
@@ -204,7 +196,7 @@ export function InviteViewersModal({
       return;
     }
 
-    const parsedEmails = hasEditedRecipients
+    const parsedEmails = recipientInput.length > 0
       ? parseRecipientInput(recipientInput)
       : defaultRecipients;
 
@@ -347,11 +339,7 @@ export function InviteViewersModal({
                   setRecipientInput(event.target.value);
                   setHasEditedRecipients(true);
                 }}
-                placeholder={
-                  defaultRecipients.length > 0
-                    ? defaultRecipients.join("\n")
-                    : "Enter email addresses separated by comma or new line"
-                }
+                placeholder="Enter email addresses separated by comma or new line"
                 className="bg-muted"
                 rows={6}
                 disabled={loading}

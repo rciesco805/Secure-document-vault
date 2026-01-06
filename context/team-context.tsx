@@ -7,8 +7,11 @@ import {
   useState,
 } from "react";
 
+import { useSession } from "next-auth/react";
+
 import { useTeams } from "@/lib/swr/use-teams";
 import { Team } from "@/lib/types";
+import { CustomUser } from "@/lib/types";
 
 interface TeamContextProps {
   children: React.ReactNode;
@@ -32,63 +35,113 @@ export const initialState = {
 
 const TeamContext = createContext<TeamContextType>(initialState);
 
+// Helper to get user-scoped localStorage key
+const getStorageKey = (userId: string | undefined) => {
+  return userId ? `currentTeamId_${userId}` : null;
+};
+
+// Helper to clean up old global key and migrate to user-scoped key
+const cleanupLegacyStorage = () => {
+  if (typeof localStorage !== "undefined") {
+    localStorage.removeItem("currentTeamId");
+  }
+};
+
 export const TeamProvider = ({ children }: TeamContextProps): JSX.Element => {
-  const { teams, loading } = useTeams();
+  const { data: session, status: sessionStatus } = useSession();
+  const { teams, loading: teamsLoading } = useTeams();
   const [currentTeam, setCurrentTeamState] = useState<Team | null>(null);
+  const [hasHydrated, setHasHydrated] = useState(false);
 
-  // Effect to set initial currentTeam on mount
+  const userId = (session?.user as CustomUser)?.id;
+  const storageKey = getStorageKey(userId);
+
+  // Clean up legacy global storage key on mount
   useEffect(() => {
-    if (!teams || teams.length === 0) return;
+    cleanupLegacyStorage();
+  }, []);
 
-    const savedTeamId =
-      typeof localStorage !== "undefined"
-        ? localStorage.getItem("currentTeamId")
-        : null;
-
-    // If we already have a currentTeam, check if it needs to be updated with fresh data
-    if (currentTeam) {
-      const updatedTeam = teams.find((team) => team.id === currentTeam.id);
-      if (updatedTeam && updatedTeam.name !== currentTeam.name) {
-        // Team data has changed, update currentTeam with fresh data
-        setCurrentTeamState(updatedTeam);
-      }
+  // Effect to set and validate currentTeam whenever teams or session changes
+  useEffect(() => {
+    // Wait for both session and teams to be ready
+    if (sessionStatus === "loading" || teamsLoading) {
       return;
     }
 
-    let teamToSet: Team | null = null;
+    // If no teams available, clear current team
+    if (!teams || teams.length === 0) {
+      setCurrentTeamState(null);
+      setHasHydrated(true);
+      return;
+    }
 
+    // Get saved team ID from user-scoped storage
+    let savedTeamId: string | null = null;
+    if (storageKey && typeof localStorage !== "undefined") {
+      savedTeamId = localStorage.getItem(storageKey);
+    }
+
+    // Validate: Check if saved team ID belongs to current user's teams
+    let validTeam: Team | null = null;
     if (savedTeamId) {
-      teamToSet = teams.find((team) => team.id === savedTeamId) || null;
+      validTeam = teams.find((team) => team.id === savedTeamId) || null;
     }
 
-    if (!teamToSet && teams.length > 0) {
-      teamToSet = teams[0];
+    // If saved team is invalid or not found, default to first team
+    if (!validTeam && teams.length > 0) {
+      validTeam = teams[0];
     }
 
-    if (teamToSet) {
-      setCurrentTeamState(teamToSet);
-      if (typeof localStorage !== "undefined") {
-        localStorage.setItem("currentTeamId", teamToSet.id);
+    // Set the current team
+    if (validTeam) {
+      setCurrentTeamState(validTeam);
+      // Update storage with valid team ID
+      if (storageKey && typeof localStorage !== "undefined") {
+        localStorage.setItem(storageKey, validTeam.id);
       }
     }
-  }, [teams, currentTeam]);
 
-  const setCurrentTeam = useCallback((team: Team) => {
-    setCurrentTeamState(team);
-    if (typeof localStorage !== "undefined") {
-      localStorage.setItem("currentTeamId", team.id);
+    setHasHydrated(true);
+  }, [teams, teamsLoading, sessionStatus, storageKey, userId]);
+
+  // Clear team state and storage when user signs out
+  useEffect(() => {
+    if (sessionStatus === "unauthenticated") {
+      setCurrentTeamState(null);
+      setHasHydrated(false);
+      // Clean up all user-scoped team keys on logout
+      if (typeof localStorage !== "undefined") {
+        const keysToRemove: string[] = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && key.startsWith("currentTeamId_")) {
+            keysToRemove.push(key);
+          }
+        }
+        keysToRemove.forEach((key) => localStorage.removeItem(key));
+      }
     }
-  }, []);
+  }, [sessionStatus]);
+
+  const setCurrentTeam = useCallback(
+    (team: Team) => {
+      setCurrentTeamState(team);
+      if (storageKey && typeof localStorage !== "undefined") {
+        localStorage.setItem(storageKey, team.id);
+      }
+    },
+    [storageKey],
+  );
 
   const value = useMemo(
     () => ({
       teams: teams || [],
       currentTeam,
       currentTeamId: currentTeam?.id || null,
-      isLoading: loading,
+      isLoading: sessionStatus === "loading" || teamsLoading || !hasHydrated,
       setCurrentTeam,
     }),
-    [teams, currentTeam, loading, setCurrentTeam],
+    [teams, currentTeam, sessionStatus, teamsLoading, hasHydrated, setCurrentTeam],
   );
 
   return <TeamContext.Provider value={value}>{children}</TeamContext.Provider>;

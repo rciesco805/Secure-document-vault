@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/router";
 import Cookies from "js-cookie";
 
@@ -14,35 +14,34 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 
+const LoadingState = () => (
+  <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-black">
+    <div className="space-y-4 text-center">
+      <Skeleton className="mx-auto h-8 w-48" />
+      <Skeleton className="mx-auto h-4 w-32" />
+    </div>
+  </div>
+);
+
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const teamInfo = useTeam();
-  const [isAuthorized, setIsAuthorized] = useState(false);
 
   // Default to open (true) if no cookie exists, otherwise use the stored preference
   const cookieValue = Cookies.get(SIDEBAR_COOKIE_NAME);
   const isSidebarOpen =
     cookieValue === undefined ? true : cookieValue === "true";
 
+  // Redirect to viewer portal when no teams after full hydration
   useEffect(() => {
-    if (!teamInfo.isLoading) {
-      if (teamInfo.teams.length === 0) {
-        router.replace("/viewer-portal");
-      } else {
-        setIsAuthorized(true);
-      }
+    if (!teamInfo.isLoading && teamInfo.teams.length === 0) {
+      router.replace("/viewer-portal");
     }
-  }, [teamInfo.isLoading, teamInfo.teams, router]);
+  }, [teamInfo.isLoading, teamInfo.teams.length, router]);
 
-  if (teamInfo.isLoading || !isAuthorized) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-black">
-        <div className="space-y-4 text-center">
-          <Skeleton className="mx-auto h-8 w-48" />
-          <Skeleton className="mx-auto h-4 w-32" />
-        </div>
-      </div>
-    );
+  // Show loading while hydrating or waiting for redirect
+  if (teamInfo.isLoading || !teamInfo.currentTeam) {
+    return <LoadingState />;
   }
 
   return (

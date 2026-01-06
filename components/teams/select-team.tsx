@@ -20,7 +20,7 @@ const SelectTeam = ({ teams, currentTeam, isLoading }: TeamContextType) => {
   const userTeam = useTeam();
 
   const switchTeam = (team: Team) => {
-    localStorage.setItem("currentTeamId", team.id);
+    // Let the context handle localStorage with user-scoped keys
     userTeam?.setCurrentTeam(team);
     router.push("/dashboard");
   };

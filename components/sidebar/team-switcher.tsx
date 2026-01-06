@@ -39,7 +39,7 @@ export function TeamSwitcher({
   const { isMobile } = useSidebar();
 
   const switchTeam = (team: Team) => {
-    localStorage.setItem("currentTeamId", team.id);
+    // Let the context handle localStorage with user-scoped keys
     setCurrentTeam(team);
   };
 

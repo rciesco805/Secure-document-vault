@@ -152,6 +152,19 @@ export default function ViewerPortal() {
         <p>BF Fund Investor Portal - Bermuda Franchise Group</p>
         <p className="mt-1">Work Well. Play Well. Be Well.</p>
       </footer>
+
+      {/* Fixed sign out button in lower left corner */}
+      <div className="fixed bottom-6 left-6">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={handleLogout}
+          className="bg-white/90 backdrop-blur-sm shadow-lg hover:bg-gray-100 dark:bg-gray-800/90 dark:hover:bg-gray-700"
+        >
+          <LogOutIcon className="mr-2 h-4 w-4" />
+          Sign Out
+        </Button>
+      </div>
     </div>
   );
 }

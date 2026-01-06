@@ -44,12 +44,13 @@ export default function Presets() {
     fetcher,
   );
 
-  const { data: datarooms, isLoading: dataroomsLoading } = useSWR<DataroomBasic[]>(
+  const { data: dataroomsResponse, isLoading: dataroomsLoading } = useSWR<{ datarooms: DataroomBasic[]; totalCount: number }>(
     teamInfo?.currentTeam?.id
       ? `/api/teams/${teamInfo.currentTeam.id}/datarooms`
       : null,
     fetcher,
   );
+  const datarooms = dataroomsResponse?.datarooms;
 
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);

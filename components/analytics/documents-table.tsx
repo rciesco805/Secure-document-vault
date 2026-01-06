@@ -47,7 +47,7 @@ interface Document {
   id: string;
   name: string;
   views: number;
-  avgDuration: string;
+  totalDuration: string;
   lastViewed: Date | null;
 }
 
@@ -99,7 +99,7 @@ const columns: ColumnDef<Document>[] = [
     ),
   },
   {
-    accessorKey: "avgDuration",
+    accessorKey: "totalDuration",
     header: ({ column }) => {
       return (
         <Button
@@ -111,7 +111,7 @@ const columns: ColumnDef<Document>[] = [
               : "text-nowrap font-normal"
           }
         >
-          Avg Duration
+          Total Duration
           {column.getIsSorted() === "asc" ? (
             <ChevronUpIcon className="ml-2 h-4 w-4" />
           ) : column.getIsSorted() === "desc" ? (
@@ -124,7 +124,7 @@ const columns: ColumnDef<Document>[] = [
     },
     cell: ({ row }) => (
       <div className="text-sm text-muted-foreground">
-        {row.original.avgDuration}
+        {row.original.totalDuration}
       </div>
     ),
   },
@@ -221,7 +221,7 @@ export default function DocumentsTable({
     const exportData = documents.map((doc) => ({
       "Document Name": doc.name,
       Views: doc.views,
-      "Average Duration": doc.avgDuration,
+      "Total Duration": doc.totalDuration,
       "Last Viewed": doc.lastViewed
         ? new Date(doc.lastViewed).toISOString()
         : "Never",

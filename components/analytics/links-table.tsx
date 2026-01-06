@@ -53,7 +53,7 @@ interface Link {
   documentName: string;
   documentId: string;
   views: number;
-  avgDuration: string;
+  totalDuration: string;
   lastViewed: Date | null;
 }
 
@@ -159,7 +159,7 @@ const columns: ColumnDef<Link>[] = [
     ),
   },
   {
-    accessorKey: "avgDuration",
+    accessorKey: "totalDuration",
     header: ({ column }) => {
       return (
         <Button
@@ -172,7 +172,7 @@ const columns: ColumnDef<Link>[] = [
             "px-0",
           )}
         >
-          Avg Duration
+          Total Duration
           {column.getIsSorted() === "asc" ? (
             <ChevronUpIcon className="ml-2 h-4 w-4" />
           ) : column.getIsSorted() === "desc" ? (
@@ -185,7 +185,7 @@ const columns: ColumnDef<Link>[] = [
     },
     cell: ({ row }) => (
       <div className="text-sm text-muted-foreground">
-        {row.original.avgDuration}
+        {row.original.totalDuration}
       </div>
     ),
   },
@@ -285,7 +285,7 @@ export default function LinksTable({
       URL: link.url,
       Document: link.documentName,
       Views: link.views,
-      "Average Duration": link.avgDuration,
+      "Total Duration": link.totalDuration,
       "Last Viewed": link.lastViewed
         ? new Date(link.lastViewed).toISOString()
         : "Never",

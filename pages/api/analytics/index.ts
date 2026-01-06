@@ -309,7 +309,7 @@ export default async function handler(
         // Transform the data to match the table requirements
         const transformedLinks = await Promise.all(
           links.map(async (link) => {
-            let avgDuration = "0s";
+            let totalDurationSeconds = 0;
 
             try {
               if (TINYBIRD_ENABLED && link.documentId) {
@@ -324,10 +324,7 @@ export default async function handler(
                 });
 
                 if (durationData.data && durationData.data[0]) {
-                  const totalDuration = durationData.data[0].sum_duration;
-                  const viewCount = durationData.data[0].view_count;
-                  const avgDurationMs = totalDuration / viewCount;
-                  avgDuration = durationFormat(avgDurationMs);
+                  totalDurationSeconds = durationData.data[0].sum_duration;
                 }
               } else {
                 // Use PostgreSQL fallback for duration tracking
@@ -335,10 +332,7 @@ export default async function handler(
                   linkId: link.id,
                 });
 
-                if (durationData.view_count > 0) {
-                  const avgDurationMs = durationData.sum_duration / durationData.view_count;
-                  avgDuration = durationFormat(avgDurationMs);
-                }
+                totalDurationSeconds = durationData.sum_duration;
               }
             } catch (error) {
               console.error("Error fetching duration data:", error);
@@ -353,7 +347,7 @@ export default async function handler(
               documentName: link.document?.name || "Unknown",
               documentId: link.documentId,
               views: link._count.views,
-              avgDuration,
+              totalDuration: durationFormat(totalDurationSeconds),
               lastViewed: link.views[0]?.viewedAt || null,
             };
           }),
@@ -411,7 +405,7 @@ export default async function handler(
         // Transform the data to match the table requirements
         const transformedDocuments = await Promise.all(
           documents.map(async (doc) => {
-            let avgDuration = "0s";
+            let totalDurationSeconds = 0;
             try {
               if (TINYBIRD_ENABLED) {
                 const durationData = await getTotalDocumentDuration({
@@ -425,9 +419,7 @@ export default async function handler(
                 });
 
                 if (durationData.data && durationData.data[0]) {
-                  const totalDuration = durationData.data[0].sum_duration;
-                  const avgDurationMs = totalDuration / doc._count.views;
-                  avgDuration = durationFormat(avgDurationMs);
+                  totalDurationSeconds = durationData.data[0].sum_duration;
                 }
               } else {
                 // Use PostgreSQL fallback for duration tracking
@@ -437,9 +429,7 @@ export default async function handler(
                 });
 
                 if (durationData.data && durationData.data[0]) {
-                  const totalDuration = durationData.data[0].sum_duration;
-                  const avgDurationMs = totalDuration / doc._count.views;
-                  avgDuration = durationFormat(avgDurationMs);
+                  totalDurationSeconds = durationData.data[0].sum_duration;
                 }
               }
             } catch (error) {
@@ -450,7 +440,7 @@ export default async function handler(
               id: doc.id,
               name: doc.name,
               views: doc._count.views,
-              avgDuration,
+              totalDuration: durationFormat(totalDurationSeconds),
               lastViewed: doc.views[0]?.viewedAt || null,
             };
           }),

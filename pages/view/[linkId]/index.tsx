@@ -587,7 +587,7 @@ export default function ViewPage({
           token={storedToken}
           verifiedEmail={verifiedEmail}
           annotationsEnabled={annotationsEnabled}
-          magicLinkToken={magicLinkToken}
+          magicLinkToken={magicLinkVerified ? undefined : magicLinkToken}
         />
       </>
     );
@@ -668,7 +668,7 @@ export default function ViewPage({
           previewToken={previewToken}
           preview={!!preview}
           dataroomIndexEnabled={dataroomIndexEnabled}
-          magicLinkToken={magicLinkToken}
+          magicLinkToken={magicLinkVerified ? undefined : magicLinkToken}
         />
       </>
     );

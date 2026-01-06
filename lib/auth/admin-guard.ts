@@ -16,7 +16,6 @@ export async function requireAdminAccess(
   const session = await getServerSession(context.req, context.res, authOptions);
 
   if (!session) {
-    console.log("[ADMIN_GUARD] No session found, redirecting to login");
     return {
       redirect: {
         destination: "/login",
@@ -26,7 +25,6 @@ export async function requireAdminAccess(
   }
 
   const user = session.user as CustomUser;
-  console.log("[ADMIN_GUARD] Checking admin access for user:", user.id, user.email);
 
   const userTeam = await prisma.userTeam.findFirst({
     where: {
@@ -34,10 +32,7 @@ export async function requireAdminAccess(
     },
   });
 
-  console.log("[ADMIN_GUARD] UserTeam found:", userTeam ? `teamId: ${userTeam.teamId}` : "NONE");
-
   if (!userTeam) {
-    console.log("[ADMIN_GUARD] No UserTeam record, redirecting to viewer-portal");
     return {
       redirect: {
         destination: "/viewer-portal",
@@ -46,7 +41,6 @@ export async function requireAdminAccess(
     };
   }
 
-  console.log("[ADMIN_GUARD] Admin access granted");
   return {
     props: {},
   };

@@ -186,6 +186,23 @@ The following pages use `withAdminGuard()` for server-side protection:
    - Basic view tracking works via PostgreSQL
    - Duration tracking requires Tinybird configuration
 
+### Multi-Admin Session Fix (Jan 6, 2026)
+
+1. **User-scoped team selection**
+   - Team selection now stored per-user in localStorage (`currentTeamId_${userId}`)
+   - Different admins on the same browser no longer inherit each other's team selections
+   - Legacy global `currentTeamId` key automatically cleaned up
+
+2. **Session lifecycle improvements**
+   - All user-scoped team keys cleared on logout
+   - Team context validates stored team ID against current user's memberships
+   - Invalid stored team IDs automatically fall back to first available team
+
+3. **AppLayout hydration fix**
+   - Waits for full team context hydration before making routing decisions
+   - Prevents false viewer-portal redirects during loading
+   - Simplified single LoadingState component
+
 ---
 
 ## File Structure (Key Files)

@@ -12,7 +12,7 @@ import { redis } from "@/lib/redis";
 import { LOCALHOST_IP } from "../utils/geo";
 import { getIpAddress } from "../utils/ip";
 
-const COOKIE_EXPIRATION_TIME = 23 * 60 * 60 * 1000; // 23 hours
+const COOKIE_EXPIRATION_TIME = 1 * 60 * 60 * 1000; // 1 hour
 
 // Define the Zod schema for session data
 export const DataroomSessionSchema = z.object({

@@ -9,7 +9,7 @@ import { z } from "zod";
 import { redis } from "@/lib/redis";
 import { LOCALHOST_IP } from "@/lib/utils/geo";
 
-const COOKIE_EXPIRATION_TIME = 23 * 60 * 60 * 1000; // 23 hours
+const COOKIE_EXPIRATION_TIME = 1 * 60 * 60 * 1000; // 1 hour
 
 export const LinkSessionSchema = z.object({
   linkId: z.string(),

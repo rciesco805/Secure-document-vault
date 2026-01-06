@@ -196,7 +196,7 @@ export default function Login() {
               <span className="w-full border-t border-gray-600" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-black px-2 text-gray-400">Already have access?</span>
+              <span className="bg-black px-2 text-base font-medium text-gray-300">Already have access?</span>
             </div>
           </div>
           <form

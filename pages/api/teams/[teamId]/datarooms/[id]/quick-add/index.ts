@@ -91,7 +91,7 @@ export default async function handle(
               audienceType: "GROUP",
               teamId: teamId,
               emailProtected: true,
-              emailAuthenticated: false,
+              emailAuthenticated: true,
               allowDownload: false,
               enableNotification: true,
             },
@@ -100,6 +100,22 @@ export default async function handle(
           return { ...group, links: [link] };
         });
         quickAddGroup = result;
+      } else {
+        // Ensure existing Quick Add links have emailAuthenticated enabled for magic links
+        if (quickAddGroup.links && quickAddGroup.links.length > 0) {
+          const link = quickAddGroup.links[0];
+          const existingLink = await prisma.link.findUnique({
+            where: { id: link.id },
+            select: { emailAuthenticated: true },
+          });
+          
+          if (existingLink && !existingLink.emailAuthenticated) {
+            await prisma.link.update({
+              where: { id: link.id },
+              data: { emailAuthenticated: true },
+            });
+          }
+        }
       }
 
       const normalizedEmails = emails.map((e) => e.trim().toLowerCase());

@@ -465,7 +465,7 @@ export default function ConversationDetailPage() {
                           <Avatar className="h-8 w-8">
                             <AvatarImage src="" />
                             <AvatarFallback>
-                              {conversation.participants[0].email
+                              {conversation.participants?.[0]?.email
                                 ? conversation.participants[0].email
                                     .charAt(0)
                                     .toUpperCase()
@@ -477,8 +477,8 @@ export default function ConversationDetailPage() {
                               {conversation.title || "Conversation"}
                             </h2>
                             <p className="text-sm text-muted-foreground">
-                              {conversation.participants[0].email ||
-                                "Anonymous Viewer"}
+                              {conversation.participants?.[0]?.email ||
+                                "Deleted Viewer"}
                             </p>
                           </div>
                         </div>

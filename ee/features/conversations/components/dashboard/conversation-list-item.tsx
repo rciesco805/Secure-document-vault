@@ -67,7 +67,7 @@ export function ConversationListItem({
       </div>
 
       <div className="line-clamp-2 text-xs text-muted-foreground">
-        {conversation.lastMessage.content}
+        {conversation.lastMessage?.content || "No messages"}
       </div>
 
       {conversation.unreadCount > 0 && (

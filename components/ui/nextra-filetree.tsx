@@ -48,6 +48,8 @@ interface FileProps {
   label?: ReactElement;
   active?: boolean;
   onToggle?: (active: boolean) => void;
+  className?: string;
+  style?: React.CSSProperties;
 }
 
 function Tree({ children }: { children: ReactNode }): ReactElement {
@@ -170,23 +172,32 @@ const Folder = memo<FolderProps>(
 );
 Folder.displayName = "Folder";
 
-const File = memo<FileProps>(({ label, name, active, onToggle }) => {
+const File = memo<FileProps>(({ label, name, active, onToggle, className, style }) => {
   const indent = useIndent();
   const toggle = useCallback(() => {
     onToggle?.(!active);
-  }, [onToggle]);
+  }, [onToggle, active]);
+
+  const hasCustomStyles = className?.includes("hover:!bg-white");
 
   return (
     <li
       className={cn(
         "flex list-none",
-        "rounded-md text-foreground duration-100 hover:bg-gray-100 hover:dark:bg-muted",
+        "rounded-md duration-100",
+        !hasCustomStyles && "text-foreground hover:bg-gray-100 hover:dark:bg-muted",
         "px-3 py-1.5 leading-6",
-        active && "bg-gray-100 font-semibold dark:bg-muted",
+        active && !hasCustomStyles && "bg-gray-100 font-semibold dark:bg-muted",
+        active && hasCustomStyles && "!bg-white/20 font-semibold",
+        className,
       )}
+      style={style}
     >
       <span
-        className="ml-5 inline-flex w-full cursor-default items-center overflow-hidden"
+        className={cn(
+          "ml-5 inline-flex w-full items-center overflow-hidden",
+          onToggle ? "cursor-pointer" : "cursor-default",
+        )}
         onClick={toggle}
       >
         <Ident />

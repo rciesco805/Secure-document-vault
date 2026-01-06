@@ -20,20 +20,37 @@ const ViewerDocumentFileItem = memo(
   ({
     document,
     dataroomIndexEnabled,
+    textColor,
+    linkId,
+    viewId,
   }: {
     document: DataroomDocumentWithVersion;
     dataroomIndexEnabled?: boolean;
+    textColor?: string;
+    linkId?: string;
+    viewId?: string;
   }) => {
+    const router = useRouter();
     const documentDisplayName = getHierarchicalDisplayName(
       document.name,
       document.hierarchicalIndex,
       dataroomIndexEnabled || false,
     );
 
+    const hasCustomColor = !!textColor;
+
+    const handleClick = () => {
+      if (linkId && viewId) {
+        router.push(`/view/${linkId}/document/${document.dataroomDocumentId}?viewId=${viewId}`);
+      }
+    };
+
     return (
       <FileTree.File
         name={documentDisplayName}
-        // onToggle={() => router.push(`/documents/${document.id}`)}
+        onToggle={handleClick}
+        className={hasCustomColor ? "hover:!bg-white/10" : undefined}
+        style={hasCustomColor ? { color: textColor } : undefined}
       />
     );
   },
@@ -93,6 +110,8 @@ const FolderComponent = memo(
     folderPath,
     dataroomIndexEnabled,
     textColor,
+    linkId,
+    viewId,
   }: {
     folder: DataroomFolderWithDocuments;
     folderId: string | null;
@@ -100,6 +119,8 @@ const FolderComponent = memo(
     folderPath: Set<string> | null;
     dataroomIndexEnabled?: boolean;
     textColor?: string;
+    linkId?: string;
+    viewId?: string;
   }) => {
     const router = useRouter();
 
@@ -121,9 +142,12 @@ const FolderComponent = memo(
               versions: [], // Not needed for display
             }}
             dataroomIndexEnabled={dataroomIndexEnabled}
+            textColor={textColor}
+            linkId={linkId}
+            viewId={viewId}
           />
         )),
-      [folder.documents, dataroomIndexEnabled],
+      [folder.documents, dataroomIndexEnabled, textColor, linkId, viewId],
     );
 
     // Recursively render child folders if they exist
@@ -138,6 +162,8 @@ const FolderComponent = memo(
             folderPath={folderPath}
             dataroomIndexEnabled={dataroomIndexEnabled}
             textColor={textColor}
+            linkId={linkId}
+            viewId={viewId}
           />
         )),
       [
@@ -147,6 +173,8 @@ const FolderComponent = memo(
         folderPath,
         dataroomIndexEnabled,
         textColor,
+        linkId,
+        viewId,
       ],
     );
 
@@ -233,6 +261,8 @@ const SidebarFolders = ({
   setFolderId,
   dataroomIndexEnabled,
   accentColor,
+  linkId,
+  viewId,
 }: {
   folders: DataroomFolder[];
   documents: DataroomDocumentWithVersion[];
@@ -240,6 +270,8 @@ const SidebarFolders = ({
   setFolderId: React.Dispatch<React.SetStateAction<string | null>>;
   dataroomIndexEnabled?: boolean;
   accentColor?: string;
+  linkId?: string;
+  viewId?: string;
 }) => {
   const nestedFolders = useMemo(() => {
     if (folders) {
@@ -279,6 +311,8 @@ const SidebarFolders = ({
             folderPath={folderPath}
             dataroomIndexEnabled={dataroomIndexEnabled}
             textColor={textColor}
+            linkId={linkId}
+            viewId={viewId}
           />
         ))}
       </FileTree>
@@ -293,6 +327,8 @@ export function ViewFolderTree({
   folderId,
   dataroomIndexEnabled,
   accentColor,
+  linkId,
+  viewId,
 }: {
   folders: DataroomFolder[];
   documents: DataroomDocumentWithVersion[];
@@ -300,6 +336,8 @@ export function ViewFolderTree({
   folderId: string | null;
   dataroomIndexEnabled?: boolean;
   accentColor?: string;
+  linkId?: string;
+  viewId?: string;
 }) {
   if (!folders) return null;
 
@@ -311,6 +349,8 @@ export function ViewFolderTree({
       folderId={folderId}
       dataroomIndexEnabled={dataroomIndexEnabled}
       accentColor={accentColor}
+      linkId={linkId}
+      viewId={viewId}
     />
   );
 }

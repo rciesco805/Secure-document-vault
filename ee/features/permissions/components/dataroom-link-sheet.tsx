@@ -54,6 +54,8 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BadgeTooltip, ButtonTooltip } from "@/components/ui/tooltip";
 
+import { InviteViewersModal } from "@/ee/features/dataroom-invitations/components/invite-viewers-modal";
+
 import { PermissionsSheet } from "./permissions-sheet";
 
 export const DEFAULT_LINK_PROPS = (
@@ -119,6 +121,7 @@ export function DataroomLinkSheet({
   const [createdLink, setCreatedLink] = useState<LinkWithViews | null>(null);
   const [hasCustomPermissions, setHasCustomPermissions] =
     useState<boolean>(false);
+  const [showInviteModal, setShowInviteModal] = useState<boolean>(false);
 
   const isPresetsAllowed =
     isTrial ||
@@ -1023,6 +1026,19 @@ export function DataroomLinkSheet({
           link={createdLink}
           hasCustomPermissions={hasCustomPermissions}
           onCreateAnother={handleCreateAnother}
+          onSendLink={() => {
+            setShowSuccessSheet(false);
+            setShowInviteModal(true);
+          }}
+        />
+      )}
+
+      {createdLink && linkType === LinkType.DATAROOM_LINK && (
+        <InviteViewersModal
+          open={showInviteModal}
+          setOpen={setShowInviteModal}
+          dataroomId={targetId}
+          linkId={createdLink.id}
         />
       )}
     </>

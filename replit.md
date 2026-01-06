@@ -203,6 +203,23 @@ The following pages use `withAdminGuard()` for server-side protection:
    - Prevents false viewer-portal redirects during loading
    - Simplified single LoadingState component
 
+### Quick Add Dataroom-Agnostic Fix (Jan 6, 2026)
+
+1. **Auto-provisioning Quick Add groups**
+   - Every new dataroom automatically gets a Quick Add group and link on creation
+   - No manual setup required - Quick Add works immediately for any dataroom
+
+2. **Fixed "Send Invitations" for Quick Add links**
+   - Modified `ee/features/dataroom-invitations/api/group-invite.ts`
+   - When using Quick Add Link, new emails are automatically added as viewers and group members
+   - Emails are added to the link's allowList before sending invitations
+   - This allows entering any email in the invitation modal - no need to add members first
+
+3. **Login page UI improvements**
+   - "Request Invite" button moved to top for first-time visitors
+   - "Already have access?" divider separates login options
+   - Larger, more visible divider text
+
 ---
 
 ## File Structure (Key Files)

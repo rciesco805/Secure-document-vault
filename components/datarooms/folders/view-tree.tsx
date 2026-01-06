@@ -40,8 +40,22 @@ const ViewerDocumentFileItem = memo(
     const hasCustomColor = !!textColor;
 
     const handleClick = () => {
-      if (linkId && viewId) {
-        router.push(`/view/${linkId}/document/${document.dataroomDocumentId}?viewId=${viewId}`);
+      if (linkId) {
+        const query = router.query;
+        const params = new URLSearchParams();
+        
+        // Preserve viewId if available
+        if (viewId) {
+          params.set('viewId', viewId);
+        }
+        
+        // Preserve previewToken for admin preview mode
+        if (query.previewToken) {
+          params.set('previewToken', query.previewToken as string);
+        }
+        
+        const queryString = params.toString();
+        router.push(`/view/${linkId}/document/${document.dataroomDocumentId}${queryString ? `?${queryString}` : ''}`);
       }
     };
 

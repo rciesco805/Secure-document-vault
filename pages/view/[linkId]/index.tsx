@@ -385,75 +385,28 @@ export default function ViewPage({
     }
   }, [router.isReady, router.query.linkId, status, session, storedToken, magicLinkVerified, isVerifyingMagicLink]);
 
-  // Handle magic link verification from email invitation
+  // Handle magic link - just store email locally, let DataroomView verify via backend
   useEffect(() => {
-    const verifyMagicLink = async () => {
+    const prepareMagicLink = () => {
       const linkId = router.query.linkId as string;
-      
-      let token = router.query.token as string | undefined;
-      let email = router.query.email as string | undefined;
-      
-      if (!token && linkId) {
-        token = window.localStorage.getItem(`pm_magic_token_${linkId}`) || undefined;
-        email = window.localStorage.getItem(`pm_magic_email_${linkId}`) || undefined;
-      }
+      const token = router.query.token as string | undefined;
+      const email = router.query.email as string | undefined;
 
-      if (!token || !email || !linkId || magicLinkVerified || isVerifyingMagicLink) {
+      if (!token || !email || !linkId) {
         return;
       }
 
-      setIsVerifyingMagicLink(true);
-
-      try {
-        const response = await fetch("/api/view/verify-magic-link", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ token, email, linkId }),
-        });
-
-        const data = await response.json();
-
-        if (data.verified) {
-          window.localStorage.setItem("papermark.email", data.email);
-          window.localStorage.removeItem(`pm_magic_token_${linkId}`);
-          window.localStorage.removeItem(`pm_magic_email_${linkId}`);
-          setStoredEmail(data.email);
-          setMagicLinkVerified(true);
-
-          const oneHour = 1 / 24;
-          Cookies.set(`pm_drs_flag_${linkId}`, "verified", {
-            path: `/view/${linkId}`,
-            expires: oneHour,
-            sameSite: "strict",
-            secure: window.location.protocol === "https:",
-          });
-          setStoredToken("verified");
-
-          if (router.query.token) {
-            const { token: _, email: __, ...restQuery } = router.query;
-            router.replace(
-              { pathname: router.pathname, query: restQuery },
-              undefined,
-              { shallow: true }
-            );
-          }
-        } else {
-          window.localStorage.removeItem(`pm_magic_token_${linkId}`);
-          window.localStorage.removeItem(`pm_magic_email_${linkId}`);
-        }
-      } catch (error) {
-        console.error("Magic link verification failed:", error);
-        window.localStorage.removeItem(`pm_magic_token_${linkId}`);
-        window.localStorage.removeItem(`pm_magic_email_${linkId}`);
-      } finally {
-        setIsVerifyingMagicLink(false);
-      }
+      // Store email for the dataroom view to use
+      window.localStorage.setItem("papermark.email", email.toLowerCase());
+      setStoredEmail(email.toLowerCase());
+      
+      console.log("[MAGIC_LINK] Prepared magic link for backend verification:", email);
     };
 
     if (router.isReady) {
-      verifyMagicLink();
+      prepareMagicLink();
     }
-  }, [router.isReady, router.query.linkId, router.query.token, router.query.email, magicLinkVerified, isVerifyingMagicLink]);
+  }, [router.isReady, router.query.linkId, router.query.token, router.query.email]);
 
   if (router.isFallback) {
     return (
@@ -587,7 +540,7 @@ export default function ViewPage({
           token={storedToken}
           verifiedEmail={verifiedEmail}
           annotationsEnabled={annotationsEnabled}
-          magicLinkToken={magicLinkVerified ? undefined : magicLinkToken}
+          magicLinkToken={magicLinkToken}
         />
       </>
     );
@@ -668,7 +621,7 @@ export default function ViewPage({
           previewToken={previewToken}
           preview={!!preview}
           dataroomIndexEnabled={dataroomIndexEnabled}
-          magicLinkToken={magicLinkVerified ? undefined : magicLinkToken}
+          magicLinkToken={magicLinkToken}
         />
       </>
     );

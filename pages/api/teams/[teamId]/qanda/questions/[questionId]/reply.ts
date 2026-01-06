@@ -3,6 +3,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
+import { sendEmail } from "@/lib/resend";
+import QuestionReply from "@/components/emails/question-reply";
 
 export default async function handle(
   req: NextApiRequest,
@@ -40,6 +42,9 @@ export default async function handle(
           id: questionId,
           teamId,
         },
+        include: {
+          dataroom: { select: { name: true } },
+        },
       });
 
       if (!question) {
@@ -60,6 +65,24 @@ export default async function handle(
         where: { id: questionId },
         data: { status: "ANSWERED" },
       });
+
+      if (question.viewerEmail) {
+        try {
+          await sendEmail({
+            to: question.viewerEmail,
+            subject: `Reply to your question about ${question.dataroom?.name || "your document"}`,
+            react: QuestionReply({
+              viewerName: question.viewerName,
+              dataroomName: question.dataroom?.name,
+              originalQuestion: question.content,
+              replyContent: content,
+              adminName: user.name,
+            }),
+          });
+        } catch (emailError) {
+          console.error("Failed to send reply notification:", emailError);
+        }
+      }
 
       return res.status(201).json(message);
     } catch (error) {

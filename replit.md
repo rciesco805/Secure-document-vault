@@ -220,6 +220,33 @@ The following pages use `withAdminGuard()` for server-side protection:
    - "Already have access?" divider separates login options
    - Larger, more visible divider text
 
+### Q&A System for Viewer-Admin Communication (Jan 6, 2026)
+
+1. **Database schema**
+   - `ViewerNote` - Freeform notes/feedback from viewers
+   - `DataroomQuestion` - Private questions from viewers with status tracking (OPEN, ANSWERED, CLOSED)
+   - `DataroomQuestionMessage` - Threaded replies within question conversations
+
+2. **Viewer feedback features**
+   - "Leave a Note" - Quick feedback submission
+   - "Ask a Question" - Private questions with email notification to admins
+   - Context tracking: document, dataroom, page number, viewer info
+
+3. **Admin Q&A management**
+   - New Q&A tab in dataroom settings (`/datarooms/[id]/settings/qanda`)
+   - View all questions and notes for a dataroom
+   - Reply to questions with email notification to viewers
+   - Change question status (OPEN, ANSWERED, CLOSED)
+
+4. **Email notifications**
+   - Admins receive email when new question is submitted (only to authorized admins)
+   - Viewers receive email when admin replies to their question
+
+5. **Security measures**
+   - Server-side validation of document/dataroom/link IDs against view
+   - Email notifications restricted to authorized admins only
+   - Proper auth checks on all admin endpoints
+
 ---
 
 ## File Structure (Key Files)
@@ -250,15 +277,36 @@ pages/
 │       └── index.tsx           # Templates (protected)
 └── api/
     ├── teams/
-    │   └── index.ts            # Team management (viewer check)
+    │   ├── index.ts            # Team management (viewer check)
+    │   └── [teamId]/qanda/     # Q&A admin endpoints
+    │       ├── notes.ts
+    │       └── questions/
+    │           ├── index.ts
+    │           └── [questionId]/
+    │               ├── reply.ts
+    │               └── status.ts
     └── viewer/
-        └── my-datarooms.ts     # Viewer dataroom access
+        ├── my-datarooms.ts     # Viewer dataroom access
+        ├── notes.ts            # Viewer note submission
+        └── questions.ts        # Viewer question submission
 
 components/
 ├── layouts/
 │   └── app.tsx                 # Admin layout with client-side backup
+├── qanda/
+│   ├── viewer-feedback-panel.tsx  # Floating feedback button for viewers
+│   └── admin-qanda-panel.tsx      # Admin Q&A management UI
+├── emails/
+│   ├── new-question.tsx        # Email to admins for new questions
+│   └── question-reply.tsx      # Email to viewers for replies
 └── sign/
     └── field-placement-editor.tsx  # Signature field editor
+
+lib/swr/
+├── use-qanda.ts               # SWR hooks for Q&A data
+
+prisma/schema/
+└── qanda.prisma               # Q&A database models
 ```
 
 ---

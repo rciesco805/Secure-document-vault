@@ -22,6 +22,16 @@ export default async function handle(
         return res.status(404).json({ error: "View not found" });
       }
 
+      if (documentId && view.documentId && documentId !== view.documentId) {
+        return res.status(400).json({ error: "Document ID does not match the view" });
+      }
+      if (dataroomId && view.dataroomId && dataroomId !== view.dataroomId) {
+        return res.status(400).json({ error: "Dataroom ID does not match the view" });
+      }
+      if (linkId && view.linkId && linkId !== view.linkId) {
+        return res.status(400).json({ error: "Link ID does not match the view" });
+      }
+
       const note = await prisma.viewerNote.create({
         data: {
           content,

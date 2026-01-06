@@ -123,9 +123,81 @@ export default function Login() {
                 BF Fund Investor Portal
               </span>
             </Link>
-            <h3 className="text-balance text-sm text-gray-300">
-              Secure access to Bermuda Franchise Group dataroom.
+            <h3 className="text-sm text-gray-300">
+              Secure access to Bermuda Franchise Fund Dataroom
             </h3>
+          </div>
+          <div className="px-4 pt-6 sm:px-12">
+            <p className="mb-3 text-center">
+              <span className="block text-lg font-bold text-white">First time here and want access?</span>
+              <span className="block text-lg font-bold text-white">Click below</span>
+            </p>
+            <Dialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen}>
+              <DialogTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="w-full border-gray-600 bg-transparent text-white hover:bg-gray-800 hover:text-white"
+                >
+                  Request Invite
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="bg-gray-900 border-gray-700 text-white sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle className="text-white">Request Access</DialogTitle>
+                  <DialogDescription className="text-gray-400">
+                    Submit your details to request access to the BF Fund Investor Portal.
+                  </DialogDescription>
+                </DialogHeader>
+                <form onSubmit={handleInviteSubmit} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="invite-name" className="text-gray-300">Full Name</Label>
+                    <Input
+                      id="invite-name"
+                      placeholder="John Smith"
+                      value={inviteForm.fullName}
+                      onChange={(e) => setInviteForm({ ...inviteForm, fullName: e.target.value })}
+                      className="border-gray-600 bg-gray-800 text-white placeholder:text-gray-500"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="invite-email" className="text-gray-300">Email</Label>
+                    <Input
+                      id="invite-email"
+                      type="email"
+                      placeholder="john@company.com"
+                      value={inviteForm.email}
+                      onChange={(e) => setInviteForm({ ...inviteForm, email: e.target.value })}
+                      className="border-gray-600 bg-gray-800 text-white placeholder:text-gray-500"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="invite-company" className="text-gray-300">Company</Label>
+                    <Input
+                      id="invite-company"
+                      placeholder="Company Name"
+                      value={inviteForm.company}
+                      onChange={(e) => setInviteForm({ ...inviteForm, company: e.target.value })}
+                      className="border-gray-600 bg-gray-800 text-white placeholder:text-gray-500"
+                    />
+                  </div>
+                  <Button
+                    type="submit"
+                    disabled={inviteLoading || !isInviteFormValid}
+                    className="w-full bg-white text-black hover:bg-gray-200 disabled:opacity-50"
+                  >
+                    {inviteLoading ? "Sending..." : "Submit Request"}
+                  </Button>
+                </form>
+              </DialogContent>
+            </Dialog>
+          </div>
+          <div className="relative my-6 px-4 sm:px-12">
+            <div className="absolute inset-0 flex items-center px-4 sm:px-12">
+              <span className="w-full border-t border-gray-600" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-black px-2 text-gray-400">Already have access?</span>
+            </div>
           </div>
           <form
             className="flex flex-col gap-4 px-4 pt-8 sm:px-12"
@@ -242,73 +314,10 @@ export default function Login() {
                 <X className="h-4 w-4" />
               </button>
               <p className="text-sm text-amber-200 pr-6">
-                Your email is not on the approved access list. Please request an invite using the button below.
+                Your email is not on the approved access list. Please request an invite using the button above.
               </p>
             </div>
           )}
-          <div className="mt-8 px-4 sm:px-12">
-            <p className="mb-3 text-center text-sm text-gray-400">
-              Want Access? Click below
-            </p>
-            <Dialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen}>
-              <DialogTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="w-full border-gray-600 bg-transparent text-white hover:bg-gray-800 hover:text-white"
-                >
-                  Request Invite
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="bg-gray-900 border-gray-700 text-white sm:max-w-md">
-                <DialogHeader>
-                  <DialogTitle className="text-white">Request Access</DialogTitle>
-                  <DialogDescription className="text-gray-400">
-                    Submit your details to request access to the BF Fund Investor Portal.
-                  </DialogDescription>
-                </DialogHeader>
-                <form onSubmit={handleInviteSubmit} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="invite-name" className="text-gray-300">Full Name</Label>
-                    <Input
-                      id="invite-name"
-                      placeholder="John Smith"
-                      value={inviteForm.fullName}
-                      onChange={(e) => setInviteForm({ ...inviteForm, fullName: e.target.value })}
-                      className="border-gray-600 bg-gray-800 text-white placeholder:text-gray-500"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="invite-email" className="text-gray-300">Email</Label>
-                    <Input
-                      id="invite-email"
-                      type="email"
-                      placeholder="john@company.com"
-                      value={inviteForm.email}
-                      onChange={(e) => setInviteForm({ ...inviteForm, email: e.target.value })}
-                      className="border-gray-600 bg-gray-800 text-white placeholder:text-gray-500"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="invite-company" className="text-gray-300">Company</Label>
-                    <Input
-                      id="invite-company"
-                      placeholder="Company Name"
-                      value={inviteForm.company}
-                      onChange={(e) => setInviteForm({ ...inviteForm, company: e.target.value })}
-                      className="border-gray-600 bg-gray-800 text-white placeholder:text-gray-500"
-                    />
-                  </div>
-                  <Button
-                    type="submit"
-                    disabled={inviteLoading || !isInviteFormValid}
-                    className="w-full bg-white text-black hover:bg-gray-200 disabled:opacity-50"
-                  >
-                    {inviteLoading ? "Sending..." : "Submit Request"}
-                  </Button>
-                </form>
-              </DialogContent>
-            </Dialog>
-          </div>
           <p className="mt-6 w-full max-w-md px-4 text-xs text-gray-400 sm:px-12">
             By clicking continue, you acknowledge that you have read and agree
             to Bermuda Franchise Group&apos;s terms of use. For inquiries,

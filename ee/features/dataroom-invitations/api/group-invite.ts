@@ -77,6 +77,7 @@ export default async function handle(
       },
       select: {
         id: true,
+        isQuickAdd: true,
         dataroom: {
           select: {
             name: true,
@@ -137,13 +138,81 @@ export default async function handle(
       .map((member) => member.viewer.email)
       .filter(Boolean);
 
-    const targetEmails = Array.from(
-      new Set(
-        (emails ?? availableEmails).filter((email) =>
-          availableEmails.includes(email),
+    // For Quick Add groups, allow adding new emails directly
+    // For regular groups, only send to existing members
+    let targetEmails: string[];
+    
+    if (group.isQuickAdd && emails && emails.length > 0) {
+      // Quick Add: Accept any valid emails - we'll add them to the group
+      targetEmails = Array.from(new Set(emails.map(e => e.trim().toLowerCase())));
+      
+      // Collect new emails to add to allowList
+      const newEmailsForAllowList: string[] = [];
+      
+      // Add new emails to the group as viewers and members
+      for (const email of targetEmails) {
+        if (!availableEmails.includes(email)) {
+          // Create viewer if doesn't exist
+          let viewer = await prisma.viewer.findFirst({
+            where: { email, teamId },
+          });
+          
+          if (!viewer) {
+            viewer = await prisma.viewer.create({
+              data: {
+                email,
+                teamId,
+                dataroomId,
+              },
+            });
+          }
+          
+          // Add to group if not already a member
+          const existingMembership = await prisma.viewerGroupMembership.findUnique({
+            where: {
+              viewerId_groupId: {
+                viewerId: viewer.id,
+                groupId: group.id,
+              },
+            },
+          });
+          
+          if (!existingMembership) {
+            await prisma.viewerGroupMembership.create({
+              data: {
+                viewerId: viewer.id,
+                groupId: group.id,
+              },
+            });
+          }
+          
+          // Track emails to add to allowList
+          if (!(link.allowList || []).includes(email)) {
+            newEmailsForAllowList.push(email);
+          }
+        }
+      }
+      
+      // Update allowList once with all new emails
+      if (newEmailsForAllowList.length > 0) {
+        const currentAllowList = link.allowList || [];
+        await prisma.link.update({
+          where: { id: link.id },
+          data: {
+            allowList: [...currentAllowList, ...newEmailsForAllowList],
+          },
+        });
+      }
+    } else {
+      // Regular groups: only send to existing members
+      targetEmails = Array.from(
+        new Set(
+          (emails ?? availableEmails).filter((email) =>
+            availableEmails.includes(email),
+          ),
         ),
-      ),
-    );
+      );
+    }
 
     if (targetEmails.length === 0) {
       return res

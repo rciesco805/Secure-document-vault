@@ -34,6 +34,10 @@ model Document {
   uploadedDocument DocumentUpload[]
   isExternalUpload Boolean          @default(false) // Indicates if the document is an external upload
 
+  // Q&A System
+  viewerNotes       ViewerNote[]
+  dataroomQuestions DataroomQuestion[]
+
   @@index([ownerId])
   @@index([teamId])
   @@index([folderId])

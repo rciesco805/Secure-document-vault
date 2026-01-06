@@ -96,6 +96,10 @@ model Link {
   // workflow entry link
   workflow Workflow?
 
+  // Q&A System
+  viewerNotes       ViewerNote[]
+  dataroomQuestions DataroomQuestion[]
+
   @@unique([domainSlug, slug])
   @@index([documentId])
   @@index([teamId])

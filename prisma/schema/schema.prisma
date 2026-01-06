@@ -149,6 +149,10 @@ model View {
   // Page-level tracking
   pageViews PageView[]
 
+  // Q&A System
+  viewerNotes       ViewerNote[]
+  dataroomQuestions DataroomQuestion[]
+
   teamId String?
   team   Team?   @relation(fields: [teamId], references: [id], onDelete: Cascade)
 
@@ -230,6 +234,9 @@ model Viewer {
 
   // AI chats
   chats Chat[]
+
+  // Q&A System
+  dataroomQuestions DataroomQuestion[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

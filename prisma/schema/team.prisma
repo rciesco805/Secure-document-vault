@@ -34,6 +34,10 @@ model Team {
   signatureDocuments  SignatureDocument[]
   signatureTemplates  SignatureTemplate[]
 
+  // Q&A System
+  viewerNotes        ViewerNote[]
+  dataroomQuestions  DataroomQuestion[]
+
   plan           String    @default("datarooms-plus")
   stripeId       String?   @unique // Stripe customer ID
   subscriptionId String?   @unique // Stripe subscription ID

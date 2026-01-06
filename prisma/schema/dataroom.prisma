@@ -33,6 +33,10 @@ model Dataroom {
   // tags
   tags TagItem[]
 
+  // Q&A System
+  viewerNotes       ViewerNote[]
+  dataroomQuestions DataroomQuestion[]
+
   // notification settings
   enableChangeNotifications Boolean @default(false)
 

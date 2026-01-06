@@ -1,0 +1,138 @@
+// Viewer Notes - Freeform feedback on documents
+model ViewerNote {
+  id        String   @id @default(cuid())
+  content   String   @db.Text
+  
+  // Link to viewer context
+  viewId    String
+  view      View     @relation(fields: [viewId], references: [id], onDelete: Cascade)
+  
+  // Optional document context
+  documentId String?
+  document   Document? @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  
+  // Dataroom context (if applicable)
+  dataroomId String?
+  dataroom   Dataroom? @relation(fields: [dataroomId], references: [id], onDelete: Cascade)
+  
+  // Link context
+  linkId    String
+  link      Link     @relation(fields: [linkId], references: [id], onDelete: Cascade)
+  
+  // Team for admin access
+  teamId    String
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  
+  // Viewer info
+  viewerEmail String?
+  viewerName  String?
+  
+  // Page context (optional - which page the note was made on)
+  pageNumber  Int?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([viewId])
+  @@index([documentId])
+  @@index([dataroomId])
+  @@index([linkId])
+  @@index([teamId])
+  @@index([teamId, createdAt(sort: Desc)])
+}
+
+// Dataroom Questions - Private questions from viewers to admins
+model DataroomQuestion {
+  id          String   @id @default(cuid())
+  subject     String?
+  content     String   @db.Text
+  status      QuestionStatus @default(OPEN)
+  
+  // Link to viewer context
+  viewId      String?
+  view        View?    @relation(fields: [viewId], references: [id], onDelete: SetNull)
+  
+  // Viewer reference
+  viewerId    String?
+  viewer      Viewer?  @relation(fields: [viewerId], references: [id], onDelete: SetNull)
+  
+  // Optional document context
+  documentId  String?
+  document    Document? @relation(fields: [documentId], references: [id], onDelete: SetNull)
+  
+  // Dataroom context (if applicable)
+  dataroomId  String?
+  dataroom    Dataroom? @relation(fields: [dataroomId], references: [id], onDelete: Cascade)
+  
+  // Link context
+  linkId      String
+  link        Link     @relation(fields: [linkId], references: [id], onDelete: Cascade)
+  
+  // Team for admin access
+  teamId      String
+  team        Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  
+  // Viewer info (cached for display even if viewer is deleted)
+  viewerEmail String
+  viewerName  String?
+  
+  // Page context (optional - which page the question was asked on)
+  pageNumber  Int?
+  
+  // Email threading support
+  replyToken  String   @unique @default(cuid())
+  emailMessageId String? // Original email message ID for threading
+  
+  // Messages/replies in this question thread
+  messages    DataroomQuestionMessage[]
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  resolvedAt  DateTime?
+  
+  @@index([viewId])
+  @@index([viewerId])
+  @@index([documentId])
+  @@index([dataroomId])
+  @@index([linkId])
+  @@index([teamId])
+  @@index([teamId, status])
+  @@index([teamId, createdAt(sort: Desc)])
+  @@index([replyToken])
+}
+
+// Messages within a question thread (replies from admin or viewer)
+model DataroomQuestionMessage {
+  id          String   @id @default(cuid())
+  questionId  String
+  question    DataroomQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  
+  content     String   @db.Text
+  senderType  MessageSenderType
+  senderEmail String
+  senderName  String?
+  
+  // Email metadata for threading
+  emailMessageId String? // Email message ID if this came from email
+  inReplyTo      String? // Message ID this is replying to
+  
+  // IP and user agent for audit
+  ipAddress   String?
+  userAgent   String?
+  
+  createdAt   DateTime @default(now())
+  
+  @@index([questionId])
+  @@index([questionId, createdAt])
+}
+
+enum QuestionStatus {
+  OPEN
+  ANSWERED
+  CLOSED
+}
+
+enum MessageSenderType {
+  VIEWER
+  ADMIN
+}

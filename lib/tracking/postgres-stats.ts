@@ -171,3 +171,43 @@ export async function getViewPagesViewedPg({
 
   return result.length;
 }
+
+export async function getTotalLinkDurationPg({
+  linkId,
+}: {
+  linkId: string;
+}) {
+  if (!linkId) {
+    return { sum_duration: 0, view_count: 0 };
+  }
+  
+  // Get all views for this link
+  const views = await prisma.view.findMany({
+    where: {
+      linkId,
+    },
+    select: {
+      id: true,
+    },
+  });
+
+  if (views.length === 0) {
+    return { sum_duration: 0, view_count: 0 };
+  }
+
+  const viewIds = views.map((v) => v.id);
+  
+  const result = await prisma.pageView.aggregate({
+    where: {
+      viewId: { in: viewIds },
+    },
+    _sum: {
+      duration: true,
+    },
+  });
+
+  return {
+    sum_duration: Math.round((result._sum.duration || 0) / 1000),
+    view_count: views.length,
+  };
+}

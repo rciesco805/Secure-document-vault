@@ -6,6 +6,12 @@ import { z } from "zod";
 
 import prisma from "@/lib/prisma";
 import {
+  getTotalDocumentDurationPg,
+  getTotalLinkDurationPg,
+  getViewDurationStatsPg,
+  getViewTotalDurationPg,
+} from "@/lib/tracking/postgres-stats";
+import {
   getTotalDocumentDuration,
   getTotalLinkDuration,
   getTotalViewerDuration,
@@ -15,6 +21,8 @@ import { CustomUser } from "@/lib/types";
 import { durationFormat } from "@/lib/utils";
 
 import { authOptions } from "../auth/[...nextauth]";
+
+const TINYBIRD_ENABLED = !!process.env.TINYBIRD_TOKEN;
 
 const analyticsQuerySchema = z.object({
   interval: z.enum(["24h", "7d", "30d", "custom"]),
@@ -303,8 +311,8 @@ export default async function handler(
           links.map(async (link) => {
             let avgDuration = "0s";
 
-            if (link.documentId) {
-              try {
+            try {
+              if (TINYBIRD_ENABLED && link.documentId) {
                 const durationData = await getTotalLinkDuration({
                   linkId: link.id,
                   documentId: link.documentId,
@@ -321,9 +329,19 @@ export default async function handler(
                   const avgDurationMs = totalDuration / viewCount;
                   avgDuration = durationFormat(avgDurationMs);
                 }
-              } catch (error) {
-                console.error("Error fetching Tinybird data:", error);
+              } else {
+                // Use PostgreSQL fallback for duration tracking
+                const durationData = await getTotalLinkDurationPg({
+                  linkId: link.id,
+                });
+
+                if (durationData.view_count > 0) {
+                  const avgDurationMs = durationData.sum_duration / durationData.view_count;
+                  avgDuration = durationFormat(avgDurationMs);
+                }
               }
+            } catch (error) {
+              console.error("Error fetching duration data:", error);
             }
 
             return {
@@ -395,23 +413,37 @@ export default async function handler(
           documents.map(async (doc) => {
             let avgDuration = "0s";
             try {
-              const durationData = await getTotalDocumentDuration({
-                documentId: doc.id,
-                excludedLinkIds: "", // Include all links
-                excludedViewIds: "", // Include all views
-                since,
-                until: endStr
-                  ? new Date(endStr).getTime()
-                  : new Date().getTime(),
-              });
+              if (TINYBIRD_ENABLED) {
+                const durationData = await getTotalDocumentDuration({
+                  documentId: doc.id,
+                  excludedLinkIds: "", // Include all links
+                  excludedViewIds: "", // Include all views
+                  since,
+                  until: endStr
+                    ? new Date(endStr).getTime()
+                    : new Date().getTime(),
+                });
 
-              if (durationData.data && durationData.data[0]) {
-                const totalDuration = durationData.data[0].sum_duration;
-                const avgDurationMs = totalDuration / doc._count.views;
-                avgDuration = durationFormat(avgDurationMs);
+                if (durationData.data && durationData.data[0]) {
+                  const totalDuration = durationData.data[0].sum_duration;
+                  const avgDurationMs = totalDuration / doc._count.views;
+                  avgDuration = durationFormat(avgDurationMs);
+                }
+              } else {
+                // Use PostgreSQL fallback for duration tracking
+                const durationData = await getTotalDocumentDurationPg({
+                  documentId: doc.id,
+                  excludedViewIds: [],
+                });
+
+                if (durationData.data && durationData.data[0]) {
+                  const totalDuration = durationData.data[0].sum_duration;
+                  const avgDurationMs = totalDuration / doc._count.views;
+                  avgDuration = durationFormat(avgDurationMs);
+                }
               }
             } catch (error) {
-              console.error("Error fetching Tinybird data:", error);
+              console.error("Error fetching duration data:", error);
             }
 
             return {
@@ -463,20 +495,28 @@ export default async function handler(
 
             let totalDuration = 0;
             try {
-              const viewIds = viewer.views.map((view) => view.id).join(",");
-              const durationData = await getTotalViewerDuration({
-                viewIds,
-                since,
-                until: endStr
-                  ? new Date(endStr).getTime()
-                  : new Date().getTime(),
-              });
+              if (TINYBIRD_ENABLED) {
+                const viewIds = viewer.views.map((view) => view.id).join(",");
+                const durationData = await getTotalViewerDuration({
+                  viewIds,
+                  since,
+                  until: endStr
+                    ? new Date(endStr).getTime()
+                    : new Date().getTime(),
+                });
 
-              if (durationData.data && durationData.data[0]) {
-                totalDuration = durationData.data[0].sum_duration;
+                if (durationData.data && durationData.data[0]) {
+                  totalDuration = durationData.data[0].sum_duration;
+                }
+              } else {
+                // Use PostgreSQL fallback for duration tracking - sum up durations for all views
+                const durations = await Promise.all(
+                  viewer.views.map((view) => getViewTotalDurationPg({ viewId: view.id }))
+                );
+                totalDuration = durations.reduce((sum, d) => sum + d, 0);
               }
             } catch (error) {
-              console.error("Error fetching Tinybird data:", error);
+              console.error("Error fetching duration data:", error);
             }
 
             // Get the name from the most recent view that has a name
@@ -543,30 +583,52 @@ export default async function handler(
 
             if (view.document?.id) {
               try {
-                const pageData = await getViewPageDuration({
-                  documentId: view.document.id,
-                  viewId: view.id,
-                  since,
-                  until: endStr
-                    ? new Date(endStr).getTime()
-                    : new Date().getTime(),
-                });
+                if (TINYBIRD_ENABLED) {
+                  const pageData = await getViewPageDuration({
+                    documentId: view.document.id,
+                    viewId: view.id,
+                    since,
+                    until: endStr
+                      ? new Date(endStr).getTime()
+                      : new Date().getTime(),
+                  });
 
-                if (pageData.data && pageData.data.length > 0) {
-                  // Calculate total duration from all pages
-                  totalDuration = pageData.data.reduce(
-                    (sum, page) => sum + page.sum_duration,
-                    0,
-                  );
+                  if (pageData.data && pageData.data.length > 0) {
+                    // Calculate total duration from all pages
+                    totalDuration = pageData.data.reduce(
+                      (sum, page) => sum + page.sum_duration,
+                      0,
+                    );
 
-                  // Calculate completion rate based on pages with any duration
-                  const numPages = view.document.versions[0]?.numPages || 0;
-                  completionRate = numPages
-                    ? (pageData.data.length / numPages) * 100
-                    : 0;
+                    // Calculate completion rate based on pages with any duration
+                    const numPages = view.document.versions[0]?.numPages || 0;
+                    completionRate = numPages
+                      ? (pageData.data.length / numPages) * 100
+                      : 0;
+                  }
+                } else {
+                  // Use PostgreSQL fallback for duration tracking
+                  const pageData = await getViewDurationStatsPg({
+                    documentId: view.document.id,
+                    viewId: view.id,
+                  });
+
+                  if (pageData.data && pageData.data.length > 0) {
+                    // Calculate total duration from all pages
+                    totalDuration = pageData.data.reduce(
+                      (sum, page) => sum + page.sum_duration,
+                      0,
+                    );
+
+                    // Calculate completion rate based on pages with any duration
+                    const numPages = view.document.versions[0]?.numPages || 0;
+                    completionRate = numPages
+                      ? (pageData.data.length / numPages) * 100
+                      : 0;
+                  }
                 }
               } catch (error) {
-                console.error("Error fetching Tinybird data:", error);
+                console.error("Error fetching duration data:", error);
               }
             }
 

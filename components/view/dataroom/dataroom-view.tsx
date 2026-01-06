@@ -230,6 +230,17 @@ export default function DataroomView({
     }
   }, [submitted, isProtected, token, preview, previewToken]);
 
+  // Handle token updates AFTER initial mount (e.g., when parent verifies magic link)
+  // This is separate from the didMount check because we need to react to token changes
+  const prevTokenRef = useRef<string | undefined>(undefined);
+  useEffect(() => {
+    // Only trigger if token changed from undefined/null to a valid value
+    if (token && !prevTokenRef.current && didMount.current && !submitted && !isLoading) {
+      handleSubmission();
+    }
+    prevTokenRef.current = token;
+  }, [token, submitted, isLoading]);
+
   // Handle magic link tokens separately to account for Next.js hydration timing
   // router.query may be empty on initial mount, so we need to wait for router.isReady
   // and ensure both token and email are available from the URL

@@ -321,7 +321,15 @@ export default function ViewPage({
         setStoredEmail(localStoredEmail.toLowerCase());
       }
     }
-  }, [router.query.linkId]);
+    
+    const linkId = router.query.linkId as string;
+    const { token, email } = router.query as { token?: string; email?: string };
+    
+    if (token && email && linkId) {
+      window.localStorage.setItem(`pm_magic_token_${linkId}`, token);
+      window.localStorage.setItem(`pm_magic_email_${linkId}`, email.toLowerCase().trim());
+    }
+  }, [router.query.linkId, router.query.token, router.query.email]);
 
   // Auto-verify authenticated users from viewer portal
   useEffect(() => {
@@ -380,11 +388,15 @@ export default function ViewPage({
   // Handle magic link verification from email invitation
   useEffect(() => {
     const verifyMagicLink = async () => {
-      const { token, email, linkId } = router.query as {
-        token?: string;
-        email?: string;
-        linkId?: string;
-      };
+      const linkId = router.query.linkId as string;
+      
+      let token = router.query.token as string | undefined;
+      let email = router.query.email as string | undefined;
+      
+      if (!token && linkId) {
+        token = window.localStorage.getItem(`pm_magic_token_${linkId}`) || undefined;
+        email = window.localStorage.getItem(`pm_magic_email_${linkId}`) || undefined;
+      }
 
       if (!token || !email || !linkId || magicLinkVerified || isVerifyingMagicLink) {
         return;
@@ -402,13 +414,13 @@ export default function ViewPage({
         const data = await response.json();
 
         if (data.verified) {
-          // Store the verified email
           window.localStorage.setItem("papermark.email", data.email);
+          window.localStorage.removeItem(`pm_magic_token_${linkId}`);
+          window.localStorage.removeItem(`pm_magic_email_${linkId}`);
           setStoredEmail(data.email);
           setMagicLinkVerified(true);
 
-          // Set a session cookie that expires in 1 hour
-          const oneHour = 1 / 24; // 1 hour in days
+          const oneHour = 1 / 24;
           Cookies.set(`pm_drs_flag_${linkId}`, "verified", {
             path: `/view/${linkId}`,
             expires: oneHour,
@@ -417,16 +429,22 @@ export default function ViewPage({
           });
           setStoredToken("verified");
 
-          // Clean up the URL by removing the token and email parameters
-          const { token: _, email: __, ...restQuery } = router.query;
-          router.replace(
-            { pathname: router.pathname, query: restQuery },
-            undefined,
-            { shallow: true }
-          );
+          if (router.query.token) {
+            const { token: _, email: __, ...restQuery } = router.query;
+            router.replace(
+              { pathname: router.pathname, query: restQuery },
+              undefined,
+              { shallow: true }
+            );
+          }
+        } else {
+          window.localStorage.removeItem(`pm_magic_token_${linkId}`);
+          window.localStorage.removeItem(`pm_magic_email_${linkId}`);
         }
       } catch (error) {
         console.error("Magic link verification failed:", error);
+        window.localStorage.removeItem(`pm_magic_token_${linkId}`);
+        window.localStorage.removeItem(`pm_magic_email_${linkId}`);
       } finally {
         setIsVerifyingMagicLink(false);
       }
@@ -435,7 +453,7 @@ export default function ViewPage({
     if (router.isReady) {
       verifyMagicLink();
     }
-  }, [router.isReady, router.query, magicLinkVerified, isVerifyingMagicLink]);
+  }, [router.isReady, router.query.linkId, router.query.token, router.query.email, magicLinkVerified, isVerifyingMagicLink]);
 
   if (router.isFallback) {
     return (

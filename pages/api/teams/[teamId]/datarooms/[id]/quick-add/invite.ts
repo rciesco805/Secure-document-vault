@@ -89,27 +89,75 @@ export default async function handle(
       
       const normalizedEmails = emails.map((e) => e.trim().toLowerCase());
 
+      // First, add all emails to the link's allowList so they can access the dataroom
+      const currentAllowList = await prisma.link.findUnique({
+        where: { id: link.id },
+        select: { allowList: true },
+      });
+      
+      const newEmailsForAllowList = normalizedEmails.filter(
+        (email) => !(currentAllowList?.allowList || []).includes(email)
+      );
+      
+      if (newEmailsForAllowList.length > 0) {
+        await prisma.link.update({
+          where: { id: link.id },
+          data: {
+            allowList: [...(currentAllowList?.allowList || []), ...newEmailsForAllowList],
+          },
+        });
+      }
+
       const results = await Promise.all(
         normalizedEmails.map(async (email) => {
           try {
-            const viewer = await prisma.viewer.findFirst({
+            // Create or find viewer
+            let viewer = await prisma.viewer.findFirst({
               where: {
                 email: email,
                 teamId: teamId,
               },
             });
 
-            if (viewer) {
-              await prisma.viewerInvitation.create({
+            if (!viewer) {
+              viewer = await prisma.viewer.create({
                 data: {
-                  viewerId: viewer.id,
-                  linkId: link.id,
-                  groupId: quickAddGroup.id,
-                  invitedBy: senderEmail,
-                  status: "SENT",
+                  email: email,
+                  teamId: teamId,
+                  dataroomId: dataroomId,
                 },
               });
             }
+
+            // Add to Quick Add group if not already a member
+            const existingMembership = await prisma.viewerGroupMembership.findUnique({
+              where: {
+                viewerId_groupId: {
+                  viewerId: viewer.id,
+                  groupId: quickAddGroup.id,
+                },
+              },
+            });
+
+            if (!existingMembership) {
+              await prisma.viewerGroupMembership.create({
+                data: {
+                  viewerId: viewer.id,
+                  groupId: quickAddGroup.id,
+                },
+              });
+            }
+
+            // Create invitation record
+            await prisma.viewerInvitation.create({
+              data: {
+                viewerId: viewer.id,
+                linkId: link.id,
+                groupId: quickAddGroup.id,
+                invitedBy: senderEmail,
+                status: "SENT",
+              },
+            });
 
             // Create a pre-authenticated magic link with 1-hour expiration
             const magicLinkResult = await createVisitorMagicLink({

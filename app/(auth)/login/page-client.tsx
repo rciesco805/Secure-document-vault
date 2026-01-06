@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 
 import { signIn, useSession } from "next-auth/react";
 import { toast } from "sonner";
@@ -26,15 +26,23 @@ import { Label } from "@/components/ui/label";
 import { X } from "lucide-react";
 
 export default function Login() {
-  const { next } = useParams as { next?: string };
+  const searchParams = useSearchParams();
+  const next = useMemo(() => {
+    const nextParam = searchParams.get("next");
+    return nextParam ? decodeURIComponent(nextParam) : null;
+  }, [searchParams]);
   const router = useRouter();
   const { data: session, status } = useSession();
 
   useEffect(() => {
     if (status === "authenticated") {
-      router.push("/dashboard");
+      if (next) {
+        router.push(next);
+      } else {
+        router.push("/dashboard");
+      }
     }
-  }, [status, router]);
+  }, [status, router, next]);
 
   const [lastUsed, setLastUsed] = useLastUsed();
   const authMethods = ["email", "google"] as const;
@@ -212,7 +220,7 @@ export default function Login() {
               signIn("email", {
                 email: emailValidation.data,
                 redirect: false,
-                ...(next && next.length > 0 ? { callbackUrl: next } : {}),
+                callbackUrl: next || "/dashboard",
               }).then((res) => {
                 if (res?.ok && !res?.error) {
                   setEmail("");
@@ -233,7 +241,7 @@ export default function Login() {
               onClick={() => {
                 setClickedMethod("google");
                 signIn("google", {
-                  ...(next && next.length > 0 ? { callbackUrl: next } : { callbackUrl: "/dashboard" }),
+                  callbackUrl: next || "/dashboard",
                 });
               }}
               loading={clickedMethod === "google"}

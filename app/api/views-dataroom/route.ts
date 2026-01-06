@@ -1,3 +1,4 @@
+import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
 import { reportDeniedAccessAttempt } from "@/ee/features/access-notifications";
@@ -239,11 +240,25 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Fallback: Check for verification cookies when Redis session isn't available
+    // This allows document views within a dataroom to work without Redis
+    let cookieVerificationToken: string | null = null;
+    let cookieEmail: string | null = null;
+    if (!dataroomSession && !isPreview) {
+      const cookieStore = cookies();
+      cookieVerificationToken = cookieStore.get(`pm_vft_${linkId}`)?.value ?? null;
+      cookieEmail = cookieStore.get(`pm_email_${linkId}`)?.value ?? null;
+    }
+
+    // Use effective values that fallback to cookie values
+    const effectiveEmail = email || cookieEmail || "";
+    const effectiveToken = token || cookieVerificationToken || "";
+
     // If there is no session, then we need to check if the link is protected and enforce the checks
     if (!dataroomSession && !isPreview) {
       // Check if email is required for visiting the link
       if (link.emailProtected) {
-        if (!email || email.trim() === "") {
+        if (!effectiveEmail || effectiveEmail.trim() === "") {
           return NextResponse.json(
             { message: "Email is required." },
             { status: 400 },
@@ -251,7 +266,7 @@ export async function POST(request: NextRequest) {
         }
 
         // validate email
-        if (!validateEmail(email)) {
+        if (!validateEmail(effectiveEmail)) {
           return NextResponse.json(
             { message: "Invalid email address." },
             { status: 400 },
@@ -295,7 +310,7 @@ export async function POST(request: NextRequest) {
 
       // Check global block list first - this overrides all other access controls
       const globalBlockCheck = checkGlobalBlockList(
-        email,
+        effectiveEmail,
         link.team?.globalBlockList,
       );
       if (globalBlockCheck.error) {
@@ -305,7 +320,7 @@ export async function POST(request: NextRequest) {
         );
       }
       if (globalBlockCheck.isBlocked) {
-        waitUntil(reportDeniedAccessAttempt(link, email, "global"));
+        waitUntil(reportDeniedAccessAttempt(link, effectiveEmail, "global"));
 
         return NextResponse.json({ message: "Access denied" }, { status: 403 });
       }
@@ -314,12 +329,12 @@ export async function POST(request: NextRequest) {
       if (link.allowList && link.allowList.length > 0) {
         // Determine if the email or its domain is allowed
         const isAllowed = link.allowList.some((allowed) =>
-          isEmailMatched(email, allowed),
+          isEmailMatched(effectiveEmail, allowed),
         );
 
         // Deny access if the email is not allowed
         if (!isAllowed) {
-          waitUntil(reportDeniedAccessAttempt(link, email, "allow"));
+          waitUntil(reportDeniedAccessAttempt(link, effectiveEmail, "allow"));
 
           return NextResponse.json(
             { message: "Unauthorized access" },
@@ -332,12 +347,12 @@ export async function POST(request: NextRequest) {
       if (link.denyList && link.denyList.length > 0) {
         // Determine if the email or its domain is denied
         const isDenied = link.denyList.some((denied) =>
-          isEmailMatched(email, denied),
+          isEmailMatched(effectiveEmail, denied),
         );
 
         // Deny access if the email is denied
         if (isDenied) {
-          waitUntil(reportDeniedAccessAttempt(link, email, "deny"));
+          waitUntil(reportDeniedAccessAttempt(link, effectiveEmail, "deny"));
 
           return NextResponse.json(
             { message: "Unauthorized access" },
@@ -370,18 +385,18 @@ export async function POST(request: NextRequest) {
         } else {
           // Check individual membership
           const isMember = group.members.some(
-            (member) => member.viewer.email === email,
+            (member) => member.viewer.email === effectiveEmail,
           );
 
           // Extract domain from email
-          const emailDomain = extractEmailDomain(email);
+          const emailDomain = extractEmailDomain(effectiveEmail);
           // Check domain access
           const hasDomainAccess = emailDomain
             ? group.domains.some((domain) => domain === emailDomain)
             : false;
 
           if (!isMember && !hasDomainAccess) {
-            waitUntil(reportDeniedAccessAttempt(link, email, "allow"));
+            waitUntil(reportDeniedAccessAttempt(link, effectiveEmail, "allow"));
             return NextResponse.json(
               { message: "Unauthorized access" },
               { status: 403 },
@@ -393,7 +408,7 @@ export async function POST(request: NextRequest) {
       // Request OTP Code for email verification if
       // 1) email verification is required and
       // 2) code is not provided or token not provided
-      if (link.emailAuthenticated && !code && !token && !dataroomVerified) {
+      if (link.emailAuthenticated && !code && !effectiveToken && !dataroomVerified) {
         const ipAddressValue = ipAddress(request);
 
         const { success } = await ratelimit(10, "1 m").limit(
@@ -778,13 +793,31 @@ export async function POST(request: NextRequest) {
               sameSite: "strict",
             });
           } else {
-            // Redis not available - set flag cookie with 1-hour expiry for session-based navigation
+            // Redis not available - set flag cookie with verification info for session-based navigation
             const oneHourFromNow = new Date(Date.now() + 60 * 60 * 1000);
-            response.cookies.set(flagCookieId, "true", {
+            response.cookies.set(flagCookieId, "verified", {
               path: basePath,
               expires: oneHourFromNow,
               sameSite: "strict",
             });
+            // Also set the verification token cookie for document views within the dataroom
+            if (hashedVerificationToken) {
+              response.cookies.set(`pm_vft_${linkId}`, hashedVerificationToken, {
+                path: "/",
+                expires: oneHourFromNow,
+                httpOnly: true,
+                sameSite: "strict",
+              });
+            }
+            // Store verified email for subsequent requests
+            if (viewer?.email ?? email) {
+              response.cookies.set(`pm_email_${linkId}`, viewer?.email ?? email, {
+                path: "/",
+                expires: oneHourFromNow,
+                httpOnly: true,
+                sameSite: "strict",
+              });
+            }
           }
         }
 

@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import { useState } from "react";
 
-import { BellRingIcon, EyeIcon, Loader2, Zap } from "lucide-react";
+import { BellRingIcon, EyeIcon, Loader2, Share2, Zap } from "lucide-react";
 import { toast } from "sonner";
 
 import { useDataroom, useDataroomLinks } from "@/lib/swr/use-dataroom";
@@ -139,6 +139,31 @@ export const DataroomHeader = ({
               </TooltipContent>
             </TooltipPortal>
           </Tooltip>
+          {dataroom?.pId && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const baseUrl = window.location.origin;
+                    const shareUrl = `${baseUrl}/public/dataroom/${dataroom.pId}`;
+                    navigator.clipboard.writeText(shareUrl);
+                    toast.success("Social share link copied!");
+                  }}
+                  className="h-8 px-2 sm:h-9 sm:px-3"
+                >
+                  <Share2 className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Social Share</span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipPortal>
+                <TooltipContent>
+                  <p>Copy public link for social media sharing</p>
+                </TooltipContent>
+              </TooltipPortal>
+            </Tooltip>
+          )}
           <Button 
             onClick={() => setIsLinkSheetOpen(true)} 
             size="sm"

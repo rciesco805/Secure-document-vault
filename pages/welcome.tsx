@@ -28,8 +28,10 @@ import Upload from "@/components/welcome/upload";
 export default function Welcome() {
   const router = useRouter();
   const [showSkipButtons, setShowSkipButtons] = useState(false);
-  const { data: session } = useSession();
+  const [isCheckingAdmin, setIsCheckingAdmin] = useState(true);
+  const { data: session, status } = useSession();
   const signupEventSent = useRef(false);
+  const adminCheckDone = useRef(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -39,12 +41,40 @@ export default function Welcome() {
     return () => clearTimeout(timer);
   }, []);
 
-  // Track signup for new users when welcome page loads (with deduplication)
+  useEffect(() => {
+    async function checkAdminStatus() {
+      if (status !== "authenticated" || !session?.user || adminCheckDone.current) {
+        return;
+      }
+      
+      adminCheckDone.current = true;
+      
+      try {
+        const res = await fetch("/api/teams");
+        const data = await res.json();
+        
+        if (!data || data.length === 0) {
+          router.replace("/viewer-portal");
+          return;
+        }
+        
+        setIsCheckingAdmin(false);
+      } catch (error) {
+        router.replace("/viewer-portal");
+      }
+    }
+    
+    if (status === "authenticated") {
+      checkAdminStatus();
+    } else if (status === "unauthenticated") {
+      router.replace("/login");
+    }
+  }, [status, session, router]);
+
   useEffect(() => {
     const user = session?.user as CustomUser;
 
     if (user?.createdAt && !signupEventSent.current) {
-      // Check if user was created within the last 10 seconds (indicating new signup)
       const isNewUser = new Date(user.createdAt).getTime() > Date.now() - 10000;
 
       if (isNewUser) {
@@ -68,6 +98,14 @@ export default function Welcome() {
     router.query.dataroomId
       ? `/datarooms/${router.query.dataroomId}`
       : "/documents";
+
+  if (isCheckingAdmin || status === "loading") {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    );
+  }
 
   return (
     <>

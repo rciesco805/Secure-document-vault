@@ -46,6 +46,11 @@ A critical architectural decision is the **platform-agnostic design**, ensuring 
 - **Viewers (Investors):** Users without `UserTeam` records but with dataroom access via allowlists are redirected to `/viewer-portal`. They can view shared documents but cannot manage them.
 - **Authentication flow:** Login → Check `UserTeam` → If exists: admin dashboard | If not: viewer portal.
 
+### Database Configuration
+- **Primary:** Replit PostgreSQL (currently in use)
+- **Backup:** Supabase PostgreSQL (credentials configured, needs data sync)
+- **TODO (Next Build):** Sync admin users and team data to Supabase as a backup/migration option
+
 ### Protected Admin Pages (Server-Side)
 The following pages use `withAdminGuard()` for server-side protection:
 - `/dashboard` - Main admin dashboard

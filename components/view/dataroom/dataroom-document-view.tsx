@@ -122,7 +122,7 @@ export default function DataroomDocumentView({
   );
   const [verificationRequested, setVerificationRequested] =
     useState<boolean>(false);
-  const [dataroomVerified, setDataroomVerified] = useState<boolean>(false);
+  const [dataroomVerified, setDataroomVerified] = useState<boolean>(!!token);
   const [verificationToken, setVerificationToken] = useState<string | null>(
     token ?? null,
   );

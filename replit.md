@@ -31,3 +31,29 @@ A critical architectural decision is the **platform-agnostic design**, ensuring 
 - **pdf-lib:** Used for embedding signatures into downloaded PDFs.
 - **qrcode.react:** Generates QR codes for in-person signing.
 - **UPSTASH_REDIS_REST_URL:** Optional for rate limiting and session caching; graceful fallback if not configured.
+
+## Recent Changes (January 2026)
+
+### Authentication & Authorization Overhaul
+- **Fixed Google OAuth redirect bug:** Users added via Quick Add (investors/viewers) who login with Google are now correctly redirected to the viewer portal instead of the admin dashboard.
+- **Server-side admin protection:** Implemented `withAdminGuard()` wrapper in `lib/auth/admin-guard.ts` that checks for `UserTeam` membership before rendering admin pages.
+- **Team auto-creation disabled for viewers:** Modified `/api/teams` to prevent auto-creating teams for viewer-only users (those in `ViewerGroupMembership` or link allowlists).
+- **Viewer portal created:** New `/viewer-portal` page shows investors their accessible datarooms without admin navigation.
+- **Data cleanup performed:** Removed incorrectly assigned ADMIN access from `rciesco@gmail.com` and `investors@bermudafranchisegroup.com`.
+
+### User Role Architecture
+- **Admins (Team Members):** Users with a `UserTeam` record can access the full admin interface (dashboard, documents, datarooms, sign, settings).
+- **Viewers (Investors):** Users without `UserTeam` records but with dataroom access via allowlists are redirected to `/viewer-portal`. They can view shared documents but cannot manage them.
+- **Authentication flow:** Login → Check `UserTeam` → If exists: admin dashboard | If not: viewer portal.
+
+### Protected Admin Pages (Server-Side)
+The following pages use `withAdminGuard()` for server-side protection:
+- `/dashboard` - Main admin dashboard
+- `/documents` - Document management
+- `/datarooms` - Dataroom management
+- `/sign` - E-signature dashboard
+- `/sign/new` - Create signature document
+- `/sign/bulk` - Bulk sending
+- `/sign/[id]` - View signature document
+- `/sign/templates` - Template management
+- `/settings/general` - Team settings

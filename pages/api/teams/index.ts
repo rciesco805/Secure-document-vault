@@ -21,6 +21,7 @@ export default async function handle(
     }
 
     const user = session.user as CustomUser;
+    console.log("[API/TEAMS] Fetching teams for user:", user.id, user.email);
 
     try {
       const userTeams = await prisma.userTeam.findMany({
@@ -47,6 +48,7 @@ export default async function handle(
       });
 
       const teams = userTeams.map((userTeam) => userTeam.team);
+      console.log("[API/TEAMS] Found", teams.length, "teams for user:", user.email, teams.map(t => t.id));
 
       // If no teams, check if user is a viewer-only (added via Quick Add or allowList)
       // Viewer-only users should NOT get an auto-created team

@@ -323,6 +323,60 @@ export default function ViewPage({
     }
   }, [router.query.linkId]);
 
+  // Auto-verify authenticated users from viewer portal
+  useEffect(() => {
+    const autoVerifyAuthenticatedUser = async () => {
+      const linkId = router.query.linkId as string;
+      const userEmail = (session?.user as CustomUser)?.email;
+      
+      if (
+        status !== "authenticated" ||
+        !userEmail ||
+        !linkId ||
+        storedToken ||
+        magicLinkVerified ||
+        isVerifyingMagicLink
+      ) {
+        return;
+      }
+      
+      setIsVerifyingMagicLink(true);
+      
+      try {
+        const response = await fetch("/api/view/auto-verify-session", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: userEmail, linkId }),
+        });
+        
+        const data = await response.json();
+        
+        if (data.verified) {
+          window.localStorage.setItem("papermark.email", userEmail.toLowerCase());
+          setStoredEmail(userEmail.toLowerCase());
+          setMagicLinkVerified(true);
+          
+          const oneHour = 1 / 24;
+          Cookies.set(`pm_drs_flag_${linkId}`, "verified", {
+            path: `/view/${linkId}`,
+            expires: oneHour,
+            sameSite: "strict",
+            secure: window.location.protocol === "https:",
+          });
+          setStoredToken("verified");
+        }
+      } catch (error) {
+        console.error("Auto-verification failed:", error);
+      } finally {
+        setIsVerifyingMagicLink(false);
+      }
+    };
+    
+    if (router.isReady && status === "authenticated") {
+      autoVerifyAuthenticatedUser();
+    }
+  }, [router.isReady, router.query.linkId, status, session, storedToken, magicLinkVerified, isVerifyingMagicLink]);
+
   // Handle magic link verification from email invitation
   useEffect(() => {
     const verifyMagicLink = async () => {

@@ -3,8 +3,10 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { waitUntil } from "@vercel/functions";
 import { z } from "zod";
 
+import AbuseReportEmail from "@/components/emails/abuse-report";
 import prisma from "@/lib/prisma";
 import { redis } from "@/lib/redis";
+import { sendEmail } from "@/lib/resend";
 
 const bodyValidation = z.object({
   linkId: z.string(),
@@ -39,6 +41,13 @@ export default async function handler(
     return res.status(400).json({ message: "Invalid request" });
   }
 
+  let documentInfo: {
+    name: string;
+    teamId: string;
+  } | null = null;
+  let viewerEmail: string | null = null;
+  let dataroomName: string | null = null;
+
   try {
     const view = await prisma.view.findUnique({
       where: {
@@ -46,7 +55,11 @@ export default async function handler(
         linkId,
         documentId,
       },
-      select: { id: true },
+      select: { 
+        id: true,
+        viewerEmail: true,
+        dataroomId: true,
+      },
     });
 
     if (!view) {
@@ -54,6 +67,26 @@ export default async function handler(
         status: "error",
         message: "View not found",
       });
+    }
+
+    viewerEmail = view.viewerEmail;
+
+    const document = await prisma.document.findUnique({
+      where: { id: documentId },
+      select: {
+        name: true,
+        teamId: true,
+      },
+    });
+
+    documentInfo = document;
+
+    if (view.dataroomId) {
+      const dataroom = await prisma.dataroom.findUnique({
+        where: { id: view.dataroomId },
+        select: { name: true },
+      });
+      dataroomName = dataroom?.name || null;
     }
   } catch (err) {
     console.error(err);
@@ -95,6 +128,38 @@ export default async function handler(
         ]),
       );
     }
+
+    // Send email notification to authorized admins
+    const adminEmails = [
+      "rciesco@gmail.com",
+      "investors@bermudafranchisegroup.com",
+    ];
+
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://dataroom.bermudafranchisegroup.com";
+    const documentUrl = documentInfo?.teamId 
+      ? `${baseUrl}/documents?teamId=${documentInfo.teamId}`
+      : baseUrl;
+
+    waitUntil(
+      Promise.all(
+        adminEmails.map((email) =>
+          sendEmail({
+            to: email,
+            subject: `Abuse Report: ${documentInfo?.name || "Unknown Document"}`,
+            react: AbuseReportEmail({
+              documentName: documentInfo?.name || "Unknown Document",
+              dataroomName: dataroomName || undefined,
+              abuseType,
+              reporterEmail: viewerEmail || undefined,
+              documentUrl,
+            }),
+            system: true,
+          }).catch((err) => {
+            console.error(`Failed to send abuse report email to ${email}:`, err);
+          })
+        )
+      )
+    );
 
     return res.status(200).json({
       status: "success",

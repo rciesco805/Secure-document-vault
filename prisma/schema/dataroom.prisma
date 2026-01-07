@@ -116,6 +116,12 @@ model DataroomBrand {
   dataroomId     String   @unique
   dataroom       Dataroom @relation(fields: [dataroomId], references: [id], onDelete: Cascade)
 
+  // Welcome splash screen settings
+  welcomeScreenEnabled     Boolean @default(false) // Show splash screen on entry
+  welcomePersonalNote      String? // Personal note from the admin
+  welcomeSuggestedViewing  String? // Suggested viewing paragraph(s)
+  welcomeRecommendedDocs   Json?   // Array of document IDs to recommend viewing first
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

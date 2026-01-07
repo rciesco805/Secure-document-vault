@@ -70,13 +70,28 @@ export default async function handle(
   } else if (req.method === "POST" || req.method === "PUT") {
     // POST/PUT /api/teams/:teamId/datarooms/:id/branding
     // Use upsert to handle both create and update
-    const { logo, banner, favicon, brandColor, accentColor, welcomeMessage } = req.body as {
+    const { 
+      logo, 
+      banner, 
+      favicon, 
+      brandColor, 
+      accentColor, 
+      welcomeMessage,
+      welcomeScreenEnabled,
+      welcomePersonalNote,
+      welcomeSuggestedViewing,
+      welcomeRecommendedDocs,
+    } = req.body as {
       logo?: string;
       banner?: string;
       favicon?: string;
       brandColor?: string;
       accentColor?: string;
       welcomeMessage?: string;
+      welcomeScreenEnabled?: boolean;
+      welcomePersonalNote?: string;
+      welcomeSuggestedViewing?: string;
+      welcomeRecommendedDocs?: string[];
     };
 
     const brand = await prisma.dataroomBrand.upsert({
@@ -90,6 +105,10 @@ export default async function handle(
         brandColor,
         accentColor,
         welcomeMessage,
+        welcomeScreenEnabled: welcomeScreenEnabled ?? false,
+        welcomePersonalNote,
+        welcomeSuggestedViewing,
+        welcomeRecommendedDocs,
         dataroomId,
       },
       update: {
@@ -99,6 +118,10 @@ export default async function handle(
         brandColor,
         accentColor,
         welcomeMessage,
+        ...(welcomeScreenEnabled !== undefined && { welcomeScreenEnabled }),
+        ...(welcomePersonalNote !== undefined && { welcomePersonalNote }),
+        ...(welcomeSuggestedViewing !== undefined && { welcomeSuggestedViewing }),
+        ...(welcomeRecommendedDocs !== undefined && { welcomeRecommendedDocs }),
       },
     });
 

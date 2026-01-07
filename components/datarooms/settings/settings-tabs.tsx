@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
 
-import { BellIcon, CogIcon, DownloadIcon, ShieldIcon, MessageCircleQuestion } from "lucide-react";
+import { BellIcon, CogIcon, DownloadIcon, ShieldIcon, MessageCircleQuestion, SparklesIcon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
@@ -74,6 +74,18 @@ export default function SettingsTabs({ dataroomId }: SettingsTabsProps) {
       >
         <MessageCircleQuestion className="h-4 w-4" />
         Q&A
+      </Link>
+      <Link
+        href={`/datarooms/${dataroomId}/settings/welcome`}
+        className={cn(
+          "flex items-center gap-x-2 rounded-md p-2 text-primary hover:bg-muted",
+          {
+            "bg-muted font-medium": router.pathname.includes("welcome"),
+          },
+        )}
+      >
+        <SparklesIcon className="h-4 w-4" />
+        Welcome Screen
       </Link>
     </nav>
   );

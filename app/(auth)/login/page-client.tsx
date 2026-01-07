@@ -34,15 +34,17 @@ export default function Login() {
   const router = useRouter();
   const { data: session, status } = useSession();
 
+  const isAdminLogin = searchParams.get("admin") === "true";
+
   useEffect(() => {
     if (status === "authenticated") {
       if (next) {
         router.push(next);
       } else {
-        router.push("/dashboard");
+        router.push(isAdminLogin ? "/dashboard" : "/viewer-redirect");
       }
     }
-  }, [status, router, next]);
+  }, [status, router, next, isAdminLogin]);
 
   const [lastUsed, setLastUsed] = useLastUsed();
   const [clickedMethod, setClickedMethod] = useState<"email" | undefined>(
@@ -223,7 +225,7 @@ export default function Login() {
               signIn("email", {
                 email: emailValidation.data,
                 redirect: false,
-                callbackUrl: next || "/dashboard",
+                callbackUrl: next || (isAdminLogin ? "/dashboard" : "/viewer-redirect"),
               }).then((res) => {
                 if (res?.ok && !res?.error) {
                   setEmail("");
@@ -301,6 +303,27 @@ export default function Login() {
             </a>
             .
           </p>
+          {!isAdminLogin && (
+            <div className="mt-8 mb-4 w-full max-w-md px-4 text-center sm:px-12">
+              <Link
+                href="/login?admin=true"
+                className="text-xs text-gray-500 hover:text-gray-300 transition-colors"
+              >
+                Admin access
+              </Link>
+            </div>
+          )}
+          {isAdminLogin && (
+            <div className="mt-8 mb-4 w-full max-w-md px-4 text-center sm:px-12">
+              <p className="text-xs text-amber-400 mb-2">Admin Login Mode</p>
+              <Link
+                href="/login"
+                className="text-xs text-gray-500 hover:text-gray-300 transition-colors"
+              >
+                Back to investor login
+              </Link>
+            </div>
+          )}
         </div>
       </div>
       <div className="relative hidden w-full justify-center overflow-hidden bg-black md:flex md:w-1/2 lg:w-1/2">

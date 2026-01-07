@@ -113,7 +113,7 @@ export default function WelcomeScreenSettings({ dataroomId }: WelcomeScreenSetti
     fetcher
   );
 
-  const { data: documentsData, isLoading: docsLoading } = useSWR<{ documents: DataroomDocumentWithDocument[] }>(
+  const { data: documentsData, isLoading: docsLoading } = useSWR<DataroomDocumentWithDocument[]>(
     teamId && dataroomId ? `/api/teams/${teamId}/datarooms/${dataroomId}/documents` : null,
     fetcher
   );
@@ -141,15 +141,15 @@ export default function WelcomeScreenSettings({ dataroomId }: WelcomeScreenSetti
     }
   }, [brand]);
 
-  const allDocuments = documentsData?.documents ?? [];
+  const allDocuments = documentsData ?? [];
   const availableDocs = allDocuments.filter(
-    (doc) => !recommendedDocIds.includes(doc.document.id)
+    (doc) => !recommendedDocIds.includes(doc.id)
   );
 
   const recommendedDocs = recommendedDocIds
     .map((docId) => {
-      const doc = allDocuments.find((d) => d.document.id === docId);
-      return doc ? { id: doc.document.id, name: doc.document.name } : null;
+      const doc = allDocuments.find((d) => d.id === docId);
+      return doc ? { id: doc.id, name: doc.document.name } : null;
     })
     .filter(Boolean) as { id: string; name: string }[];
 
@@ -285,7 +285,7 @@ export default function WelcomeScreenSettings({ dataroomId }: WelcomeScreenSetti
                   </SelectTrigger>
                   <SelectContent>
                     {availableDocs.map((doc) => (
-                      <SelectItem key={doc.document.id} value={doc.document.id}>
+                      <SelectItem key={doc.id} value={doc.id}>
                         {doc.document.name}
                       </SelectItem>
                     ))}

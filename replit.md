@@ -220,6 +220,33 @@ The following pages use `withAdminGuard()` for server-side protection:
    - "Already have access?" divider separates login options
    - Larger, more visible divider text
 
+### Welcome Screen Feature (Jan 7, 2026)
+
+1. **Admin configuration**
+   - New "Welcome Screen" settings tab in dataroom branding
+   - Enable/disable welcome modal for first-time visitors
+   - Personal note (rich text) from admin to investors
+   - Suggested viewing guidance for document review
+   - Drag-and-drop reorderable recommended documents list
+
+2. **Viewer experience**
+   - Modal appears on first dataroom visit (cookie-based dismissal)
+   - Shows personal note, viewing suggestions, and recommended docs
+   - Click recommended document to navigate directly
+   - Cookie `welcome_dismissed_${dataroomId}` tracks dismissal
+
+3. **Database schema**
+   - Extended `DataroomBrand` with welcome screen fields:
+     - `welcomeScreenEnabled` (Boolean)
+     - `welcomePersonalNote` (String)
+     - `welcomeSuggestedViewing` (String)
+     - `welcomeRecommendedDocs` (Json - array of DataroomDocument.ids)
+
+4. **ID consistency**
+   - Admin saves DataroomDocument.id (not Document.id)
+   - Viewer looks up by dataroomDocumentId
+   - Navigation uses dataroomDocumentId for /view/${linkId}/d/${documentId} route
+
 ### Q&A System for Viewer-Admin Communication (Jan 6, 2026)
 
 1. **Database schema**

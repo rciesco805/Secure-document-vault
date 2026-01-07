@@ -1,6 +1,6 @@
 import { useRouter } from "next/router";
 
-import { useMemo } from "react";
+import { useMemo, useState, useCallback } from "react";
 import React from "react";
 
 import { ViewerChatPanel } from "@/ee/features/ai/components/viewer-chat-panel";
@@ -49,6 +49,7 @@ import { DocumentUploadModal } from "../dataroom/document-upload-modal";
 import FolderCard from "../dataroom/folder-card";
 import IndexFileDialog from "../dataroom/index-file-dialog";
 import DataroomNav from "../dataroom/nav-dataroom";
+import WelcomeModal from "../dataroom/welcome-modal";
 
 const ViewerBreadcrumbItem = ({
   folder,
@@ -129,6 +130,13 @@ const getParentFolders = (
   return breadcrumbFolders;
 };
 
+type DataroomBrandWithWelcome = Partial<DataroomBrand> & {
+  welcomeScreenEnabled?: boolean;
+  welcomePersonalNote?: string | null;
+  welcomeSuggestedViewing?: string | null;
+  welcomeRecommendedDocs?: string[] | null;
+};
+
 export default function DataroomViewer({
   brand,
   viewId,
@@ -146,7 +154,7 @@ export default function DataroomViewer({
   viewerEmail,
   dataroomIndexEnabled,
 }: {
-  brand: Partial<DataroomBrand>;
+  brand: DataroomBrandWithWelcome;
   viewId?: string;
   linkId: string;
   dataroom: any;
@@ -170,6 +178,30 @@ export default function DataroomViewer({
 
   const router = useRouter();
   const searchQuery = (router.query.search as string)?.toLowerCase() || "";
+
+  const [showWelcomeModal, setShowWelcomeModal] = useState(
+    brand?.welcomeScreenEnabled && !isPreview
+  );
+
+  const recommendedDocs = useMemo(() => {
+    if (!brand?.welcomeRecommendedDocs || brand.welcomeRecommendedDocs.length === 0) {
+      return [];
+    }
+    return brand.welcomeRecommendedDocs
+      .map((docId) => {
+        const doc = documents.find((d) => d.dataroomDocumentId === docId);
+        return doc ? { id: doc.dataroomDocumentId, name: doc.name } : null;
+      })
+      .filter(Boolean) as { id: string; name: string }[];
+  }, [brand?.welcomeRecommendedDocs, documents]);
+
+  const handleWelcomeDocumentClick = useCallback((documentId: string) => {
+    router.push(`/view/${linkId}/d/${documentId}`);
+  }, [router, linkId]);
+
+  const handleWelcomeClose = useCallback(() => {
+    setShowWelcomeModal(false);
+  }, []);
 
   const breadcrumbFolders = useMemo(
     () => getParentFolders(folderId, folders),
@@ -384,6 +416,18 @@ export default function DataroomViewer({
       viewId={viewId}
       viewerId={viewerId}
     >
+      {showWelcomeModal && brand?.welcomeScreenEnabled && (
+        <WelcomeModal
+          dataroomId={dataroom?.id}
+          dataroomName={dataroom?.name || "Dataroom"}
+          personalNote={brand.welcomePersonalNote}
+          suggestedViewing={brand.welcomeSuggestedViewing}
+          recommendedDocs={recommendedDocs}
+          brandColor={brand.brandColor}
+          onDocumentClick={handleWelcomeDocumentClick}
+          onClose={handleWelcomeClose}
+        />
+      )}
       <DataroomNav
         brand={brand}
         linkId={linkId}

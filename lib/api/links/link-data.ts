@@ -221,6 +221,10 @@ export async function fetchDataroomLinkData({
       brandColor: true,
       accentColor: true,
       welcomeMessage: true,
+      welcomeScreenEnabled: true,
+      welcomePersonalNote: true,
+      welcomeSuggestedViewing: true,
+      welcomeRecommendedDocs: true,
     },
   });
 
@@ -244,6 +248,10 @@ export async function fetchDataroomLinkData({
     brandColor: dataroomBrand?.brandColor || teamBrand?.brandColor,
     accentColor: dataroomBrand?.accentColor || teamBrand?.accentColor,
     welcomeMessage: dataroomBrand?.welcomeMessage || teamBrand?.welcomeMessage,
+    welcomeScreenEnabled: dataroomBrand?.welcomeScreenEnabled ?? false,
+    welcomePersonalNote: dataroomBrand?.welcomePersonalNote ?? null,
+    welcomeSuggestedViewing: dataroomBrand?.welcomeSuggestedViewing ?? null,
+    welcomeRecommendedDocs: dataroomBrand?.welcomeRecommendedDocs ?? null,
   };
 
   // Extract access controls from either ViewerGroup or PermissionGroup

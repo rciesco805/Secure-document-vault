@@ -309,6 +309,7 @@ export default function ViewPage({
   const [storedEmail, setStoredEmail] = useState<string | undefined>(undefined);
   const [magicLinkVerified, setMagicLinkVerified] = useState<boolean>(false);
   const [isVerifyingMagicLink, setIsVerifyingMagicLink] = useState<boolean>(false);
+  const [autoVerifyAttempted, setAutoVerifyAttempted] = useState<boolean>(false);
 
   useEffect(() => {
     // Retrieve token from cookie on component mount
@@ -344,7 +345,8 @@ export default function ViewPage({
         !linkId ||
         storedToken ||
         magicLinkVerified ||
-        isVerifyingMagicLink
+        isVerifyingMagicLink ||
+        autoVerifyAttempted
       ) {
         return;
       }
@@ -378,13 +380,14 @@ export default function ViewPage({
         console.error("Auto-verification failed:", error);
       } finally {
         setIsVerifyingMagicLink(false);
+        setAutoVerifyAttempted(true);
       }
     };
     
     if (router.isReady && status === "authenticated") {
       autoVerifyAuthenticatedUser();
     }
-  }, [router.isReady, router.query.linkId, status, session, storedToken, magicLinkVerified, isVerifyingMagicLink]);
+  }, [router.isReady, router.query.linkId, status, session, storedToken, magicLinkVerified, isVerifyingMagicLink, autoVerifyAttempted]);
 
   // Handle magic link - just store email locally, let DataroomView verify via backend
   useEffect(() => {
@@ -551,7 +554,13 @@ export default function ViewPage({
   if (linkType === "DATAROOM_LINK") {
     const { link, brand } = linkData as DataroomLinkData;
 
-    if (!link || status === "loading" || router.isFallback) {
+    // Wait for session to load and auto-verification to complete before rendering dataroom
+    // Also wait if session is authenticated but auto-verify hasn't been attempted yet
+    const needsAutoVerify = status === "authenticated" && !storedToken && !magicLinkVerified && !autoVerifyAttempted;
+    const isAutoVerifying = status === "authenticated" && !storedToken && !magicLinkVerified && isVerifyingMagicLink;
+    const shouldShowLoading = !link || status === "loading" || router.isFallback || needsAutoVerify || isAutoVerifying;
+    
+    if (shouldShowLoading) {
       return (
         <>
           <CustomMetaTag
@@ -564,7 +573,7 @@ export default function ViewPage({
             imageUrl={meta.metaImage ?? null}
             url={meta.metaUrl ?? ""}
           />
-          <div className="flex h-screen items-center justify-center">
+          <div className="flex h-screen items-center justify-center bg-black">
             <LoadingSpinner className="h-20 w-20" />
           </div>
         </>

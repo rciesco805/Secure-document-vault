@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from "react";
 
 import { DataroomBrand } from "@prisma/client";
 import Cookies from "js-cookie";
+import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 
 import { useAnalytics } from "@/lib/analytics";
@@ -112,10 +113,14 @@ export default function DataroomView({
   const [code, setCode] = useState<string | null>(magicLinkToken ?? null);
   const [isInvalidCode, setIsInvalidCode] = useState<boolean>(false);
   const [magicLinkProcessed, setMagicLinkProcessed] = useState<boolean>(false);
+  const [autoVerifyAttempted, setAutoVerifyAttempted] = useState<boolean>(false);
+  
+  const { data: session, status: sessionStatus } = useSession();
 
-  const handleSubmission = async (overrideCode?: string): Promise<void> => {
+  const handleSubmission = async (overrideCode?: string, overrideEmail?: string): Promise<void> => {
     setIsLoading(true);
     const effectiveCode = overrideCode ?? code;
+    const effectiveEmail = overrideEmail ?? data.email ?? verifiedEmail ?? userEmail ?? null;
     const response = await fetch("/api/views-dataroom", {
       method: "POST",
       headers: {
@@ -123,7 +128,7 @@ export default function DataroomView({
       },
       body: JSON.stringify({
         ...data,
-        email: data.email ?? verifiedEmail ?? userEmail ?? null,
+        email: effectiveEmail,
         linkId: link.id,
         userId: userId ?? null,
         dataroomId: dataroom?.id,
@@ -218,6 +223,50 @@ export default function DataroomView({
     event.preventDefault();
     await handleSubmission();
   };
+
+  // Auto-verify session for already logged-in users
+  // This allows users who authenticated via NextAuth magic link to skip the dataroom verification
+  useEffect(() => {
+    const autoVerifySession = async () => {
+      if (
+        sessionStatus === "authenticated" &&
+        session?.user?.email &&
+        emailProtected &&
+        !autoVerifyAttempted &&
+        !submitted &&
+        !isLoading
+      ) {
+        setAutoVerifyAttempted(true);
+        setIsLoading(true);
+        
+        try {
+          const response = await fetch("/api/view/auto-verify-session", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              email: session.user.email,
+              linkId: link.id,
+            }),
+          });
+          
+          if (response.ok) {
+            const result = await response.json();
+            if (result.verified) {
+              await handleSubmission(undefined, result.email);
+              return;
+            }
+          }
+        } catch (error) {
+          console.error("Auto-verify session error:", error);
+        }
+        setIsLoading(false);
+      }
+    };
+    
+    if (sessionStatus !== "loading") {
+      autoVerifySession();
+    }
+  }, [sessionStatus, session?.user?.email, emailProtected, autoVerifyAttempted, submitted, isLoading, link.id]);
 
   // If token is present, run handle submit which will verify token and get document
   // If link is not submitted and does not have email / password protection, show the access form

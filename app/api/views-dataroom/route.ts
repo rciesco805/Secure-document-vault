@@ -172,6 +172,61 @@ export async function POST(request: NextRequest) {
     // Check if the user is part of the team and therefore skip verification steps
     let isTeamMember: boolean = false;
     let isPreview: boolean = false;
+    let sessionVerifiedEmail: string | null = null;
+    
+    // Check if user is authenticated via NextAuth and has access to this dataroom
+    // This allows magic link authenticated users to bypass OTP verification
+    const session = await getServerSession(authOptions);
+    if (session?.user?.email && !isPreview) {
+      const sessionEmail = (session.user as CustomUser).email?.toLowerCase().trim();
+      if (sessionEmail) {
+        // Check if user has access via group membership or allowList
+        let hasSessionAccess = false;
+        
+        // Check group membership
+        if (link.audienceType === LinkAudienceType.GROUP && link.groupId) {
+          const membership = await prisma.viewerGroupMembership.findFirst({
+            where: {
+              group: { id: link.groupId },
+              viewer: { email: sessionEmail },
+            },
+          });
+          if (membership) hasSessionAccess = true;
+        }
+        
+        // Check allowList
+        if (!hasSessionAccess && link.allowList && link.allowList.length > 0) {
+          const normalizedAllowList = link.allowList.map(e => e.toLowerCase().trim());
+          if (normalizedAllowList.includes(sessionEmail)) hasSessionAccess = true;
+        }
+        
+        // Check team membership (for any viewer in this team's datarooms)
+        if (!hasSessionAccess && link.dataroomId && link.teamId) {
+          const viewer = await prisma.viewer.findFirst({
+            where: {
+              email: sessionEmail,
+              teamId: link.teamId,
+            },
+          });
+          if (viewer) {
+            const dataroomMembership = await prisma.viewerGroupMembership.findFirst({
+              where: {
+                viewerId: viewer.id,
+                group: { dataroomId: link.dataroomId },
+              },
+            });
+            if (dataroomMembership) hasSessionAccess = true;
+          }
+        }
+        
+        if (hasSessionAccess) {
+          isEmailVerified = true;
+          sessionVerifiedEmail = sessionEmail;
+          console.log("[SESSION_AUTH] User authenticated via NextAuth session:", sessionEmail);
+        }
+      }
+    }
+    
     if (userId && previewToken) {
       const session = await getServerSession(authOptions);
       if (!session) {
@@ -250,12 +305,13 @@ export async function POST(request: NextRequest) {
       cookieEmail = cookieStore.get(`pm_email_${linkId}`)?.value ?? null;
     }
 
-    // Use effective values that fallback to cookie values
-    const effectiveEmail = email || cookieEmail || "";
+    // Use effective values that fallback to cookie values or session-verified email
+    const effectiveEmail = email || cookieEmail || sessionVerifiedEmail || "";
     const effectiveToken = token || cookieVerificationToken || "";
 
     // If there is no session, then we need to check if the link is protected and enforce the checks
-    if (!dataroomSession && !isPreview) {
+    // Skip these checks if already verified via NextAuth session
+    if (!dataroomSession && !isPreview && !isEmailVerified) {
       // Check if email is required for visiting the link
       if (link.emailProtected) {
         if (!effectiveEmail || effectiveEmail.trim() === "") {
@@ -408,7 +464,8 @@ export async function POST(request: NextRequest) {
       // Request OTP Code for email verification if
       // 1) email verification is required and
       // 2) code is not provided or token not provided
-      if (link.emailAuthenticated && !code && !effectiveToken && !dataroomVerified) {
+      // 3) user is not already verified via NextAuth session
+      if (link.emailAuthenticated && !code && !effectiveToken && !dataroomVerified && !isEmailVerified) {
         const ipAddressValue = ipAddress(request);
 
         const { success } = await ratelimit(10, "1 m").limit(
@@ -473,7 +530,7 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      if (link.emailAuthenticated && code && !dataroomVerified) {
+      if (link.emailAuthenticated && code && !dataroomVerified && !isEmailVerified) {
         const ipAddressValue = ipAddress(request);
         const { success } = await ratelimit(10, "1 m").limit(
           `verify-otp:${ipAddressValue}`,

@@ -205,8 +205,13 @@ export default function Login() {
               <span className="bg-black px-2 text-base font-medium text-gray-300">Already have access?</span>
             </div>
           </div>
+          <div className="px-4 sm:px-12">
+            <p className="mb-4 text-center text-gray-300">
+              Enter your email below for an email with one-click access
+            </p>
+          </div>
           <form
-            className="flex flex-col gap-4 px-4 pt-8 sm:px-12"
+            className="flex flex-col gap-4 px-4 sm:px-12"
             onSubmit={(e) => {
               e.preventDefault();
               if (!emailValidation.success) {

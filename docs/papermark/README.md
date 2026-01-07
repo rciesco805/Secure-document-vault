@@ -38,7 +38,7 @@
 | Area | Stock Papermark | BF Fund Customization |
 |------|-----------------|----------------------|
 | Plan System | Multi-tier (Free, Pro, Business, Enterprise) | Always `datarooms-plus` (all features enabled) |
-| Auth | Multiple providers | Magic link only, **1-hour expiration** |
+| Auth | Multiple providers | Magic link only, **1-hour expiration**, one-click session bypass |
 | Admin Access | Any registered user | Allowlist: 2 specific emails only |
 | File Storage | Vercel Blob / S3 | Replit Object Storage (AES-256) |
 | Analytics | Tinybird (required) | **PostgreSQL only** (Tinybird NOT used) |
@@ -70,6 +70,24 @@
 - Redirects to `/admin/quick-add?email=<investor_email>`
 - Admin selects dataroom (dynamic selector, works for ANY dataroom), clicks "Add & Send Invite"
 - Investor receives magic link instantly
+
+### One-Click Authentication System
+
+**Platform-wide enhancement** that provides seamless access for authenticated users:
+
+| User State | emailAuthenticated Toggle | Behavior |
+|------------|--------------------------|----------|
+| Authenticated (has NextAuth session) + has access | OFF or ON | **One-click access** (OTP bypassed) |
+| Not authenticated | OFF | Email collected, no OTP |
+| Not authenticated | ON | OTP required |
+
+**How It Works:**
+1. User clicks magic link → NextAuth creates session
+2. API checks session + verifies access (group/allowList/team viewer)
+3. If both valid → `isEmailVerified = true` → OTP skipped
+4. Direct dataroom access without 6-digit code entry
+
+**Key Implementation:** `app/api/views-dataroom/route.ts` performs session-based access verification for ALL datarooms dynamically.
 
 ### Session Cookie System
 

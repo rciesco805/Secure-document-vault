@@ -29,12 +29,14 @@ The platform is built on Next.js 14 (Pages Router) using TypeScript, Tailwind CS
 *   **Q&A System:** Enables viewers to "Leave a Note" or "Ask a Question" privately, with context tracking (document, dataroom, page number). Admins can manage questions, reply, and track status (OPEN, ANSWERED, CLOSED), with email notifications for both parties.
 *   **Welcome Screen:** Configurable welcome modal for first-time visitors to a dataroom, featuring a personal note, suggested viewing guidance, and a reorderable list of recommended documents.
 *   **Magic Link Direct Dataroom Redirect:** Magic links now directly guide viewers to their approved dataroom, bypassing intermediate portals for a streamlined experience.
+*   **One-Click Authentication System:** Platform-wide enhancement that automatically verifies authenticated users. When a viewer is logged in via NextAuth magic link and has verified access (via group membership, allowList, or team viewer status), they bypass OTP verification entirely. This applies to all datarooms dynamically without hardcoded IDs.
+*   **Configurable Email Verification:** The "Require email verification" toggle (`emailAuthenticated`) in link settings controls extra verification steps. When OFF (default), one-click access works. When ON, unauthenticated users require OTP, but authenticated session users still get seamless access.
 
 **System Design Choices:**
 
 *   **Frontend:** Next.js 14, TypeScript, Tailwind CSS, shadcn/ui.
 *   **Database:** Replit PostgreSQL (primary) with Prisma ORM. Supabase PostgreSQL is configured for backup.
-*   **Authentication:** NextAuth.js with email magic links (one-click access) and Google OAuth for administrators.
+*   **Authentication:** NextAuth.js with email magic links (one-click access). Session-based verification bypasses OTP for authenticated users with dataroom access. Google OAuth available for administrators only.
 *   **Storage:** Replit Object Storage with AES-256 encryption.
 *   **Email:** Resend API.
 

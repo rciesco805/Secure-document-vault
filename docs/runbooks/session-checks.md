@@ -92,8 +92,26 @@ Check DATABASE_URL environment variable is set correctly.
 Escalate to user if:
 - Production site is down
 - Database migration failed with data loss risk
-- Authentication system not working
+- Authentication system not working (magic links, session bypass, OTP)
 - More than 5 TypeScript errors in core files
+
+## Authentication System Health Check
+
+### One-Click Access Verification
+The platform uses session-based authentication bypass. Key file: `app/api/views-dataroom/route.ts`
+
+Check these conditions are working:
+1. **NextAuth Session Detection** - `getServerSession(authOptions)` returns valid session
+2. **Access Verification** - Group membership, allowList, or team viewer status checked
+3. **OTP Bypass** - `isEmailVerified = true` when session + access verified
+
+### Test Scenarios
+| User State | emailAuthenticated | Expected Behavior |
+|------------|-------------------|-------------------|
+| Has session + access | OFF | One-click access |
+| Has session + access | ON | One-click access |
+| No session | OFF | Email collected, no OTP |
+| No session | ON | OTP required |
 
 ## Session End Checklist
 

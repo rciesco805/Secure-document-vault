@@ -131,9 +131,24 @@ Team ─────────────────────────
 
 | Field | Default | Reason |
 |-------|---------|--------|
-| `Link.emailProtected` | `true` | Always require email verification |
-| `Link.emailAuthenticated` | `false` | Session-based (no re-verification) |
+| `Link.emailProtected` | `true` | Always require email for access |
+| `Link.emailAuthenticated` | `false` | One-click access for authenticated users, email-only for others |
 | `Link.allowDownload` | `false` | No downloads by default |
 | `Team.plan` | `datarooms-plus` | All features enabled |
 | `ViewerGroup.isQuickAdd` | `false` | Only Quick Add groups are true |
 | `ViewerGroup.allowAll` | `false` | Quick Add groups set to true |
+
+## Authentication Behavior
+
+### emailAuthenticated Settings
+| Value | Authenticated User (has session) | Non-Authenticated User |
+|-------|----------------------------------|------------------------|
+| `false` (default) | One-click access | Email collected, no OTP |
+| `true` | One-click access (session = verified) | OTP code required |
+
+**Platform-Wide Behavior:** The `/api/views-dataroom` endpoint checks for NextAuth session and verifies access via:
+- `ViewerGroupMembership` (group membership)
+- `Link.allowList` (direct email match)
+- `Viewer` + `ViewerGroupMembership` (team viewer status)
+
+If authenticated AND has access → `isEmailVerified = true` → OTP bypassed automatically.

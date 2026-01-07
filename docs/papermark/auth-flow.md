@@ -12,7 +12,7 @@
 ```
 
 ### Key Files
-- `app/(auth)/login/page-client.tsx` - Login form
+- `app/(auth)/login/page-client.tsx` - Login form (email-only, no Google OAuth button)
 - `app/(auth)/verify/page.tsx` - Token verification (auto-redirects)
 - `pages/api/auth/[...nextauth].ts` - NextAuth configuration
 - `lib/emails/send-verification-request.ts` - Email sending
@@ -24,28 +24,60 @@ Only these emails can access admin:
 
 ## Viewer Authentication (Document Access)
 
-### Session-Based Flow (emailAuthenticated=false)
+### One-Click Access Flow (Authenticated Users)
 ```
-1. Viewer clicks link in invitation email
-2. Email verification page shown
-3. Enter email → receive verification code/link
-4. Once verified → session cookie set
-5. Full access for entire browser session
-6. No re-verification when switching documents
+1. Viewer clicks magic link in invitation email
+2. NextAuth authenticates user and creates session
+3. Viewer redirected to dataroom via /viewer-redirect
+4. API checks: NextAuth session + dataroom access (group/allowList/team viewer)
+5. If both valid → isEmailVerified = true → OTP bypassed
+6. Direct access to dataroom content immediately
+7. No 6-digit code entry required
 ```
 
-### Per-Document Flow (emailAuthenticated=true)
+**Key Implementation:** `app/api/views-dataroom/route.ts` checks:
+- Group membership via `ViewerGroupMembership`
+- AllowList inclusion (normalized email matching)
+- Team viewer status via `Viewer` + `ViewerGroupMembership`
+
+### Standard Flow (Non-Authenticated Users)
 ```
-1. Every document view requires re-verification
-2. Not used in BF Fund (session-based preferred)
+1. Viewer visits dataroom link directly (no session)
+2. Email verification page shown
+3. Enter email → receive OTP code/magic link
+4. Enter code or click link → session created
+5. Access granted for browser session
 ```
+
+### Email Verification Toggle (emailAuthenticated)
+| Setting | Authenticated Session | No Session |
+|---------|----------------------|------------|
+| OFF (default) | One-click access | Email collected, no OTP |
+| ON | One-click access (session = verified) | OTP required |
+
+**Note:** Authenticated session users ALWAYS get one-click access regardless of the toggle, since the magic link authentication already verified their identity.
 
 ### Key Settings
 | Setting | Value | Effect |
 |---------|-------|--------|
 | `emailProtected` | `true` | Must provide email to view |
-| `emailAuthenticated` | `false` | Verify once per session |
+| `emailAuthenticated` | `false` | Default: one-click for authenticated, email-only for others |
+| `emailAuthenticated` | `true` | OTP required for non-authenticated users only |
 | `allowList` | `string[]` | Only these emails can access |
+
+### Session-Based Bypass Logic
+The `/api/views-dataroom` endpoint implements session-based authentication bypass:
+
+```typescript
+// Check if user is authenticated via NextAuth and has access
+const session = await getServerSession(authOptions);
+if (session?.user?.email) {
+  // Check group membership, allowList, or team viewer status
+  // If access verified → isEmailVerified = true → skip OTP
+}
+```
+
+This is platform-wide and applies dynamically to ALL datarooms without hardcoded IDs.
 
 ## Quick Add Authentication
 

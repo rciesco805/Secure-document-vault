@@ -27,7 +27,7 @@ export const sendDataroomInfoEmail = async (
   try {
     await sendEmail({
       to: email as string,
-      from: "BF Fund <noreply@investors.bermudafranchisegroup.com>",
+      from: "BF Fund <dataroom@investors.bermudafranchisegroup.com>",
       subject,
       react: emailTemplate,
       test: process.env.NODE_ENV === "development",

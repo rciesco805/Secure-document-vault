@@ -4,7 +4,7 @@ import { sendEmail } from "@/lib/resend";
 
 import OtpEmailVerification from "@/components/emails/otp-verification";
 
-const DEFAULT_SENDER = "BF Fund Dataroom <no-reply@investors.bermudafranchisegroup.com>";
+const DEFAULT_SENDER = "BF Fund Dataroom <dataroom@investors.bermudafranchisegroup.com>";
 
 export const sendOtpVerificationEmail = async (
   email: string,

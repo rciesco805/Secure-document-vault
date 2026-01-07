@@ -18,7 +18,7 @@ export const sendDataroomTrialWelcome = async ({
   try {
     await sendEmail({
       to: to,
-      from: "BF Fund <noreply@investors.bermudafranchisegroup.com>",
+      from: "BF Fund <dataroom@investors.bermudafranchisegroup.com>",
       subject: `For ${name}`,
       react: DataroomTrialWelcome({ name }),
       test: process.env.NODE_ENV === "development",

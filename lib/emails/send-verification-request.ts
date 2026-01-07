@@ -26,7 +26,7 @@ export const sendVerificationRequestEmail = async (params: {
   try {
     await sendEmail({
       to: email as string,
-      from: "BF Fund Portal <noreply@investors.bermudafranchisegroup.com>",
+      from: "BF Fund Portal <dataroom@investors.bermudafranchisegroup.com>",
       subject: "Your BF Fund Portal Login Link",
       react: emailTemplate,
     });

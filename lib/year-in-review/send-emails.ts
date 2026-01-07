@@ -145,7 +145,7 @@ export async function processEmailQueue() {
 
                   return {
                     email: {
-                      from: "BF Fund <noreply@investors.bermudafranchisegroup.com>",
+                      from: "BF Fund <dataroom@investors.bermudafranchisegroup.com>",
                       to: userTeam.user.email || "delivered@resend.dev",
                       subject: "2024 in Review: Your Year with BF Fund Dataroom",
                       react,

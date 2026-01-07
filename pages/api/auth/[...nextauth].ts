@@ -142,15 +142,16 @@ export const authOptions: NextAuthOptions = {
   debug: true,
   callbacks: {
     redirect: async ({ url, baseUrl }) => {
-      // If the URL is just the base URL or login page, redirect to dashboard
+      // If the URL is just the base URL or login page, redirect to viewer-redirect
+      // The viewer-redirect page will check if user is admin or viewer and redirect appropriately
       if (url === baseUrl || url === `${baseUrl}/` || url.includes('/login')) {
-        return `${baseUrl}/dashboard`;
+        return `${baseUrl}/viewer-redirect`;
       }
       // Allows relative callback URLs
       if (url.startsWith("/")) return `${baseUrl}${url}`;
       // Allows callback URLs on the same origin
       if (new URL(url).origin === baseUrl) return url;
-      return `${baseUrl}/dashboard`;
+      return `${baseUrl}/viewer-redirect`;
     },
     jwt: async (params) => {
       const { token, user, trigger } = params;

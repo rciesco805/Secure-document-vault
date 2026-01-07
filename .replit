@@ -12,7 +12,7 @@ channel = "stable-24_11"
 deploymentTarget = "autoscale"
 ignorePorts = false
 build = ["npm", "run", "build"]
-run = ["npm", "start", "--", "-p", "5000"]
+run = ["npm", "run", "start"]
 
 [agent]
 expertMode = true

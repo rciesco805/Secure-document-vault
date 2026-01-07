@@ -2,8 +2,10 @@ import { useRouter } from "next/router";
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
 import useSWR from "swr";
+import { useEffect } from "react";
 
 import { fetcher } from "@/lib/utils";
+import { ADMIN_EMAILS } from "@/lib/constants/admins";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -37,12 +39,21 @@ export default function ViewerPortal() {
   const router = useRouter();
   const { data: session, status } = useSession();
 
+  const isAdmin = session?.user?.email && 
+    ADMIN_EMAILS.map(e => e.toLowerCase()).includes(session.user.email.toLowerCase());
+
+  useEffect(() => {
+    if (status === "authenticated" && isAdmin) {
+      router.replace("/dashboard");
+    }
+  }, [status, isAdmin, router]);
+
   const { data, isLoading, error } = useSWR<ViewerDataResponse>(
-    status === "authenticated" ? "/api/viewer/my-datarooms" : null,
+    status === "authenticated" && !isAdmin ? "/api/viewer/my-datarooms" : null,
     fetcher
   );
 
-  if (status === "loading" || isLoading) {
+  if (status === "loading" || isLoading || isAdmin) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
         <div className="mx-auto max-w-4xl px-4 py-16">

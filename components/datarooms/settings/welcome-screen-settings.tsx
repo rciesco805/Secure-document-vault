@@ -1,7 +1,5 @@
-import { useRouter } from "next/router";
 import { useState, useEffect } from "react";
 import { useTeam } from "@/context/team-context";
-import { DataroomBrand, DataroomDocument, Document } from "@prisma/client";
 import { toast } from "sonner";
 import useSWR, { mutate } from "swr";
 import { CheckIcon, GripVertical, PlusIcon, TrashIcon, SparklesIcon } from "lucide-react";
@@ -34,9 +32,29 @@ interface WelcomeScreenSettingsProps {
   dataroomId: string;
 }
 
-type DataroomDocumentWithDocument = DataroomDocument & {
-  document: Document;
-};
+interface DataroomBrandWithWelcome {
+  id: string;
+  dataroomId: string;
+  logo?: string | null;
+  banner?: string | null;
+  favicon?: string | null;
+  brandColor?: string | null;
+  accentColor?: string | null;
+  welcomeMessage?: string | null;
+  welcomeScreenEnabled?: boolean;
+  welcomePersonalNote?: string | null;
+  welcomeSuggestedViewing?: string | null;
+  welcomeRecommendedDocs?: string[] | null;
+}
+
+interface DataroomDocumentWithDocument {
+  id: string;
+  documentId: string;
+  document: {
+    id: string;
+    name: string;
+  };
+}
 
 function SortableDocumentItem({ 
   id, 
@@ -90,7 +108,7 @@ export default function WelcomeScreenSettings({ dataroomId }: WelcomeScreenSetti
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
 
-  const { data: brand, isLoading: brandLoading } = useSWR<DataroomBrand>(
+  const { data: brand, isLoading: brandLoading } = useSWR<DataroomBrandWithWelcome>(
     teamId && dataroomId ? `/api/teams/${teamId}/datarooms/${dataroomId}/branding` : null,
     fetcher
   );

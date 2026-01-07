@@ -79,7 +79,8 @@ export const getServerSideProps = async (context: GetServerSidePropsContext) => 
   );
 
   try {
-    const linkId = z.string().cuid().parse(linkIdParam);
+    // Accept both CUID format and quicklink format (quicklink_xxx)
+    const linkId = z.string().min(1).parse(linkIdParam);
     const res = await fetch(`${process.env.NEXTAUTH_URL}/api/links/${linkId}`);
     if (!res.ok) {
       throw new Error(`Failed to fetch: ${res.status}`);

@@ -2,7 +2,6 @@ import { useRouter } from "next/router";
 
 import React, { useEffect, useRef, useState } from "react";
 
-import { DataroomBrand } from "@prisma/client";
 import Cookies from "js-cookie";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
@@ -19,7 +18,7 @@ import AccessForm, {
 } from "@/components/view/access-form";
 
 import EmailVerificationMessage from "../access-form/email-verification-form";
-import DataroomViewer from "../viewer/dataroom-viewer";
+import DataroomViewer, { DataroomBrandWithWelcome } from "../viewer/dataroom-viewer";
 
 export type TSupportedDocumentSimpleType =
   (typeof SUPPORTED_DOCUMENT_SIMPLE_TYPES)[number];
@@ -69,7 +68,7 @@ export default function DataroomView({
   userEmail: string | null | undefined;
   userId: string | null | undefined;
   isProtected: boolean;
-  brand?: Partial<DataroomBrand> | null;
+  brand?: DataroomBrandWithWelcome | null;
   token?: string;
   verifiedEmail?: string;
   previewToken?: string;

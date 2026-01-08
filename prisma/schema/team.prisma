@@ -38,6 +38,9 @@ model Team {
   viewerNotes        ViewerNote[]
   dataroomQuestions  DataroomQuestion[]
 
+  // Access Requests
+  accessRequests     AccessRequest[]
+
   plan           String    @default("datarooms-plus")
   stripeId       String?   @unique // Stripe customer ID
   subscriptionId String?   @unique // Stripe subscription ID

@@ -130,7 +130,7 @@ const getParentFolders = (
   return breadcrumbFolders;
 };
 
-type DataroomBrandWithWelcome = Partial<DataroomBrand> & {
+export type DataroomBrandWithWelcome = Omit<Partial<DataroomBrand>, 'welcomeRecommendedDocs'> & {
   welcomeScreenEnabled?: boolean;
   welcomePersonalNote?: string | null;
   welcomeSuggestedViewing?: string | null;

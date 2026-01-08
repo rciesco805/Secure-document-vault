@@ -93,13 +93,10 @@ async function verifyDataroomSession(
       return null;
     }
 
-    const ipAddressValue = ipAddress(request) ?? LOCALHOST_IP;
-
-    if (ipAddressValue !== sessionData.ipAddress) {
-      await redis.del(`dataroom_session:${sessionToken}`);
-      return null;
-    }
-
+    // NOTE: IP validation disabled to support mobile users who frequently switch
+    // between WiFi and cellular networks, causing their IP to change.
+    // Security is still maintained via linkId/dataroomId validation and session expiration.
+    
     // Check if the session is for the correct link and dataroom
     if (
       sessionData.linkId !== linkId ||
@@ -142,13 +139,9 @@ export async function verifyDataroomSessionInPagesRouter(
       return null;
     }
 
-    // Get IP address from request
-    const ipAddressValue = getIpAddress(req.headers) ?? LOCALHOST_IP;
-
-    if (ipAddressValue !== sessionData.ipAddress) {
-      await redis.del(`dataroom_session:${sessionToken}`);
-      return null;
-    }
+    // NOTE: IP validation disabled to support mobile users who frequently switch
+    // between WiFi and cellular networks, causing their IP to change.
+    // Security is still maintained via linkId/dataroomId validation and session expiration.
 
     // Check if the session is for the correct link and dataroom
     if (

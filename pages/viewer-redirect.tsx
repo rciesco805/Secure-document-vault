@@ -65,18 +65,22 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
         include: {
           group: {
             include: {
-              links: {
-                where: {
-                  deletedAt: null,
-                  isArchived: false,
+              dataroom: {
+                include: {
+                  links: {
+                    where: {
+                      deletedAt: null,
+                      isArchived: false,
+                    },
+                    select: {
+                      id: true,
+                      domainId: true,
+                      domainSlug: true,
+                      slug: true,
+                    },
+                    take: 1,
+                  },
                 },
-                select: {
-                  id: true,
-                  domainId: true,
-                  domainSlug: true,
-                  slug: true,
-                },
-                take: 1,
               },
             },
           },
@@ -87,9 +91,11 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
 
   if (viewer) {
     for (const membership of viewer.groups) {
-      const link = membership.group.links[0];
+      const dataroom = membership.group.dataroom;
+      const link = dataroom?.links?.[0];
       if (link) {
         const linkUrl = constructLinkUrl(link);
+        console.log("[VIEWER_REDIRECT] Found link for viewer:", userEmail, "->", linkUrl);
         return {
           redirect: {
             destination: linkUrl,
@@ -98,6 +104,9 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
         };
       }
     }
+    console.log("[VIEWER_REDIRECT] Viewer found but no dataroom links:", userEmail);
+  } else {
+    console.log("[VIEWER_REDIRECT] No viewer record found:", userEmail);
   }
 
   const linkWithEmail = await prisma.link.findFirst({
@@ -117,6 +126,7 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
 
   if (linkWithEmail) {
     const linkUrl = constructLinkUrl(linkWithEmail);
+    console.log("[VIEWER_REDIRECT] Found allowList link for:", userEmail, "->", linkUrl);
     return {
       redirect: {
         destination: linkUrl,
@@ -125,6 +135,7 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
     };
   }
 
+  console.log("[VIEWER_REDIRECT] No access found, redirecting to portal:", userEmail);
   return {
     redirect: {
       destination: "/viewer-portal",

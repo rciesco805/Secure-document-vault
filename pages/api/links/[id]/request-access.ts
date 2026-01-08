@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/lib/prisma";
 import { sendEmail } from "@/lib/resend";
 import AccessRequestNotificationEmail from "@/components/emails/access-request-notification";
+import { ADMIN_EMAILS } from "@/lib/constants/admins";
 
 export default async function handler(
   req: NextApiRequest,
@@ -130,10 +131,7 @@ export default async function handler(
     const dataroomPath = link.dataroomId ? `/datarooms/${link.dataroomId}` : "/datarooms";
     const approvalUrl = `${baseUrl}${dataroomPath}?accessRequest=${accessRequest.id}&linkId=${linkId}`;
 
-    const adminEmails = [
-      "rciesco@gmail.com",
-      "investors@bermudafranchisegroup.com",
-    ];
+    const adminEmails = [...ADMIN_EMAILS];
 
     for (const adminEmail of adminEmails) {
       try {

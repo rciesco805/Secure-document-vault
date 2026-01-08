@@ -169,28 +169,48 @@ export default function SignDocument() {
     }
   };
 
-  const startDrawing = (e: React.MouseEvent<HTMLCanvasElement>) => {
+  const getCoordinates = (
+    e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>,
+    canvas: HTMLCanvasElement
+  ) => {
+    const rect = canvas.getBoundingClientRect();
+    if ('touches' in e) {
+      const touch = e.touches[0];
+      return {
+        x: touch.clientX - rect.left,
+        y: touch.clientY - rect.top,
+      };
+    }
+    return {
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top,
+    };
+  };
+
+  const startDrawing = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    e.preventDefault();
     const canvas = canvasRef.current;
     if (!canvas) return;
 
     setIsDrawing(true);
     const ctx = canvas.getContext("2d");
     if (ctx) {
-      const rect = canvas.getBoundingClientRect();
+      const coords = getCoordinates(e, canvas);
       ctx.beginPath();
-      ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+      ctx.moveTo(coords.x, coords.y);
     }
   };
 
-  const draw = (e: React.MouseEvent<HTMLCanvasElement>) => {
+  const draw = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    e.preventDefault();
     if (!isDrawing) return;
     const canvas = canvasRef.current;
     if (!canvas) return;
 
     const ctx = canvas.getContext("2d");
     if (ctx) {
-      const rect = canvas.getBoundingClientRect();
-      ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+      const coords = getCoordinates(e, canvas);
+      ctx.lineTo(coords.x, coords.y);
       ctx.strokeStyle = "#000";
       ctx.lineWidth = 2;
       ctx.lineCap = "round";
@@ -198,7 +218,8 @@ export default function SignDocument() {
     }
   };
 
-  const stopDrawing = () => {
+  const stopDrawing = (e?: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    if (e) e.preventDefault();
     setIsDrawing(false);
     const canvas = canvasRef.current;
     if (canvas) {
@@ -412,36 +433,44 @@ export default function SignDocument() {
 
       <div className="min-h-screen bg-gray-100">
         <header className="border-b bg-white shadow-sm">
-          <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4">
-            <div className="flex items-center gap-4">
+          <div className="mx-auto flex max-w-5xl flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:py-4">
+            <div className="flex items-center gap-2 sm:gap-4">
               <div className="flex items-center gap-2">
-                <ShieldCheckIcon className="h-6 w-6 text-primary" />
-                <span className="font-bold text-gray-900">BF Fund Sign</span>
+                <ShieldCheckIcon className="h-5 w-5 text-primary sm:h-6 sm:w-6" />
+                <span className="text-sm font-bold text-gray-900 sm:text-base">BF Fund Sign</span>
               </div>
-              <Separator orientation="vertical" className="h-8" />
-              <div>
+              <Separator orientation="vertical" className="hidden h-8 sm:block" />
+              <div className="hidden sm:block">
                 <h1 className="text-lg font-semibold">{document?.title}</h1>
                 <p className="text-sm text-gray-500">
                   From: {document?.teamName}
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                onClick={() => setShowDeclineDialog(true)}
-              >
-                <XIcon className="mr-2 h-4 w-4" />
-                Decline
-              </Button>
-              <Button onClick={handleSubmit} disabled={isSubmitting}>
-                {isSubmitting ? (
-                  <Loader2Icon className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <CheckCircle2Icon className="mr-2 h-4 w-4" />
-                )}
-                {isSubmitting ? "Signing..." : "Complete Signing"}
-              </Button>
+            <div className="flex items-center justify-between gap-2 sm:justify-end">
+              <div className="sm:hidden">
+                <p className="text-sm font-medium truncate max-w-[180px]">{document?.title}</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowDeclineDialog(true)}
+                  className="px-2 sm:px-4"
+                >
+                  <XIcon className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Decline</span>
+                </Button>
+                <Button size="sm" onClick={handleSubmit} disabled={isSubmitting} className="px-2 sm:px-4">
+                  {isSubmitting ? (
+                    <Loader2Icon className="h-4 w-4 animate-spin sm:mr-2" />
+                  ) : (
+                    <CheckCircle2Icon className="h-4 w-4 sm:mr-2" />
+                  )}
+                  <span className="hidden sm:inline">{isSubmitting ? "Signing..." : "Complete Signing"}</span>
+                  <span className="sm:hidden">{isSubmitting ? "..." : "Sign"}</span>
+                </Button>
+              </div>
             </div>
           </div>
         </header>
@@ -484,8 +513,8 @@ export default function SignDocument() {
                 
                 <div className="flex">
                   {showThumbnails && (
-                    <div className="w-24 border-r bg-gray-900">
-                      <ScrollArea className="h-[600px]">
+                    <div className="hidden w-24 border-r bg-gray-900 sm:block">
+                      <ScrollArea className="h-[400px] sm:h-[600px]">
                         <div className="p-2 space-y-2">
                           {document?.fileUrl && Array.from({ length: pdfNumPages }, (_, i) => (
                             <button
@@ -513,7 +542,7 @@ export default function SignDocument() {
                     </div>
                   )}
                   
-                  <div className="flex-1 bg-gray-200 overflow-auto" style={{ height: "600px" }}>
+                  <div className="flex-1 bg-gray-200 overflow-auto h-[400px] sm:h-[600px]">
                     {document?.fileUrl ? (
                       <div className="flex flex-col items-center p-4">
                         {pdfLoading && (
@@ -645,6 +674,9 @@ export default function SignDocument() {
                         onMouseMove={draw}
                         onMouseUp={stopDrawing}
                         onMouseLeave={stopDrawing}
+                        onTouchStart={startDrawing}
+                        onTouchMove={draw}
+                        onTouchEnd={stopDrawing}
                       />
                       {signatureMode === "draw" && !signatureData && (
                         <div className="pointer-events-none absolute inset-0 flex items-center justify-center text-gray-400">

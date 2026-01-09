@@ -119,9 +119,14 @@ export async function getLimits({
         }),
       };
     } else {
+      // For paid plans, if plan default is null (unlimited), don't let stored limits override
+      const effectiveUsers = defaultLimits.users === null ? null : (parsedData.users ?? defaultLimits.users);
+      
       return {
         ...defaultLimits,
         ...parsedData,
+        // Override users with effective value (respect unlimited plans)
+        users: effectiveUsers,
         // if account is paid, but link and document limits are not set, then set them to Infinity
         links: parsedData.links === 50 ? Infinity : parsedData.links,
         documents:

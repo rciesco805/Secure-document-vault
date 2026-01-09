@@ -104,7 +104,7 @@ export async function getLimits({
 
     const basePlan = getBasePlan(team.plan);
     const isTrial = isTrialPlan(team.plan);
-    const defaultLimits = planLimitsMap[basePlan];
+    const defaultLimits = planLimitsMap[basePlan] || FREE_PLAN_LIMITS;
 
     // Adjust limits based on the plan if they're at the default value
     if (isFreePlan(team.plan)) {
@@ -119,7 +119,8 @@ export async function getLimits({
         }),
       };
     } else {
-      // For paid plans, if plan default is null (unlimited), don't let stored limits override
+      // For paid plans, if plan default is null (unlimited), ALWAYS use null regardless of stored value
+      // This ensures paid plans like datarooms-plus get unlimited users
       const effectiveUsers = defaultLimits.users === null ? null : (parsedData.users ?? defaultLimits.users);
       
       return {
@@ -127,10 +128,9 @@ export async function getLimits({
         ...parsedData,
         // Override users with effective value (respect unlimited plans)
         users: effectiveUsers,
-        // if account is paid, but link and document limits are not set, then set them to Infinity
-        links: parsedData.links === 50 ? Infinity : parsedData.links,
-        documents:
-          parsedData.documents === 50 ? Infinity : parsedData.documents,
+        // if account is paid, set links and documents to Infinity (unlimited)
+        links: defaultLimits.links === null ? null : parsedData.links,
+        documents: defaultLimits.documents === null ? null : parsedData.documents,
         // Self-hosted: always enable Q&A conversations
         conversationsInDataroom: true,
         usage: { documents: documentCount, links: linkCount, users: userCount },

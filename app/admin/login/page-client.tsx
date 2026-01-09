@@ -87,7 +87,7 @@ export default function AdminLoginClient() {
           </div>
           <form
             className="flex flex-col gap-4 px-4 sm:px-12"
-            onSubmit={(e) => {
+            onSubmit={async (e) => {
               e.preventDefault();
               if (!emailValidation.success) {
                 toast.error(emailValidation.error.errors[0].message);
@@ -95,6 +95,26 @@ export default function AdminLoginClient() {
               }
 
               setClickedMethod("email");
+              
+              try {
+                const checkRes = await fetch("/api/auth/check-admin", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ email: emailValidation.data }),
+                });
+                const { isAdmin } = await checkRes.json();
+                
+                if (!isAdmin) {
+                  setClickedMethod(undefined);
+                  setShowAccessNotice(true);
+                  return;
+                }
+              } catch (error) {
+                setClickedMethod(undefined);
+                toast.error("Unable to verify admin access. Please try again.");
+                return;
+              }
+
               signIn("email", {
                 email: emailValidation.data,
                 redirect: false,
@@ -107,7 +127,7 @@ export default function AdminLoginClient() {
                   setShowAccessNotice(false);
                 } else {
                   setEmailButtonText("Continue with Email");
-                  setShowAccessNotice(true);
+                  toast.error("Failed to send login email. Please try again.");
                 }
                 setClickedMethod(undefined);
               });
@@ -158,9 +178,18 @@ export default function AdminLoginClient() {
               >
                 <X className="h-4 w-4" />
               </button>
-              <p className="text-sm text-red-200 pr-6">
-                This email is not authorized for admin access. Only designated team administrators can sign in here.
+              <p className="text-sm text-red-200 pr-6 mb-3">
+                This email is not authorized for admin access. This portal is only for BF Fund team administrators.
               </p>
+              <p className="text-sm text-red-200 pr-6 mb-3">
+                If you are an investor looking to access the dataroom, please use the investor portal instead.
+              </p>
+              <Link 
+                href="/login" 
+                className="inline-block w-full text-center py-2 px-4 bg-white text-black rounded-md hover:bg-gray-200 transition-colors text-sm font-medium"
+              >
+                Go to Investor Login
+              </Link>
             </div>
           )}
           <p className="mt-6 w-full max-w-md px-4 text-xs text-gray-400 sm:px-12">

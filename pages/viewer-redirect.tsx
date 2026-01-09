@@ -6,7 +6,6 @@ import { CustomUser } from "@/lib/types";
 import { constructLinkUrl } from "@/lib/utils/link-url";
 
 import { authOptions } from "./api/auth/[...nextauth]";
-import { isAdminEmail } from "@/lib/constants/admins";
 
 export default function ViewerRedirect() {
   return (
@@ -34,28 +33,26 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
   const user = session.user as CustomUser;
   const userEmail = user.email!.toLowerCase();
 
-  if (isAdminEmail(userEmail)) {
-    return {
-      redirect: {
-        destination: "/dashboard",
-        permanent: false,
-      },
-    };
+  // Check if visitor mode is requested (admins testing the visitor experience)
+  const visitorMode = context.query.mode === "visitor";
+
+  // Only redirect to admin dashboard if NOT in visitor mode
+  if (!visitorMode) {
+    const userTeam = await prisma.userTeam.findFirst({
+      where: { userId: user.id },
+    });
+
+    if (userTeam) {
+      return {
+        redirect: {
+          destination: "/dashboard",
+          permanent: false,
+        },
+      };
+    }
   }
 
-  const userTeam = await prisma.userTeam.findFirst({
-    where: { userId: user.id },
-  });
-
-  if (userTeam) {
-    return {
-      redirect: {
-        destination: "/dashboard",
-        permanent: false,
-      },
-    };
-  }
-
+  // For visitor mode or non-admin users, find their viewer access
   const viewer = await prisma.viewer.findFirst({
     where: {
       email: { equals: userEmail, mode: "insensitive" },

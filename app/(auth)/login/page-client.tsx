@@ -9,7 +9,6 @@ import { signIn, useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { z } from "zod";
 
-import { isAdminEmail } from "@/lib/constants/admins";
 import { cn } from "@/lib/utils";
 
 import { LastUsed, useLastUsed } from "@/components/hooks/useLastUsed";
@@ -224,17 +223,13 @@ export default function Login() {
                 return;
               }
 
-              // Block admin emails from investor portal - they must use /admin/login
-              if (isAdminEmail(emailValidation.data)) {
-                toast.error("Admin accounts must sign in at /admin/login");
-                return;
-              }
-
               setClickedMethod("email");
+              // Pass mode=visitor so admins testing from this page get visitor experience
+              const callbackUrl = next || "/viewer-redirect?mode=visitor";
               signIn("email", {
                 email: emailValidation.data,
                 redirect: false,
-                callbackUrl: next || "/viewer-redirect",
+                callbackUrl,
               }).then((res) => {
                 if (res?.ok && !res?.error) {
                   setEmail("");

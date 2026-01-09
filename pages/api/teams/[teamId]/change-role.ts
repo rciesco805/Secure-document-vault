@@ -39,13 +39,25 @@ export default async function handle(
         return res.status(401).json("Unauthorized");
       }
 
+      const isSuperAdmin = userTeam.role === "SUPER_ADMIN";
+      const isAdmin = userTeam.role === "ADMIN" || isSuperAdmin;
+
       // Only ADMINs can change roles
-      if (role === "ADMIN" && userTeam.role !== "ADMIN") {
+      if (!isAdmin) {
         return res.status(403).json("Only admins can change user roles");
       }
 
-      if (userTeam?.role === "ADMIN" && userTeam.userId === userToBeChanged) {
-        return res.status(401).json("You can't change the Admin");
+      // Only super admin can promote someone to ADMIN
+      if (role === "ADMIN" && !isSuperAdmin) {
+        return res.status(403).json("Only the super admin can promote users to admin");
+      }
+
+      // Cannot change the super admin's role
+      const targetUser = await prisma.userTeam.findFirst({
+        where: { teamId, userId: userToBeChanged },
+      });
+      if (targetUser?.role === "SUPER_ADMIN") {
+        return res.status(400).json("Cannot change the super admin's role");
       }
 
       await prisma.userTeam.update({

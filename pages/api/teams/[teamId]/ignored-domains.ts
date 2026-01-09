@@ -40,7 +40,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
   const isUserAdminOrManager = team.users.some(
     (user) =>
-      (user.role === "ADMIN" || user.role === "MANAGER") && user.userId === (session.user as CustomUser).id,
+      (user.role === "SUPER_ADMIN" || user.role === "ADMIN" || user.role === "MANAGER") && user.userId === (session.user as CustomUser).id,
   );
 
   if (!isUserAdminOrManager) {

@@ -41,7 +41,7 @@ export default async function handle(
         return;
       }
 
-      const isUserAdmin = userTeam.role === "ADMIN";
+      const isUserAdmin = userTeam.role === "ADMIN" || userTeam.role === "SUPER_ADMIN";
       if (!isUserAdmin) {
         res.status(403).json("Only admins can resend the invitation!");
         return;

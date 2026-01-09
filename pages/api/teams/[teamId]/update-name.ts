@@ -38,7 +38,7 @@ export default async function handle(
       // check if current user is admin of the team
       const isUserAdmin = team.users.some(
         (user) =>
-          user.role === "ADMIN" &&
+          (user.role === "ADMIN" || user.role === "SUPER_ADMIN") &&
           user.userId === (session.user as CustomUser).id,
       );
       if (!isUserAdmin) {

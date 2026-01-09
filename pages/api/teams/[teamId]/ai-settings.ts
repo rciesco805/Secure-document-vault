@@ -58,7 +58,7 @@ export default async function handle(
         return res.status(404).json({ error: "Team not found" });
       }
 
-      const isAdmin = teamAccess.role === "ADMIN";
+      const isAdmin = teamAccess.role === "ADMIN" || teamAccess.role === "SUPER_ADMIN";
 
       return res.status(200).json({
         agentsEnabled: team.agentsEnabled,
@@ -79,7 +79,7 @@ export default async function handle(
     }
 
     // Only admins can update AI settings
-    if (teamAccess.role !== "ADMIN") {
+    if (teamAccess.role !== "ADMIN" && teamAccess.role !== "SUPER_ADMIN") {
       return res.status(403).json({
         error: "Only team admins can manage AI settings",
       });

@@ -62,7 +62,7 @@ export default async function handle(
       const teamUsers = team.users;
       const isUserAdmin = teamUsers.some(
         (user) =>
-          user.role === "ADMIN" &&
+          (user.role === "ADMIN" || user.role === "SUPER_ADMIN") &&
           user.userId === (session.user as CustomUser).id,
       );
       if (!isUserAdmin) {

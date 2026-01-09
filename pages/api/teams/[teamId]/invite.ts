@@ -77,13 +77,16 @@ export default async function handle(
 
       // limits.users === null or undefined means unlimited
       const userLimit = limits?.users;
+      console.log('[INVITE] Team:', teamId, 'UserLimit:', userLimit, 'TeamUsers:', teamUsers.length);
       const isUnlimited = userLimit === null || userLimit === undefined;
       if (!isUnlimited && typeof userLimit === 'number' && teamUsers.length >= userLimit) {
+        console.log('[INVITE] Blocked: limit reached');
         res
           .status(403)
           .json("You have reached the limit of users in your team");
         return;
       }
+      console.log('[INVITE] Proceeding: isUnlimited=', isUnlimited);
 
       // check if user is already in the team
       const isExistingMember = teamUsers?.some(

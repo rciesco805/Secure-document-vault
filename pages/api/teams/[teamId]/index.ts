@@ -73,6 +73,8 @@ export default async function handle(
         return res.status(403).end("Unauthorized to access this team");
       }
 
+      // Force no caching on team data
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
       return res.status(200).json(team);
     } catch (error) {
       errorhandler(error, res);

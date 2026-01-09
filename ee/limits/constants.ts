@@ -1,7 +1,7 @@
 // INFO: for numeric values,`null` means unlimited
 
 export type TPlanLimits = {
-  users: number;
+  users: number | null;
   links: number | null;
   documents: number | null;
   domains: number;
@@ -64,7 +64,7 @@ export const DATAROOMS_PLAN_LIMITS = {
 };
 
 export const DATAROOMS_PLUS_PLAN_LIMITS = {
-  users: 5,
+  users: null,
   links: null,
   documents: null,
   domains: 1000,

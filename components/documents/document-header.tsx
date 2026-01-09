@@ -88,6 +88,9 @@ export default function DocumentHeader({
   const { isPro, isFree, isTrial, isBusiness, isDatarooms } = usePlan();
   const { canUseAI, isAIEnabled } = useTeamAI();
   const [isEditingName, setIsEditingName] = useState<boolean>(false);
+  const [isEditingDescription, setIsEditingDescription] = useState<boolean>(false);
+  const [description, setDescription] = useState<string>(prismaDocument.description || "");
+  const [descriptionInput, setDescriptionInput] = useState<string>(prismaDocument.description || "");
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
   const [isFirstClick, setIsFirstClick] = useState<boolean>(false);
   const [orientationLoading, setOrientationLoading] = useState<boolean>(false);
@@ -140,6 +143,12 @@ export default function DocumentHeader({
     String(currentTime.getMinutes()).padStart(2, "0");
   "-" + String(currentTime.getSeconds()).padStart(2, "0");
 
+  // Sync description state with props when document changes
+  useEffect(() => {
+    setDescription(prismaDocument.description || "");
+    setDescriptionInput(prismaDocument.description || "");
+  }, [prismaDocument.description]);
+
   // https://github.com/radix-ui/primitives/issues/1241#issuecomment-1888232392
   useEffect(() => {
     if (!addDataRoomOpen || !addDocumentVersion) {
@@ -181,6 +190,36 @@ export default function DocumentHeader({
       }
       setIsEditingName(false);
     }
+  };
+
+  const handleDescriptionSubmit = async () => {
+    const newDescription = descriptionInput.trim();
+
+    if (newDescription !== description) {
+      const response = await fetch(
+        `/api/teams/${teamId}/documents/${prismaDocument.id}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            description: newDescription || null,
+          }),
+        },
+      );
+
+      if (response.ok) {
+        toast.success("Description updated");
+        setDescription(newDescription);
+        mutate(`/api/teams/${teamId}/documents/${prismaDocument.id}`);
+      } else {
+        const { message } = await response.json();
+        toast.error(message || "Failed to update description");
+        setDescriptionInput(description);
+      }
+    }
+    setIsEditingDescription(false);
   };
 
   const preventEnterAndSubmit = (
@@ -517,6 +556,47 @@ export default function DocumentHeader({
             {isEditingName && (
               <span className="mt-1 text-xs text-muted-foreground">
                 {`Press <Enter> to save the name.`}
+              </span>
+            )}
+            {isEditingDescription ? (
+              <input
+                type="text"
+                className="w-full rounded-md border border-border bg-transparent px-1 py-0.5 text-sm text-muted-foreground outline-none lg:px-3"
+                value={descriptionInput}
+                onChange={(e) => setDescriptionInput(e.target.value)}
+                onBlur={handleDescriptionSubmit}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleDescriptionSubmit();
+                  }
+                  if (e.key === "Escape") {
+                    setDescriptionInput(description);
+                    setIsEditingDescription(false);
+                  }
+                }}
+                placeholder="Add a description..."
+                autoFocus
+                maxLength={500}
+              />
+            ) : (
+              <p
+                className={cn(
+                  "rounded-md border border-transparent px-1 py-0.5 text-sm text-muted-foreground duration-200 hover:cursor-text hover:border hover:border-border lg:px-3",
+                  !description && "italic opacity-60"
+                )}
+                onClick={() => {
+                  setIsEditingDescription(true);
+                  setDescriptionInput(description);
+                }}
+                title="Click to add description"
+              >
+                {description || "Add a description..."}
+              </p>
+            )}
+            {isEditingDescription && (
+              <span className="mt-1 text-xs text-muted-foreground">
+                {`Press <Enter> to save, <Escape> to cancel.`}
               </span>
             )}
           </div>

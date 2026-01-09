@@ -39,6 +39,11 @@ export default async function handle(
         return res.status(401).json("You can't remove the Admin");
       }
 
+      const userToDelete = await prisma.user.findUnique({
+        where: { id: userToBeDeleted },
+        select: { email: true },
+      });
+
       await Promise.all([
         // update all documents owned by the user to be deleted to be owned by the team
         prisma.document.updateMany({
@@ -59,6 +64,17 @@ export default async function handle(
             },
           },
         }),
+        // delete any pending invitations for this user's email
+        ...(userToDelete?.email
+          ? [
+              prisma.invitation.deleteMany({
+                where: {
+                  teamId,
+                  email: userToDelete.email,
+                },
+              }),
+            ]
+          : []),
       ]);
 
       return res.status(204).end();

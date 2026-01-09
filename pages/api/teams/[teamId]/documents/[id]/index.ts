@@ -210,8 +210,9 @@ export default async function handle(
       }
 
       // Extract allowed fields from request body
-      const { agentsEnabled } = req.body as {
+      const { agentsEnabled, description } = req.body as {
         agentsEnabled?: boolean;
+        description?: string | null;
       };
 
       if (agentsEnabled !== undefined) {
@@ -224,10 +225,17 @@ export default async function handle(
       }
 
       // Build update data object with only provided fields
-      const updateData: { agentsEnabled?: boolean } = {};
+      const updateData: { agentsEnabled?: boolean; description?: string | null } = {};
 
       if (typeof agentsEnabled === "boolean") {
         updateData.agentsEnabled = agentsEnabled;
+      }
+
+      if (description !== undefined) {
+        if (description !== null && description.length > 500) {
+          return res.status(400).json({ message: "Description must be 500 characters or less" });
+        }
+        updateData.description = description;
       }
 
       // Check if there's anything to update
@@ -245,6 +253,7 @@ export default async function handle(
         select: {
           id: true,
           agentsEnabled: true,
+          description: true,
         },
       });
 

@@ -98,7 +98,8 @@ export default function People() {
 
     if (response.status !== 204) {
       const error = await response.json();
-      toast.error(error);
+      const errorMessage = typeof error === 'string' ? error : (error?.message || error?.error || 'Failed to change role');
+      toast.error(errorMessage);
       return;
     }
 
@@ -128,7 +129,8 @@ export default function People() {
 
     if (response.status !== 204) {
       const error = await response.json();
-      toast.error(error);
+      const errorMessage = typeof error === 'string' ? error : (error?.message || error?.error || 'Failed to remove teammate');
+      toast.error(errorMessage);
       setLeavingUserId("");
       return;
     }
@@ -171,7 +173,8 @@ export default function People() {
 
     if (response.status !== 200) {
       const error = await response.json();
-      toast.error(error);
+      const errorMessage = typeof error === 'string' ? error : (error?.message || error?.error || 'Failed to resend invitation');
+      toast.error(errorMessage);
       return;
     }
 
@@ -202,7 +205,8 @@ export default function People() {
 
     if (!response.ok) {
       const error = await response.json();
-      toast.error(error);
+      const errorMessage = typeof error === 'string' ? error : (error?.message || error?.error || 'Failed to revoke invitation');
+      toast.error(errorMessage);
       return;
     }
 

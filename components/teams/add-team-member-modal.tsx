@@ -68,7 +68,9 @@ export function AddTeamMembers({
       const error = await response.json();
       setLoading(false);
       setOpen(false);
-      toast.error(error);
+      // Handle both string and object error responses
+      const errorMessage = typeof error === 'string' ? error : (error?.message || error?.error || 'Failed to send invitation');
+      toast.error(errorMessage);
       return;
     }
 

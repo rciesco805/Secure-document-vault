@@ -190,6 +190,7 @@ export default async function handle(
 
       return res.status(200).json("Invitation sent!");
     } catch (error) {
+      console.error('[INVITE] Error caught:', error);
       errorhandler(error, res);
     }
   }

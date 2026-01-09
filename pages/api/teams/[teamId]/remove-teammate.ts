@@ -33,7 +33,10 @@ export default async function handle(
         },
       });
 
-      if (!currentUserTeam || currentUserTeam.role !== "ADMIN") {
+      const isSuperAdmin = currentUserTeam?.role === "SUPER_ADMIN";
+      const isAdmin = currentUserTeam?.role === "ADMIN" || isSuperAdmin;
+
+      if (!currentUserTeam || !isAdmin) {
         return res.status(403).json("Only admins can remove team members");
       }
 
@@ -49,17 +52,15 @@ export default async function handle(
         return res.status(404).json("The teammate isn't part of this team");
       }
 
-      // Count how many admins are in the team
-      const adminCount = await prisma.userTeam.count({
-        where: {
-          teamId,
-          role: "ADMIN",
-        },
-      });
+      // Only super admin can remove other admins or super admins
+      const targetIsAdminOrHigher = targetUserTeam.role === "ADMIN" || targetUserTeam.role === "SUPER_ADMIN";
+      if (targetIsAdminOrHigher && !isSuperAdmin) {
+        return res.status(403).json("Only the super admin can remove admins");
+      }
 
-      // Prevent removing the last admin
-      if (targetUserTeam.role === "ADMIN" && adminCount <= 1) {
-        return res.status(400).json("Cannot remove the last admin from the team");
+      // Prevent removing the super admin (they must transfer role first)
+      if (targetUserTeam.role === "SUPER_ADMIN") {
+        return res.status(400).json("Cannot remove the super admin. Transfer the role to another admin first.");
       }
 
       const userToDelete = await prisma.user.findUnique({

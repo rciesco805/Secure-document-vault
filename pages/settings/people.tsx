@@ -11,6 +11,7 @@ import { useAnalytics } from "@/lib/analytics";
 import { useInvitations } from "@/lib/swr/use-invitations";
 import { useGetTeam } from "@/lib/swr/use-team";
 import { useTeams } from "@/lib/swr/use-teams";
+import { isAdminRole, isSuperAdminRole, getRoleLabel } from "@/lib/team/roles";
 import { CustomUser } from "@/lib/types";
 
 import AppLayout from "@/components/layouts/app";
@@ -67,35 +68,16 @@ export default function People() {
     return false;
   };
 
+  const currentUserTeamMember = team?.users.find(
+    (user) => user.userId === (session?.user as CustomUser)?.id,
+  );
+
   const isCurrentUserAdmin = () => {
-    return team?.users.some(
-      (user) =>
-        (user.role === "ADMIN" || (user.role as string) === "SUPER_ADMIN") &&
-        user.userId === (session?.user as CustomUser)?.id,
-    );
+    return currentUserTeamMember && isAdminRole(currentUserTeamMember.role);
   };
 
   const isCurrentUserSuperAdmin = () => {
-    return team?.users.some(
-      (user) =>
-        (user.role as string) === "SUPER_ADMIN" &&
-        user.userId === (session?.user as CustomUser)?.id,
-    );
-  };
-
-  const getRoleLabel = (role: string) => {
-    switch (role) {
-      case "SUPER_ADMIN":
-        return "Super Admin";
-      case "ADMIN":
-        return "Admin";
-      case "MANAGER":
-        return "Manager";
-      case "MEMBER":
-        return "Member";
-      default:
-        return role.toLowerCase();
-    }
+    return currentUserTeamMember && isSuperAdminRole(currentUserTeamMember.role);
   };
 
   const changeRole = async (

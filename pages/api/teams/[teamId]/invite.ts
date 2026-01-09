@@ -8,6 +8,7 @@ import { sendTeammateInviteEmail } from "@/lib/emails/send-teammate-invite";
 import { errorhandler } from "@/lib/errorHandler";
 import { newId } from "@/lib/id-helper";
 import prisma from "@/lib/prisma";
+import { isAdminRole } from "@/lib/team/roles";
 import { CustomUser } from "@/lib/types";
 import { generateChecksum } from "@/lib/utils/generate-checksum";
 import { generateJWT } from "@/lib/utils/generate-jwt";
@@ -60,12 +61,10 @@ export default async function handle(
 
       // check that the user is admin of the team, otherwise return 403
       const teamUsers = team.users;
-      const isUserAdmin = teamUsers.some(
-        (user) =>
-          (user.role === "ADMIN" || user.role === "SUPER_ADMIN") &&
-          user.userId === (session.user as CustomUser).id,
+      const currentUser = teamUsers.find(
+        (user) => user.userId === (session.user as CustomUser).id,
       );
-      if (!isUserAdmin) {
+      if (!currentUser || !isAdminRole(currentUser.role)) {
         res.status(403).json("Only admins can send the invitation!");
         return;
       }

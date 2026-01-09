@@ -38,10 +38,11 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     return res.status(404).json({ error: "Team not found" });
   }
 
-  const isUserAdminOrManager = team.users.some(
-    (user) =>
-      (user.role === "SUPER_ADMIN" || user.role === "ADMIN" || user.role === "MANAGER") && user.userId === (session.user as CustomUser).id,
+  const currentUser = team.users.find(
+    (user) => user.userId === (session.user as CustomUser).id,
   );
+  const isUserAdminOrManager = currentUser && 
+    (currentUser.role === "SUPER_ADMIN" || currentUser.role === "ADMIN" || currentUser.role === "MANAGER");
 
   if (!isUserAdminOrManager) {
     return res.status(403).json({ error: "Forbidden" });

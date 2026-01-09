@@ -7,6 +7,7 @@ import { hashToken } from "@/lib/api/auth/token";
 import { sendTeammateInviteEmail } from "@/lib/emails/send-teammate-invite";
 import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
+import { isAdminRole } from "@/lib/team/roles";
 import { CustomUser } from "@/lib/types";
 import { generateChecksum } from "@/lib/utils/generate-checksum";
 import { generateJWT } from "@/lib/utils/generate-jwt";
@@ -41,8 +42,7 @@ export default async function handle(
         return;
       }
 
-      const isUserAdmin = userTeam.role === "ADMIN" || userTeam.role === "SUPER_ADMIN";
-      if (!isUserAdmin) {
+      if (!isAdminRole(userTeam.role)) {
         res.status(403).json("Only admins can resend the invitation!");
         return;
       }

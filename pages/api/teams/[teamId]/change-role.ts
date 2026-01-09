@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth";
 
 import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
+import { isAdminRole, isSuperAdminRole } from "@/lib/team/roles";
 import { CustomUser } from "@/lib/types";
 
 import { authOptions } from "../../auth/[...nextauth]";
@@ -39,13 +40,12 @@ export default async function handle(
         return res.status(401).json("Unauthorized");
       }
 
-      const isSuperAdmin = userTeam.role === "SUPER_ADMIN";
-      const isAdmin = userTeam.role === "ADMIN" || isSuperAdmin;
-
-      // Only ADMINs can change roles
-      if (!isAdmin) {
+      // Only admins can change roles
+      if (!isAdminRole(userTeam.role)) {
         return res.status(403).json("Only admins can change user roles");
       }
+
+      const isSuperAdmin = isSuperAdminRole(userTeam.role);
 
       // Only super admin can promote someone to ADMIN
       if (role === "ADMIN" && !isSuperAdmin) {
@@ -56,7 +56,7 @@ export default async function handle(
       const targetUser = await prisma.userTeam.findFirst({
         where: { teamId, userId: userToBeChanged },
       });
-      if (targetUser?.role === "SUPER_ADMIN") {
+      if (targetUser && isSuperAdminRole(targetUser.role)) {
         return res.status(400).json("Cannot change the super admin's role");
       }
 

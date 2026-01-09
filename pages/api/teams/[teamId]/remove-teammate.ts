@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth";
 
 import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
+import { isAdminRole, isSuperAdminRole } from "@/lib/team/roles";
 import { CustomUser } from "@/lib/types";
 
 import { authOptions } from "../../auth/[...nextauth]";
@@ -33,12 +34,11 @@ export default async function handle(
         },
       });
 
-      const isSuperAdmin = currentUserTeam?.role === "SUPER_ADMIN";
-      const isAdmin = currentUserTeam?.role === "ADMIN" || isSuperAdmin;
-
-      if (!currentUserTeam || !isAdmin) {
+      if (!currentUserTeam || !isAdminRole(currentUserTeam.role)) {
         return res.status(403).json("Only admins can remove team members");
       }
+
+      const isSuperAdmin = isSuperAdminRole(currentUserTeam.role);
 
       // Check if the user to be deleted is part of this team
       const targetUserTeam = await prisma.userTeam.findFirst({
@@ -52,14 +52,13 @@ export default async function handle(
         return res.status(404).json("The teammate isn't part of this team");
       }
 
-      // Only super admin can remove other admins or super admins
-      const targetIsAdminOrHigher = targetUserTeam.role === "ADMIN" || targetUserTeam.role === "SUPER_ADMIN";
-      if (targetIsAdminOrHigher && !isSuperAdmin) {
+      // Only super admin can remove other admins
+      if (isAdminRole(targetUserTeam.role) && !isSuperAdmin) {
         return res.status(403).json("Only the super admin can remove admins");
       }
 
       // Prevent removing the super admin (they must transfer role first)
-      if (targetUserTeam.role === "SUPER_ADMIN") {
+      if (isSuperAdminRole(targetUserTeam.role)) {
         return res.status(400).json("Cannot remove the super admin. Transfer the role to another admin first.");
       }
 

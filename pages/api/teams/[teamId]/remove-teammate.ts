@@ -25,18 +25,41 @@ export default async function handle(
     const { userToBeDeleted } = req.body;
 
     try {
-      const userTeam = await prisma.userTeam.findFirst({
+      // Check if the current user is an admin of this team
+      const currentUserTeam = await prisma.userTeam.findFirst({
         where: {
           teamId,
+          userId,
         },
       });
 
-      if (!userTeam) {
-        return res.status(401).json("The teammate isn't the part of this team");
+      if (!currentUserTeam || currentUserTeam.role !== "ADMIN") {
+        return res.status(403).json("Only admins can remove team members");
       }
 
-      if (userTeam?.role === "ADMIN" && userTeam.userId === userToBeDeleted) {
-        return res.status(401).json("You can't remove the Admin");
+      // Check if the user to be deleted is part of this team
+      const targetUserTeam = await prisma.userTeam.findFirst({
+        where: {
+          teamId,
+          userId: userToBeDeleted,
+        },
+      });
+
+      if (!targetUserTeam) {
+        return res.status(404).json("The teammate isn't part of this team");
+      }
+
+      // Count how many admins are in the team
+      const adminCount = await prisma.userTeam.count({
+        where: {
+          teamId,
+          role: "ADMIN",
+        },
+      });
+
+      // Prevent removing the last admin
+      if (targetUserTeam.role === "ADMIN" && adminCount <= 1) {
+        return res.status(400).json("Cannot remove the last admin from the team");
       }
 
       const userToDelete = await prisma.user.findUnique({

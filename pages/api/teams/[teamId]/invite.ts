@@ -174,21 +174,13 @@ export default async function handle(
           to: email,
           url: verifyUrl,
         });
+        return res.status(200).json("Invitation sent!");
       } catch (emailError) {
-        // If email fails, delete the invitation so user can retry
-        await prisma.invitation.delete({
-          where: {
-            email_teamId: {
-              teamId,
-              email,
-            },
-          },
-        });
+        // Email failed but invitation was created - don't delete it, just warn user
         console.error("Failed to send invitation email:", emailError);
-        return res.status(500).json("Failed to send invitation email. Please try again.");
+        // Still return success since the invitation was created - they can resend later
+        return res.status(200).json("Invitation created! Email delivery may be delayed - you can resend from the team settings.");
       }
-
-      return res.status(200).json("Invitation sent!");
     } catch (error) {
       console.error('[INVITE] Error caught:', error);
       errorhandler(error, res);

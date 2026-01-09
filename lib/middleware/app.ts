@@ -17,8 +17,9 @@ export default async function AppMiddleware(req: NextRequest) {
     };
   };
 
-  // UNAUTHENTICATED if there's no token and the path isn't /login, redirect to /login
-  if (!token?.email && path !== "/login") {
+  // UNAUTHENTICATED if there's no token and the path isn't a login page, redirect to /login
+  const isLoginPage = path === "/login" || path === "/admin/login";
+  if (!token?.email && !isLoginPage) {
     const loginUrl = new URL(`/login`, req.url);
     // Append "next" parameter only if not navigating to the root
     if (path !== "/") {
@@ -40,10 +41,13 @@ export default async function AppMiddleware(req: NextRequest) {
     return NextResponse.redirect(new URL("/welcome", req.url));
   }
 
-  // AUTHENTICATED if the path is /login, redirect appropriately
+  // AUTHENTICATED if the path is a login page, redirect appropriately
   // The actual team check happens on the dashboard page via API
-  if (token?.email && path === "/login") {
-    const nextPath = url.searchParams.get("next") || "/dashboard";
+  if (token?.email && isLoginPage) {
+    const nextParam = url.searchParams.get("next");
+    // Admin login always goes to dashboard, investor login goes to viewer-redirect
+    const defaultRedirect = path === "/admin/login" ? "/dashboard" : "/viewer-redirect";
+    const nextPath = nextParam || defaultRedirect;
     return NextResponse.redirect(
       new URL(decodeURIComponent(nextPath), req.url),
     );

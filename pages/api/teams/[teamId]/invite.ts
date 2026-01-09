@@ -75,8 +75,10 @@ export default async function handle(
         userId: (session.user as CustomUser).id,
       });
 
-      // limits.users === null means unlimited
-      if (limits && limits.users !== null && teamUsers.length >= limits.users) {
+      // limits.users === null or undefined means unlimited
+      const userLimit = limits?.users;
+      const isUnlimited = userLimit === null || userLimit === undefined;
+      if (!isUnlimited && typeof userLimit === 'number' && teamUsers.length >= userLimit) {
         res
           .status(403)
           .json("You have reached the limit of users in your team");

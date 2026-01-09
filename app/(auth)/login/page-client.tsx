@@ -29,7 +29,15 @@ export default function Login() {
   const searchParams = useSearchParams();
   const next = useMemo(() => {
     const nextParam = searchParams.get("next");
-    return nextParam ? decodeURIComponent(nextParam) : null;
+    if (!nextParam) return null;
+    
+    const decodedPath = decodeURIComponent(nextParam);
+    // Block admin routes from investor login - they must use /admin/login
+    const adminRoutes = ["/dashboard", "/settings", "/documents", "/datarooms"];
+    if (adminRoutes.some(route => decodedPath.startsWith(route))) {
+      return null; // Ignore admin routes, will redirect to viewer-redirect instead
+    }
+    return decodedPath;
   }, [searchParams]);
   const router = useRouter();
   const { data: session, status } = useSession();

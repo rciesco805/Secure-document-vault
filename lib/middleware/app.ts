@@ -17,10 +17,14 @@ export default async function AppMiddleware(req: NextRequest) {
     };
   };
 
-  // UNAUTHENTICATED if there's no token and the path isn't a login page, redirect to /login
+  // UNAUTHENTICATED if there's no token and the path isn't a login page, redirect appropriately
   const isLoginPage = path === "/login" || path === "/admin/login";
+  const isAdminRoute = path.startsWith("/dashboard") || path.startsWith("/settings") || path.startsWith("/documents") || path.startsWith("/datarooms");
+  
   if (!token?.email && !isLoginPage) {
-    const loginUrl = new URL(`/login`, req.url);
+    // Admin routes go to admin login, everything else goes to investor login
+    const loginPath = isAdminRoute ? "/admin/login" : "/login";
+    const loginUrl = new URL(loginPath, req.url);
     // Append "next" parameter only if not navigating to the root
     if (path !== "/") {
       // Always include query string for view pages and email-confirm

@@ -38,7 +38,7 @@ export const configSchema = z.object({
     .preprocess((v) => (v === null ? Infinity : Number(v)), z.number())
     .optional()
     .default(50),
-  users: z.number().optional(),
+  users: z.number().nullable().optional(),
   domains: z.number().optional(),
   customDomainOnPro: z.boolean().optional(),
   customDomainInDataroom: z.boolean().optional(),

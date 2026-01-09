@@ -70,9 +70,32 @@ export default function People() {
   const isCurrentUserAdmin = () => {
     return team?.users.some(
       (user) =>
-        user.role === "ADMIN" &&
+        (user.role === "ADMIN" || (user.role as string) === "SUPER_ADMIN") &&
         user.userId === (session?.user as CustomUser)?.id,
     );
+  };
+
+  const isCurrentUserSuperAdmin = () => {
+    return team?.users.some(
+      (user) =>
+        (user.role as string) === "SUPER_ADMIN" &&
+        user.userId === (session?.user as CustomUser)?.id,
+    );
+  };
+
+  const getRoleLabel = (role: string) => {
+    switch (role) {
+      case "SUPER_ADMIN":
+        return "Super Admin";
+      case "ADMIN":
+        return "Admin";
+      case "MANAGER":
+        return "Manager";
+      case "MEMBER":
+        return "Member";
+      default:
+        return role.toLowerCase();
+    }
   };
 
   const changeRole = async (
@@ -288,8 +311,8 @@ export default function People() {
                 </div>
                 <div className="flex items-center gap-12">
                   <div className="flex flex-col items-end gap-1">
-                    <span className="text-sm capitalize text-foreground">
-                      {member.role.toLowerCase()}
+                    <span className="text-sm text-foreground">
+                      {getRoleLabel(member.role)}
                     </span>
                   </div>
                   {leavingUserId === member.userId ? (

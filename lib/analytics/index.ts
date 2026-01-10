@@ -9,6 +9,7 @@ export function useAnalytics() {
 
   /**
    * Capture an analytic event.
+   * Wrapped in try/catch to prevent blocking if analytics is blocked by browser extensions.
    *
    * @param event The event name.
    * @param properties Properties to attach to the event.
@@ -18,7 +19,11 @@ export function useAnalytics() {
       return;
     }
 
-    posthog.capture(event, properties);
+    try {
+      posthog.capture(event, properties);
+    } catch (e) {
+      // Analytics blocked by extension - ignore silently
+    }
   };
 
   const identify = (
@@ -29,7 +34,11 @@ export function useAnalytics() {
       return;
     }
 
-    posthog.identify(distinctId, properties);
+    try {
+      posthog.identify(distinctId, properties);
+    } catch (e) {
+      // Analytics blocked by extension - ignore silently
+    }
   };
 
   return {

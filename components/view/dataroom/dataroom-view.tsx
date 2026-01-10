@@ -174,14 +174,22 @@ export default function DataroomView({
           teamId: link.teamId,
         });
 
-        // set the verification token to the cookie
+        // set the verification token to the cookie for subsequent document views
         if (verificationToken) {
-          // Cookies.set("pm_vft", verificationToken, {
-          //   path: router.asPath.split("?")[0],
-          //   expires: 1,
-          //   sameSite: "strict",
-          //   secure: true,
-          // });
+          const currentPath = router.asPath.split("?")[0];
+          // Set both cookies for backward compatibility
+          Cookies.set("pm_vft", verificationToken, {
+            path: currentPath,
+            expires: 1,
+            sameSite: "strict",
+            secure: true,
+          });
+          Cookies.set(`pm_drs_flag_${link.id}`, verificationToken, {
+            path: `/view/${link.id}`,
+            expires: 1,
+            sameSite: "strict",
+            secure: true,
+          });
           setCode(null);
         }
 

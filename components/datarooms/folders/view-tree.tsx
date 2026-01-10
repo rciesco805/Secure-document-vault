@@ -55,7 +55,7 @@ const ViewerDocumentFileItem = memo(
         }
         
         const queryString = params.toString();
-        router.push(`/view/${linkId}/document/${document.dataroomDocumentId}${queryString ? `?${queryString}` : ''}`);
+        router.push(`/view/${linkId}/d/${document.dataroomDocumentId}${queryString ? `?${queryString}` : ''}`);
       }
     };
 

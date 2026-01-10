@@ -64,7 +64,12 @@ export default function DataroomDocumentViewPage({
 
   useEffect(() => {
     // Retrieve token from cookie on component mount
-    const cookieToken = Cookies.get(`pm_drs_flag_${router.query.linkId}`);
+    // Check all possible cookie keys: global pm_vft, linkId-based, and slug-based for compatibility
+    const linkSlug = linkData?.link?.slug;
+    const cookieToken =
+      Cookies.get("pm_vft") || 
+      Cookies.get(`pm_drs_flag_${router.query.linkId}`) ||
+      (linkSlug ? Cookies.get(`pm_drs_flag_${linkSlug}`) : undefined);
     const storedEmail = window.localStorage.getItem("papermark.email");
     if (cookieToken) {
       setStoredToken(cookieToken);
@@ -72,7 +77,7 @@ export default function DataroomDocumentViewPage({
         setStoredEmail(storedEmail.toLowerCase());
       }
     }
-  }, [router.query.linkId]);
+  }, [router.query.linkId, linkData?.link?.slug]);
 
   const {
     email: verifiedEmail,

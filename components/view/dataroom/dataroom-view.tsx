@@ -176,20 +176,29 @@ export default function DataroomView({
 
         // set the verification token to the cookie for subsequent document views
         if (verificationToken) {
-          const currentPath = router.asPath.split("?")[0];
-          // Set both cookies for backward compatibility
+          // Use root path to ensure cookies work across all sub-routes
           Cookies.set("pm_vft", verificationToken, {
-            path: currentPath,
+            path: "/",
             expires: 1,
             sameSite: "strict",
             secure: true,
           });
+          // Always write the link.id cookie for direct link access
           Cookies.set(`pm_drs_flag_${link.id}`, verificationToken, {
-            path: `/view/${link.id}`,
+            path: "/",
             expires: 1,
             sameSite: "strict",
             secure: true,
           });
+          // Also write the slug cookie if link has a slug (for custom domain access)
+          if (link.slug) {
+            Cookies.set(`pm_drs_flag_${link.slug}`, verificationToken, {
+              path: "/",
+              expires: 1,
+              sameSite: "strict",
+              secure: true,
+            });
+          }
           setCode(null);
         }
 
@@ -213,9 +222,13 @@ export default function DataroomView({
       toast.error(data.message);
 
       if (data.resetVerification) {
-        const currentPath = router.asPath.split("?")[0];
-
-        Cookies.remove("pm_vft", { path: currentPath });
+        // Remove cookies with root path to match how they were set
+        Cookies.remove("pm_vft", { path: "/" });
+        Cookies.remove(`pm_drs_flag_${link.id}`, { path: "/" });
+        // Also remove the slug cookie if link has a slug
+        if (link.slug) {
+          Cookies.remove(`pm_drs_flag_${link.slug}`, { path: "/" });
+        }
         setVerificationToken(null);
         setCode(null);
         setIsInvalidCode(true);

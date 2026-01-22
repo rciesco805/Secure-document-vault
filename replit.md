@@ -118,6 +118,29 @@ The platform is built on Next.js 14, utilizing a hybrid Pages and App Router app
 - `GET /api/sign/[token]` - Get signature document for signing
 - `POST /api/sign/[token]` - Complete signature (auto-stores in LP vault)
 
+## Testing
+
+```bash
+# Run all tests
+npm test
+
+# Run tests in watch mode
+npm test:watch
+
+# Run tests with coverage
+npm test:coverage
+
+# Run specific test suites
+npm run test:sign      # Signing flow tests
+npm run test:auth      # Authentication tests
+npm run test:datarooms # Dataroom gate tests
+```
+
+### Test Coverage
+- **Sign Routes (12 tests)**: E2E tests calling actual API handler with Prisma mocks
+- **Auth Flows (6 tests)**: Logic tests for magic link, session, OTP validation
+- **Dataroom Gates (15 tests)**: Logic tests for NDA, accreditation, KYC gates
+
 ## Database Commands
 
 ```bash

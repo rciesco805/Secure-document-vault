@@ -32,6 +32,8 @@ import {
   Clock,
   AlertCircle,
   Send,
+  PenTool,
+  ExternalLink,
 } from "lucide-react";
 
 interface InvestorDocument {
@@ -40,6 +42,16 @@ interface InvestorDocument {
   documentType: string;
   signedAt: string | null;
   createdAt: string;
+}
+
+interface PendingSignature {
+  id: string;
+  documentId: string;
+  documentTitle: string;
+  teamName: string;
+  signingToken: string;
+  status: string;
+  sentAt: string | null;
 }
 
 interface InvestorData {
@@ -73,6 +85,7 @@ export default function LPDashboard() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [noteContent, setNoteContent] = useState("");
   const [noteSending, setNoteSending] = useState(false);
+  const [pendingSignatures, setPendingSignatures] = useState<PendingSignature[]>([]);
 
   useEffect(() => {
     if (sessionStatus === "loading") return;
@@ -87,17 +100,26 @@ export default function LPDashboard() {
 
   const fetchInvestorData = async () => {
     try {
-      const response = await fetch("/api/lp/me");
-      if (!response.ok) {
-        if (response.status === 404) {
+      const [meResponse, signaturesResponse] = await Promise.all([
+        fetch("/api/lp/me"),
+        fetch("/api/lp/pending-signatures"),
+      ]);
+
+      if (!meResponse.ok) {
+        if (meResponse.status === 404) {
           router.push("/lp/onboard");
           return;
         }
         throw new Error("Failed to fetch investor data");
       }
-      const data = await response.json();
+      const data = await meResponse.json();
       setInvestor(data.investor);
       setCapitalCalls(data.capitalCalls || []);
+
+      if (signaturesResponse.ok) {
+        const sigData = await signaturesResponse.json();
+        setPendingSignatures(sigData.pendingSignatures || []);
+      }
 
       if (!data.investor.ndaSigned || data.investor.accreditationStatus === "PENDING") {
         setShowNdaModal(true);
@@ -279,6 +301,50 @@ export default function LPDashboard() {
               </CardContent>
             </Card>
           </div>
+
+          {pendingSignatures.length > 0 && (
+            <Card className="bg-gradient-to-r from-amber-900/30 to-orange-900/30 border-amber-700/50 mb-6">
+              <CardHeader>
+                <CardTitle className="text-white flex items-center">
+                  <PenTool className="h-5 w-5 mr-2 text-amber-400" />
+                  Action Required: Documents to Sign
+                </CardTitle>
+                <CardDescription className="text-amber-200/70">
+                  You have {pendingSignatures.length} document{pendingSignatures.length > 1 ? "s" : ""} awaiting your signature
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {pendingSignatures.map((sig) => (
+                    <div
+                      key={sig.id}
+                      className="flex items-center justify-between p-4 bg-gray-800/70 rounded-lg border border-amber-700/30"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-amber-500/20 rounded-lg">
+                          <FileText className="h-5 w-5 text-amber-400" />
+                        </div>
+                        <div>
+                          <p className="text-white font-medium">{sig.documentTitle}</p>
+                          <p className="text-gray-400 text-sm">
+                            From {sig.teamName} {sig.sentAt && `• Sent ${new Date(sig.sentAt).toLocaleDateString()}`}
+                          </p>
+                        </div>
+                      </div>
+                      <a
+                        href={`/sign/${sig.signingToken}`}
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-medium transition-colors"
+                      >
+                        <PenTool className="h-4 w-4" />
+                        Sign Now
+                        <ExternalLink className="h-3 w-3" />
+                      </a>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <Card className="lg:col-span-2 bg-gray-800/50 border-gray-700">

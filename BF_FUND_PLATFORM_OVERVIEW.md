@@ -16,17 +16,6 @@ The BF Fund Platform is a secure, self-hosted investor portal consisting of two 
 
 The platform is designed specifically for accredited investors, providing enterprise-grade security while maintaining ease of use.
 
-### Platform Origin
-The platform is based on the open-source [Papermark](https://github.com/mfts/papermark) project (secure document sharing), extended with custom features for BF Fund including:
-- Custom-built e-signature system (BF Fund Sign)
-- Magic link authentication for investors
-- Access request workflows
-- Custom branding and domain
-- Q&A system for investor communication
-
-### Important Technical Note
-The e-signature system is **fully native/built-in** - it does not use external services like DocuSign or OpenSign. The database schema contains optional `openSignDocumentId` and `openSignData` fields as placeholders for potential future external integration, but these are not currently used. All signature capture, field management, and PDF embedding is handled by custom code within this codebase.
-
 ---
 
 ## Platform Components
@@ -67,26 +56,6 @@ The e-signature system is **fully native/built-in** - it does not use external s
 
 ### 2. BF Fund Sign (E-Signature Platform)
 
-**Implementation:** Fully native/built-in e-signature system (no external API dependencies)
-
-#### Technical Implementation Details
-| Component | File Location | Description |
-|-----------|--------------|-------------|
-| Admin Dashboard | `pages/sign/index.tsx` (295 lines) | Document list, status tracking |
-| Create Document | `pages/sign/new.tsx` (431 lines) | Upload PDF, add fields, recipients |
-| Bulk Send | `pages/sign/bulk.tsx` | Send to multiple recipients |
-| Templates | `pages/sign/templates/` | Reusable document templates |
-| Signing API | `pages/api/sign/[token].ts` (431 lines) | Handle signing flow, validation |
-| Document CRUD | `pages/api/teams/[teamId]/signature-documents/` | Create, read, update, delete |
-| Field Management | `.../signature-documents/[documentId]/fields.ts` | Manage signature fields |
-| Send Emails | `.../signature-documents/[documentId]/send.ts` | Send signing requests |
-| Reminders | `.../signature-documents/[documentId]/remind.ts` | Send reminder emails |
-| Corrections | `.../signature-documents/[documentId]/correct.ts` | Correct and resend |
-| Download | `.../signature-documents/[documentId]/download.ts` | Download signed PDFs |
-| Audit Trail UI | `components/signature/audit-trail.tsx` | Display audit history |
-| QR Signing | `components/signature/qr-code-dialog.tsx` | In-person QR codes |
-| Database Schema | `prisma/schema/signature.prisma` (196 lines) | Full data models |
-
 #### Document Preparation
 | Feature | Description |
 |---------|-------------|
@@ -119,36 +88,6 @@ The e-signature system is **fully native/built-in** - it does not use external s
 | Complete Audit Trail | Every action logged with timestamp and IP |
 | Signed PDF Download | Final document with embedded signatures |
 | Certificate of Completion | Audit log included in final document |
-
-#### Database Models (signature.prisma)
-```
-SignatureDocument     - Documents requiring signatures
-  - id, title, description, file, status
-  - expirationDate, sentAt, completedAt
-  - emailSubject, emailMessage
-  - auditTrail (JSON)
-  - teamId, createdById
-
-SignatureRecipient    - Recipients with roles
-  - name, email, role (SIGNER/VIEWER/APPROVER)
-  - signingOrder, status
-  - signingToken (unique secure URL)
-  - signedAt, viewedAt, declinedAt
-  - ipAddress, userAgent (audit)
-  - signatureImage (captured signature)
-
-SignatureField        - Fields placed on documents
-  - type (SIGNATURE/INITIALS/DATE/TEXT/etc.)
-  - pageNumber, x, y, width, height
-  - label, placeholder, required
-  - value, filledAt
-
-SignatureTemplate     - Reusable templates
-  - name, description, file
-  - defaultRecipients (JSON)
-  - fields (JSON)
-  - defaultEmailSubject/Message
-```
 
 ---
 

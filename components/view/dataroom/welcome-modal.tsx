@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { XIcon, FileTextIcon, ArrowRightIcon, SparklesIcon } from "lucide-react";
 import Cookies from "js-cookie";
 
@@ -11,6 +11,15 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
+
+function getContrastTextColor(hexColor: string): string {
+  const hex = hexColor.replace("#", "");
+  const r = parseInt(hex.substring(0, 2), 16);
+  const g = parseInt(hex.substring(2, 4), 16);
+  const b = parseInt(hex.substring(4, 6), 16);
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  return luminance > 0.5 ? "#000000" : "#ffffff";
+}
 
 interface RecommendedDocument {
   id: string;
@@ -62,6 +71,7 @@ export default function WelcomeModal({
   };
 
   const accentColor = brandColor || "#7c3aed";
+  const accentTextColor = useMemo(() => getContrastTextColor(accentColor), [accentColor]);
 
   if (!isOpen) return null;
 
@@ -69,11 +79,14 @@ export default function WelcomeModal({
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleDismiss()}>
       <DialogContent className="max-w-lg border-border bg-background p-0 sm:max-w-xl">
         <div 
-          className="rounded-t-lg p-6 text-white"
-          style={{ backgroundColor: accentColor }}
+          className="rounded-t-lg p-6"
+          style={{ backgroundColor: accentColor, color: accentTextColor }}
         >
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-xl font-bold text-white">
+            <DialogTitle 
+              className="flex items-center gap-2 text-xl font-bold"
+              style={{ color: accentTextColor }}
+            >
               <SparklesIcon className="h-6 w-6" />
               Welcome to {dataroomName}
             </DialogTitle>
@@ -120,8 +133,8 @@ export default function WelcomeModal({
                       )}
                     >
                       <div 
-                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-white text-sm font-bold"
-                        style={{ backgroundColor: accentColor }}
+                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-sm font-bold"
+                        style={{ backgroundColor: accentColor, color: accentTextColor }}
                       >
                         {index + 1}
                       </div>
@@ -142,8 +155,8 @@ export default function WelcomeModal({
         <div className="border-t border-border p-4">
           <Button 
             onClick={handleDismiss} 
-            className="w-full"
-            style={{ backgroundColor: accentColor }}
+            className="w-full font-semibold"
+            style={{ backgroundColor: accentColor, color: accentTextColor }}
           >
             Get Started
           </Button>

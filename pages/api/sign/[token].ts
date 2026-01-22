@@ -407,6 +407,59 @@ async function handlePost(
       }
 
       await Promise.all(emailPromises);
+
+      // Store completed document in LP vaults for signers only
+      try {
+        const signers = result.allRecipients.filter(
+          (r) => r.role === "SIGNER" && r.status === "SIGNED"
+        );
+        
+        for (const r of signers) {
+          // Find investor by email
+          const investor = await prisma.investor.findFirst({
+            where: {
+              user: { email: r.email },
+            },
+          });
+
+          if (investor && document.file) {
+            // Upsert to LP vault (prevents duplicates)
+            await prisma.investorDocument.upsert({
+              where: {
+                investorId_signatureDocumentId: {
+                  investorId: investor.id,
+                  signatureDocumentId: document.id,
+                },
+              },
+              update: {
+                signedAt: new Date(),
+                ipAddress: r.ipAddress || null,
+                userAgent: r.userAgent || null,
+                auditTrail: document.auditTrail,
+              },
+              create: {
+                investorId: investor.id,
+                title: document.title,
+                documentType: document.title.toLowerCase().includes("nda")
+                  ? "NDA"
+                  : document.title.toLowerCase().includes("subscription")
+                  ? "SUBSCRIPTION"
+                  : "OTHER",
+                storageKey: document.file,
+                storageType: document.storageType,
+                signatureDocumentId: document.id,
+                signedAt: new Date(),
+                ipAddress: r.ipAddress || null,
+                userAgent: r.userAgent || null,
+                auditTrail: document.auditTrail,
+              },
+            });
+          }
+        }
+      } catch (lpError) {
+        console.error("Failed to store document in LP vault:", lpError);
+        // Non-blocking - don't fail the signing if vault storage fails
+      }
     } else {
       const owner = await prisma.user.findFirst({
         where: { id: document.createdById },

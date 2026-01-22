@@ -34,6 +34,14 @@ import {
   Send,
 } from "lucide-react";
 
+interface InvestorDocument {
+  id: string;
+  title: string;
+  documentType: string;
+  signedAt: string | null;
+  createdAt: string;
+}
+
 interface InvestorData {
   id: string;
   entityName: string | null;
@@ -41,6 +49,7 @@ interface InvestorData {
   accreditationStatus: string;
   fundData: any;
   signedDocs: any[];
+  documents: InvestorDocument[];
 }
 
 interface CapitalCall {
@@ -351,14 +360,21 @@ export default function LPDashboard() {
             </Card>
 
             <Card className="lg:col-span-3 bg-gray-800/50 border-gray-700">
-              <CardHeader>
-                <CardTitle className="text-white flex items-center">
-                  <FileText className="h-5 w-5 mr-2 text-purple-500" />
-                  Your Documents
-                </CardTitle>
-                <CardDescription className="text-gray-400">
-                  Signed agreements and fund documents
-                </CardDescription>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle className="text-white flex items-center">
+                    <FileText className="h-5 w-5 mr-2 text-purple-500" />
+                    Your Documents
+                  </CardTitle>
+                  <CardDescription className="text-gray-400">
+                    Signed agreements and fund documents
+                  </CardDescription>
+                </div>
+                <Link href="/lp/docs">
+                  <Button variant="outline" size="sm" className="border-gray-600 text-gray-300 hover:bg-gray-700">
+                    View All
+                  </Button>
+                </Link>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -380,7 +396,18 @@ export default function LPDashboard() {
                       </div>
                     </div>
                   )}
-                  {(!investor?.ndaSigned && investor?.accreditationStatus === "PENDING") && (
+                  {investor?.documents && investor.documents.length > 0 && investor.documents.slice(0, 3).map((doc) => (
+                    <div key={doc.id} className="p-4 bg-gray-700/50 rounded-lg flex items-center">
+                      <FileText className="h-8 w-8 text-purple-500 mr-3" />
+                      <div>
+                        <p className="text-white font-medium">{doc.title}</p>
+                        <p className="text-gray-400 text-sm">
+                          {doc.signedAt ? `Signed ${new Date(doc.signedAt).toLocaleDateString()}` : doc.documentType}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                  {(!investor?.ndaSigned && investor?.accreditationStatus === "PENDING" && (!investor?.documents || investor.documents.length === 0)) && (
                     <div className="col-span-full text-center py-8 text-gray-500">
                       <FileText className="h-12 w-12 mx-auto mb-3 text-gray-600" />
                       <p>Complete NDA and accreditation to access documents</p>

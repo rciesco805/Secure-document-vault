@@ -22,6 +22,12 @@ export default async function AppMiddleware(req: NextRequest) {
     return NextResponse.next();
   }
 
+  // LP authenticated routes (require login but no team membership)
+  const lpAuthRoutes = ["/lp/dashboard", "/lp/docs"];
+  if (token?.email && lpAuthRoutes.some((r) => path.startsWith(r))) {
+    return NextResponse.next();
+  }
+
   // UNAUTHENTICATED if there's no token and the path isn't a login page, redirect appropriately
   const isLoginPage = path === "/login" || path === "/admin/login";
   const isAdminRoute = path.startsWith("/dashboard") || path.startsWith("/settings") || path.startsWith("/documents") || path.startsWith("/datarooms");

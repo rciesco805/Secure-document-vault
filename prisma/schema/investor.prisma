@@ -20,11 +20,38 @@ model Investor {
   capitalCalls          CapitalCallResponse[]
   notes                 InvestorNote[]
   accreditationAcks     AccreditationAck[]
+  documents             InvestorDocument[]
   
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
 
   @@index([userId])
+}
+
+model InvestorDocument {
+  id                    String   @id @default(cuid())
+  investorId            String
+  investor              Investor @relation(fields: [investorId], references: [id], onDelete: Cascade)
+  
+  title                 String
+  documentType          String   @default("OTHER")
+  storageKey            String
+  storageType           String   @default("S3_PATH")
+  
+  signatureDocumentId   String
+  signedAt              DateTime?
+  
+  ipAddress             String?
+  userAgent             String?
+  auditTrail            Json?
+  
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@unique([investorId, signatureDocumentId])
+  @@index([investorId])
+  @@index([signatureDocumentId])
+  @@index([documentType])
 }
 
 model AccreditationAck {

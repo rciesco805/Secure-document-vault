@@ -37,6 +37,10 @@ export default async function handler(
                 },
               },
             },
+            documents: {
+              orderBy: { createdAt: "desc" },
+              take: 10,
+            },
           },
         },
       },
@@ -63,6 +67,7 @@ export default async function handler(
         accreditationStatus: user.investorProfile.accreditationStatus,
         fundData: user.investorProfile.fundData,
         signedDocs: user.investorProfile.signedDocs || [],
+        documents: user.investorProfile.documents || [],
       },
       capitalCalls,
     });

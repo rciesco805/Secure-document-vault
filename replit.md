@@ -24,10 +24,17 @@ The platform is built on Next.js 14, utilizing a hybrid Pages and App Router app
 *   **Investor Dataroom**: Secure document sharing, custom branding, folder hierarchy, page-level analytics, and custom domain support.
 *   **Email Verification Flow**: Multi-step verification with OTP for secure access, persisting for one day via cookies.
 *   **BF Fund Sign (E-Signature)**: Drag-and-drop field placement, multi-recipient roles (Signer, Viewer, Approver), sequential signing, bulk sending, in-person QR signing, document expiration, 'Correct & Resend' functionality, reusable templates, and detailed audit trails with embedded PDF signatures.
+*   **LP Fundroom Portal**: Personalized investor dashboards with:
+    - 3-step investor onboarding at `/lp/onboard` (name/email → entity → magic link verification)
+    - NDA/accreditation gate modal with 506(c) compliance (IP/user agent logging)
+    - Per-LP document vault at `/lp/docs` storing all signed documents
+    - Auto-storage of completed signature documents in LP vault
+    - Dashboard showing fund raise progress, capital calls, and recent documents
+    - "Message GP" functionality for investor-to-GP communication
 *   **Authentication**: Primarily via email magic links, with Google OAuth for admin users.
 *   **Admin/Viewer Separation**: Distinct interfaces and server-side protection based on user roles (SUPER\_ADMIN, ADMIN, MANAGER, MEMBER).
 *   **Hybrid Routing Architecture**: Pages Router for the main application, API routes, and viewer pages; App Router for authentication, Enterprise Edition (EE) APIs, and admin pages.
-*   **Database Schema**: A comprehensive Prisma schema incorporating models for Users, Teams, Documents, Datarooms, Links, Viewers, E-signatures (SignatureDocument, SignatureRecipient, SignatureField, SignatureTemplate), Analytics, and Q&A. This is designed for extensibility to support future GP/LP fund management features.
+*   **Database Schema**: A comprehensive Prisma schema incorporating models for Users, Teams, Documents, Datarooms, Links, Viewers, E-signatures (SignatureDocument, SignatureRecipient, SignatureField, SignatureTemplate), LP Portal (Investor, InvestorDocument, AccreditationAck, Fund, Investment, CapitalCall, Distribution), Analytics, and Q&A. This is designed for extensibility to support future GP/LP fund management features.
 *   **UI/UX**: Emphasis on a UX-first approach with mobile-responsive design using Tailwind CSS and shadcn/ui components, aiming for minimal clicks and guided wizards for critical flows.
 
 ## External Dependencies

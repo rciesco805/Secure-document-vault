@@ -7,13 +7,21 @@ The BF Fund Investor Dataroom is a secure, self-hosted investor portal for Bermu
 1.  **BF Fund Dataroom**: A secure document sharing platform for investors, featuring visitor access management, one-click magic link authentication, and admin approval workflows. It enables custom branding, page-level analytics, and folder organization.
 2.  **BF Fund Sign**: A DocuSign-style e-signature platform that supports signature fields, templates, bulk sending, QR signing, and comprehensive audit trails. This system is custom-built and self-hosted, drawing inspiration from OpenSign's architecture but entirely implemented within the codebase without external API dependencies.
 
-The platform aims to provide a comprehensive, UX-first solution for GPs managing private investments, with future plans to evolve into a full GP/LP fund management suite offering personalized investor dashboards, fundraise tracking, investment document management, and automated capital management.
+The platform provides a comprehensive, UX-first solution for GPs managing private investments, featuring personalized investor dashboards, fundraise tracking, investment document management, and automated capital management.
 
 ## User Preferences
 
 -   Communication style: Simple, everyday language
 -   Technical level: Non-technical explanations preferred
 -   Focus: Security and ease of use for investors
+
+## Recent Changes
+
+### January 2026
+- **Pending Signatures Dashboard**: LP dashboard now shows "Action Required" section with documents awaiting signature, with direct "Sign Now" links
+- **Optional NDA Gate**: Fund-level toggle for NDA/accreditation gate - admins can enable/disable per fund
+- **Admin Fund Settings**: New `/settings/funds` page for managing fund-specific settings with NDA gate toggle
+- **E-Sign Integration**: Completed documents auto-stored in LP vault with full audit trail
 
 ## System Architecture
 
@@ -26,16 +34,83 @@ The platform is built on Next.js 14, utilizing a hybrid Pages and App Router app
 *   **BF Fund Sign (E-Signature)**: Drag-and-drop field placement, multi-recipient roles (Signer, Viewer, Approver), sequential signing, bulk sending, in-person QR signing, document expiration, 'Correct & Resend' functionality, reusable templates, and detailed audit trails with embedded PDF signatures.
 *   **LP Fundroom Portal**: Personalized investor dashboards with:
     - 3-step investor onboarding at `/lp/onboard` (name/email → entity → magic link verification)
-    - NDA/accreditation gate modal with 506(c) compliance (IP/user agent logging)
-    - Per-LP document vault at `/lp/docs` storing all signed documents
-    - Auto-storage of completed signature documents in LP vault
+    - Optional NDA/accreditation gate modal with 506(c) compliance (IP/user agent logging) - toggleable per fund
+    - Per-LP document vault at `/lp/docs` storing all signed documents with view/download
+    - Auto-storage of completed signature documents in LP vault via webhook
+    - Pending signatures section on dashboard with "Sign Now" action buttons
     - Dashboard showing fund raise progress, capital calls, and recent documents
     - "Message GP" functionality for investor-to-GP communication
+*   **Admin Fund Settings** (`/settings/funds`):
+    - View all funds for team with status and investor counts
+    - Toggle NDA gate on/off per fund
+    - Role-based access control (ADMIN/OWNER only)
 *   **Authentication**: Primarily via email magic links, with Google OAuth for admin users.
 *   **Admin/Viewer Separation**: Distinct interfaces and server-side protection based on user roles (SUPER\_ADMIN, ADMIN, MANAGER, MEMBER).
 *   **Hybrid Routing Architecture**: Pages Router for the main application, API routes, and viewer pages; App Router for authentication, Enterprise Edition (EE) APIs, and admin pages.
 *   **Database Schema**: A comprehensive Prisma schema incorporating models for Users, Teams, Documents, Datarooms, Links, Viewers, E-signatures (SignatureDocument, SignatureRecipient, SignatureField, SignatureTemplate), LP Portal (Investor, InvestorDocument, AccreditationAck, Fund, Investment, CapitalCall, Distribution), Analytics, and Q&A. This is designed for extensibility to support future GP/LP fund management features.
 *   **UI/UX**: Emphasis on a UX-first approach with mobile-responsive design using Tailwind CSS and shadcn/ui components, aiming for minimal clicks and guided wizards for critical flows.
+
+## Project Structure
+
+```
+/
+├── app/                    # App Router pages (auth, admin)
+│   ├── admin/             # Admin login pages
+│   ├── api/               # App Router API routes
+│   └── (auth)/            # Authentication pages
+├── pages/                  # Pages Router
+│   ├── api/               # API routes
+│   │   ├── funds/         # Fund management APIs
+│   │   ├── lp/            # LP Portal APIs
+│   │   ├── sign/          # E-signature APIs
+│   │   └── teams/         # Team management APIs
+│   ├── lp/                # LP Portal pages
+│   │   ├── dashboard.tsx  # Investor dashboard
+│   │   ├── docs.tsx       # Document vault
+│   │   └── onboard.tsx    # Investor onboarding
+│   ├── settings/          # Admin settings pages
+│   │   ├── funds.tsx      # Fund settings with NDA gate toggle
+│   │   └── general.tsx    # General team settings
+│   └── sign/              # E-signature pages
+├── components/            # React components
+│   ├── sidebar/           # Navigation sidebar
+│   ├── settings/          # Settings components
+│   └── ui/                # UI primitives (shadcn/ui)
+├── prisma/
+│   └── schema/            # Prisma schema files (folder-based)
+│       └── investor.prisma # Fund, Investor, Investment models
+└── lib/                   # Utilities and helpers
+```
+
+## Key API Endpoints
+
+### LP Portal
+- `GET /api/lp/me` - Get investor profile, investments, capital calls, NDA gate status
+- `GET /api/lp/docs` - Get investor's signed documents with signed URLs
+- `GET /api/lp/pending-signatures` - Get documents awaiting signature
+- `POST /api/lp/complete-gate` - Complete NDA/accreditation acknowledgment
+
+### Fund Management
+- `GET /api/teams/[teamId]/funds` - List funds for team (admin only)
+- `GET /api/funds/[fundId]/settings` - Get fund settings
+- `PATCH /api/funds/[fundId]/settings` - Update fund settings (NDA gate toggle)
+
+### E-Signature
+- `GET /api/sign/[token]` - Get signature document for signing
+- `POST /api/sign/[token]` - Complete signature (auto-stores in LP vault)
+
+## Database Commands
+
+```bash
+# Generate Prisma client
+npx prisma generate --schema=./prisma/schema
+
+# Push schema changes to database
+npx prisma db push --schema=./prisma/schema
+
+# Open Prisma Studio
+npx prisma studio --schema=./prisma/schema
+```
 
 ## External Dependencies
 
@@ -48,3 +123,12 @@ The platform is built on Next.js 14, utilizing a hybrid Pages and App Router app
 *   **AI (Optional)**: OpenAI API
 *   **UI Primitives**: Radix UI
 *   **Form Handling**: React Hook Form, Zod
+
+## Future Roadmap
+
+- GP Admin Panel for investor management
+- Capital Call Management (create, track, notify)
+- Subscription Documents with templates
+- KYC/AML integration
+- Multi-fund support with portfolio views
+- K-1 document management

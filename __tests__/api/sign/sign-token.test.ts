@@ -1,245 +1,327 @@
 import { createMocks } from 'node-mocks-http';
 import type { NextApiRequest, NextApiResponse } from 'next';
+import handler from '@/pages/api/sign/[token]';
+import prisma from '@/lib/prisma';
 
-describe('/api/sign/[token] - Signing Flow Logic', () => {
+const mockPrisma = prisma as jest.Mocked<typeof prisma>;
+
+describe('/api/sign/[token]', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  describe('Token Validation', () => {
-    it('should reject empty token', () => {
-      const token = '';
-      expect(token).toBeFalsy();
-    });
-
-    it('should accept valid token format', () => {
-      const token = 'abc123-def456-ghi789';
-      expect(token).toBeTruthy();
-      expect(typeof token).toBe('string');
-    });
-  });
-
-  describe('Document Status Checks', () => {
-    it('should detect expired documents', () => {
-      const expirationDate = new Date(Date.now() - 86400000);
-      const isExpired = expirationDate < new Date();
-      expect(isExpired).toBe(true);
-    });
-
-    it('should allow non-expired documents', () => {
-      const expirationDate = new Date(Date.now() + 86400000);
-      const isExpired = expirationDate < new Date();
-      expect(isExpired).toBe(false);
-    });
-
-    it('should detect voided documents', () => {
-      const document = { status: 'VOIDED' };
-      const isVoided = document.status === 'VOIDED';
-      expect(isVoided).toBe(true);
-    });
-
-    it('should detect completed documents', () => {
-      const document = { status: 'COMPLETED' };
-      const isCompleted = document.status === 'COMPLETED';
-      expect(isCompleted).toBe(true);
-    });
-
-    it('should allow pending documents', () => {
-      const document = { status: 'PENDING' };
-      const isPending = document.status === 'PENDING';
-      const canSign = !['VOIDED', 'COMPLETED', 'EXPIRED'].includes(document.status);
-      expect(isPending).toBe(true);
-      expect(canSign).toBe(true);
-    });
-  });
-
-  describe('Recipient Status', () => {
-    it('should detect already signed recipients', () => {
-      const recipient = { status: 'SIGNED' };
-      const alreadySigned = recipient.status === 'SIGNED';
-      expect(alreadySigned).toBe(true);
-    });
-
-    it('should allow pending recipients to sign', () => {
-      const recipient = { status: 'PENDING' };
-      const canSign = recipient.status === 'PENDING';
-      expect(canSign).toBe(true);
-    });
-
-    it('should detect declined recipients', () => {
-      const recipient = { status: 'DECLINED' };
-      const hasDeclined = recipient.status === 'DECLINED';
-      expect(hasDeclined).toBe(true);
-    });
-  });
-
-  describe('Sequential Signing Order', () => {
-    it('should determine if recipient can sign based on order', () => {
-      const recipients = [
-        { order: 1, status: 'SIGNED' },
-        { order: 2, status: 'PENDING' },
-        { order: 3, status: 'PENDING' },
-      ];
-
-      const currentRecipient = recipients[1];
-      const previousRecipients = recipients.filter(r => r.order < currentRecipient.order);
-      const allPreviousSigned = previousRecipients.every(r => r.status === 'SIGNED');
-
-      expect(allPreviousSigned).toBe(true);
-    });
-
-    it('should block signing if previous recipient has not signed', () => {
-      const recipients = [
-        { order: 1, status: 'PENDING' },
-        { order: 2, status: 'PENDING' },
-      ];
-
-      const currentRecipient = recipients[1];
-      const previousRecipients = recipients.filter(r => r.order < currentRecipient.order);
-      const allPreviousSigned = previousRecipients.every(r => r.status === 'SIGNED');
-
-      expect(allPreviousSigned).toBe(false);
-    });
-  });
-
-  describe('Field Validation', () => {
-    it('should validate required signature fields', () => {
-      const fields = [
-        { id: 'field-1', type: 'SIGNATURE', required: true, value: null },
-        { id: 'field-2', type: 'INITIALS', required: true, value: 'ABC' },
-      ];
-
-      const missingRequired = fields.filter(f => f.required && !f.value);
-      expect(missingRequired.length).toBe(1);
-      expect(missingRequired[0].type).toBe('SIGNATURE');
-    });
-
-    it('should accept completed required fields', () => {
-      const fields = [
-        { id: 'field-1', type: 'SIGNATURE', required: true, value: 'data:image/png;base64,...' },
-        { id: 'field-2', type: 'DATE', required: true, value: '2026-01-22' },
-      ];
-
-      const missingRequired = fields.filter(f => f.required && !f.value);
-      expect(missingRequired.length).toBe(0);
-    });
-
-    it('should allow optional fields to be empty', () => {
-      const fields = [
-        { id: 'field-1', type: 'TEXT', required: false, value: null },
-      ];
-
-      const missingRequired = fields.filter(f => f.required && !f.value);
-      expect(missingRequired.length).toBe(0);
-    });
-  });
-
-  describe('Signature Data Validation', () => {
-    it('should validate base64 signature format', () => {
-      const validSignature = 'data:image/png;base64,iVBORw0KGgo...';
-      const invalidSignature = 'not-a-valid-signature';
-
-      expect(validSignature.startsWith('data:image/')).toBe(true);
-      expect(invalidSignature.startsWith('data:image/')).toBe(false);
-    });
-
-    it('should detect empty signature', () => {
-      const emptySignature = '';
-      expect(emptySignature).toBeFalsy();
-    });
-  });
-
-  describe('Document Completion Logic', () => {
-    it('should detect when all recipients have signed', () => {
-      const recipients = [
-        { status: 'SIGNED', role: 'SIGNER' },
-        { status: 'SIGNED', role: 'SIGNER' },
-        { status: 'SIGNED', role: 'VIEWER' },
-      ];
-
-      const signers = recipients.filter(r => r.role === 'SIGNER');
-      const allSigned = signers.every(r => r.status === 'SIGNED');
-      expect(allSigned).toBe(true);
-    });
-
-    it('should not complete if any signer is pending', () => {
-      const recipients = [
-        { status: 'SIGNED', role: 'SIGNER' },
-        { status: 'PENDING', role: 'SIGNER' },
-      ];
-
-      const signers = recipients.filter(r => r.role === 'SIGNER');
-      const allSigned = signers.every(r => r.status === 'SIGNED');
-      expect(allSigned).toBe(false);
-    });
-
-    it('should ignore viewer status for completion', () => {
-      const recipients = [
-        { status: 'SIGNED', role: 'SIGNER' },
-        { status: 'PENDING', role: 'VIEWER' },
-      ];
-
-      const signers = recipients.filter(r => r.role === 'SIGNER');
-      const allSigned = signers.every(r => r.status === 'SIGNED');
-      expect(allSigned).toBe(true);
-    });
-  });
-
-  describe('Rate Limiting', () => {
-    it('should extract IP address from x-forwarded-for header', () => {
-      const { req } = createMocks<NextApiRequest, NextApiResponse>({
+  describe('GET - Fetch signing document', () => {
+    it('returns 400 if token is missing', async () => {
+      const { req, res } = createMocks<NextApiRequest, NextApiResponse>({
         method: 'GET',
-        headers: { 'x-forwarded-for': '192.168.1.1, 10.0.0.1' },
+        query: {},
       });
 
-      const ipAddress = (req.headers['x-forwarded-for'] as string)?.split(',')[0] || 'unknown';
-      expect(ipAddress).toBe('192.168.1.1');
+      await handler(req, res);
+
+      expect(res._getStatusCode()).toBe(400);
+      expect(JSON.parse(res._getData())).toEqual({ message: 'Token is required' });
     });
 
-    it('should fallback to unknown if no IP', () => {
-      const { req } = createMocks<NextApiRequest, NextApiResponse>({
+    it('returns 404 if token is invalid', async () => {
+      (mockPrisma.signatureRecipient.findUnique as jest.Mock).mockResolvedValue(null);
+
+      const { req, res } = createMocks<NextApiRequest, NextApiResponse>({
         method: 'GET',
-        headers: {},
+        query: { token: 'invalid-token' },
       });
 
-      const ipAddress = (req.headers['x-forwarded-for'] as string)?.split(',')[0] || 'unknown';
-      expect(ipAddress).toBe('unknown');
+      await handler(req, res);
+
+      expect(res._getStatusCode()).toBe(404);
+      expect(JSON.parse(res._getData())).toEqual({ message: 'Invalid or expired signing link' });
+    });
+
+    it('returns 410 if document is expired', async () => {
+      const expiredDate = new Date(Date.now() - 86400000);
+      (mockPrisma.signatureRecipient.findUnique as jest.Mock).mockResolvedValue({
+        id: 'recipient-1',
+        signingToken: 'test-token',
+        document: {
+          id: 'doc-1',
+          status: 'PENDING',
+          expirationDate: expiredDate,
+          fields: [],
+          team: { name: 'Test Team' },
+        },
+      });
+
+      const { req, res } = createMocks<NextApiRequest, NextApiResponse>({
+        method: 'GET',
+        query: { token: 'test-token' },
+      });
+
+      await handler(req, res);
+
+      expect(res._getStatusCode()).toBe(410);
+      expect(JSON.parse(res._getData())).toEqual({ message: 'This signing link has expired' });
+    });
+
+    it('returns 410 if document is voided', async () => {
+      (mockPrisma.signatureRecipient.findUnique as jest.Mock).mockResolvedValue({
+        id: 'recipient-1',
+        signingToken: 'test-token',
+        document: {
+          id: 'doc-1',
+          status: 'VOIDED',
+          expirationDate: null,
+          fields: [],
+          team: { name: 'Test Team' },
+        },
+      });
+
+      const { req, res } = createMocks<NextApiRequest, NextApiResponse>({
+        method: 'GET',
+        query: { token: 'test-token' },
+      });
+
+      await handler(req, res);
+
+      expect(res._getStatusCode()).toBe(410);
+      expect(JSON.parse(res._getData())).toEqual({ message: 'This document has been voided' });
+    });
+
+    it('returns 400 if document is already completed', async () => {
+      (mockPrisma.signatureRecipient.findUnique as jest.Mock).mockResolvedValue({
+        id: 'recipient-1',
+        signingToken: 'test-token',
+        document: {
+          id: 'doc-1',
+          status: 'COMPLETED',
+          expirationDate: null,
+          fields: [],
+          team: { name: 'Test Team' },
+        },
+      });
+
+      const { req, res } = createMocks<NextApiRequest, NextApiResponse>({
+        method: 'GET',
+        query: { token: 'test-token' },
+      });
+
+      await handler(req, res);
+
+      expect(res._getStatusCode()).toBe(400);
+      expect(JSON.parse(res._getData())).toEqual({ message: 'This document has already been completed' });
+    });
+
+    it('returns document data for valid pending document', async () => {
+      const futureDate = new Date(Date.now() + 86400000);
+      (mockPrisma.signatureRecipient.findUnique as jest.Mock).mockResolvedValue({
+        id: 'recipient-1',
+        signingToken: 'test-token',
+        email: 'signer@example.com',
+        name: 'Test Signer',
+        role: 'SIGNER',
+        status: 'PENDING',
+        order: 1,
+        document: {
+          id: 'doc-1',
+          title: 'Test Document',
+          status: 'PENDING',
+          expirationDate: futureDate,
+          storageType: 'REPLIT',
+          documentUrl: 'documents/test.pdf',
+          numPages: 3,
+          teamId: 'team-1',
+          fields: [
+            { id: 'field-1', type: 'SIGNATURE', pageNumber: 1, x: 100, y: 200, width: 200, height: 50, recipientId: 'recipient-1' },
+          ],
+          team: { name: 'Test Team' },
+        },
+      });
+
+      (mockPrisma.signatureAuditLog.create as jest.Mock).mockResolvedValue({});
+
+      const { req, res } = createMocks<NextApiRequest, NextApiResponse>({
+        method: 'GET',
+        query: { token: 'test-token' },
+        headers: {
+          'x-forwarded-for': '192.168.1.1',
+          'user-agent': 'Mozilla/5.0',
+        },
+      });
+
+      await handler(req, res);
+
+      expect(res._getStatusCode()).toBe(200);
+      const data = JSON.parse(res._getData());
+      expect(data.document).toBeDefined();
+      expect(data.document.title).toBe('Test Document');
+      expect(data.recipient).toBeDefined();
+      expect(data.recipient.name).toBe('Test Signer');
     });
   });
 
-  describe('Audit Logging', () => {
-    it('should capture user agent for audit', () => {
-      const { req } = createMocks<NextApiRequest, NextApiResponse>({
-        method: 'GET',
-        headers: { 'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' },
+  describe('POST - Submit signature', () => {
+    it('returns 404 if recipient not found for POST', async () => {
+      (mockPrisma.signatureRecipient.findUnique as jest.Mock).mockResolvedValue(null);
+
+      const { req, res } = createMocks<NextApiRequest, NextApiResponse>({
+        method: 'POST',
+        query: { token: 'invalid-token' },
+        body: { fields: [] },
       });
 
-      const userAgent = req.headers['user-agent'];
-      expect(userAgent).toContain('Mozilla');
+      await handler(req, res);
+
+      expect(res._getStatusCode()).toBe(404);
+      expect(JSON.parse(res._getData())).toEqual({ message: 'Invalid signing link' });
     });
 
-    it('should capture signing timestamp', () => {
-      const signedAt = new Date();
-      expect(signedAt).toBeInstanceOf(Date);
-      expect(signedAt.getTime()).toBeLessThanOrEqual(Date.now());
+    it('returns 400 if recipient already signed', async () => {
+      (mockPrisma.signatureRecipient.findUnique as jest.Mock).mockResolvedValue({
+        id: 'recipient-1',
+        signingToken: 'test-token',
+        status: 'SIGNED',
+        role: 'SIGNER',
+        document: {
+          id: 'doc-1',
+          status: 'PENDING',
+          expirationDate: null,
+        },
+      });
+
+      const { req, res } = createMocks<NextApiRequest, NextApiResponse>({
+        method: 'POST',
+        query: { token: 'test-token' },
+        body: { fields: [] },
+      });
+
+      await handler(req, res);
+
+      expect(res._getStatusCode()).toBe(400);
+      expect(JSON.parse(res._getData())).toEqual({ message: 'You have already signed this document' });
+    });
+
+    it('returns 410 for POST on voided document', async () => {
+      (mockPrisma.signatureRecipient.findUnique as jest.Mock).mockResolvedValue({
+        id: 'recipient-1',
+        signingToken: 'test-token',
+        status: 'PENDING',
+        role: 'SIGNER',
+        document: {
+          id: 'doc-1',
+          status: 'VOIDED',
+          expirationDate: null,
+        },
+      });
+
+      const { req, res } = createMocks<NextApiRequest, NextApiResponse>({
+        method: 'POST',
+        query: { token: 'test-token' },
+        body: { fields: [{ id: 'field-1', value: 'signature-data' }] },
+      });
+
+      await handler(req, res);
+
+      expect(res._getStatusCode()).toBe(410);
     });
   });
 
-  describe('Method Validation', () => {
-    it('should identify GET requests', () => {
-      const { req } = createMocks<NextApiRequest, NextApiResponse>({ method: 'GET' });
-      expect(req.method).toBe('GET');
+  describe('Document Access', () => {
+    it('returns document fields for signing', async () => {
+      const futureDate = new Date(Date.now() + 86400000);
+      (mockPrisma.signatureRecipient.findUnique as jest.Mock).mockResolvedValue({
+        id: 'recipient-1',
+        signingToken: 'test-token',
+        email: 'signer@example.com',
+        name: 'Test Signer',
+        role: 'SIGNER',
+        status: 'PENDING',
+        order: 1,
+        document: {
+          id: 'doc-1',
+          title: 'Test Document',
+          status: 'PENDING',
+          expirationDate: futureDate,
+          storageType: 'REPLIT',
+          file: 'documents/test.pdf',
+          numPages: 3,
+          teamId: 'team-1',
+          fields: [
+            { id: 'field-1', type: 'SIGNATURE', pageNumber: 1, x: 100, y: 200, width: 200, height: 50, recipientId: 'recipient-1', required: true },
+            { id: 'field-2', type: 'DATE', pageNumber: 1, x: 350, y: 200, width: 100, height: 30, recipientId: 'recipient-1', required: true },
+          ],
+          team: { name: 'Test Team' },
+        },
+      });
+
+      (mockPrisma.signatureRecipient.update as jest.Mock).mockResolvedValue({});
+
+      const { req, res } = createMocks<NextApiRequest, NextApiResponse>({
+        method: 'GET',
+        query: { token: 'test-token' },
+        headers: {
+          'x-forwarded-for': '192.168.1.1',
+          'user-agent': 'Mozilla/5.0',
+        },
+      });
+
+      await handler(req, res);
+
+      expect(res._getStatusCode()).toBe(200);
+      const data = JSON.parse(res._getData());
+      expect(data.fields).toBeDefined();
+      expect(data.fields.length).toBe(2);
+      expect(data.fields[0].type).toBe('SIGNATURE');
     });
 
-    it('should identify POST requests', () => {
-      const { req } = createMocks<NextApiRequest, NextApiResponse>({ method: 'POST' });
-      expect(req.method).toBe('POST');
-    });
+    it('includes team name in document response', async () => {
+      const futureDate = new Date(Date.now() + 86400000);
+      (mockPrisma.signatureRecipient.findUnique as jest.Mock).mockResolvedValue({
+        id: 'recipient-1',
+        signingToken: 'test-token',
+        email: 'signer@example.com',
+        name: 'Test Signer',
+        role: 'SIGNER',
+        status: 'PENDING',
+        order: 1,
+        document: {
+          id: 'doc-1',
+          title: 'Investment Agreement',
+          status: 'PENDING',
+          expirationDate: futureDate,
+          storageType: 'REPLIT',
+          file: 'documents/test.pdf',
+          numPages: 5,
+          teamId: 'team-1',
+          fields: [],
+          team: { name: 'BF Fund GP' },
+        },
+      });
 
-    it('should identify unsupported methods', () => {
-      const { req } = createMocks<NextApiRequest, NextApiResponse>({ method: 'DELETE' });
-      const isAllowed = ['GET', 'POST'].includes(req.method || '');
-      expect(isAllowed).toBe(false);
+      (mockPrisma.signatureRecipient.update as jest.Mock).mockResolvedValue({});
+
+      const { req, res } = createMocks<NextApiRequest, NextApiResponse>({
+        method: 'GET',
+        query: { token: 'test-token' },
+      });
+
+      await handler(req, res);
+
+      expect(res._getStatusCode()).toBe(200);
+      const data = JSON.parse(res._getData());
+      expect(data.document.teamName).toBe('BF Fund GP');
+    });
+  });
+
+  describe('Method validation', () => {
+    it('returns 405 for unsupported methods', async () => {
+      const { req, res } = createMocks<NextApiRequest, NextApiResponse>({
+        method: 'DELETE',
+        query: { token: 'test-token' },
+      });
+
+      await handler(req, res);
+
+      expect(res._getStatusCode()).toBe(405);
+      expect(JSON.parse(res._getData())).toEqual({ message: 'Method not allowed' });
     });
   });
 });

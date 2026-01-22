@@ -1,5 +1,10 @@
 require('@testing-library/jest-dom');
 
+jest.mock('@sindresorhus/slugify', () => ({
+  __esModule: true,
+  default: (str) => str.toLowerCase().replace(/\s+/g, '-'),
+}));
+
 jest.mock('@/lib/prisma', () => ({
   __esModule: true,
   default: {
@@ -73,6 +78,31 @@ jest.mock('next-auth/react', () => ({
 
 jest.mock('next-auth', () => ({
   getServerSession: jest.fn(),
+}));
+
+jest.mock('@/lib/redis', () => ({
+  ratelimit: jest.fn(() => ({
+    limit: jest.fn().mockResolvedValue({ success: true, limit: 30, remaining: 29, reset: Date.now() + 60000 }),
+  })),
+}));
+
+jest.mock('@/lib/files/get-file', () => ({
+  getFile: jest.fn().mockResolvedValue('https://example.com/test.pdf'),
+}));
+
+jest.mock('@/lib/resend', () => ({
+  sendEmail: jest.fn().mockResolvedValue({ success: true }),
+}));
+
+jest.mock('@/lib/webhook/triggers/signature-events', () => ({
+  onRecipientSigned: jest.fn().mockResolvedValue(undefined),
+  onDocumentCompleted: jest.fn().mockResolvedValue(undefined),
+  onDocumentDeclined: jest.fn().mockResolvedValue(undefined),
+  onDocumentViewed: jest.fn().mockResolvedValue(undefined),
+}));
+
+jest.mock('@/pages/api/teams/[teamId]/signature-documents/[documentId]/send', () => ({
+  sendToNextSigners: jest.fn().mockResolvedValue(undefined),
 }));
 
 process.env.NEXTAUTH_SECRET = 'test-secret';

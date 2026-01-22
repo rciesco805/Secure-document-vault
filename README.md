@@ -51,7 +51,7 @@ Papermark is the open-source document-sharing alternative to DocSend, featuring 
 
 ### Prerequisites
 
-Here's what you need to run Papermark:
+Here's what you need to run Secure document vualt:
 
 - Node.js (version >= 18.17.0)
 - PostgreSQL Database

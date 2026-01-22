@@ -145,8 +145,16 @@ npx prisma studio --schema=./prisma/schema
 ## Git Commands
 
 ```bash
-# Push to GitHub (uses GITHUB_TOKEN secret)
+# IMPORTANT: Always pull before pushing to avoid conflicts
+
+# Step 1: Pull remote changes first (required before pushing)
+GIT_ASKPASS= GIT_TERMINAL_PROMPT=0 git -c credential.helper= pull --rebase https://rciesco805:${GITHUB_TOKEN}@github.com/rciesco805/Secure-document-vault.git main
+
+# Step 2: Push to GitHub
 GIT_ASKPASS= GIT_TERMINAL_PROMPT=0 git -c credential.helper= push https://rciesco805:${GITHUB_TOKEN}@github.com/rciesco805/Secure-document-vault.git main
+
+# One-liner (pull then push):
+GIT_ASKPASS= GIT_TERMINAL_PROMPT=0 git -c credential.helper= pull --rebase https://rciesco805:${GITHUB_TOKEN}@github.com/rciesco805/Secure-document-vault.git main && GIT_ASKPASS= GIT_TERMINAL_PROMPT=0 git -c credential.helper= push https://rciesco805:${GITHUB_TOKEN}@github.com/rciesco805/Secure-document-vault.git main
 
 # Note: GITHUB_TOKEN is stored as a Replit secret (valid for 90 days from January 2026)
 ```

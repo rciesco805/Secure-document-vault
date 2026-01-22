@@ -1,40 +1,21 @@
 # BF Fund Investor Dataroom
 
+> **Full Documentation**: See [DOCUMENTATION.md](./DOCUMENTATION.md) for complete setup guides, API reference, and integration details.
+
 ## Overview
 
-The BF Fund Investor Dataroom is a secure, self-hosted investor portal for Bermuda Franchise Group (BFG), deployed on Replit with a custom domain. It integrates two primary platforms:
-
-1.  **BF Fund Dataroom**: A secure document sharing platform for investors, featuring visitor access management, one-click magic link authentication, and admin approval workflows. It enables custom branding, page-level analytics, and folder organization.
-2.  **BF Fund Sign**: A DocuSign-style e-signature platform that supports signature fields, templates, bulk sending, QR signing, and comprehensive audit trails. This system is custom-built and self-hosted, drawing inspiration from OpenSign's architecture but entirely implemented within the codebase without external API dependencies.
-
-The platform provides a comprehensive, UX-first solution for GPs managing private investments, featuring personalized investor dashboards, fundraise tracking, investment document management, and automated capital management.
+A comprehensive 506(c) fund GP/LP management suite with:
+- **Investor Dataroom**: Secure document sharing with folder organization and analytics
+- **BF Fund Sign**: Self-hosted e-signature platform (DocuSign-style, no external dependencies)
+- **LP Fundroom Portal**: Personalized investor dashboards with onboarding and document vault
+- **KYC/AML Verification**: Post-subscription identity verification via Persona API
+- **Compliance Tools**: SEC 506(c) audit trails, accreditation verification, signature logging
 
 ## User Preferences
 
--   Communication style: Simple, everyday language
--   Technical level: Non-technical explanations preferred
--   Focus: Security and ease of use for investors
-
-## Recent Changes
-
-### January 2026
-- **Persona KYC/AML Integration**: Post-subscription document verification using Persona API
-  - Automated trigger after subscription document signing (via metadata.triggerKyc or title detection)
-  - Embedded popup-based verification flow with blocked-popup fallback
-  - Webhook endpoint with required signature verification for status updates
-  - KYC status displayed on LP dashboard with verification progress
-  - Investor model extended with personaInquiryId, personaStatus, personaVerifiedAt fields
-  - Environment: PERSONA_API_KEY, PERSONA_TEMPLATE_ID, PERSONA_WEBHOOK_SECRET, PERSONA_ENVIRONMENT_ID
-- **Signature Template Management**: New `/settings/sign` page for creating and managing reusable signature templates with drag-drop field placement, multi-recipient roles, and "Use Template" flow for bulk document creation
-- **Mobile-Optimized Signing Experience**: Signing page uses stacked layout on mobile with signature panel first, touch-friendly 44px buttons, and responsive canvas sizing
-- **Mobile-Optimized Accreditation Wizard**: Full mobile responsiveness with touch targets (min 44px height), tap-anywhere checkbox rows, responsive step indicators, and button order optimized for thumb reach
-- **Pending Signatures Dashboard**: LP dashboard now shows "Action Required" section with documents awaiting signature, with direct "Sign Now" links
-- **Optional NDA Gate**: Fund-level toggle for NDA/accreditation gate - admins can enable/disable per fund
-- **Admin Fund Settings**: New `/settings/funds` page for managing fund-specific settings with NDA gate toggle
-- **E-Sign Integration**: Completed documents auto-stored in LP vault with full audit trail
-- **Signature Event Webhooks**: Internal event system for real-time tracking of signature events (viewed, signed, completed, declined) with full audit logging for 506(c) compliance
-- **Accreditation Self-Ack Wizard**: 3-step guided wizard for investor accreditation verification (type selection, details, SEC-compliant checkboxes) with KYC API hooks for future integration
-- **Signature Audit Reports**: New `/settings/signature-audit` page with filterable audit logs, document selection, date ranges, and CSV/HTML export for SEC 506(c) compliance reporting
+- Communication: Simple, everyday language
+- Technical level: Non-technical explanations preferred
+- Focus: Security and ease of use for investors
 
 ## System Architecture
 
@@ -163,23 +144,28 @@ GIT_ASKPASS= GIT_TERMINAL_PROMPT=0 git -c credential.helper= push https://rciesc
 # Note: GITHUB_TOKEN is stored as a Replit secret (valid for 90 days from January 2026)
 ```
 
-## External Dependencies
+## Technology Stack
 
-*   **Database**: PostgreSQL (hosted on Replit)
-*   **ORM**: Prisma
-*   **Authentication**: NextAuth.js
-*   **Email Service**: Resend API
-*   **Object Storage**: Replit Object Storage (S3-compatible, TUS resumable uploads)
-*   **PDF Processing**: pdf-lib, MuPDF
-*   **AI (Optional)**: OpenAI API
-*   **UI Primitives**: Radix UI
-*   **Form Handling**: React Hook Form, Zod
+| Category | Technology |
+|----------|------------|
+| Framework | Next.js 14, TypeScript, React 18 |
+| Database | PostgreSQL + Prisma ORM |
+| Auth | NextAuth.js (magic links, Google OAuth) |
+| Email | Resend API |
+| Storage | Replit Object Storage (AES-256, TUS uploads) |
+| PDF | pdf-lib, MuPDF, react-pdf |
+| KYC/AML | Persona API |
+| UI | Tailwind CSS, shadcn/ui, Radix UI |
+| Forms | React Hook Form, Zod |
 
-## Future Roadmap
+## Integrations
 
-- GP Admin Panel for investor management
-- Capital Call Management (create, track, notify)
-- Subscription Documents with templates
-- KYC/AML integration
-- Multi-fund support with portfolio views
-- K-1 document management
+| Service | Purpose | Env Variables |
+|---------|---------|---------------|
+| Resend | Transactional emails | `RESEND_API_KEY` |
+| Persona | KYC/AML verification | `PERSONA_API_KEY`, `PERSONA_TEMPLATE_ID`, `PERSONA_WEBHOOK_SECRET`, `PERSONA_ENVIRONMENT_ID` |
+| Google | Admin OAuth | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` |
+| OpenAI | AI features (optional) | `OPENAI_API_KEY` |
+| Stripe | Payments (optional) | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` |
+
+See [DOCUMENTATION.md](./DOCUMENTATION.md) for complete setup instructions.

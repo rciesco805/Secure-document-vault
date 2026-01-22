@@ -18,6 +18,80 @@ The platform is designed specifically for accredited investors, providing enterp
 
 ---
 
+## Platform Build Origins
+
+This platform is built on two open-source foundations, customized and integrated for BF Fund's investor relations needs:
+
+### Papermark (Dataroom Foundation)
+
+| Attribute | Details |
+|-----------|---------|
+| Repository | https://github.com/mfts/papermark |
+| License | AGPLv3 (with commercial license for /ee features) |
+| Description | Open-source DocSend alternative |
+
+**Components from Papermark:**
+- Complete document sharing infrastructure
+- Custom domain and branding system
+- Page-level analytics and view tracking
+- Magic link authentication via NextAuth.js
+- Viewer access controls and permission groups
+- Folder hierarchy with drag-and-drop organization
+- PDF rendering via MuPDF and pdf-lib
+- Email notification system via Resend
+- Full database schema for teams, users, documents, links, and viewers
+
+### OpenSign (E-Signature Foundation)
+
+| Attribute | Details |
+|-----------|---------|
+| Inspiration | OpenSign open-source e-signature platform |
+| Integration | Custom-built module with OpenSign-compatible data structures |
+| Location | `/prisma/schema/signature.prisma`, `/pages/sign/`, `/components/signature/` |
+
+**Components from OpenSign Integration:**
+- `SignatureDocument` model with OpenSign ID references (`openSignDocumentId`)
+- `SignatureRecipient` model with signing tokens and OpenSign recipient IDs
+- Multi-recipient signing workflows (Signer, Viewer, Approver roles)
+- 10 field types: Signature, Initials, Date, Text, Checkbox, Name, Email, Company, Title, Address
+- Sequential signing order enforcement
+- Secure signing URL generation
+- Complete audit trail system
+- Reusable template system
+- PDF signature embedding and certificate generation
+
+### Integration Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                     BF Fund Platform                            │
+├─────────────────────────────────────────────────────────────────┤
+│  ┌─────────────────────────┐  ┌─────────────────────────────┐   │
+│  │    BF Fund Dataroom     │  │      BF Fund Sign           │   │
+│  │    (Papermark Base)     │  │   (OpenSign Integration)    │   │
+│  ├─────────────────────────┤  ├─────────────────────────────┤   │
+│  │ • Document sharing      │  │ • Signature workflows       │   │
+│  │ • Viewer management     │  │ • Field placement           │   │
+│  │ • Analytics tracking    │  │ • Recipient management      │   │
+│  │ • Access controls       │  │ • Audit trails              │   │
+│  │ • Custom branding       │  │ • Templates                 │   │
+│  └───────────┬─────────────┘  └─────────────┬───────────────┘   │
+│              │                              │                    │
+│              └──────────────┬───────────────┘                    │
+│                             │                                    │
+│  ┌──────────────────────────▼────────────────────────────────┐  │
+│  │              Shared Infrastructure                         │  │
+│  │  • PostgreSQL Database (Prisma ORM)                       │  │
+│  │  • NextAuth.js Authentication                             │  │
+│  │  • Replit Object Storage (AES-256 encrypted)              │  │
+│  │  • Resend Email Service                                   │  │
+│  │  • shadcn/ui Component Library                            │  │
+│  └───────────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+---
+
 ## Platform Components
 
 ### 1. BF Fund Dataroom

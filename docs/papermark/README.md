@@ -1,6 +1,72 @@
-# Papermark Reference Documentation
+# BF Fund Platform - Reference Documentation
 
-> Local reference library for BF Fund Dataroom (customized Papermark)
+> Local reference library for BF Fund Investor Portal  
+> Built on **Papermark** (dataroom) and **OpenSign** (e-signature) open-source foundations
+
+---
+
+## Platform Build Origins
+
+This platform integrates two open-source projects into a unified investor portal:
+
+### Papermark (Dataroom Foundation)
+| Attribute | Details |
+|-----------|---------|
+| Repository | https://github.com/mfts/papermark |
+| License | AGPLv3 (with commercial /ee license) |
+| Version | Forked and customized for BF Fund |
+
+**Papermark provides:**
+- Complete document sharing and dataroom infrastructure
+- Custom domains and branding system
+- Page-level analytics via PostgreSQL (Tinybird disabled)
+- Magic link authentication via NextAuth.js
+- Viewer access controls and permission groups
+- Folder hierarchy with drag-and-drop
+- PDF rendering via MuPDF and pdf-lib
+- Email notifications via Resend
+- Core database models: Team, User, Document, Folder, Link, Viewer, ViewerGroup
+
+### OpenSign (E-Signature Foundation)
+| Attribute | Details |
+|-----------|---------|
+| Inspiration | OpenSign open-source e-signature platform |
+| Integration | Custom module in `/prisma/schema/signature.prisma` |
+| UI Location | `/pages/sign/`, `/components/signature/` |
+
+**OpenSign integration provides:**
+- `SignatureDocument` model with `openSignDocumentId` for external references
+- `SignatureRecipient` model with `openSignRecipientId` and signing tokens
+- Multi-recipient workflows: Signer, Viewer, Approver roles
+- 10 field types: Signature, Initials, Date, Text, Checkbox, Name, Email, Company, Title, Address
+- Sequential signing order enforcement
+- Secure signing URL generation
+- Complete audit trail system
+- Reusable template system (`SignatureTemplate` model)
+- PDF signature embedding
+
+### Integration Pattern
+```
+BF Fund Platform
+├── BF Fund Dataroom (Papermark core)
+│   ├── Document management
+│   ├── Viewer authentication
+│   ├── Analytics tracking
+│   └── Access controls
+│
+├── BF Fund Sign (OpenSign integration)
+│   ├── Signature workflows
+│   ├── Field placement
+│   ├── Recipient management
+│   └── Audit trails
+│
+└── Shared Infrastructure
+    ├── PostgreSQL + Prisma ORM
+    ├── NextAuth.js authentication
+    ├── Replit Object Storage
+    ├── Resend email service
+    └── shadcn/ui components
+```
 
 ---
 

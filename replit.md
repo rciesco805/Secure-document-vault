@@ -9,6 +9,44 @@ The BF Fund Investor Dataroom is a secure, self-hosted investor portal for Bermu
 
 The platform is deployed on Replit with a custom domain at `dataroom.bermudafranchisegroup.com`.
 
+## Platform Build Origins
+
+This platform is built on two open-source foundations:
+
+### 1. Papermark (Dataroom Foundation)
+- **Repository:** https://github.com/mfts/papermark
+- **License:** AGPLv3 (with commercial EE license for enterprise features)
+- **What it provides:**
+  - Document sharing and dataroom infrastructure
+  - Custom domains and branding
+  - Page-level analytics and visitor tracking
+  - Magic link authentication system
+  - Viewer access controls and permissions
+  - Folder organization with drag-and-drop
+  - PDF viewing and document processing
+  - NextAuth.js authentication setup
+  - Email system via Resend
+  - Database schema for teams, users, documents, links, viewers
+
+### 2. OpenSign (E-Signature Foundation)
+- **Inspiration:** OpenSign open-source e-signature platform
+- **Integration:** Custom-built e-signature module with OpenSign-compatible data structures
+- **What it provides:**
+  - Signature document workflow (`SignatureDocument` model)
+  - Multi-recipient signing with roles (Signer, Viewer, Approver)
+  - Field types: Signature, Initials, Date, Text, Checkbox, Name, Email, Company, Title, Address
+  - Sequential signing order support
+  - Signing tokens and secure URLs (`openSignDocumentId`, `openSignRecipientId` fields)
+  - Complete audit trail logging
+  - Template system for reusable documents
+  - PDF signature embedding
+
+### How They're Integrated
+- Papermark provides the core application shell, authentication, team management, and document infrastructure
+- The e-signature system extends Papermark with new Prisma models (`signature.prisma`) that reference OpenSign data structures
+- Both systems share the same database, authentication, and file storage backends
+- The UI follows Papermark's design patterns using shadcn/ui components
+
 ## User Preferences
 
 - Communication style: Simple, everyday language

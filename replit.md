@@ -453,6 +453,95 @@ prisma/schema/          # Database schema (split files)
 ### Architecture Note
 The BF Fund Sign e-signature system is **self-hosted** and does NOT use the external OpenSign API (opensignlabs.com). It is a custom-built system inspired by OpenSign's architecture but implemented entirely within this codebase using Prisma models. No external API token is required.
 
+### Architecture Clarification (Important!)
+| Component | Status | Notes |
+|-----------|--------|-------|
+| OpenSign API | **NOT USED** | System is self-hosted, no external API calls |
+| @opensign/react | **NOT USED** | Custom drag-drop field UI built with React |
+| Tinybird Analytics | **NOT CONFIGURED** | Code exists but `TINYBIRD_TOKEN` not set |
+| Webhooks | **AVAILABLE** | Infrastructure at `/api/teams/[teamId]/webhooks/` |
+| Resend Email | **CONFIGURED** | Sends signing request emails |
+| Prisma DB | **ACTIVE** | All signature data in PostgreSQL |
+
+### Production End-to-End Test Guide
+
+#### Step 1: Admin Login
+1. Navigate to `/admin/login` or `/login`
+2. Use admin credentials (Google OAuth or magic link)
+3. Access the dashboard
+
+#### Step 2: Create Document (/sign/new)
+1. Navigate to `/sign/new`
+2. Upload a test PDF (e.g., subscription agreement)
+3. Enter document title and description
+4. Add recipient: `test@investor.com` with name "Test Investor"
+5. Set role to "SIGNER"
+6. Click "Continue to Prepare"
+
+#### Step 3: Place Fields (/sign/[id]/prepare)
+1. Drag signature fields onto the PDF:
+   - SIGNATURE field (required)
+   - DATE_SIGNED field (auto-fills)
+   - NAME field (auto-fills from recipient)
+2. Position fields where signatures are needed
+3. Click "Send for Signature"
+
+#### Step 4: Send Document
+- System creates signing tokens via `nanoid(32)`
+- Resend API sends email with signing URL
+- Document status: DRAFT → SENT
+- Audit trail updated with SENT event
+
+#### Step 5: Recipient Signing (/view/sign/[token])
+1. Recipient opens email link (no login required)
+2. Views PDF with positioned fields
+3. Draws or types signature
+4. Fills any required fields
+5. Clicks "Sign & Complete"
+6. Status updates: SENT → VIEWED → SIGNED/COMPLETED
+
+#### Step 6: Verify in Dashboard (/sign)
+1. Refresh the /sign dashboard
+2. Check document status: "Completed" 
+3. View audit trail (IP, timestamps, user agent)
+4. Download signed PDF with embedded signatures
+
+### Verification SQL Queries
+
+```sql
+-- Check document status and audit trail
+SELECT id, title, status, "sentAt", "completedAt", "auditTrail"
+FROM "SignatureDocument" 
+WHERE id = '[document-id]';
+
+-- Check recipient signing details (SEC traceability)
+SELECT name, email, status, "viewedAt", "signedAt", "ipAddress", "userAgent"
+FROM "SignatureRecipient"
+WHERE "documentId" = '[document-id]';
+
+-- Check field values
+SELECT type, value, "filledAt"
+FROM "SignatureField"
+WHERE "documentId" = '[document-id]';
+
+-- Dashboard summary query
+SELECT 
+  d.id, d.title, d.status,
+  COUNT(r.id) as recipients,
+  SUM(CASE WHEN r.status = 'SIGNED' THEN 1 ELSE 0 END) as signed
+FROM "SignatureDocument" d
+LEFT JOIN "SignatureRecipient" r ON r."documentId" = d.id
+GROUP BY d.id ORDER BY d."createdAt" DESC LIMIT 10;
+```
+
+### SEC Compliance Tracking
+The system captures for audit purposes:
+- **IP Address**: Recorded on each signing action
+- **User Agent**: Browser/device fingerprint
+- **Timestamps**: Precise to millisecond (viewedAt, signedAt)
+- **Signature Image**: Base64 PNG stored in DB
+- **Decline Reason**: Text captured if recipient declines
+
 ### Testing Endpoints
 
 | Endpoint | Method | Description |

@@ -51,6 +51,11 @@ export function SettingsHeader() {
             segment: "agreements",
           },
           {
+            label: "Sign Templates",
+            href: `/settings/sign`,
+            segment: "sign",
+          },
+          {
             label: "Webhooks",
             href: `/settings/webhooks`,
             segment: "webhooks",

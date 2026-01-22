@@ -28,7 +28,7 @@ export default async function handler(
 
   if (req.method === "GET") {
     return handleGet(req, res, teamId, templateId);
-  } else if (req.method === "PUT") {
+  } else if (req.method === "PUT" || req.method === "PATCH") {
     return handlePut(req, res, teamId, templateId);
   } else if (req.method === "DELETE") {
     return handleDelete(req, res, teamId, templateId);

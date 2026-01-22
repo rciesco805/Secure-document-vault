@@ -35,6 +35,7 @@ The platform is built on Next.js 14, utilizing a hybrid Pages and App Router app
     - Dashboard showing fund raise progress, capital calls, and recent documents
     - "Message GP" functionality for investor-to-GP communication
     - Persona KYC/AML verification with embedded popup flow and status tracking
+    - **Plaid Bank Connect**: One-click bank account linking at `/lp/bank-connect` for capital calls and distributions
 *   **Admin Fund Settings** (`/settings/funds`):
     - View all funds for team with status and investor counts
     - Toggle NDA gate on/off per fund
@@ -42,7 +43,7 @@ The platform is built on Next.js 14, utilizing a hybrid Pages and App Router app
 *   **Authentication**: Primarily via email magic links, with Google OAuth for admin users.
 *   **Admin/Viewer Separation**: Distinct interfaces and server-side protection based on user roles (SUPER\_ADMIN, ADMIN, MANAGER, MEMBER).
 *   **Hybrid Routing Architecture**: Pages Router for the main application, API routes, and viewer pages; App Router for authentication, Enterprise Edition (EE) APIs, and admin pages.
-*   **Database Schema**: A comprehensive Prisma schema incorporating models for Users, Teams, Documents, Datarooms, Links, Viewers, E-signatures (SignatureDocument, SignatureRecipient, SignatureField, SignatureTemplate), LP Portal (Investor, InvestorDocument, AccreditationAck, Fund, Investment, CapitalCall, Distribution), Analytics, and Q&A. This is designed for extensibility to support future GP/LP fund management features.
+*   **Database Schema**: A comprehensive Prisma schema incorporating models for Users, Teams, Documents, Datarooms, Links, Viewers, E-signatures (SignatureDocument, SignatureRecipient, SignatureField, SignatureTemplate), LP Portal (Investor, InvestorDocument, AccreditationAck, Fund, Investment, CapitalCall, Distribution, BankLink, Transaction), Analytics, and Q&A. This is designed for extensibility to support future GP/LP fund management features.
 *   **UI/UX**: Emphasis on a UX-first approach with mobile-responsive design using Tailwind CSS and shadcn/ui components, aiming for minimal clicks and guided wizards for critical flows.
 
 ## Project Structure
@@ -86,6 +87,12 @@ The platform is built on Next.js 14, utilizing a hybrid Pages and App Router app
 - `POST /api/lp/complete-gate` - Complete NDA/accreditation acknowledgment
 - `GET /api/lp/kyc` - Get KYC verification status
 - `POST /api/lp/kyc` - Start or resume Persona KYC verification
+
+### Bank Connect (Plaid)
+- `POST /api/lp/bank/link-token` - Create Plaid Link token for bank connection
+- `POST /api/lp/bank/connect` - Exchange public token and store bank link
+- `GET /api/lp/bank/status` - Get investor's bank connection status
+- `GET /api/lp/transactions` - Get investor's transaction history
 
 ### Webhooks
 - `POST /api/webhooks/persona` - Persona KYC webhook (requires signature verification)

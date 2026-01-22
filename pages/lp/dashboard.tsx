@@ -34,6 +34,8 @@ import {
   Send,
   PenTool,
   ExternalLink,
+  Building2,
+  CreditCard,
 } from "lucide-react";
 import { KycVerification } from "@/components/lp/kyc-verification";
 
@@ -89,6 +91,16 @@ export default function LPDashboard() {
   const [noteContent, setNoteContent] = useState("");
   const [noteSending, setNoteSending] = useState(false);
   const [pendingSignatures, setPendingSignatures] = useState<PendingSignature[]>([]);
+  const [bankStatus, setBankStatus] = useState<{
+    hasBankLink: boolean;
+    configured: boolean;
+    bankLink: {
+      institutionName: string | null;
+      accountName: string | null;
+      accountMask: string | null;
+      accountType: string | null;
+    } | null;
+  } | null>(null);
 
   useEffect(() => {
     if (sessionStatus === "loading") return;
@@ -122,6 +134,16 @@ export default function LPDashboard() {
       if (signaturesResponse.ok) {
         const sigData = await signaturesResponse.json();
         setPendingSignatures(sigData.pendingSignatures || []);
+      }
+
+      try {
+        const bankRes = await fetch("/api/lp/bank/status");
+        if (bankRes.ok) {
+          const bankData = await bankRes.json();
+          setBankStatus(bankData);
+        }
+      } catch (e) {
+        console.error("Error fetching bank status:", e);
       }
 
       const ndaGateEnabled = data.ndaGateEnabled !== false;
@@ -353,6 +375,64 @@ export default function LPDashboard() {
           <div className="mb-6">
             <KycVerification />
           </div>
+
+          {bankStatus?.configured && (
+            <Card className={`mb-6 ${bankStatus.hasBankLink ? 'bg-emerald-900/20 border-emerald-700/50' : 'bg-blue-900/20 border-blue-700/50'}`}>
+              <CardHeader>
+                <CardTitle className="text-white flex items-center">
+                  {bankStatus.hasBankLink ? (
+                    <>
+                      <CheckCircle2 className="h-5 w-5 mr-2 text-emerald-400" />
+                      Bank Account Connected
+                    </>
+                  ) : (
+                    <>
+                      <CreditCard className="h-5 w-5 mr-2 text-blue-400" />
+                      Connect Your Bank Account
+                    </>
+                  )}
+                </CardTitle>
+                <CardDescription className={bankStatus.hasBankLink ? "text-emerald-200/70" : "text-blue-200/70"}>
+                  {bankStatus.hasBankLink
+                    ? "Your bank is linked for capital calls and distributions"
+                    : "Link your bank for easy capital call payments and distributions"}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {bankStatus.hasBankLink && bankStatus.bankLink ? (
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-emerald-500/20 rounded-lg">
+                        <Building2 className="h-5 w-5 text-emerald-400" />
+                      </div>
+                      <div>
+                        <p className="text-white font-medium">{bankStatus.bankLink.institutionName || "Bank Account"}</p>
+                        <p className="text-gray-400 text-sm">
+                          {bankStatus.bankLink.accountName} ••••{bankStatus.bankLink.accountMask}
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="border-gray-600 text-gray-300 hover:bg-gray-700"
+                      onClick={() => router.push("/lp/bank-connect")}
+                    >
+                      Manage
+                    </Button>
+                  </div>
+                ) : (
+                  <Button
+                    className="bg-blue-600 hover:bg-blue-700"
+                    onClick={() => router.push("/lp/bank-connect")}
+                  >
+                    <Building2 className="h-4 w-4 mr-2" />
+                    Connect Bank Account
+                  </Button>
+                )}
+              </CardContent>
+            </Card>
+          )}
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <Card className="lg:col-span-2 bg-gray-800/50 border-gray-700">

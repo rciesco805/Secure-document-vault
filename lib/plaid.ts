@@ -1,4 +1,51 @@
 import { Configuration, PlaidApi, PlaidEnvironments, Products, CountryCode, TransferType, TransferNetwork, ACHClass } from 'plaid';
+import crypto from 'crypto';
+import { importJWK, jwtVerify } from 'jose';
+
+function getEncryptionKey(): string {
+  const key = process.env.PLAID_TOKEN_ENCRYPTION_KEY || process.env.NEXTAUTH_SECRET;
+  if (!key && process.env.NODE_ENV === 'production') {
+    throw new Error('PLAID_TOKEN_ENCRYPTION_KEY or NEXTAUTH_SECRET is required in production');
+  }
+  return key || 'default-key-for-dev-only';
+}
+
+export function encryptToken(token: string): string {
+  const ENCRYPTION_KEY = getEncryptionKey();
+  const algorithm = 'aes-256-gcm';
+  const key = crypto.scryptSync(ENCRYPTION_KEY, 'salt', 32);
+  const iv = crypto.randomBytes(16);
+  const cipher = crypto.createCipheriv(algorithm, key, iv);
+  
+  let encrypted = cipher.update(token, 'utf8', 'hex');
+  encrypted += cipher.final('hex');
+  const authTag = cipher.getAuthTag();
+  
+  return `${iv.toString('hex')}:${authTag.toString('hex')}:${encrypted}`;
+}
+
+export function decryptToken(encryptedToken: string): string {
+  const ENCRYPTION_KEY = getEncryptionKey();
+  const algorithm = 'aes-256-gcm';
+  const key = crypto.scryptSync(ENCRYPTION_KEY, 'salt', 32);
+  
+  const parts = encryptedToken.split(':');
+  if (parts.length !== 3) {
+    throw new Error('Invalid encrypted token format');
+  }
+  
+  const iv = Buffer.from(parts[0], 'hex');
+  const authTag = Buffer.from(parts[1], 'hex');
+  const encrypted = parts[2];
+  
+  const decipher = crypto.createDecipheriv(algorithm, key, iv);
+  decipher.setAuthTag(authTag);
+  
+  let decrypted = decipher.update(encrypted, 'hex', 'utf8');
+  decrypted += decipher.final('utf8');
+  
+  return decrypted;
+}
 
 const configuration = new Configuration({
   basePath: PlaidEnvironments[process.env.PLAID_ENV as keyof typeof PlaidEnvironments] || PlaidEnvironments.sandbox,
@@ -94,8 +141,8 @@ export async function createTransferAuthorization(
   accountId: string,
   amount: string,
   type: 'debit' | 'credit',
-  userId: string,
-  description: string
+  legalName: string,
+  emailAddress?: string
 ) {
   const response = await plaidClient.transferAuthorizationCreate({
     access_token: accessToken,
@@ -105,7 +152,8 @@ export async function createTransferAuthorization(
     amount: amount,
     ach_class: ACHClass.Ppd,
     user: {
-      legal_name: userId,
+      legal_name: legalName,
+      email_address: emailAddress,
     },
   });
 
@@ -162,8 +210,51 @@ export async function removeItem(accessToken: string) {
   return response.data;
 }
 
-export function verifyWebhookSignature(body: string, signedJwt: string): boolean {
-  return true;
+export async function verifyWebhookSignature(body: string, signedJwt: string): Promise<boolean> {
+  if (!signedJwt) {
+    console.error('Plaid webhook: Missing Plaid-Verification header');
+    return false;
+  }
+
+  try {
+    const [headerB64] = signedJwt.split('.');
+    if (!headerB64) {
+      console.error('Plaid webhook: Invalid JWT format');
+      return false;
+    }
+
+    const header = JSON.parse(Buffer.from(headerB64, 'base64url').toString('utf8'));
+    const keyId = header.kid;
+
+    if (!keyId) {
+      console.error('Plaid webhook: Missing key ID in JWT header');
+      return false;
+    }
+
+    const keyResponse = await plaidClient.webhookVerificationKeyGet({
+      key_id: keyId,
+    });
+
+    const jwk = keyResponse.data.key;
+    const publicKey = await importJWK(jwk, 'ES256');
+    
+    const { payload } = await jwtVerify(signedJwt, publicKey, {
+      algorithms: ['ES256'],
+      maxTokenAge: '5 minutes',
+    });
+    
+    const requestBodyHash = crypto.createHash('sha256').update(body).digest('hex');
+    
+    if (payload.request_body_sha256 !== requestBodyHash) {
+      console.error('Plaid webhook: Body hash mismatch');
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Plaid webhook verification error:', error);
+    return false;
+  }
 }
 
 export type PlaidWebhookType = 

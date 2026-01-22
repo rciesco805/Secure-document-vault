@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/lib/prisma";
-import { exchangePublicToken, getAccounts, getItem, getInstitution, isPlaidConfigured } from "@/lib/plaid";
+import { exchangePublicToken, getAccounts, getItem, getInstitution, isPlaidConfigured, encryptToken } from "@/lib/plaid";
 
 export default async function handler(
   req: NextApiRequest,
@@ -77,11 +77,13 @@ export default async function handler(
       });
     }
 
+    const encryptedAccessToken = encryptToken(accessToken);
+
     const bankLink = await prisma.bankLink.create({
       data: {
         investorId: investor.id,
         plaidItemId: itemId,
-        plaidAccessToken: accessToken,
+        plaidAccessToken: encryptedAccessToken,
         plaidAccountId: accountId,
         institutionId: item.institution_id,
         institutionName: institutionName,

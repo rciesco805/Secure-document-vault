@@ -69,6 +69,7 @@ Investor-facing dashboard at `/lp/dashboard`:
 - **Fund Progress**: Visual fundraise progress and capital call tracking
 - **Message GP**: Direct communication with fund managers
 - **KYC Status**: Verification progress and status display
+- **Bank Connect**: One-click bank account linking at `/lp/bank-connect` using Plaid for capital calls and distributions
 
 ### 4. NDA/Accreditation Gate
 Optional investor gate before accessing fund materials:
@@ -185,6 +186,14 @@ Post-subscription identity verification using Persona:
 | [openai](https://openai.com/) | 6.10.0 | OpenAI API client |
 | [@ai-sdk/openai](https://sdk.vercel.ai/) | 2.0.80 | Vercel AI SDK OpenAI |
 | [ai](https://sdk.vercel.ai/) | 5.0.108 | Vercel AI SDK |
+
+### Payments & Banking
+
+| Library | Version | Purpose |
+|---------|---------|---------|
+| [plaid](https://plaid.com/) | 28.0.0 | Plaid Node.js SDK for bank connections |
+| [react-plaid-link](https://github.com/plaid/react-plaid-link) | 3.6.0 | React component for Plaid Link UI |
+| [jose](https://github.com/panva/jose) | 5.10.0 | JWT verification for Plaid webhooks |
 
 ### Rate Limiting & Caching
 
@@ -344,14 +353,16 @@ GOOGLE_CLIENT_SECRET=GOCSPX-xxxxxxxxxx
 
 ### 6. Plaid (Bank Connect & ACH Transfers)
 
-**Purpose**: Bank account linking, ACH transfers for capital calls and distributions
+**Purpose**: Secure bank account linking and ACH transfers for capital calls and distributions
 
-**Library**: `plaid` (to be installed)
+**Libraries**: 
+- `plaid` v28.0.0 - Plaid Node.js SDK
+- `react-plaid-link` v3.6.0 - React component for Plaid Link
 
 **API Documentation**: [plaid.com/docs](https://plaid.com/docs/)
 
 **Products Used**:
-- **Link** - Bank account connection UI
+- **Link** - Bank account connection UI (embedded React component)
 - **Auth** - Account and routing number verification
 - **Transfer** - ACH debit (capital calls) and credit (distributions)
 - **Balance** - Real-time balance checks
@@ -360,39 +371,110 @@ GOOGLE_CLIENT_SECRET=GOCSPX-xxxxxxxxxx
 1. Create account at [dashboard.plaid.com](https://dashboard.plaid.com)
 2. Get API credentials (Client ID and Secret)
 3. Start with Sandbox environment for testing
-4. Configure webhook endpoint
+4. Configure webhook endpoint for transfer status updates
+5. Set up encryption key for secure token storage
 
 **Environment Variables**:
-```
-PLAID_CLIENT_ID=xxxxxxxxxx
-PLAID_SECRET=xxxxxxxxxx
-PLAID_ENV=sandbox
+```bash
+PLAID_CLIENT_ID=xxxxxxxxxx              # From Plaid dashboard
+PLAID_SECRET=xxxxxxxxxx                 # Environment-specific secret
+PLAID_ENV=sandbox                       # sandbox | development | production
 PLAID_WEBHOOK_URL=https://your-domain.com/api/webhooks/plaid
+PLAID_TOKEN_ENCRYPTION_KEY=xxxxxxxxxx   # 32+ char key for token encryption (optional, falls back to NEXTAUTH_SECRET)
 ```
 
-**Implementation Roadmap**:
+**Implementation (Completed)**:
 
-1. **Bank Connect Wizard** (`/lp/bank-connect`)
-   - Post-NDA gate access
-   - Embed Plaid Link React component
-   - 3-step wizard: Connect → Select Account → Confirm
-   - Store token in Prisma (BankLink model)
+#### Bank Connect Wizard (`/lp/bank-connect`)
+- Full-page wizard with Plaid Link integration
+- Automatic link token generation via `/api/lp/bank/link-token`
+- Account selection and connection via `/api/lp/bank/connect`
+- Shows connected bank details or prompts for connection
+- "Connect Different Account" option for account changes
 
-2. **Capital Calls (Inbound)**
-   - GP triggers via admin dashboard
-   - Plaid Transfer API for ACH debit
-   - LP confirmation flow
-   - Transaction tracking
+#### Security Features
+| Feature | Implementation |
+|---------|----------------|
+| Token Encryption | AES-256-GCM encryption for all Plaid access tokens |
+| Webhook Verification | JWT signature verification using jose library with Plaid's public keys |
+| Production Validation | Requires `PLAID_TOKEN_ENCRYPTION_KEY` or `NEXTAUTH_SECRET` in production |
 
-3. **Distributions (Outbound)**
-   - GP bulk-push from admin
-   - Batch ACH credits to LP bank accounts
-   - One-click for all investors
+#### API Endpoints
 
-4. **New Prisma Models**:
-   - `BankLink`: investorId, plaidToken, accountId, status
-   - `Transaction`: amount, type, status, method, audit trail
-   - `FundAggregate`: totalInbound, totalOutbound, currentBalance
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/lp/bank/link-token` | POST | Creates Plaid Link token for bank connection |
+| `/api/lp/bank/connect` | POST | Exchanges public token, encrypts and stores access token |
+| `/api/lp/bank/status` | GET | Returns current bank connection status |
+| `/api/lp/transactions` | GET | Returns investor's transaction history |
+
+#### Prisma Models
+
+**BankLink Model**:
+```prisma
+model BankLink {
+  id                String   @id @default(cuid())
+  investorId        String
+  plaidItemId       String   @unique
+  plaidAccessToken  String   // AES-256-GCM encrypted
+  plaidAccountId    String
+  institutionId     String?
+  institutionName   String?
+  accountName       String?
+  accountMask       String?  // Last 4 digits
+  accountType       String?  // checking, savings
+  accountSubtype    String?
+  status            String   @default("ACTIVE")
+  transferEnabled   Boolean  @default(false)
+  processorToken    String?
+  lastSyncAt        DateTime?
+}
+```
+
+**Transaction Model**:
+```prisma
+model Transaction {
+  id                String   @id @default(cuid())
+  investorId        String
+  bankLinkId        String?
+  type              String   // CAPITAL_CALL, DISTRIBUTION
+  amount            Decimal  @db.Decimal(18, 2)
+  currency          String   @default("USD")
+  plaidTransferId   String?  @unique
+  transferType      String?  // ach_debit, ach_credit
+  status            String   @default("PENDING")
+  ipAddress         String?
+  userAgent         String?
+  initiatedBy       String?  // userId of GP
+  auditTrail        Json?
+}
+```
+
+#### Dashboard Integration
+- LP Dashboard shows bank connection status card
+- "Connect Bank Account" CTA for unlinked investors
+- Connected account details with institution name and masked account number
+- "Manage" button to change connected account
+
+#### Plaid Service Library (`lib/plaid.ts`)
+| Function | Purpose |
+|----------|---------|
+| `createLinkToken()` | Generate Link token for bank connection UI |
+| `exchangePublicToken()` | Exchange public token for access token |
+| `getAccounts()` | Retrieve account details |
+| `getInstitution()` | Get bank/institution info |
+| `createTransferAuthorization()` | Authorize ACH transfer |
+| `createTransfer()` | Execute ACH transfer |
+| `getTransfer()` | Check transfer status |
+| `cancelTransfer()` | Cancel pending transfer |
+| `encryptToken()` | AES-256-GCM token encryption |
+| `decryptToken()` | Token decryption |
+| `verifyWebhookSignature()` | JWT signature verification |
+
+#### Future Enhancements (Next Phase)
+- **Capital Calls**: GP triggers ACH debit from connected accounts
+- **Distributions**: Bulk ACH credits to investor bank accounts
+- **Transaction Dashboard**: Admin view for all fund transactions
 
 ---
 

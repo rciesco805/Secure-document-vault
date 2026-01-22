@@ -59,6 +59,11 @@ export default async function handler(
       fundName: ccr.capitalCall.fund.name,
     }));
 
+    const investments = user.investorProfile.investments || [];
+    const ndaGateEnabled = investments.length > 0
+      ? investments.some((inv: any) => inv.fund?.ndaGateEnabled !== false)
+      : true;
+
     return res.status(200).json({
       investor: {
         id: user.investorProfile.id,
@@ -70,6 +75,7 @@ export default async function handler(
         documents: user.investorProfile.documents || [],
       },
       capitalCalls,
+      ndaGateEnabled,
     });
   } catch (error: any) {
     console.error("LP me error:", error);

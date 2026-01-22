@@ -121,7 +121,8 @@ export default function LPDashboard() {
         setPendingSignatures(sigData.pendingSignatures || []);
       }
 
-      if (!data.investor.ndaSigned || data.investor.accreditationStatus === "PENDING") {
+      const ndaGateEnabled = data.ndaGateEnabled !== false;
+      if (ndaGateEnabled && (!data.investor.ndaSigned || data.investor.accreditationStatus === "PENDING")) {
         setShowNdaModal(true);
       }
     } catch (error) {

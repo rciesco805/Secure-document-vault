@@ -17,6 +17,11 @@ export default async function AppMiddleware(req: NextRequest) {
     };
   };
 
+  // LP onboard is publicly accessible (investor signup)
+  if (path === "/lp/onboard") {
+    return NextResponse.next();
+  }
+
   // UNAUTHENTICATED if there's no token and the path isn't a login page, redirect appropriately
   const isLoginPage = path === "/login" || path === "/admin/login";
   const isAdminRoute = path.startsWith("/dashboard") || path.startsWith("/settings") || path.startsWith("/documents") || path.startsWith("/datarooms");

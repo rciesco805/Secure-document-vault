@@ -40,6 +40,10 @@ model Team {
 
   // Access Requests
   accessRequests     AccessRequest[]
+  
+  // LP Portal - Fund Management
+  funds              Fund[]
+  investorNotes      InvestorNote[]
 
   plan           String    @default("datarooms-plus")
   stripeId       String?   @unique // Stripe customer ID

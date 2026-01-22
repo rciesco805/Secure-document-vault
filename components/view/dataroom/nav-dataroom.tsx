@@ -1,9 +1,10 @@
 import Link from "next/link";
+import { useRouter } from "next/router";
 
 import React, { useEffect, useState } from "react";
 
 import { DataroomBrand } from "@prisma/client";
-import { BadgeInfoIcon, Download } from "lucide-react";
+import { BadgeInfoIcon, Download, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 
 import { formatDate } from "@/lib/utils";
@@ -33,6 +34,7 @@ export default function DataroomNav({
   viewerId,
   conversationsEnabled,
   isTeamMember,
+  showSignUp = true,
 }: {
   allowDownload?: boolean;
   allowBulkDownload?: boolean;
@@ -45,7 +47,9 @@ export default function DataroomNav({
   viewerId?: string;
   conversationsEnabled?: boolean;
   isTeamMember?: boolean;
+  showSignUp?: boolean;
 }) {
+  const router = useRouter();
   const [loading, setLoading] = useState<boolean>(false);
   const [showConversations, setShowConversations] = useState<boolean>(false);
 
@@ -171,6 +175,15 @@ export default function DataroomNav({
                 </Tooltip>
               </TooltipProvider>
             ) : null}
+            {showSignUp && !isTeamMember && (
+              <Button
+                onClick={() => router.push("/lp/onboard")}
+                className="bg-emerald-600 text-white hover:bg-emerald-700 font-semibold"
+              >
+                <UserPlus className="mr-2 h-4 w-4" />
+                Sign Me Up
+              </Button>
+            )}
             {conversationsEnabled && (
               <Button onClick={() => setShowConversations(!showConversations)}>
                 View FAQ

@@ -1,0 +1,176 @@
+model Investor {
+  id                    String   @id @default(cuid())
+  userId                String   @unique
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  entityName            String?
+  entityType            String   @default("INDIVIDUAL")
+  taxId                 String?
+  address               String?
+  phone                 String?
+  
+  fundData              Json?
+  signedDocs            Json?
+  
+  accreditationStatus   String   @default("PENDING")
+  ndaSigned             Boolean  @default(false)
+  ndaSignedAt           DateTime?
+  
+  investments           Investment[]
+  capitalCalls          CapitalCallResponse[]
+  notes                 InvestorNote[]
+  accreditationAcks     AccreditationAck[]
+  
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model AccreditationAck {
+  id              String   @id @default(cuid())
+  investorId      String
+  investor        Investor @relation(fields: [investorId], references: [id], onDelete: Cascade)
+  
+  acknowledged    Boolean  @default(false)
+  method          String   @default("SELF_CERTIFIED")
+  ipAddress       String
+  userAgent       String
+  
+  createdAt       DateTime @default(now())
+
+  @@index([investorId])
+}
+
+model Fund {
+  id                String   @id @default(cuid())
+  teamId            String
+  team              Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  
+  name              String
+  description       String?
+  targetRaise       Decimal  @db.Decimal(18, 2)
+  minimumInvestment Decimal  @db.Decimal(18, 2)
+  currentRaise      Decimal  @default(0) @db.Decimal(18, 2)
+  
+  status            String   @default("RAISING")
+  closingDate       DateTime?
+  
+  investments       Investment[]
+  capitalCalls      CapitalCall[]
+  distributions     Distribution[]
+  reports           FundReport[]
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([teamId])
+}
+
+model Investment {
+  id                String   @id @default(cuid())
+  fundId            String
+  fund              Fund     @relation(fields: [fundId], references: [id], onDelete: Cascade)
+  investorId        String
+  investor          Investor @relation(fields: [investorId], references: [id], onDelete: Cascade)
+  
+  commitmentAmount  Decimal  @db.Decimal(18, 2)
+  fundedAmount      Decimal  @default(0) @db.Decimal(18, 2)
+  status            String   @default("COMMITTED")
+  subscriptionDate  DateTime?
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@unique([fundId, investorId])
+  @@index([fundId])
+  @@index([investorId])
+}
+
+model CapitalCall {
+  id              String   @id @default(cuid())
+  fundId          String
+  fund            Fund     @relation(fields: [fundId], references: [id], onDelete: Cascade)
+  
+  callNumber      Int
+  amount          Decimal  @db.Decimal(18, 2)
+  purpose         String?
+  dueDate         DateTime
+  status          String   @default("PENDING")
+  
+  responses       CapitalCallResponse[]
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([fundId])
+}
+
+model CapitalCallResponse {
+  id              String      @id @default(cuid())
+  capitalCallId   String
+  capitalCall     CapitalCall @relation(fields: [capitalCallId], references: [id], onDelete: Cascade)
+  investorId      String
+  investor        Investor    @relation(fields: [investorId], references: [id], onDelete: Cascade)
+  
+  amountDue       Decimal     @db.Decimal(18, 2)
+  amountPaid      Decimal     @default(0) @db.Decimal(18, 2)
+  status          String      @default("PENDING")
+  paidAt          DateTime?
+  
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  @@unique([capitalCallId, investorId])
+  @@index([capitalCallId])
+  @@index([investorId])
+}
+
+model Distribution {
+  id              String   @id @default(cuid())
+  fundId          String
+  fund            Fund     @relation(fields: [fundId], references: [id], onDelete: Cascade)
+  
+  distributionNumber Int
+  totalAmount     Decimal  @db.Decimal(18, 2)
+  distributionType String  @default("DIVIDEND")
+  distributionDate DateTime
+  status          String   @default("PENDING")
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([fundId])
+}
+
+model FundReport {
+  id              String   @id @default(cuid())
+  fundId          String
+  fund            Fund     @relation(fields: [fundId], references: [id], onDelete: Cascade)
+  
+  reportType      String
+  reportPeriod    String
+  title           String
+  fileUrl         String?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([fundId])
+}
+
+model InvestorNote {
+  id              String   @id @default(cuid())
+  investorId      String
+  investor        Investor @relation(fields: [investorId], references: [id], onDelete: Cascade)
+  teamId          String
+  team            Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  
+  content         String   @db.Text
+  isFromInvestor  Boolean  @default(true)
+  
+  createdAt       DateTime @default(now())
+
+  @@index([investorId])
+  @@index([teamId])
+}

@@ -112,6 +112,15 @@ npx prisma db push --schema=./prisma/schema
 npx prisma studio --schema=./prisma/schema
 ```
 
+## Git Commands
+
+```bash
+# Push to GitHub (uses GITHUB_TOKEN secret)
+GIT_ASKPASS= GIT_TERMINAL_PROMPT=0 git -c credential.helper= push https://rciesco805:${GITHUB_TOKEN}@github.com/rciesco805/Secure-document-vault.git main
+
+# Note: GITHUB_TOKEN is stored as a Replit secret (valid for 90 days from January 2026)
+```
+
 ## External Dependencies
 
 *   **Database**: PostgreSQL (hosted on Replit)

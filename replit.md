@@ -69,6 +69,13 @@ Full documentation for both foundation platforms is available in `/docs/`:
 
 ## Recent Changes (January 2026)
 
+### E-Signature System Validation (January 22, 2026)
+- Validated complete end-to-end e-signature workflow
+- Confirmed self-hosted architecture (no external OpenSign API required)
+- Tested all API endpoints: GET/POST `/api/sign/[token]`
+- Verified fund compliance requirements: IP tracking, audit trails, timestamps
+- Added comprehensive testing sandbox documentation (see "E-Signature Testing Sandbox" section)
+
 ### Bug Fixes
 - Fixed 404 errors on document navigation (URL routing from `/document/` to `/d/`)
 - Fixed "Add a custom domain" modal not opening (DialogTrigger conditional rendering)
@@ -440,3 +447,137 @@ prisma/schema/          # Database schema (split files)
 - IP-based rate limiting
 - AES-256 file encryption
 - Cookie-based verification persistence
+
+## E-Signature Testing Sandbox
+
+### Architecture Note
+The BF Fund Sign e-signature system is **self-hosted** and does NOT use the external OpenSign API (opensignlabs.com). It is a custom-built system inspired by OpenSign's architecture but implemented entirely within this codebase using Prisma models. No external API token is required.
+
+### Testing Endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/sign/[token]` | GET | Fetch document and fields for signing |
+| `/api/sign/[token]` | POST | Submit signature or decline |
+| `/api/teams/[teamId]/signature-documents` | GET | List signature documents |
+| `/api/teams/[teamId]/signature-documents` | POST | Create new signature document |
+| `/api/teams/[teamId]/signature-documents/[documentId]/send` | POST | Send document for signing |
+| `/api/teams/[teamId]/signature-documents/[documentId]/fields` | POST | Add/update signature fields |
+| `/view/sign/[token]` | Page | Public signing UI for recipients |
+
+### Test Parameters
+
+#### Create Test Document (SQL)
+```sql
+INSERT INTO "SignatureDocument" (
+  id, title, description, file, "storageType", "numPages", status, 
+  "emailSubject", "emailMessage", "auditTrail", "teamId", "createdById", 
+  "createdAt", "updatedAt"
+) VALUES (
+  'test-e2e-doc-XXX',
+  'Test Document Title',
+  'Description for testing',
+  'https://example.com/sample.pdf',
+  'VERCEL_BLOB',
+  1,
+  'DRAFT',
+  'Please sign this document',
+  'Dear recipient, please review and sign.',
+  '[{"actor": "system", "action": "CREATED", "timestamp": "..."}]'::jsonb,
+  'cmjbsfoec0000p9pfot2jcr8w',  -- Bermuda Franchise Fund team ID
+  'cmjbqc0ss0000p91n4qjcdujk',  -- Admin user ID
+  now(), now()
+);
+```
+
+#### Create Test Recipient (SQL)
+```sql
+INSERT INTO "SignatureRecipient" (
+  id, "documentId", name, email, role, "signingOrder", status, 
+  "signingToken", "createdAt", "updatedAt"
+) VALUES (
+  'test-recipient-XXX',
+  'test-e2e-doc-XXX',
+  'Test Investor',
+  'test@investor.com',
+  'SIGNER',  -- Options: SIGNER, VIEWER, APPROVER
+  1,
+  'SENT',    -- Options: PENDING, SENT, VIEWED, SIGNED, DECLINED
+  'unique-signing-token-xxx',
+  now(), now()
+);
+```
+
+#### Create Test Fields (SQL)
+```sql
+INSERT INTO "SignatureField" (
+  id, "documentId", "recipientId", type, "pageNumber", 
+  x, y, width, height, required, "createdAt", "updatedAt"
+) VALUES 
+  ('field-sig-001', 'test-e2e-doc-XXX', 'test-recipient-XXX', 'SIGNATURE', 1, 10, 70, 35, 12, true, now(), now()),
+  ('field-date-001', 'test-e2e-doc-XXX', 'test-recipient-XXX', 'DATE_SIGNED', 1, 50, 70, 20, 6, true, now(), now()),
+  ('field-name-001', 'test-e2e-doc-XXX', 'test-recipient-XXX', 'NAME', 1, 10, 85, 35, 6, true, now(), now());
+```
+
+### API Test Commands
+
+#### Test GET (Fetch Document)
+```bash
+curl -s "http://localhost:5000/api/sign/[token]"
+```
+
+#### Test POST (Submit Signature)
+```bash
+curl -s -X POST "http://localhost:5000/api/sign/[token]" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "fields": [
+      {"id": "field-sig-001", "value": null},
+      {"id": "field-date-001", "value": "01/22/2026"},
+      {"id": "field-name-001", "value": "Test Investor"}
+    ],
+    "signatureImage": "data:image/png;base64,iVBORw0KGgo..."
+  }'
+```
+
+#### Test POST (Decline Document)
+```bash
+curl -s -X POST "http://localhost:5000/api/sign/[token]" \
+  -H "Content-Type: application/json" \
+  -d '{"declined": true, "declinedReason": "Reason for declining"}'
+```
+
+### Validation Test Results (January 22, 2026)
+
+| Test Case | Status | Notes |
+|-----------|--------|-------|
+| Database Schema Exists | ✅ Pass | SignatureDocument, SignatureRecipient, SignatureField, SignatureTemplate |
+| GET /api/sign/[token] | ✅ Pass | Returns document, recipient, and fields |
+| Auto-update to VIEWED | ✅ Pass | Recipient status updates on first view |
+| POST Submit Signature | ✅ Pass | Signs document, updates all statuses |
+| Document Status Flow | ✅ Pass | DRAFT → SENT → VIEWED → COMPLETED |
+| Recipient Status Flow | ✅ Pass | PENDING → SENT → VIEWED → SIGNED |
+| IP Address Tracking | ✅ Pass | Records 127.0.0.1 (localhost) or real IP |
+| User Agent Logging | ✅ Pass | Records curl/8.14.1 or browser info |
+| Signature Image Storage | ✅ Pass | Base64 PNG stored in database |
+| Field Values Saved | ✅ Pass | All field values and filledAt timestamps recorded |
+| POST Decline Flow | ✅ Pass | Document/recipient status → DECLINED |
+| Decline Reason Captured | ✅ Pass | Text stored in declinedReason field |
+| Already Signed Protection | ✅ Pass | Returns 400 "already completed" |
+| Rate Limiting Active | ✅ Pass | 10 POST / 30 GET per minute per IP |
+| Audit Trail JSON | ✅ Pass | Events logged with actor, action, timestamp |
+
+### Fund Compliance Verification
+- ✅ All signature data persists to PostgreSQL via Prisma
+- ✅ IP address recorded for each signing action
+- ✅ User agent (browser) fingerprint captured
+- ✅ Timestamps precise to millisecond
+- ✅ Decline reasons stored for audit purposes
+- ✅ Transactional updates ensure data consistency
+
+### Cleanup SQL
+```sql
+DELETE FROM "SignatureField" WHERE "documentId" LIKE 'test-%';
+DELETE FROM "SignatureRecipient" WHERE "documentId" LIKE 'test-%';
+DELETE FROM "SignatureDocument" WHERE id LIKE 'test-%';
+```

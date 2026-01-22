@@ -12,9 +12,18 @@ model Investor {
   fundData              Json?
   signedDocs            Json?
   
-  accreditationStatus   String   @default("PENDING")
+  // Accreditation Status
+  accreditationStatus   String   @default("PENDING")  // PENDING, SELF_CERTIFIED, KYC_VERIFIED, EXPIRED
+  accreditationType     String?  // INCOME, NET_WORTH, PROFESSIONAL, ENTITY, OTHER
+  accreditationExpiresAt DateTime?  // Annual re-verification for 506(c)
+  
+  // NDA Gate
   ndaSigned             Boolean  @default(false)
   ndaSignedAt           DateTime?
+  
+  // Onboarding Progress
+  onboardingStep        Int      @default(0)
+  onboardingCompletedAt DateTime?
   
   investments           Investment[]
   capitalCalls          CapitalCallResponse[]
@@ -26,6 +35,7 @@ model Investor {
   updatedAt             DateTime @updatedAt
 
   @@index([userId])
+  @@index([accreditationStatus])
 }
 
 model InvestorDocument {
@@ -61,12 +71,41 @@ model AccreditationAck {
   
   acknowledged    Boolean  @default(false)
   method          String   @default("SELF_CERTIFIED")
-  ipAddress       String
-  userAgent       String
   
-  createdAt       DateTime @default(now())
+  // 506(c) Compliance: Accreditation Type Selection
+  accreditationType    String?  // INCOME, NET_WORTH, PROFESSIONAL, ENTITY, OTHER
+  accreditationDetails Json?    // Structured data for selected type
+  
+  // Self-Acknowledgment Checkboxes (506(c) "Reasonable Steps")
+  confirmAccredited    Boolean  @default(false)  // "I confirm I am an accredited investor"
+  confirmRiskAware     Boolean  @default(false)  // "I understand the risks of private investments"
+  confirmDocReview     Boolean  @default(false)  // "I have reviewed the offering documents"
+  confirmRepresentations Boolean @default(false) // "My representations are true and accurate"
+  
+  // KYC Integration Hooks (for future API connection)
+  kycProvider          String?  // PLAID, PARALLEL_MARKETS, VERIFY_INVESTOR, etc.
+  kycVerificationId    String?  // External verification ID
+  kycStatus            String?  // PENDING, VERIFIED, FAILED, EXPIRED
+  kycVerifiedAt        DateTime?
+  kycData              Json?    // Structured KYC response data
+  
+  // Full Audit Trail for SEC Compliance
+  ipAddress            String
+  userAgent            String
+  sessionId            String?  // Browser session tracking
+  geoLocation          String?  // Derived from IP
+  completedSteps       Json?    // Track wizard progress
+  
+  // Timestamps
+  startedAt            DateTime @default(now())  // When wizard was started
+  completedAt          DateTime?                 // When fully completed
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
 
   @@index([investorId])
+  @@index([kycStatus])
+  @@index([method])
+  @@index([createdAt])
 }
 
 model Fund {

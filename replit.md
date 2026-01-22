@@ -206,17 +206,27 @@ prisma/schema/          # Database schema (split files)
 
 | Component | Technology |
 |-----------|------------|
-| Framework | Next.js 14 (Pages + App Router) |
+| Framework | Next.js 14 (hybrid Pages + App Router) |
 | Language | TypeScript |
 | Styling | Tailwind CSS, shadcn/ui |
 | Database | PostgreSQL (Replit) + Prisma ORM |
 | Auth | NextAuth.js |
-| Storage | Replit Object Storage (AES-256) |
+| Storage | Replit Object Storage (AES-256), S3-compatible, TUS resumable uploads |
 | Email | Resend API |
 | PDF | pdf-lib, MuPDF |
 | AI | OpenAI API |
 | UI | Radix UI primitives |
 | Forms | React Hook Form, Zod |
+
+### Routing Architecture (Hybrid Next.js)
+- **Pages Router** (`pages/`): Main application, API routes, viewer pages
+- **App Router** (`app/`): Auth pages, EE APIs, admin pages, cron jobs
+
+### Storage Backends
+- **Replit Object Storage**: Primary encrypted storage (`lib/files/put-file.ts`)
+- **S3-Compatible**: AWS S3 endpoints (`pages/api/file/s3/`)
+- **TUS Protocol**: Resumable uploads (`pages/api/file/tus/`)
+- **Browser Upload**: Direct client uploads (`pages/api/file/browser-upload.ts`)
 
 ## Key Files Reference
 
@@ -238,6 +248,101 @@ prisma/schema/          # Database schema (split files)
 - `pages/sign/index.tsx` - Documents list
 - `pages/sign/new.tsx` - Create document
 - `components/signature/audit-trail.tsx` - Audit trail
+
+## API Routes
+
+### Pages Router APIs (`pages/api/`)
+
+#### Authentication & Account
+- `auth/[...nextauth].ts` - NextAuth.js endpoints
+- `account/` - User account management
+- `passkeys/` - Passkey authentication
+
+#### Teams Management (`teams/[teamId]/`)
+- `documents/` - Document CRUD, versions, folders
+- `datarooms/[id]/` - Dataroom CRUD
+  - `documents/`, `folders/` - Content management
+  - `conversations/` - Dataroom conversations
+  - `faqs/` - FAQ management
+  - `download/` - Bulk download
+  - `groups/` - Viewer group management
+  - `permissions/` - Permission management
+  - `qanda/` - Q&A system (notes, questions)
+- `links/` - Shareable link management
+- `domains/` - Custom domain configuration
+- `agreements/` - Legal agreements
+- `billing/` - Billing and subscription
+- `webhooks/` - Webhook configuration
+- `integrations/` - Third-party integrations
+- `tokens/` - API tokens
+
+#### File Operations
+- `file/browser-upload.ts` - Client-side uploads
+- `file/replit-upload.ts` - Replit storage uploads
+- `file/replit-get.ts`, `replit-get-proxy.ts` - Storage retrieval
+- `file/s3/` - S3-compatible endpoints
+- `file/tus/` - TUS resumable uploads
+- `file/tus-viewer/` - Viewer TUS uploads
+- `file/notion/` - Notion integration uploads
+- `mupdf/[documentId]` - PDF page rendering
+
+#### Links & Viewer Access
+- `links/[id]/` - Link settings, views, documents
+- `links/domains/` - Domain-based links
+- `links/download/` - Document downloads
+- `view/` - Viewer verification, access APIs
+- `analytics/` - View analytics tracking
+- `conversations/` - Viewer conversations
+- `feedback/` - Viewer feedback
+
+#### E-Signature
+- `sign/` - Signature documents and recipients
+
+#### Background Jobs & Internal
+- `jobs/` - Background job processing
+- `internal/billing/` - Internal billing operations
+- `stripe/` - Stripe webhook handling
+
+### App Router APIs (`app/api/`)
+
+#### Scheduled Tasks
+- `cron/` - Cron job endpoints
+- `cron/domains/` - Domain verification jobs
+- `cron/year-in-review/` - Annual report generation
+
+#### Analytics & Views
+- `views/` - Document view endpoints
+- `views-dataroom/` - Dataroom view analytics
+
+#### System & Webhooks
+- `webhooks/callback/` - Webhook callbacks
+- `integrations/` - Integration endpoints
+- `og/`, `og/yir/` - Open Graph images
+- `csp-report/` - CSP violation reports
+- `feature-flags/` - Feature flag management
+- `help/` - Help/support endpoints
+
+### Enterprise APIs (`app/(ee)/api/`)
+
+#### AI Features
+- `ai/chat/[chatId]/messages/` - AI chat sessions
+- `ai/store/teams/[teamId]/` - AI vector stores
+  - `datarooms/[dataroomId]/` - Dataroom AI indexing
+  - `documents/[documentId]/` - Document AI indexing
+
+#### Links (EE)
+- `links/[id]/upload/` - EE link upload features
+
+#### Workflows
+- `workflows/[workflowId]/` - Workflow management
+  - `executions/` - Workflow execution history
+  - `steps/[stepId]/` - Workflow step configuration
+- `workflow-entry/link/[entryLinkId]/` - Entry link access
+  - `access/`, `verify/` - Entry verification
+- `workflow-entry/domains/` - Domain-based entries
+
+#### FAQs
+- `faqs/` - FAQ management
 
 ## Environment Variables
 

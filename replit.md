@@ -18,6 +18,7 @@ The platform provides a comprehensive, UX-first solution for GPs managing privat
 ## Recent Changes
 
 ### January 2026
+- **Signature Template Management**: New `/settings/sign` page for creating and managing reusable signature templates with drag-drop field placement, multi-recipient roles, and "Use Template" flow for bulk document creation
 - **Mobile-Optimized Signing Experience**: Signing page uses stacked layout on mobile with signature panel first, touch-friendly 44px buttons, and responsive canvas sizing
 - **Mobile-Optimized Accreditation Wizard**: Full mobile responsiveness with touch targets (min 44px height), tap-anywhere checkbox rows, responsive step indicators, and button order optimized for thumb reach
 - **Pending Signatures Dashboard**: LP dashboard now shows "Action Required" section with documents awaiting signature, with direct "Sign Now" links

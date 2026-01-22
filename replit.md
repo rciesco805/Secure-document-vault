@@ -18,6 +18,8 @@ The platform provides a comprehensive, UX-first solution for GPs managing privat
 ## Recent Changes
 
 ### January 2026
+- **Mobile-Optimized Signing Experience**: Signing page uses stacked layout on mobile with signature panel first, touch-friendly 44px buttons, and responsive canvas sizing
+- **Mobile-Optimized Accreditation Wizard**: Full mobile responsiveness with touch targets (min 44px height), tap-anywhere checkbox rows, responsive step indicators, and button order optimized for thumb reach
 - **Pending Signatures Dashboard**: LP dashboard now shows "Action Required" section with documents awaiting signature, with direct "Sign Now" links
 - **Optional NDA Gate**: Fund-level toggle for NDA/accreditation gate - admins can enable/disable per fund
 - **Admin Fund Settings**: New `/settings/funds` page for managing fund-specific settings with NDA gate toggle

@@ -35,6 +35,7 @@ import {
   PenTool,
   ExternalLink,
 } from "lucide-react";
+import { KycVerification } from "@/components/lp/kyc-verification";
 
 interface InvestorDocument {
   id: string;
@@ -62,6 +63,8 @@ interface InvestorData {
   fundData: any;
   signedDocs: any[];
   documents: InvestorDocument[];
+  kycStatus?: string;
+  kycVerifiedAt?: string | null;
 }
 
 interface CapitalCall {
@@ -346,6 +349,10 @@ export default function LPDashboard() {
               </CardContent>
             </Card>
           )}
+
+          <div className="mb-6">
+            <KycVerification />
+          </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <Card className="lg:col-span-2 bg-gray-800/50 border-gray-700">

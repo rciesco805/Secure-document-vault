@@ -1,5 +1,6 @@
 import prisma from "@/lib/prisma";
 import { log } from "@/lib/utils";
+import { triggerPersonaVerification } from "@/lib/persona-hooks";
 
 export type SignatureEventType = 
   | "signature.recipient_signed"
@@ -136,6 +137,37 @@ export async function onDocumentCompleted({
       allRecipients,
     },
   });
+
+  // Post-subscription KYC verification: Trigger Persona for subscription documents
+  // Check document metadata or title for subscription document detection
+  const doc = await prisma.signatureDocument.findUnique({
+    where: { id: documentId },
+    select: { metadata: true },
+  });
+  
+  // @ts-ignore - metadata may have triggerKyc field
+  const explicitKycTrigger = doc?.metadata?.triggerKyc === true;
+  const titleBasedDetection = documentTitle.toLowerCase().includes("subscription") ||
+    documentTitle.toLowerCase().includes("sub agreement") ||
+    documentTitle.toLowerCase().includes("investor agreement");
+  
+  const shouldTriggerKyc = explicitKycTrigger || titleBasedDetection;
+  
+  if (shouldTriggerKyc) {
+    // Trigger Persona KYC for all signers
+    for (const recipient of allRecipients) {
+      if (recipient.status === "SIGNED") {
+        triggerPersonaVerification({
+          email: recipient.email,
+          name: recipient.name,
+          documentId,
+          teamId,
+        }).catch((err) => {
+          console.error(`[PERSONA] Failed to trigger KYC for ${recipient.email}:`, err);
+        });
+      }
+    }
+  }
 }
 
 export async function onDocumentDeclined({

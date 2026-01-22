@@ -64,6 +64,18 @@ export default async function handler(
       ? investments.some((inv: any) => inv.fund?.ndaGateEnabled !== false)
       : true;
 
+    // Get Persona KYC status using raw query (new fields may not be in Prisma types)
+    const personaData = await prisma.$queryRaw<Array<{
+      personaStatus: string;
+      personaVerifiedAt: Date | null;
+    }>>`
+      SELECT "personaStatus", "personaVerifiedAt"
+      FROM "Investor"
+      WHERE id = ${user.investorProfile.id}
+      LIMIT 1
+    `;
+    const kycInfo = personaData[0] || { personaStatus: "NOT_STARTED", personaVerifiedAt: null };
+
     return res.status(200).json({
       investor: {
         id: user.investorProfile.id,
@@ -73,6 +85,8 @@ export default async function handler(
         fundData: user.investorProfile.fundData,
         signedDocs: user.investorProfile.signedDocs || [],
         documents: user.investorProfile.documents || [],
+        kycStatus: kycInfo.personaStatus,
+        kycVerifiedAt: kycInfo.personaVerifiedAt?.toISOString() || null,
       },
       capitalCalls,
       ndaGateEnabled,

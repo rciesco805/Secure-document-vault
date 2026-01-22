@@ -17,6 +17,13 @@ model Investor {
   accreditationType     String?  // INCOME, NET_WORTH, PROFESSIONAL, ENTITY, OTHER
   accreditationExpiresAt DateTime?  // Annual re-verification for 506(c)
   
+  // Persona KYC/AML Integration
+  personaInquiryId      String?  // Persona inquiry ID
+  personaStatus         String   @default("NOT_STARTED")  // NOT_STARTED, PENDING, APPROVED, DECLINED, NEEDS_REVIEW, EXPIRED
+  personaVerifiedAt     DateTime?
+  personaReferenceId    String?  // Our internal reference ID sent to Persona
+  personaData           Json?    // Full Persona verification response data
+  
   // NDA Gate
   ndaSigned             Boolean  @default(false)
   ndaSignedAt           DateTime?

@@ -90,6 +90,7 @@ BF Fund Platform
 
 ## Quick Links
 
+### Papermark (Dataroom) Documentation
 | Document | Description |
 |----------|-------------|
 | [Architecture](./architecture.md) | System design, component relationships, PDF rendering |
@@ -98,6 +99,14 @@ BF Fund Platform
 | [File Storage](./file-storage.md) | Replit Object Storage integration |
 | [UI Patterns](./ui-patterns.md) | SWR, forms, and component conventions |
 | [API Conventions](./api-conventions.md) | API route patterns and authentication |
+
+### OpenSign (E-Signature) Documentation
+| Document | Description |
+|----------|-------------|
+| [OpenSign Overview](../opensign/README.md) | Complete OpenSign reference documentation |
+| [API Reference](../opensign/api-reference.md) | OpenSign API endpoints and authentication |
+| [Data Models](../opensign/data-models.md) | Document, Recipient, Field, Template models |
+| [Signing Workflows](../opensign/signing-workflows.md) | Signing flows, sequential signing, bulk send |
 
 ## Key Customizations (BF Fund vs. Stock Papermark)
 

@@ -47,6 +47,20 @@ This platform is built on two open-source foundations:
 - Both systems share the same database, authentication, and file storage backends
 - The UI follows Papermark's design patterns using shadcn/ui components
 
+### Reference Documentation
+Full documentation for both foundation platforms is available in `/docs/`:
+
+| Path | Description |
+|------|-------------|
+| `/docs/papermark/README.md` | Papermark architecture, customizations, patterns |
+| `/docs/papermark/architecture.md` | System design, PDF rendering, component relationships |
+| `/docs/papermark/data-models.md` | Database entity relationships |
+| `/docs/papermark/auth-flow.md` | Magic link authentication, session management |
+| `/docs/opensign/README.md` | OpenSign overview, features, core concepts |
+| `/docs/opensign/api-reference.md` | OpenSign API endpoints and authentication |
+| `/docs/opensign/data-models.md` | Document, Recipient, Field, Template models |
+| `/docs/opensign/signing-workflows.md` | Signing flows, sequential signing, bulk send |
+
 ## User Preferences
 
 - Communication style: Simple, everyday language

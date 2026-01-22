@@ -23,6 +23,8 @@ The platform provides a comprehensive, UX-first solution for GPs managing privat
 - **Admin Fund Settings**: New `/settings/funds` page for managing fund-specific settings with NDA gate toggle
 - **E-Sign Integration**: Completed documents auto-stored in LP vault with full audit trail
 - **Signature Event Webhooks**: Internal event system for real-time tracking of signature events (viewed, signed, completed, declined) with full audit logging for 506(c) compliance
+- **Accreditation Self-Ack Wizard**: 3-step guided wizard for investor accreditation verification (type selection, details, SEC-compliant checkboxes) with KYC API hooks for future integration
+- **Signature Audit Reports**: New `/settings/signature-audit` page with filterable audit logs, document selection, date ranges, and CSV/HTML export for SEC 506(c) compliance reporting
 
 ## System Architecture
 

@@ -47,9 +47,21 @@ const nextConfig = {
 
     return [
       {
-        // Default headers for all routes
+        // Prevent HTML pages from being cached - ensures users get new builds
         source: "/:path*",
         headers: [
+          {
+            key: "Cache-Control",
+            value: "no-cache, no-store, must-revalidate",
+          },
+          {
+            key: "Pragma",
+            value: "no-cache",
+          },
+          {
+            key: "Expires",
+            value: "0",
+          },
           {
             key: "Referrer-Policy",
             value: "no-referrer-when-downgrade",

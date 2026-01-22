@@ -342,7 +342,61 @@ GOOGLE_CLIENT_SECRET=GOCSPX-xxxxxxxxxx
 
 ---
 
-### 6. Upstash (Redis/Rate Limiting)
+### 6. Plaid (Bank Connect & ACH Transfers)
+
+**Purpose**: Bank account linking, ACH transfers for capital calls and distributions
+
+**Library**: `plaid` (to be installed)
+
+**API Documentation**: [plaid.com/docs](https://plaid.com/docs/)
+
+**Products Used**:
+- **Link** - Bank account connection UI
+- **Auth** - Account and routing number verification
+- **Transfer** - ACH debit (capital calls) and credit (distributions)
+- **Balance** - Real-time balance checks
+
+**Setup**:
+1. Create account at [dashboard.plaid.com](https://dashboard.plaid.com)
+2. Get API credentials (Client ID and Secret)
+3. Start with Sandbox environment for testing
+4. Configure webhook endpoint
+
+**Environment Variables**:
+```
+PLAID_CLIENT_ID=xxxxxxxxxx
+PLAID_SECRET=xxxxxxxxxx
+PLAID_ENV=sandbox
+PLAID_WEBHOOK_URL=https://your-domain.com/api/webhooks/plaid
+```
+
+**Implementation Roadmap**:
+
+1. **Bank Connect Wizard** (`/lp/bank-connect`)
+   - Post-NDA gate access
+   - Embed Plaid Link React component
+   - 3-step wizard: Connect → Select Account → Confirm
+   - Store token in Prisma (BankLink model)
+
+2. **Capital Calls (Inbound)**
+   - GP triggers via admin dashboard
+   - Plaid Transfer API for ACH debit
+   - LP confirmation flow
+   - Transaction tracking
+
+3. **Distributions (Outbound)**
+   - GP bulk-push from admin
+   - Batch ACH credits to LP bank accounts
+   - One-click for all investors
+
+4. **New Prisma Models**:
+   - `BankLink`: investorId, plaidToken, accountId, status
+   - `Transaction`: amount, type, status, method, audit trail
+   - `FundAggregate`: totalInbound, totalOutbound, currentBalance
+
+---
+
+### 7. Upstash (Redis/Rate Limiting)
 
 **Purpose**: Session storage, rate limiting, job queue
 
@@ -471,7 +525,16 @@ The app will be available at `http://localhost:5000`
 |----------|----------|-------------|
 | `OPENAI_API_KEY` | Optional | OpenAI API key for AI features |
 
-### Payments (Stripe)
+### Payments - Plaid (Primary)
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `PLAID_CLIENT_ID` | For Payments | Plaid client ID from [dashboard.plaid.com](https://dashboard.plaid.com) |
+| `PLAID_SECRET` | For Payments | Plaid secret key (sandbox/development/production) |
+| `PLAID_ENV` | For Payments | Environment: `sandbox`, `development`, or `production` |
+| `PLAID_WEBHOOK_URL` | For Payments | Webhook endpoint URL |
+
+### Payments - Stripe (Optional/Future)
 
 | Variable | Required | Description |
 |----------|----------|-------------|

@@ -164,8 +164,36 @@ GIT_ASKPASS= GIT_TERMINAL_PROMPT=0 git -c credential.helper= push https://rciesc
 |---------|---------|---------------|
 | Resend | Transactional emails | `RESEND_API_KEY` |
 | Persona | KYC/AML verification | `PERSONA_API_KEY`, `PERSONA_TEMPLATE_ID`, `PERSONA_WEBHOOK_SECRET`, `PERSONA_ENVIRONMENT_ID` |
+| Plaid | Bank connect & ACH transfers | `PLAID_CLIENT_ID`, `PLAID_SECRET`, `PLAID_ENV`, `PLAID_WEBHOOK_URL` |
 | Google | Admin OAuth | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` |
 | OpenAI | AI features (optional) | `OPENAI_API_KEY` |
-| Stripe | Payments (optional) | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` |
+| Stripe | Payments (optional/future) | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` |
 
 See [DOCUMENTATION.md](./DOCUMENTATION.md) for complete setup instructions.
+
+## Upcoming: Plaid Payment Integration
+
+**Phase 2 Implementation Roadmap** (Post E-Sign/Subscription flows):
+
+1. **Bank Connect Wizard** (`/lp/bank-connect`)
+   - Plaid Link UI for one-click bank connection
+   - Post-NDA gate access
+   - Store tokens in new `BankLink` Prisma model
+
+2. **Capital Calls (Inbound)**
+   - GP triggers from admin dashboard
+   - ACH debit via Plaid Transfer API
+   - LP confirmation flow with transaction tracking
+
+3. **Distributions (Outbound)**
+   - GP bulk-push for all investors
+   - Batch ACH credits to connected bank accounts
+
+4. **New Prisma Models**
+   - `BankLink`: investorId, plaidToken, accountId, status
+   - `Transaction`: amount, type (inbound/outbound), status, method, audit
+   - `FundAggregate`: totalInbound, totalOutbound, currentBalance
+
+5. **Dashboard Updates**
+   - LP: Transaction history, balance tracking, "Connect Bank" CTA
+   - GP: Fund aggregates, bulk distribution wizard, charts

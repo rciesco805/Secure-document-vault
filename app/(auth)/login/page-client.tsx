@@ -133,6 +133,9 @@ export default function Login() {
                 BF Fund Investor Portal
               </span>
             </Link>
+            <span className="text-sm font-medium text-gray-400">
+              For accredited investors only
+            </span>
             <h3 className="text-sm text-gray-300">
               Secure access to Bermuda Franchise Fund Dataroom
             </h3>

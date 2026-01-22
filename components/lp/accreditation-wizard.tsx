@@ -206,36 +206,39 @@ export function AccreditationWizard({
 
   return (
     <Card className="w-full max-w-2xl mx-auto">
-      <CardHeader className="text-center">
-        <div className="mx-auto w-12 h-12 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center mb-4">
-          <Shield className="h-6 w-6 text-emerald-600" />
+      <CardHeader className="text-center px-4 sm:px-6">
+        <div className="mx-auto w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center mb-3 sm:mb-4">
+          <Shield className="h-5 w-5 sm:h-6 sm:w-6 text-emerald-600" />
         </div>
-        <CardTitle>Accreditation Verification</CardTitle>
-        <CardDescription>
+        <CardTitle className="text-lg sm:text-xl">Accreditation Verification</CardTitle>
+        <CardDescription className="text-sm">
           SEC Rule 506(c) requires verification of accredited investor status
         </CardDescription>
       </CardHeader>
 
-      <CardContent>
-        <div className="flex justify-center mb-8">
+      <CardContent className="px-4 sm:px-6">
+        <div className="flex justify-center mb-6 sm:mb-8">
           {steps.map((s, i) => (
             <div key={s.number} className="flex items-center">
-              <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors ${
-                  step >= s.number
-                    ? "bg-emerald-600 text-white"
-                    : "bg-gray-200 dark:bg-gray-700 text-gray-500"
-                }`}
-              >
-                {step > s.number ? (
-                  <CheckCircle2 className="h-5 w-5" />
-                ) : (
-                  s.number
-                )}
+              <div className="flex flex-col items-center">
+                <div
+                  className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-sm font-medium transition-colors ${
+                    step >= s.number
+                      ? "bg-emerald-600 text-white"
+                      : "bg-gray-200 dark:bg-gray-700 text-gray-500"
+                  }`}
+                >
+                  {step > s.number ? (
+                    <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5" />
+                  ) : (
+                    s.number
+                  )}
+                </div>
+                <span className="text-xs mt-1 text-gray-500 hidden sm:block">{s.title}</span>
               </div>
               {i < steps.length - 1 && (
                 <div
-                  className={`w-16 h-0.5 mx-2 transition-colors ${
+                  className={`w-8 sm:w-16 h-0.5 mx-1 sm:mx-2 transition-colors ${
                     step > s.number
                       ? "bg-emerald-600"
                       : "bg-gray-200 dark:bg-gray-700"
@@ -247,8 +250,8 @@ export function AccreditationWizard({
         </div>
 
         {step === 1 && (
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold mb-4">
+          <div className="space-y-3 sm:space-y-4">
+            <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">
               How do you qualify as an accredited investor?
             </h3>
             <RadioGroup
@@ -260,25 +263,25 @@ export function AccreditationWizard({
               {ACCREDITATION_TYPES.map((type) => (
                 <div
                   key={type.id}
-                  className={`flex items-start space-x-3 p-4 rounded-lg border transition-colors cursor-pointer ${
+                  className={`flex items-start space-x-3 p-3 sm:p-4 rounded-lg border transition-colors cursor-pointer min-h-[60px] ${
                     accreditationType === type.id
                       ? "border-emerald-600 bg-emerald-50 dark:bg-emerald-900/20"
-                      : "border-gray-200 dark:border-gray-700 hover:border-gray-300"
+                      : "border-gray-200 dark:border-gray-700 hover:border-gray-300 active:bg-gray-50"
                   }`}
                   onClick={() => setAccreditationType(type.id)}
                 >
-                  <RadioGroupItem value={type.id} id={type.id} />
-                  <div className="flex-1">
+                  <RadioGroupItem value={type.id} id={type.id} className="mt-0.5" />
+                  <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <type.icon className="h-4 w-4 text-emerald-600" />
+                      <type.icon className="h-4 w-4 text-emerald-600 flex-shrink-0" />
                       <Label
                         htmlFor={type.id}
-                        className="font-medium cursor-pointer"
+                        className="font-medium cursor-pointer text-sm sm:text-base"
                       >
                         {type.title}
                       </Label>
                     </div>
-                    <p className="text-sm text-gray-500 mt-1">
+                    <p className="text-xs sm:text-sm text-gray-500 mt-1 line-clamp-2 sm:line-clamp-none">
                       {type.description}
                     </p>
                   </div>
@@ -289,8 +292,8 @@ export function AccreditationWizard({
         )}
 
         {step === 2 && accreditationType && (
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold mb-4">
+          <div className="space-y-3 sm:space-y-4">
+            <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">
               Please specify your qualification
             </h3>
             <RadioGroup
@@ -301,17 +304,17 @@ export function AccreditationWizard({
                 (detail) => (
                   <div
                     key={detail.value}
-                    className={`flex items-center space-x-3 p-4 rounded-lg border transition-colors cursor-pointer ${
+                    className={`flex items-center space-x-3 p-3 sm:p-4 rounded-lg border transition-colors cursor-pointer min-h-[52px] ${
                       accreditationDetail === detail.value
                         ? "border-emerald-600 bg-emerald-50 dark:bg-emerald-900/20"
-                        : "border-gray-200 dark:border-gray-700 hover:border-gray-300"
+                        : "border-gray-200 dark:border-gray-700 hover:border-gray-300 active:bg-gray-50"
                     }`}
                     onClick={() => setAccreditationDetail(detail.value)}
                   >
                     <RadioGroupItem value={detail.value} id={detail.value} />
                     <Label
                       htmlFor={detail.value}
-                      className="font-medium cursor-pointer"
+                      className="font-medium cursor-pointer text-sm sm:text-base"
                     >
                       {detail.label}
                     </Label>
@@ -323,34 +326,37 @@ export function AccreditationWizard({
         )}
 
         {step === 3 && (
-          <div className="space-y-4">
-            <div className="flex items-start gap-3 p-4 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 mb-6">
-              <AlertTriangle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
+          <div className="space-y-3 sm:space-y-4">
+            <div className="flex items-start gap-2 sm:gap-3 p-3 sm:p-4 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 mb-4 sm:mb-6">
+              <AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5 text-amber-600 flex-shrink-0 mt-0.5" />
               <div>
-                <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
+                <p className="text-xs sm:text-sm font-medium text-amber-800 dark:text-amber-200">
                   SEC 506(c) Compliance Notice
                 </p>
-                <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
+                <p className="text-xs sm:text-sm text-amber-700 dark:text-amber-300 mt-1">
                   By checking the boxes below, you are making legally binding
-                  representations under SEC regulations. False statements may
-                  result in civil or criminal penalties.
+                  representations under SEC regulations.
                 </p>
               </div>
             </div>
 
-            <h3 className="text-lg font-semibold mb-4">
+            <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">
               Please acknowledge the following:
             </h3>
 
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               {ACKNOWLEDGMENT_CHECKBOXES.map((checkbox) => (
                 <div
                   key={checkbox.id}
-                  className={`flex items-start space-x-3 p-4 rounded-lg border transition-colors ${
+                  className={`flex items-start space-x-3 p-3 sm:p-4 rounded-lg border transition-colors cursor-pointer min-h-[60px] ${
                     confirmations[checkbox.id as keyof typeof confirmations]
                       ? "border-emerald-600 bg-emerald-50 dark:bg-emerald-900/20"
-                      : "border-gray-200 dark:border-gray-700"
+                      : "border-gray-200 dark:border-gray-700 active:bg-gray-50"
                   }`}
+                  onClick={() => handleConfirmationChange(
+                    checkbox.id as keyof typeof confirmations,
+                    !confirmations[checkbox.id as keyof typeof confirmations]
+                  )}
                 >
                   <Checkbox
                     id={checkbox.id}
@@ -363,18 +369,19 @@ export function AccreditationWizard({
                         checked as boolean
                       )
                     }
+                    className="mt-0.5"
                   />
-                  <div className="flex-1">
+                  <div className="flex-1 min-w-0">
                     <Label
                       htmlFor={checkbox.id}
-                      className="font-medium cursor-pointer"
+                      className="font-medium cursor-pointer text-sm sm:text-base leading-tight"
                     >
                       {checkbox.label}
                       {checkbox.required && (
                         <span className="text-red-500 ml-1">*</span>
                       )}
                     </Label>
-                    <p className="text-sm text-gray-500 mt-1">
+                    <p className="text-xs sm:text-sm text-gray-500 mt-1 line-clamp-2 sm:line-clamp-none">
                       {checkbox.description}
                     </p>
                   </div>
@@ -384,7 +391,7 @@ export function AccreditationWizard({
           </div>
         )}
 
-        <div className="flex justify-between mt-8 pt-6 border-t">
+        <div className="flex flex-col sm:flex-row justify-between gap-3 mt-6 sm:mt-8 pt-4 sm:pt-6 border-t">
           <Button
             variant="outline"
             onClick={() => {
@@ -392,6 +399,7 @@ export function AccreditationWizard({
               else onCancel?.();
             }}
             disabled={isLoading}
+            className="min-h-[44px] order-2 sm:order-1"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             {step === 1 ? "Cancel" : "Back"}
@@ -404,6 +412,7 @@ export function AccreditationWizard({
                 (step === 1 && !canProceedStep1) ||
                 (step === 2 && !canProceedStep2)
               }
+              className="min-h-[44px] order-1 sm:order-2"
             >
               Next
               <ArrowRight className="h-4 w-4 ml-2" />
@@ -412,7 +421,7 @@ export function AccreditationWizard({
             <Button
               onClick={handleComplete}
               disabled={!canComplete || isLoading}
-              className="bg-emerald-600 hover:bg-emerald-700"
+              className="bg-emerald-600 hover:bg-emerald-700 min-h-[44px] order-1 sm:order-2"
             >
               {isLoading ? (
                 <>
@@ -422,7 +431,8 @@ export function AccreditationWizard({
               ) : (
                 <>
                   <FileCheck className="h-4 w-4 mr-2" />
-                  Complete Verification
+                  <span className="hidden sm:inline">Complete Verification</span>
+                  <span className="sm:hidden">Complete</span>
                 </>
               )}
             </Button>

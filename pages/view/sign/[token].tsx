@@ -475,8 +475,8 @@ export default function SignDocument() {
           </div>
         </header>
 
-        <main className="mx-auto max-w-5xl px-4 py-8">
-          <div className="grid gap-8 lg:grid-cols-3">
+        <main className="mx-auto max-w-5xl px-2 py-4 sm:px-4 sm:py-8">
+          <div className="flex flex-col-reverse gap-4 lg:grid lg:grid-cols-3 lg:gap-8">
             <div className="lg:col-span-2">
               <div className="rounded-lg bg-white shadow">
                 <div className="flex items-center justify-between border-b bg-gray-800 px-4 py-2 rounded-t-lg">
@@ -542,7 +542,7 @@ export default function SignDocument() {
                     </div>
                   )}
                   
-                  <div className="flex-1 bg-gray-200 overflow-auto h-[400px] sm:h-[600px]">
+                  <div className="flex-1 bg-gray-200 overflow-auto h-[300px] sm:h-[500px] lg:h-[600px]">
                     {document?.fileUrl ? (
                       <div className="flex flex-col items-center p-4">
                         {pdfLoading && (
@@ -598,10 +598,10 @@ export default function SignDocument() {
               </div>
             </div>
 
-            <div className="space-y-6">
-              <div className="rounded-lg bg-white p-6 shadow">
-                <h2 className="mb-4 flex items-center gap-2 text-lg font-medium">
-                  <PenIcon className="h-5 w-5" />
+            <div className="space-y-4 sm:space-y-6">
+              <div className="rounded-lg bg-white p-4 sm:p-6 shadow">
+                <h2 className="mb-3 sm:mb-4 flex items-center gap-2 text-base sm:text-lg font-medium">
+                  <PenIcon className="h-4 w-4 sm:h-5 sm:w-5" />
                   Your Signature
                 </h2>
                 
@@ -664,12 +664,13 @@ export default function SignDocument() {
                     <p className="mb-3 text-sm text-gray-600">
                       Draw your signature using your mouse or finger
                     </p>
-                    <div className="relative rounded-lg border-2 border-dashed border-gray-300 bg-white">
+                    <div className="relative rounded-lg border-2 border-dashed border-gray-300 bg-white w-full overflow-hidden">
                       <canvas
                         ref={canvasRef}
                         width={280}
                         height={120}
-                        className="cursor-crosshair touch-none"
+                        className="cursor-crosshair touch-none w-full max-w-[280px] mx-auto block"
+                        style={{ touchAction: 'none' }}
                         onMouseDown={startDrawing}
                         onMouseMove={draw}
                         onMouseUp={stopDrawing}
@@ -679,7 +680,7 @@ export default function SignDocument() {
                         onTouchEnd={stopDrawing}
                       />
                       {signatureMode === "draw" && !signatureData && (
-                        <div className="pointer-events-none absolute inset-0 flex items-center justify-center text-gray-400">
+                        <div className="pointer-events-none absolute inset-0 flex items-center justify-center text-gray-400 text-sm">
                           Sign here
                         </div>
                       )}
@@ -691,10 +692,17 @@ export default function SignDocument() {
                   variant="ghost"
                   size="sm"
                   onClick={clearSignature}
-                  className="mt-2"
+                  className="mt-2 min-h-[44px] px-4"
                 >
                   Clear Signature
                 </Button>
+              </div>
+
+              <div className="lg:hidden rounded-lg bg-emerald-50 dark:bg-emerald-900/20 p-4 border border-emerald-200 dark:border-emerald-800">
+                <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-300">
+                  <ShieldCheckIcon className="h-4 w-4 flex-shrink-0" />
+                  <p className="text-sm font-medium">Scroll down to view document</p>
+                </div>
               </div>
 
               {fields.filter(

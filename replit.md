@@ -18,6 +18,13 @@ The platform provides a comprehensive, UX-first solution for GPs managing privat
 ## Recent Changes
 
 ### January 2026
+- **Persona KYC/AML Integration**: Post-subscription document verification using Persona API
+  - Automated trigger after subscription document signing (via metadata.triggerKyc or title detection)
+  - Embedded popup-based verification flow with blocked-popup fallback
+  - Webhook endpoint with required signature verification for status updates
+  - KYC status displayed on LP dashboard with verification progress
+  - Investor model extended with personaInquiryId, personaStatus, personaVerifiedAt fields
+  - Environment: PERSONA_API_KEY, PERSONA_TEMPLATE_ID, PERSONA_WEBHOOK_SECRET, PERSONA_ENVIRONMENT_ID
 - **Signature Template Management**: New `/settings/sign` page for creating and managing reusable signature templates with drag-drop field placement, multi-recipient roles, and "Use Template" flow for bulk document creation
 - **Mobile-Optimized Signing Experience**: Signing page uses stacked layout on mobile with signature panel first, touch-friendly 44px buttons, and responsive canvas sizing
 - **Mobile-Optimized Accreditation Wizard**: Full mobile responsiveness with touch targets (min 44px height), tap-anywhere checkbox rows, responsive step indicators, and button order optimized for thumb reach
@@ -46,6 +53,7 @@ The platform is built on Next.js 14, utilizing a hybrid Pages and App Router app
     - Pending signatures section on dashboard with "Sign Now" action buttons
     - Dashboard showing fund raise progress, capital calls, and recent documents
     - "Message GP" functionality for investor-to-GP communication
+    - Persona KYC/AML verification with embedded popup flow and status tracking
 *   **Admin Fund Settings** (`/settings/funds`):
     - View all funds for team with status and investor counts
     - Toggle NDA gate on/off per fund
@@ -91,10 +99,15 @@ The platform is built on Next.js 14, utilizing a hybrid Pages and App Router app
 ## Key API Endpoints
 
 ### LP Portal
-- `GET /api/lp/me` - Get investor profile, investments, capital calls, NDA gate status
+- `GET /api/lp/me` - Get investor profile, investments, capital calls, NDA gate status, KYC status
 - `GET /api/lp/docs` - Get investor's signed documents with signed URLs
 - `GET /api/lp/pending-signatures` - Get documents awaiting signature
 - `POST /api/lp/complete-gate` - Complete NDA/accreditation acknowledgment
+- `GET /api/lp/kyc` - Get KYC verification status
+- `POST /api/lp/kyc` - Start or resume Persona KYC verification
+
+### Webhooks
+- `POST /api/webhooks/persona` - Persona KYC webhook (requires signature verification)
 
 ### Fund Management
 - `GET /api/teams/[teamId]/funds` - List funds for team (admin only)

@@ -1,6 +1,6 @@
 # BF Fund Investor Dataroom - Complete Documentation
 
-A comprehensive 506(c) fund GP/LP management suite with secure document sharing, self-hosted e-signatures, investor onboarding, and KYC/AML verification.
+A comprehensive 506(c) fund GP/LP management suite for private fund managers (General Partners) to manage investor relationships, secure document sharing, e-signatures, onboarding, KYC/AML verification, and bank account linking for capital calls and distributions.
 
 ---
 
@@ -8,93 +8,370 @@ A comprehensive 506(c) fund GP/LP management suite with secure document sharing,
 
 1. [Platform Overview](#platform-overview)
 2. [Features](#features)
-3. [Technology Stack](#technology-stack)
-4. [Third-Party Integrations](#third-party-integrations)
-5. [Setup Guide](#setup-guide)
-6. [Environment Variables](#environment-variables)
-7. [API Reference](#api-reference)
-8. [Database Schema](#database-schema)
-9. [Testing](#testing)
-10. [Deployment](#deployment)
+3. [User Journeys](#user-journeys)
+4. [Technology Stack](#technology-stack)
+5. [Third-Party Integrations](#third-party-integrations)
+6. [Setup Guide](#setup-guide)
+7. [Environment Variables](#environment-variables)
+8. [API Reference](#api-reference)
+9. [Database Schema](#database-schema)
+10. [Testing](#testing)
+11. [Deployment](#deployment)
+12. [Security & Compliance](#security--compliance)
 
 ---
 
 ## Platform Overview
 
-The BF Fund Investor Dataroom is a self-hosted investor portal designed for private fund managers (GPs) to securely manage investor relationships, document sharing, and compliance requirements.
+### What is BF Fund Investor Dataroom?
+
+The BF Fund Investor Dataroom is a **self-hosted, enterprise-grade investor portal** designed specifically for private fund managers (GPs) running SEC 506(c) exempt offerings. It provides a complete end-to-end solution for:
+
+- **Investor Onboarding** - Guided multi-step onboarding with entity selection and magic link verification
+- **Document Management** - Secure datarooms with folder organization, custom branding, and page-level analytics
+- **E-Signatures** - Self-hosted DocuSign-style signing platform with no external dependencies
+- **Compliance** - SEC 506(c) audit trails, accreditation verification, and KYC/AML verification
+- **Capital Management** - Bank account linking via Plaid for ACH capital calls and distributions
+
+### Why Self-Hosted?
+
+| Benefit | Description |
+|---------|-------------|
+| **Data Sovereignty** | All investor data, documents, and signatures remain on your infrastructure |
+| **No Per-Signature Fees** | Unlimited e-signatures without DocuSign/HelloSign costs |
+| **Full Customization** | White-label branding, custom domains, tailored investor experience |
+| **Compliance Control** | Complete audit trails and data retention under your control |
+| **Integration Flexibility** | Connect to your existing CRM, accounting, and fund admin systems |
+
+### Target Users
+
+| User Type | Description | Primary Pages |
+|-----------|-------------|---------------|
+| **General Partner (GP)** | Fund manager/admin who manages investors, documents, and compliance | `/dashboard`, `/settings/*`, `/sign/*` |
+| **Limited Partner (LP)** | Investor who onboards, signs documents, and tracks investments | `/lp/dashboard`, `/lp/docs`, `/lp/bank-connect` |
+| **Team Member** | Staff with role-based access (Admin, Manager, Member) | `/dashboard`, `/documents/*` |
 
 ### Core Modules
 
-| Module | Description |
-|--------|-------------|
-| **Investor Dataroom** | Secure document sharing with folder organization, custom branding, and analytics |
-| **BF Fund Sign** | DocuSign-style e-signature platform (self-hosted, no external dependencies) |
-| **LP Fundroom Portal** | Personalized investor dashboards with onboarding, document vault, and capital tracking |
-| **KYC/AML Verification** | Post-subscription identity verification using Persona API |
-| **Compliance Tools** | SEC 506(c) audit trails, accreditation verification, signature logging |
+| Module | Status | Description |
+|--------|--------|-------------|
+| **Investor Dataroom** | ✅ Complete | Secure document sharing with folder organization, custom branding, page-level analytics, and magic link access |
+| **BF Fund Sign** | ✅ Complete | Self-hosted e-signature platform with drag-and-drop fields, multi-recipient workflows, templates, bulk sending, QR signing, and audit trails |
+| **LP Fundroom Portal** | ✅ Complete | Personalized investor dashboards with 3-step onboarding, document vault, pending signatures, fund progress, and GP messaging |
+| **NDA/Accreditation Gate** | ✅ Complete | Optional per-fund investor gate with 506(c) compliance logging and accreditation wizard |
+| **KYC/AML Verification** | ✅ Complete | Post-subscription identity verification using Persona API with embedded popup flow |
+| **Bank Connect (Plaid)** | ✅ Complete | One-click bank account linking for ACH capital calls and distributions |
+| **Capital Calls** | 🔄 Next Phase | GP-initiated ACH debits from investor bank accounts |
+| **Distributions** | 🔄 Next Phase | Bulk ACH credits to investor bank accounts |
+| **K-1 Management** | 📋 Planned | Tax document generation and distribution |
 
 ---
 
 ## Features
 
 ### 1. Investor Dataroom
-- **Secure Document Sharing**: Upload and share documents with investors
-- **Folder Hierarchy**: Organize documents in nested folder structures
-- **Custom Branding**: White-label with your fund's logo and colors
-- **Page-Level Analytics**: Track which pages investors view and for how long
-- **Magic Link Access**: One-click email verification for secure access
-- **Custom Domain Support**: Host on your own domain
 
-### 2. BF Fund Sign (E-Signature)
-Self-hosted e-signature platform inspired by DocuSign/OpenSign architecture.
+Secure document sharing platform for private placement memorandums, subscription agreements, and investor communications.
+
+#### Core Capabilities
+
+| Feature | Description | Location |
+|---------|-------------|----------|
+| **Secure Upload** | Drag-and-drop PDF/document uploads with encryption at rest | `/documents` |
+| **Folder Hierarchy** | Unlimited nested folder structures for organization | `/datarooms/[id]/folders` |
+| **Custom Branding** | White-label with fund logo, colors, and custom CSS | `/settings/general` |
+| **Page-Level Analytics** | Track exactly which pages each investor views and for how long | `/documents/[id]/stats` |
+| **Magic Link Access** | One-click email verification without passwords | Automatic via email |
+| **Custom Domain** | Host on your own domain (e.g., investors.yourfund.com) | `/settings/domains` |
+| **Watermarking** | Dynamic watermarks with investor email/timestamp | Document settings |
+| **Download Controls** | Enable/disable downloads per document or dataroom | Link settings |
+| **Expiration** | Auto-expire access links after specified date | Link settings |
+
+#### Access Control
+
+| Permission Level | Description |
+|-----------------|-------------|
+| **Public Link** | Anyone with the link can view (not recommended for confidential docs) |
+| **Email Verification** | Viewers must verify email before access |
+| **Password Protected** | Additional password required |
+| **Allow List** | Only specific email addresses can access |
+| **NDA Required** | Must accept NDA before viewing |
+| **Accreditation Required** | Must complete accreditation wizard |
+
+### 2. BF Fund Sign (E-Signature Platform)
+
+**Self-hosted, DocuSign-style e-signature platform** with no external dependencies or per-signature fees.
+
+#### Field Types
+
+| Field | Description | Validation |
+|-------|-------------|------------|
+| **Signature** | Draw, type, or upload signature | Required |
+| **Initials** | Short signature for page acknowledgment | Required |
+| **Date** | Auto-populated or manual date selection | Auto-fill available |
+| **Text** | Free-form text input | Optional validation |
+| **Checkbox** | Agreement/acknowledgment checkboxes | Optional required |
+| **Dropdown** | Pre-defined selection options | Configurable |
+
+#### Recipient Roles
+
+| Role | Description | Actions |
+|------|-------------|---------|
+| **Signer** | Must complete all assigned fields | Sign, initial, fill fields |
+| **Viewer** | Receives copy for records only | View, download |
+| **Approver** | Reviews before or after signing | Approve/reject |
+| **Carbon Copy** | Receives final signed copy | View only |
+
+#### Workflow Features
 
 | Feature | Description |
 |---------|-------------|
-| Drag-and-Drop Fields | Place signature, date, text, checkbox fields on PDF |
-| Multi-Recipient Roles | Signer, Viewer, Approver with sequential signing |
-| Reusable Templates | Create templates for subscription docs, NDAs, etc. |
-| Bulk Sending | Send same document to multiple signers |
-| QR Code Signing | In-person signing via mobile QR scan |
-| Document Expiration | Auto-void documents after deadline |
-| Correct & Resend | Fix errors without starting over |
-| Audit Trail | Complete signing history with timestamps and IP addresses |
-| Mobile-Optimized | Touch-friendly signing on any device |
+| **Sequential Signing** | Recipients sign in specified order |
+| **Parallel Signing** | All recipients can sign simultaneously |
+| **Bulk Sending** | Send same document to multiple recipients at once |
+| **Reusable Templates** | Save document configurations for repeated use |
+| **QR Code Signing** | In-person signing via mobile phone QR scan |
+| **Document Expiration** | Auto-void documents after deadline |
+| **Correct & Resend** | Fix errors and resend without starting over |
+| **Reminder Emails** | Automatic reminders for pending signatures |
+
+#### Audit Trail
+
+Every signature action is logged with:
+- Timestamp (UTC)
+- IP address
+- User agent (browser/device)
+- Geolocation (derived from IP)
+- Action type (viewed, signed, declined, etc.)
+- Session ID
+
+#### PDF Integration
+
+| Feature | Technology |
+|---------|------------|
+| **Field Placement** | Drag-and-drop on PDF pages using react-pdf |
+| **Signature Embedding** | pdf-lib for embedding signatures directly into PDF |
+| **Visual Rendering** | MuPDF for high-quality page rendering |
+| **Certificate Stamping** | Signing certificate with timestamp and verification link |
 
 ### 3. LP Fundroom Portal
-Investor-facing dashboard at `/lp/dashboard`:
 
-- **3-Step Onboarding**: Name/email → Entity selection → Magic link verification
-- **Document Vault**: All signed documents stored and accessible at `/lp/docs`
-- **Pending Signatures**: "Action Required" section with direct "Sign Now" links
-- **Fund Progress**: Visual fundraise progress and capital call tracking
-- **Message GP**: Direct communication with fund managers
-- **KYC Status**: Verification progress and status display
-- **Bank Connect**: One-click bank account linking at `/lp/bank-connect` using Plaid for capital calls and distributions
+**Personalized investor dashboard** providing a complete self-service experience for Limited Partners.
+
+#### Investor Onboarding (`/lp/onboard`)
+
+| Step | Description | Fields |
+|------|-------------|--------|
+| **Step 1** | Basic Information | Full name, email address |
+| **Step 2** | Entity Selection | Individual, LLC, Trust, Corporation, Partnership |
+| **Step 3** | Magic Link Verification | Email verification with one-click login |
+
+#### Dashboard Features (`/lp/dashboard`)
+
+| Section | Description | Data Source |
+|---------|-------------|-------------|
+| **Welcome Banner** | Personalized greeting with investor name | Investor profile |
+| **Fund Progress** | Visual fundraise progress with percentage and amounts | Fund model |
+| **Your Commitment** | Total commitment amount across all funds | Investment model |
+| **Signed Documents** | Count of completed signatures with NDA status | InvestorDocument model |
+| **Accreditation Status** | Verified/Self-Certified status badge | Investor model |
+| **Pending Signatures** | Action Required cards with "Sign Now" buttons | SignatureRecipient model |
+| **KYC Status** | Verification progress with "Verify Identity" CTA | Persona integration |
+| **Bank Connect** | Bank account status with "Connect Bank" CTA | BankLink model |
+| **Capital Calls** | Outstanding capital call notices with due dates | CapitalCall model |
+| **Message GP** | Direct communication form to fund manager | InvestorNote model |
+
+#### Document Vault (`/lp/docs`)
+
+| Feature | Description |
+|---------|-------------|
+| **All Signed Documents** | Complete history of signed documents with download |
+| **Document Types** | Subscription Agreement, NDA, Side Letter, etc. |
+| **Signed Date** | Timestamp when document was completed |
+| **View/Download** | Generate signed URLs for secure access |
+| **Search** | Filter documents by title or type |
+
+#### Bank Connect (`/lp/bank-connect`)
+
+| Feature | Description |
+|---------|-------------|
+| **Plaid Link Integration** | Secure bank connection via Plaid's UI |
+| **Institution Display** | Shows bank name with account masked (••••1234) |
+| **Account Type** | Checking/Savings account identification |
+| **Change Account** | Option to connect different bank account |
+| **Transfer Ready** | Account verified for ACH debits/credits |
 
 ### 4. NDA/Accreditation Gate
-Optional investor gate before accessing fund materials:
 
-- **Toggle Per Fund**: Enable/disable at `/settings/funds`
-- **506(c) Compliance**: Captures IP address, user agent, timestamp
-- **Accreditation Wizard**: 3-step guided flow for investor self-certification
-- **Type Selection**: Individual, entity, qualified purchaser options
+Optional **per-fund investor gate** requiring NDA acceptance and accreditation acknowledgment before accessing fund materials.
+
+#### Gate Configuration
+
+| Setting | Description | Location |
+|---------|-------------|----------|
+| **Enable/Disable** | Toggle gate on or off per fund | `/settings/funds` |
+| **NDA Text** | Customizable NDA language | Fund settings |
+| **Accreditation Types** | Individual, Entity, Qualified Purchaser | Wizard options |
+
+#### 506(c) Compliance Logging
+
+Every gate completion captures:
+- IP address
+- User agent
+- Timestamp
+- Session ID
+- Geolocation
+- Selected accreditation type
+- All acknowledgment checkboxes
+
+#### Accreditation Wizard Steps
+
+| Step | Description | Fields |
+|------|-------------|--------|
+| **Step 1** | Accreditation Type Selection | Individual Income, Net Worth, Professional, Entity |
+| **Step 2** | Acknowledgment Checkboxes | "I confirm I am accredited", "I understand the risks", "I have reviewed documents", "My representations are accurate" |
+| **Step 3** | NDA Acceptance | Read and accept NDA terms |
 
 ### 5. KYC/AML Verification
-Post-subscription identity verification using Persona:
 
-- **Automatic Trigger**: Starts after subscription document signing
-- **Embedded Flow**: Popup-based verification (500x700px)
-- **Fallback Support**: Direct link if popup is blocked
-- **Status Tracking**: Pending → Approved/Declined/Needs Review
-- **Webhook Updates**: Real-time status sync from Persona
+**Post-subscription identity verification** using Persona API for SEC 506(c) "reasonable steps" compliance.
+
+#### Verification Flow
+
+| Step | Description | UI |
+|------|-------------|-----|
+| **1. Trigger** | After subscription document is signed | Automatic |
+| **2. Prompt** | Dashboard shows "Verify Identity" card | `/lp/dashboard` |
+| **3. Launch** | Embedded Persona popup (500x700px) | Modal overlay |
+| **4. Capture** | ID photo + selfie verification | Persona UI |
+| **5. Processing** | AI verification by Persona | Background |
+| **6. Webhook** | Status update received | `/api/webhooks/persona` |
+| **7. Display** | Status shown on dashboard | Real-time update |
+
+#### Verification Statuses
+
+| Status | Description | Dashboard Display |
+|--------|-------------|-------------------|
+| **NOT_STARTED** | Verification not initiated | "Verify Identity" button |
+| **PENDING** | Verification in progress | "Verification Pending" badge |
+| **APPROVED** | Identity verified successfully | Green "Verified" badge |
+| **DECLINED** | Verification failed | "Verification Failed" with retry |
+| **NEEDS_REVIEW** | Manual review required | "Under Review" badge |
+| **EXPIRED** | Verification expired (>1 year) | "Re-verify" button |
 
 ### 6. Admin Tools
 
-| Tool | Location | Description |
-|------|----------|-------------|
-| Fund Settings | `/settings/funds` | Toggle NDA gate, view investor counts |
-| Signature Audit | `/settings/signature-audit` | Filter and export audit logs |
-| Template Manager | `/settings/sign` | Create/manage signature templates |
+#### Fund Settings (`/settings/funds`)
+
+| Feature | Description |
+|---------|-------------|
+| **Fund List** | All funds for current team with status |
+| **Investor Count** | Number of investors per fund |
+| **NDA Gate Toggle** | Enable/disable per fund |
+| **Fund Status** | RAISING, CLOSED, ACTIVE |
+
+#### Signature Audit (`/settings/signature-audit`)
+
+| Filter | Description |
+|--------|-------------|
+| **Date Range** | Filter by signing date |
+| **Document** | Filter by specific document |
+| **Signer** | Filter by signer email |
+| **Status** | Completed, Pending, Declined, Voided |
+| **Export** | Download audit log as CSV |
+
+#### Template Manager (`/settings/sign`)
+
+| Feature | Description |
+|---------|-------------|
+| **Create Template** | Upload PDF and place fields |
+| **Recipient Roles** | Define signer/viewer roles |
+| **Field Mapping** | Map fields to recipient roles |
+| **Use Template** | Generate new document from template |
+
+---
+
+## User Journeys
+
+### GP (Fund Manager) Journey
+
+```
+1. Sign Up / Login
+   └── Email magic link or Google OAuth
+
+2. Team Setup
+   ├── Create team/fund
+   ├── Configure branding
+   └── Invite team members
+
+3. Document Management
+   ├── Upload PPM, subscription docs, NDAs
+   ├── Create dataroom with folders
+   └── Configure access controls
+
+4. E-Signature Setup
+   ├── Create signature templates
+   ├── Place fields on documents
+   └── Set recipient roles
+
+5. Investor Onboarding
+   ├── Send dataroom links
+   ├── Monitor document access
+   └── Send signature requests
+
+6. Compliance Monitoring
+   ├── Track accreditation status
+   ├── Monitor KYC verification
+   └── Export audit logs
+
+7. Capital Management (Coming Soon)
+   ├── Issue capital calls
+   ├── Track payments
+   └── Process distributions
+```
+
+### LP (Investor) Journey
+
+```
+1. Receive Invitation
+   └── Email with dataroom link
+
+2. Onboarding (/lp/onboard)
+   ├── Enter name and email
+   ├── Select entity type
+   └── Verify via magic link
+
+3. NDA/Accreditation Gate (if enabled)
+   ├── Read and accept NDA
+   ├── Complete accreditation wizard
+   └── Confirm acknowledgments
+
+4. Review Documents
+   ├── Access dataroom
+   ├── View PPM, financial docs
+   └── Download materials
+
+5. Sign Documents (/sign/[token])
+   ├── Review document
+   ├── Complete all fields
+   └── Submit signature
+
+6. Identity Verification (if required)
+   ├── Launch Persona popup
+   ├── Upload ID and selfie
+   └── Await verification
+
+7. Bank Connection (/lp/bank-connect)
+   ├── Launch Plaid Link
+   ├── Select bank and account
+   └── Confirm connection
+
+8. Ongoing Access (/lp/dashboard)
+   ├── View investment status
+   ├── Access signed documents
+   ├── Track capital calls
+   └── Message GP
+```
 
 ---
 
@@ -710,35 +987,80 @@ The app will be available at `http://localhost:5000`
 
 ### Core Models
 
-```
-User              - Admin/team member accounts
-Team              - Organization/fund groups
-Document          - Uploaded documents
-Dataroom          - Document collections
-Link              - Shareable access links
-Viewer            - Document access sessions
-```
+| Model | Description | Key Fields |
+|-------|-------------|------------|
+| **User** | Admin/team member accounts | id, name, email, role, emailVerified |
+| **Team** | Organization/fund groups | id, name, slug, plan, brandingSettings |
+| **TeamMember** | User-team relationships | userId, teamId, role (ADMIN/MANAGER/MEMBER) |
+| **Document** | Uploaded documents | id, name, teamId, storageType, file, numPages |
+| **Dataroom** | Document collections | id, name, teamId, pId (parent), folders |
+| **DataroomFolder** | Folder hierarchy | id, name, dataroomId, parentId, path |
+| **Link** | Shareable access links | id, documentId, url, password, expiresAt, allowDownload |
+| **Viewer** | Document access sessions | id, linkId, email, verified, viewedAt |
+| **View** | Individual page views | id, viewerId, documentId, pageNumber, duration |
 
 ### E-Signature Models
 
-```
-SignatureDocument  - Documents pending signature
-SignatureRecipient - Signers/viewers per document
-SignatureField     - Signature/date/text fields
-SignatureTemplate  - Reusable document templates
-SignatureAuditLog  - Complete audit trail
-```
+| Model | Description | Key Fields |
+|-------|-------------|------------|
+| **SignatureDocument** | Documents pending signature | id, teamId, name, file, status, expiresAt |
+| **SignatureRecipient** | Signers/viewers per document | id, documentId, email, role, order, status, signingToken |
+| **SignatureField** | Signature/date/text fields | id, documentId, recipientId, type, page, x, y, width, height, value |
+| **SignatureTemplate** | Reusable document templates | id, teamId, name, file, fields, recipients |
+| **SignatureAuditLog** | Complete audit trail | id, documentId, action, actorEmail, ipAddress, userAgent, timestamp |
 
 ### LP Portal Models
 
+| Model | Description | Key Fields |
+|-------|-------------|------------|
+| **Investor** | LP investor profiles | id, userId, entityName, entityType, accreditationStatus, personaStatus, ndaSigned |
+| **Fund** | Investment funds | id, teamId, name, targetRaise, currentRaise, status, ndaGateEnabled |
+| **Investment** | Investor-fund relationships | id, fundId, investorId, commitmentAmount, fundedAmount, status |
+| **InvestorDocument** | Signed docs in vault | id, investorId, title, documentType, storageKey, signedAt |
+| **AccreditationAck** | Accreditation records | id, investorId, accreditationType, acknowledged, ipAddress, userAgent, completedAt |
+| **CapitalCall** | Capital call records | id, fundId, callNumber, amount, dueDate, status |
+| **CapitalCallResponse** | Investor responses to calls | id, capitalCallId, investorId, amountDue, amountPaid, status |
+| **Distribution** | Distribution records | id, fundId, distributionNumber, totalAmount, distributionType, status |
+| **InvestorNote** | GP-LP messages | id, investorId, teamId, content, isFromInvestor |
+
+### Bank Connect Models (Plaid)
+
+| Model | Description | Key Fields |
+|-------|-------------|------------|
+| **BankLink** | Connected bank accounts | id, investorId, plaidItemId, plaidAccessToken (encrypted), plaidAccountId, institutionName, accountMask, status, transferEnabled |
+| **Transaction** | Capital calls/distributions | id, investorId, bankLinkId, type, amount, plaidTransferId, status, ipAddress, auditTrail |
+
+### Entity Relationships
+
 ```
-Investor          - LP investor profiles
-Fund              - Investment funds
-Investment        - Investor-fund relationships
-InvestorDocument  - Signed docs in vault
-AccreditationAck  - Accreditation records
-CapitalCall       - Capital call records
-Distribution      - Distribution records
+User ─────────────┬──────────────── TeamMember ──────────────── Team
+                  │                                              │
+                  └──── Investor                                 │
+                        │                                        │
+                        ├─── BankLink                            │
+                        │    └─── Transaction                    │
+                        │                                        │
+                        ├─── Investment ──────────────────────── Fund
+                        │                                        │
+                        ├─── InvestorDocument                    │
+                        │                                        │
+                        ├─── AccreditationAck                    │
+                        │                                        │
+                        └─── CapitalCallResponse                 │
+                                                                 │
+Team ────────────────────────────────────────────────────────────┘
+  │
+  ├─── Document ──────── Link ──────── Viewer ──────── View
+  │
+  ├─── Dataroom ──────── DataroomFolder
+  │
+  ├─── SignatureDocument ──┬── SignatureRecipient
+  │                        │
+  │                        ├── SignatureField
+  │                        │
+  │                        └── SignatureAuditLog
+  │
+  └─── SignatureTemplate
 ```
 
 ---
@@ -788,6 +1110,82 @@ npm run test:datarooms # Gate logic tests
 - [ ] Persona webhook URL updated
 - [ ] Email domain verified in Resend
 - [ ] Google OAuth redirect URI updated
+
+---
+
+## Security & Compliance
+
+### SEC 506(c) Compliance
+
+The platform is designed specifically to support SEC Regulation D Rule 506(c) offerings, which require the issuer to take "reasonable steps" to verify accredited investor status.
+
+#### Reasonable Steps Documentation
+
+| Requirement | Platform Feature |
+|-------------|-----------------|
+| **Investor Self-Certification** | Accreditation wizard with checkbox acknowledgments |
+| **Type Selection** | Income, Net Worth, Professional, Entity options |
+| **Audit Trail** | IP address, user agent, timestamp, session ID logging |
+| **KYC/AML Verification** | Persona integration for identity verification |
+| **Document Retention** | All signed documents stored with audit trails |
+
+#### Compliance Logging
+
+Every investor action is logged:
+- Dataroom access with page views
+- Document downloads
+- Signature events
+- NDA/accreditation acknowledgments
+- KYC verification status changes
+
+### Data Security
+
+#### Encryption
+
+| Data Type | Encryption Method |
+|-----------|------------------|
+| **Documents at Rest** | AES-256 via Replit Object Storage |
+| **Plaid Access Tokens** | AES-256-GCM with per-token IV and auth tag |
+| **Sessions** | Encrypted cookies with NEXTAUTH_SECRET |
+| **Passwords** | bcrypt hashing with salt |
+
+#### Access Controls
+
+| Control | Implementation |
+|---------|----------------|
+| **Authentication** | Email magic links + optional Google OAuth |
+| **Authorization** | Role-based (SUPER_ADMIN, ADMIN, MANAGER, MEMBER) |
+| **Session Management** | NextAuth.js with Prisma adapter |
+| **API Protection** | Server-side session validation on all endpoints |
+
+#### Webhook Security
+
+| Integration | Verification Method |
+|-------------|---------------------|
+| **Persona** | HMAC signature verification |
+| **Plaid** | JWT signature verification with jose library |
+| **Stripe** | Webhook signing secret verification |
+
+### Production Security Checklist
+
+- [ ] All secrets configured in Replit Secrets (never in code)
+- [ ] `NEXTAUTH_SECRET` is 32+ random characters
+- [ ] `PLAID_TOKEN_ENCRYPTION_KEY` set (required in production)
+- [ ] Persona webhook secret configured
+- [ ] Google OAuth redirect URIs updated for production domain
+- [ ] Custom domain with SSL configured
+- [ ] Rate limiting enabled via Upstash Redis
+- [ ] Database backups enabled
+
+### Data Retention
+
+| Data Type | Retention Policy |
+|-----------|------------------|
+| **Signed Documents** | Permanent (required for compliance) |
+| **Audit Logs** | 7 years minimum (SEC requirement) |
+| **Investor Profiles** | Until fund dissolution + 7 years |
+| **Session Data** | 30 days |
+| **Page View Analytics** | 2 years |
 
 ---
 

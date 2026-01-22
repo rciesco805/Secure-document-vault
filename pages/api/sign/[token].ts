@@ -5,6 +5,12 @@ import { sendEmail } from "@/lib/resend";
 import SignatureCompletedEmail from "@/components/emails/signature-completed";
 import { sendToNextSigners } from "@/pages/api/teams/[teamId]/signature-documents/[documentId]/send";
 import { ratelimit } from "@/lib/redis";
+import {
+  onRecipientSigned,
+  onDocumentCompleted,
+  onDocumentDeclined,
+  onDocumentViewed,
+} from "@/lib/webhook/triggers/signature-events";
 
 export default async function handler(
   req: NextApiRequest,
@@ -48,6 +54,11 @@ async function handleGet(
   res: NextApiResponse,
   token: string
 ) {
+  const ipAddress = (req.headers["x-forwarded-for"] as string)?.split(",")[0] 
+    || req.socket.remoteAddress 
+    || "unknown";
+  const userAgent = req.headers["user-agent"] || null;
+
   try {
     const recipient = await prisma.signatureRecipient.findUnique({
       where: { signingToken: token },
@@ -129,6 +140,18 @@ async function handleGet(
           data: { status: "VIEWED" },
         });
       }
+
+      onDocumentViewed({
+        documentId: document.id,
+        documentTitle: document.title,
+        teamId: document.teamId,
+        teamName: document.team.name,
+        recipientId: recipient.id,
+        recipientName: recipient.name,
+        recipientEmail: recipient.email,
+        ipAddress,
+        userAgent,
+      }).catch(console.error);
     }
 
     return res.status(200).json({
@@ -247,6 +270,18 @@ async function handlePost(
         });
       });
 
+      onDocumentDeclined({
+        documentId: document.id,
+        documentTitle: document.title,
+        teamId: document.teamId,
+        teamName: document.team.name,
+        recipientId: recipient.id,
+        recipientName: recipient.name,
+        recipientEmail: recipient.email,
+        ipAddress,
+        userAgent,
+      }).catch(console.error);
+
       return res.status(200).json({ 
         message: "Document declined",
         status: "DECLINED" 
@@ -351,6 +386,18 @@ async function handlePost(
 
       return { allSigned, newStatus, allRecipients };
     });
+
+    onRecipientSigned({
+      documentId: document.id,
+      documentTitle: document.title,
+      teamId: document.teamId,
+      teamName: document.team.name,
+      recipientId: recipient.id,
+      recipientName: recipient.name,
+      recipientEmail: recipient.email,
+      ipAddress,
+      userAgent,
+    }).catch(console.error);
 
     if (result.allSigned && result.newStatus === "COMPLETED") {
       const completedAt = new Date().toLocaleDateString("en-US", {
@@ -460,6 +507,19 @@ async function handlePost(
         console.error("Failed to store document in LP vault:", lpError);
         // Non-blocking - don't fail the signing if vault storage fails
       }
+
+      onDocumentCompleted({
+        documentId: document.id,
+        documentTitle: document.title,
+        teamId: document.teamId,
+        teamName: document.team.name,
+        allRecipients: result.allRecipients.map((r) => ({
+          name: r.name,
+          email: r.email,
+          status: r.status,
+          signedAt: r.signedAt?.toISOString() || null,
+        })),
+      }).catch(console.error);
     } else {
       const owner = await prisma.user.findFirst({
         where: { id: document.createdById },

@@ -193,3 +193,21 @@ model SignatureTemplate {
   @@index([teamId])
   @@index([teamId, isPublic])
 }
+
+model SignatureAuditLog {
+  id                String   @id @default(cuid())
+  documentId        String
+  event             String
+  recipientId       String?
+  recipientEmail    String?
+  ipAddress         String?
+  userAgent         String?
+  metadata          Json?
+  
+  createdAt         DateTime @default(now())
+  
+  @@index([documentId])
+  @@index([event])
+  @@index([documentId, event])
+  @@index([createdAt])
+}

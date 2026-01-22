@@ -15,10 +15,18 @@ export const LINK_LEVEL_WEBHOOK_TRIGGERS = [
   "link.downloaded",
 ] as const;
 
+export const SIGNATURE_WEBHOOK_TRIGGERS = [
+  "signature.recipient_signed",
+  "signature.document_completed",
+  "signature.document_declined",
+  "signature.document_viewed",
+] as const;
+
 export const WEBHOOK_TRIGGERS = [
   ...TEAM_LEVEL_WEBHOOK_TRIGGERS,
   ...DOCUMENT_LEVEL_WEBHOOK_TRIGGERS,
   ...LINK_LEVEL_WEBHOOK_TRIGGERS,
+  ...SIGNATURE_WEBHOOK_TRIGGERS,
 ] as const;
 
 export const WEBHOOK_TRIGGER_DESCRIPTIONS = {
@@ -31,4 +39,8 @@ export const WEBHOOK_TRIGGER_DESCRIPTIONS = {
   "document.updated": "Document updated",
   "document.deleted": "Document deleted",
   "dataroom.created": "Data room created",
+  "signature.recipient_signed": "Signature recipient signed",
+  "signature.document_completed": "Signature document completed",
+  "signature.document_declined": "Signature document declined",
+  "signature.document_viewed": "Signature document viewed",
 } as const;

@@ -22,6 +22,7 @@ The platform provides a comprehensive, UX-first solution for GPs managing privat
 - **Optional NDA Gate**: Fund-level toggle for NDA/accreditation gate - admins can enable/disable per fund
 - **Admin Fund Settings**: New `/settings/funds` page for managing fund-specific settings with NDA gate toggle
 - **E-Sign Integration**: Completed documents auto-stored in LP vault with full audit trail
+- **Signature Event Webhooks**: Internal event system for real-time tracking of signature events (viewed, signed, completed, declined) with full audit logging for 506(c) compliance
 
 ## System Architecture
 

@@ -670,3 +670,281 @@ DELETE FROM "SignatureField" WHERE "documentId" LIKE 'test-%';
 DELETE FROM "SignatureRecipient" WHERE "documentId" LIKE 'test-%';
 DELETE FROM "SignatureDocument" WHERE id LIKE 'test-%';
 ```
+
+---
+
+## GP/LP Fund Management Suite Roadmap
+
+### Vision
+Transform the BF Fund Investor Dataroom into a comprehensive 506(c) fund LP portal for GPs managing private investments. Focus on tech-driven capital raises, transactions, and reporting with **UX as the #1 priority**.
+
+### Core Principles
+
+| Principle | Description |
+|-----------|-------------|
+| **UX-First** | Mobile-responsive (Tailwind/shadcn/ui), minimal clicks, clear CTAs, guided wizards |
+| **Simple Steps** | 3-5 step linear flows per action (dataroom → account → NDA → dashboard) |
+| **Build on Existing** | Extend Next.js, Prisma, self-hosted e-sign, Resend, webhooks, Stripe |
+| **506(c) Compliance** | Accreditation self-ack, audit logs (IP/timestamps), KYC/AML hooks |
+| **Internal Stack** | No external APIs like OpenSign—keep everything self-hosted |
+
+### Unique Fundroom Concept
+A personalized, secure dashboard for each investor (LP) post-account creation:
+- **Fund Data**: Full raise status, capital call notices
+- **Personal Docs**: Signed documents, subscription agreements, K-1s
+- **Communication**: Notes/feedback to GP, messaging
+- **Payments**: Automated capital management via Stripe
+- **Reporting**: Custom dashboards for metrics and distributions
+
+### Tech Stack (Reusing Existing)
+
+| Component | Technology |
+|-----------|------------|
+| Framework | Next.js 14 (routes/UI) |
+| Language | TypeScript |
+| Database | PostgreSQL + Prisma (extend for LP data) |
+| Auth | NextAuth (enhanced for LP logins) |
+| E-Signature | Self-hosted BF Fund Sign |
+| Email | Resend API |
+| Payments | Stripe integration |
+| Analytics | Tinybird (configure TINYBIRD_TOKEN later) |
+| Storage | Replit Object Storage / S3 / Vercel Blob |
+
+### New Prisma Models Needed
+
+| Model | Purpose |
+|-------|---------|
+| `Investor` | LP profiles with accreditation status, contact info |
+| `Fund` | Fund entities with target raise, terms, status |
+| `Investment` | LP investments linking Investor → Fund |
+| `CapitalCommitment` | Commitment amounts and schedules |
+| `CapitalCall` | Capital call notices and payments |
+| `Distribution` | Distribution events and payouts |
+| `K1Document` | Tax documents per LP per year |
+| `AccreditationVerification` | Accreditation proof and status |
+| `InvestorNote` | LP notes/feedback to GP |
+| `FundReport` | Fund performance reports |
+
+### Implementation Phases
+
+#### Phase 1: MVP Core (1-2 weeks)
+**Priority: Get LP onboarding + personalized dashboard working**
+
+1. **Investor Registration Flow**
+   - Email-based signup with magic link
+   - Investor profile creation (name, contact, entity type)
+   - Link existing Viewer → Investor model
+
+2. **NDA Gate**
+   - Auto-present NDA on first login
+   - Integrate with BF Fund Sign
+   - Gate dashboard access until NDA signed
+
+3. **Personalized LP Dashboard**
+   - Investor-specific document view
+   - Signed documents history
+   - Fund summary cards
+
+4. **Accreditation Self-Certification**
+   - Simple checkbox acknowledgment
+   - Record IP, timestamp, user agent
+   - Store in AccreditationVerification model
+
+#### Phase 2: Full UX + Automations (2-4 weeks)
+**Priority: Polish investor experience + automate workflows**
+
+1. **Fund Subscription Flow**
+   - Subscription agreement generation
+   - Commitment amount entry
+   - Bank/wire information capture
+   - E-sign integration
+
+2. **Capital Call System**
+   - GP creates capital call notice
+   - Automatic LP notifications
+   - Payment tracking (Stripe or manual wire)
+   - Capital call status dashboard
+
+3. **Distribution Management**
+   - GP creates distribution event
+   - LP payout calculations
+   - Distribution notice emails
+   - Distribution history
+
+4. **Document Management**
+   - Organized folders per investor
+   - Automatic K-1 assignment
+   - Quarterly/annual report distribution
+   - Document acknowledgment tracking
+
+5. **Investor Portal Enhancements**
+   - Fund performance metrics
+   - Investment history
+   - Capital account balance
+   - Communication thread with GP
+
+#### Phase 3: Scaling + Compliance (1-2 months)
+**Priority: Enterprise features + regulatory readiness**
+
+1. **KYC/AML Integration**
+   - Persona API integration (post-NDA)
+   - Identity verification workflow
+   - Accredited investor verification
+
+2. **Multi-Fund Support**
+   - Multiple funds per GP team
+   - LP investments across funds
+   - Consolidated investor view
+
+3. **Advanced Reporting**
+   - IRR/MOIC calculations
+   - Custom report generation
+   - Tinybird analytics integration
+   - Investor statement generation
+
+4. **Audit + Compliance**
+   - Full audit trail export
+   - SEC-ready documentation
+   - Blue Sky filing support
+   - Compliance dashboard for GP
+
+5. **External Integrations**
+   - CRM sync (Hubspot, Salesforce)
+   - Accounting integration
+   - Cap table management
+   - Banking API for payments
+
+### Database Extensions
+
+#### Extend Existing Models
+```prisma
+// Extend User model for investor attributes
+model User {
+  // ... existing fields
+  investorProfile   Investor?
+  isAccredited      Boolean   @default(false)
+  accreditedAt      DateTime?
+  accreditedMethod  String?   // SELF_CERTIFIED, THIRD_PARTY_VERIFIED
+}
+
+// Extend Team for fund management
+model Team {
+  // ... existing fields
+  funds             Fund[]
+  isGP              Boolean   @default(false)
+}
+```
+
+#### New LP/GP Models
+```prisma
+model Investor {
+  id                    String   @id @default(cuid())
+  userId                String   @unique
+  user                  User     @relation(fields: [userId], references: [id])
+  entityName            String?
+  entityType            String   // INDIVIDUAL, LLC, TRUST, IRA, etc.
+  taxId                 String?
+  address               String?
+  phone                 String?
+  accreditationStatus   String   @default("PENDING")
+  investments           Investment[]
+  notes                 InvestorNote[]
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+}
+
+model Fund {
+  id                String   @id @default(cuid())
+  teamId            String
+  team              Team     @relation(fields: [teamId], references: [id])
+  name              String
+  targetRaise       Decimal
+  minimumInvestment Decimal
+  status            String   @default("RAISING")
+  closingDate       DateTime?
+  investments       Investment[]
+  capitalCalls      CapitalCall[]
+  distributions     Distribution[]
+  reports           FundReport[]
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model Investment {
+  id                String   @id @default(cuid())
+  fundId            String
+  fund              Fund     @relation(fields: [fundId], references: [id])
+  investorId        String
+  investor          Investor @relation(fields: [investorId], references: [id])
+  commitmentAmount  Decimal
+  fundedAmount      Decimal  @default(0)
+  status            String   @default("COMMITTED")
+  subscriptionDate  DateTime?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+```
+
+### UI Flows
+
+#### LP Onboarding Flow (5 steps)
+```
+1. Email Signup → Magic Link
+2. Profile Creation → Name, Entity, Contact
+3. NDA Presentation → E-Sign with BF Fund Sign
+4. Accreditation Self-Cert → Checkbox + Acknowledgment
+5. Dashboard Access → Personalized Fundroom
+```
+
+#### Subscription Flow (4 steps)
+```
+1. View Fund Details → Summary, Terms, Docs
+2. Enter Commitment → Amount, Bank Info
+3. Sign Subscription → E-Sign Agreement
+4. Confirmation → Receipt, Next Steps
+```
+
+#### Capital Call Flow (GP side - 3 steps)
+```
+1. Create Call → Amount, Due Date, Purpose
+2. Select LPs → All or Specific Investors
+3. Send Notice → Email + Dashboard Notification
+```
+
+### API Routes to Add
+
+| Endpoint | Purpose |
+|----------|---------|
+| `/api/investor/profile` | LP profile CRUD |
+| `/api/investor/dashboard` | LP dashboard data |
+| `/api/investor/documents` | LP document list |
+| `/api/investor/accreditation` | Accreditation management |
+| `/api/fund/[fundId]` | Fund details |
+| `/api/fund/[fundId]/investments` | Fund investments |
+| `/api/fund/[fundId]/capital-calls` | Capital call management |
+| `/api/fund/[fundId]/distributions` | Distribution management |
+| `/api/gp/dashboard` | GP overview dashboard |
+| `/api/gp/investors` | LP management |
+| `/api/gp/reports` | Fund reporting |
+
+### Success Metrics
+
+| Metric | Target |
+|--------|--------|
+| LP onboarding completion | > 90% |
+| Time to first investment | < 15 minutes |
+| Document signing rate | > 95% |
+| Capital call response time | < 5 days avg |
+| LP portal engagement | Weekly active |
+| GP time saved | 10+ hours/week |
+
+### Testing Strategy
+- Use Replit for prototyping (Agent-assisted)
+- Deploy to Vercel for production
+- Add Jest for E2E tests
+- Test each flow with real investor data
+
+---
+
+*Roadmap created: January 22, 2026*
+*Last updated: January 22, 2026*

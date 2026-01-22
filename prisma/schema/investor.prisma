@@ -37,6 +37,8 @@ model Investor {
   notes                 InvestorNote[]
   accreditationAcks     AccreditationAck[]
   documents             InvestorDocument[]
+  bankLinks             BankLink[]
+  transactions          Transaction[]
   
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
@@ -248,4 +250,91 @@ model InvestorNote {
 
   @@index([investorId])
   @@index([teamId])
+}
+
+// Plaid Bank Account Link
+model BankLink {
+  id                String   @id @default(cuid())
+  investorId        String
+  investor          Investor @relation(fields: [investorId], references: [id], onDelete: Cascade)
+  
+  // Plaid tokens and identifiers
+  plaidItemId       String   @unique
+  plaidAccessToken  String   // Encrypted access token
+  plaidAccountId    String   // Selected account ID
+  
+  // Account details (cached from Plaid)
+  institutionId     String?
+  institutionName   String?
+  accountName       String?
+  accountMask       String?  // Last 4 digits
+  accountType       String?  // checking, savings
+  accountSubtype    String?
+  
+  // Status
+  status            String   @default("ACTIVE")  // ACTIVE, DISCONNECTED, ERROR
+  errorCode         String?
+  errorMessage      String?
+  lastSyncAt        DateTime?
+  
+  // Plaid Transfer authorization
+  transferEnabled   Boolean  @default(false)
+  processorToken    String?  // For ACH transfers
+  
+  transactions      Transaction[]
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([investorId])
+  @@index([status])
+}
+
+// Transaction records for capital calls and distributions
+model Transaction {
+  id                String   @id @default(cuid())
+  investorId        String
+  investor          Investor @relation(fields: [investorId], references: [id], onDelete: Cascade)
+  bankLinkId        String?
+  bankLink          BankLink? @relation(fields: [bankLinkId], references: [id], onDelete: SetNull)
+  
+  // Transaction details
+  type              String   // CAPITAL_CALL, DISTRIBUTION
+  amount            Decimal  @db.Decimal(18, 2)
+  currency          String   @default("USD")
+  description       String?
+  
+  // Related records
+  capitalCallId     String?
+  distributionId    String?
+  fundId            String?
+  
+  // Plaid Transfer details
+  plaidTransferId   String?  @unique
+  transferType      String?  // ach_debit, ach_credit
+  
+  // Status tracking
+  status            String   @default("PENDING")  // PENDING, PROCESSING, COMPLETED, FAILED, CANCELLED
+  statusMessage     String?
+  
+  // Timestamps
+  initiatedAt       DateTime @default(now())
+  processedAt       DateTime?
+  completedAt       DateTime?
+  failedAt          DateTime?
+  
+  // Audit trail (506(c) compliance)
+  ipAddress         String?
+  userAgent         String?
+  initiatedBy       String?  // userId of GP who initiated
+  auditTrail        Json?
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([investorId])
+  @@index([bankLinkId])
+  @@index([status])
+  @@index([type])
+  @@index([plaidTransferId])
 }

@@ -41,6 +41,10 @@ export default async function handler(
               orderBy: { createdAt: "desc" },
               take: 10,
             },
+            accreditationAcks: {
+              orderBy: { createdAt: "desc" },
+              take: 1,
+            },
           },
         },
       },
@@ -76,20 +80,41 @@ export default async function handler(
     `;
     const kycInfo = personaData[0] || { personaStatus: "NOT_STARTED", personaVerifiedAt: null };
 
+    // Check accreditation acknowledgment completion
+    const latestAck = user.investorProfile.accreditationAcks[0];
+    const accreditationComplete = latestAck?.acknowledged === true && latestAck?.completedAt !== null;
+
+    // Calculate gate completion progress
+    const gateProgress = {
+      ndaCompleted: user.investorProfile.ndaSigned,
+      accreditationCompleted: accreditationComplete,
+      completionPercentage: 
+        (user.investorProfile.ndaSigned ? 50 : 0) + 
+        (accreditationComplete ? 50 : 0),
+    };
+
     return res.status(200).json({
       investor: {
         id: user.investorProfile.id,
         entityName: user.investorProfile.entityName,
         ndaSigned: user.investorProfile.ndaSigned,
+        ndaSignedAt: user.investorProfile.ndaSignedAt?.toISOString() || null,
         accreditationStatus: user.investorProfile.accreditationStatus,
+        accreditationType: user.investorProfile.accreditationType,
         fundData: user.investorProfile.fundData,
         signedDocs: user.investorProfile.signedDocs || [],
         documents: user.investorProfile.documents || [],
         kycStatus: kycInfo.personaStatus,
         kycVerifiedAt: kycInfo.personaVerifiedAt?.toISOString() || null,
+        accreditationAck: latestAck ? {
+          completedAt: latestAck.completedAt?.toISOString() || null,
+          accreditationType: latestAck.accreditationType,
+          method: latestAck.method,
+        } : null,
       },
       capitalCalls,
       ndaGateEnabled,
+      gateProgress,
     });
   } catch (error: any) {
     console.error("LP me error:", error);

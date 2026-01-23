@@ -107,6 +107,11 @@ export default function LPDashboard() {
       accountType: string | null;
     } | null;
   } | null>(null);
+  const [gateProgress, setGateProgress] = useState({
+    ndaCompleted: false,
+    accreditationCompleted: false,
+    completionPercentage: 0,
+  });
 
   useEffect(() => {
     if (sessionStatus === "loading") return;
@@ -137,6 +142,11 @@ export default function LPDashboard() {
       setInvestor(data.investor);
       setCapitalCalls(data.capitalCalls || []);
 
+      // Set gate progress from API
+      if (data.gateProgress) {
+        setGateProgress(data.gateProgress);
+      }
+
       if (signaturesResponse.ok) {
         const sigData = await signaturesResponse.json();
         setPendingSignatures(sigData.pendingSignatures || []);
@@ -153,7 +163,11 @@ export default function LPDashboard() {
       }
 
       const ndaGateEnabled = data.ndaGateEnabled !== false;
-      if (ndaGateEnabled && (!data.investor.ndaSigned || data.investor.accreditationStatus === "PENDING")) {
+      const gateIncomplete = data.gateProgress 
+        ? data.gateProgress.completionPercentage < 100
+        : (!data.investor.ndaSigned || data.investor.accreditationStatus === "PENDING");
+      
+      if (ndaGateEnabled && gateIncomplete) {
         setShowNdaModal(true);
       }
     } catch (error) {
@@ -595,35 +609,60 @@ export default function LPDashboard() {
         </main>
 
         <Dialog open={showNdaModal} onOpenChange={() => {}}>
-          <DialogContent className="bg-gray-800 border-gray-700 text-white max-w-lg">
+          <DialogContent className="bg-gray-800 border-gray-700 text-white max-w-lg sm:max-w-xl">
             <DialogHeader>
-              <DialogTitle className="text-xl">
+              <DialogTitle className="text-lg sm:text-xl">
                 {wizardStep === 1 ? "Non-Disclosure Agreement" : "Accredited Investor Verification"}
               </DialogTitle>
-              <DialogDescription className="text-gray-400">
+              <DialogDescription className="text-gray-400 text-sm">
                 {wizardStep === 1 
                   ? "Step 1 of 2: Review and accept the confidentiality agreement"
                   : "Step 2 of 2: Confirm your accredited investor status (SEC 506(c))"}
               </DialogDescription>
             </DialogHeader>
 
-            <div className="space-y-6 py-4">
+            <div className="space-y-4 sm:space-y-6 py-2 sm:py-4">
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-400">Verification Progress</span>
+                  <span className="text-emerald-400 font-medium">
+                    {wizardStep === 1 ? (ndaAccepted ? "50%" : "0%") : (canSubmit ? "100%" : "75%")}
+                  </span>
+                </div>
+                <div className="w-full bg-gray-700 rounded-full h-2.5">
+                  <div
+                    className="bg-gradient-to-r from-emerald-600 to-emerald-400 h-2.5 rounded-full transition-all duration-500"
+                    style={{ 
+                      width: wizardStep === 1 
+                        ? (ndaAccepted ? "50%" : "0%") 
+                        : (canSubmit ? "100%" : "75%") 
+                    }}
+                  />
+                </div>
+              </div>
+
               <div className="flex items-center justify-center">
-                <div className="flex items-center space-x-4">
-                  <div
-                    className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium ${
-                      wizardStep >= 1 ? "bg-emerald-600" : "bg-gray-700"
-                    }`}
-                  >
-                    {wizardStep > 1 ? <CheckCircle2 className="h-5 w-5" /> : "1"}
+                <div className="flex items-center space-x-2 sm:space-x-4">
+                  <div className="flex flex-col items-center">
+                    <div
+                      className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-xs sm:text-sm font-medium transition-colors ${
+                        wizardStep > 1 || (wizardStep === 1 && ndaAccepted) ? "bg-emerald-600" : wizardStep === 1 ? "bg-emerald-600/50 ring-2 ring-emerald-400" : "bg-gray-700"
+                      }`}
+                    >
+                      {wizardStep > 1 ? <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5" /> : "1"}
+                    </div>
+                    <span className="text-[10px] sm:text-xs text-gray-400 mt-1">NDA</span>
                   </div>
-                  <div className={`w-20 h-1 rounded ${wizardStep > 1 ? "bg-emerald-600" : "bg-gray-700"}`} />
-                  <div
-                    className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium ${
-                      wizardStep === 2 ? "bg-emerald-600" : "bg-gray-700"
-                    }`}
-                  >
-                    2
+                  <div className={`w-12 sm:w-20 h-1 rounded transition-colors ${wizardStep > 1 ? "bg-emerald-600" : "bg-gray-700"}`} />
+                  <div className="flex flex-col items-center">
+                    <div
+                      className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-xs sm:text-sm font-medium transition-colors ${
+                        canSubmit && wizardStep === 2 ? "bg-emerald-600" : wizardStep === 2 ? "bg-emerald-600/50 ring-2 ring-emerald-400" : "bg-gray-700"
+                      }`}
+                    >
+                      2
+                    </div>
+                    <span className="text-[10px] sm:text-xs text-gray-400 mt-1">Accreditation</span>
                   </div>
                 </div>
               </div>

@@ -2,6 +2,8 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { getServerSession } from "next-auth";
 import prisma from "@/lib/prisma";
 import { authOptions } from "../auth/[...nextauth]";
+import { sendEmail } from "@/lib/resend";
+import AccreditationConfirmedEmail from "@/components/emails/accreditation-confirmed";
 
 interface CompleteGateBody {
   ndaAccepted: boolean;
@@ -127,6 +129,24 @@ export default async function handler(
         },
       }),
     ]);
+
+    // Send confirmation email
+    const finalAccreditationType = accreditationType || (confirmIncome && confirmNetWorth ? "INCOME_AND_NET_WORTH" : confirmIncome ? "INCOME" : "NET_WORTH");
+    
+    try {
+      await sendEmail({
+        to: session.user.email,
+        subject: "Accreditation Confirmed - BF Fund",
+        react: AccreditationConfirmedEmail({
+          investorName: session.user.name || "Investor",
+          email: session.user.email,
+          accreditationType: finalAccreditationType,
+          completedAt: timestamp.toISOString(),
+        }),
+      });
+    } catch (emailError) {
+      console.error("Failed to send confirmation email:", emailError);
+    }
 
     return res.status(200).json({ 
       success: true,

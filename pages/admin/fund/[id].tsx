@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/router";
 import Head from "next/head";
 import Link from "next/link";
@@ -42,7 +42,10 @@ import {
   AlertTriangle,
   Target,
   Calendar,
+  RefreshCw,
 } from "lucide-react";
+
+const POLL_INTERVAL = 30000; // 30 seconds for real-time updates
 
 interface FundDetails {
   id: string;
@@ -124,15 +127,11 @@ export default function FundDetailPage() {
   const [fund, setFund] = useState<FundDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  useEffect(() => {
-    if (id) {
-      fetchFundDetails();
-    }
-  }, [id]);
-
-  async function fetchFundDetails() {
+  const fetchFundDetails = useCallback(async (silent = false) => {
     try {
+      if (!silent) setIsRefreshing(true);
       const res = await fetch(`/api/admin/fund/${id}`);
       if (!res.ok) {
         if (res.status === 403) {
@@ -147,11 +146,29 @@ export default function FundDetailPage() {
       const json = await res.json();
       setFund(json);
     } catch (err: any) {
-      setError(err.message);
+      if (!silent) setError(err.message);
     } finally {
       setLoading(false);
+      if (!silent) setIsRefreshing(false);
     }
-  }
+  }, [id, router]);
+
+  useEffect(() => {
+    if (id) {
+      fetchFundDetails();
+    }
+  }, [id, fetchFundDetails]);
+
+  // Real-time polling for dashboard updates
+  useEffect(() => {
+    if (!id || !fund) return;
+
+    const pollInterval = setInterval(() => {
+      fetchFundDetails(true);
+    }, POLL_INTERVAL);
+
+    return () => clearInterval(pollInterval);
+  }, [id, fund, fetchFundDetails]);
 
   function formatCurrency(value: number | string) {
     const num = typeof value === "string" ? parseFloat(value) : value;
@@ -261,12 +278,22 @@ export default function FundDetailPage() {
                 </span>
               </div>
             </div>
-            <Link href={`/admin/settings/fund?id=${fund.id}`}>
-              <Button variant="outline">
-                <Settings className="h-4 w-4 mr-2" />
-                Settings
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => fetchFundDetails()}
+                disabled={isRefreshing}
+              >
+                <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? "animate-spin" : ""}`} />
+                {isRefreshing ? "Refreshing..." : "Refresh"}
               </Button>
-            </Link>
+              <Link href={`/admin/settings/fund?id=${fund.id}`}>
+                <Button variant="outline">
+                  <Settings className="h-4 w-4 mr-2" />
+                  Settings
+                </Button>
+              </Link>
+            </div>
           </div>
 
           {(initialThresholdEnabled || fullAuthorizedAmount) && (

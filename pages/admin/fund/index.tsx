@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/router";
 import Head from "next/head";
 import Link from "next/link";
@@ -61,7 +61,10 @@ import {
   CheckCircle2,
   ArrowUpRight,
   ArrowDownRight,
+  RefreshCw,
 } from "lucide-react";
+
+const POLL_INTERVAL = 30000; // 30 seconds for real-time updates
 
 interface FundData {
   id: string;
@@ -123,6 +126,7 @@ export default function FundDashboard() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const [wizardOpen, setWizardOpen] = useState(false);
   const [wizardStep, setWizardStep] = useState(1);
@@ -133,12 +137,9 @@ export default function FundDashboard() {
   const [processing, setProcessing] = useState(false);
   const [actionResult, setActionResult] = useState<any>(null);
 
-  useEffect(() => {
-    fetchDashboard();
-  }, []);
-
-  async function fetchDashboard() {
+  const fetchDashboard = useCallback(async (silent = false) => {
     try {
+      if (!silent) setIsRefreshing(true);
       const res = await fetch("/api/admin/fund-dashboard");
       if (!res.ok) {
         if (res.status === 403) {
@@ -150,11 +151,27 @@ export default function FundDashboard() {
       const json = await res.json();
       setData(json);
     } catch (err: any) {
-      setError(err.message);
+      if (!silent) setError(err.message);
     } finally {
       setLoading(false);
+      if (!silent) setIsRefreshing(false);
     }
-  }
+  }, [router]);
+
+  useEffect(() => {
+    fetchDashboard();
+  }, [fetchDashboard]);
+
+  // Real-time polling for dashboard updates
+  useEffect(() => {
+    if (!data) return;
+
+    const pollInterval = setInterval(() => {
+      fetchDashboard(true);
+    }, POLL_INTERVAL);
+
+    return () => clearInterval(pollInterval);
+  }, [data, fetchDashboard]);
 
   async function handleBulkAction() {
     if (!selectedFund || !totalAmount) return;
@@ -246,6 +263,14 @@ export default function FundDashboard() {
             </div>
 
             <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => fetchDashboard()}
+                disabled={isRefreshing}
+              >
+                <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? "animate-spin" : ""}`} />
+                {isRefreshing ? "Refreshing..." : "Refresh"}
+              </Button>
               <Link href="/admin/funds/new">
                 <Button variant="outline">Create New Fund</Button>
               </Link>

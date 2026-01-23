@@ -150,11 +150,36 @@ model Fund {
   capitalCalls      CapitalCall[]
   distributions     Distribution[]
   reports           FundReport[]
+  aggregate         FundAggregate?
   
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
   @@index([teamId])
+}
+
+model FundAggregate {
+  id                String   @id @default(cuid())
+  fundId            String   @unique
+  fund              Fund     @relation(fields: [fundId], references: [id], onDelete: Cascade)
+  
+  // Financial Aggregates
+  totalInbound      Decimal  @default(0) @db.Decimal(15, 2)  // Capital calls received
+  totalOutbound     Decimal  @default(0) @db.Decimal(15, 2)  // Distributions paid
+  totalCommitted    Decimal  @default(0) @db.Decimal(15, 2)  // From subscriptions
+  currentBalance    Json?    // Breakdowns by type/period
+  
+  // Configurable Threshold (can override Fund-level settings)
+  thresholdEnabled  Boolean  @default(false)
+  thresholdAmount   Decimal? @db.Decimal(15, 2)
+  
+  // Audit Trail for Changes
+  audit             Json?    // Array of { ip, timestamp, userAgent, action, previousValue, newValue }
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([fundId])
 }
 
 model Investment {

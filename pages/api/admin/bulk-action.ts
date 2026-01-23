@@ -59,29 +59,38 @@ export default async function handler(
       return res.status(404).json({ message: "Fund not found" });
     }
 
-    // Enforce capital call threshold for capital calls only
+    // Enforce initial closing threshold for capital calls only
     if (actionType === "capital_call") {
       const aggregate = fund.aggregate;
-      const thresholdEnabled = aggregate?.thresholdEnabled || fund.capitalCallThresholdEnabled;
-      const thresholdAmount = aggregate?.thresholdAmount 
-        ? Number(aggregate.thresholdAmount) 
-        : fund.capitalCallThreshold 
-          ? Number(fund.capitalCallThreshold) 
-          : null;
+      // Priority: new initial threshold fields > legacy fields
+      const initialThresholdEnabled = fund.initialThresholdEnabled || 
+        aggregate?.initialThresholdEnabled || 
+        fund.capitalCallThresholdEnabled ||
+        aggregate?.thresholdEnabled || 
+        false;
+      const initialThresholdAmount = fund.initialThresholdAmount 
+        ? Number(fund.initialThresholdAmount)
+        : aggregate?.initialThresholdAmount
+          ? Number(aggregate.initialThresholdAmount)
+          : fund.capitalCallThreshold 
+            ? Number(fund.capitalCallThreshold) 
+            : aggregate?.thresholdAmount
+              ? Number(aggregate.thresholdAmount)
+              : null;
       const totalCommitted = aggregate?.totalCommitted 
         ? Number(aggregate.totalCommitted) 
         : Number(fund.currentRaise);
 
-      if (thresholdEnabled && thresholdAmount && totalCommitted < thresholdAmount) {
-        const remaining = thresholdAmount - totalCommitted;
+      if (initialThresholdEnabled && initialThresholdAmount && totalCommitted < initialThresholdAmount) {
+        const remaining = initialThresholdAmount - totalCommitted;
         return res.status(403).json({
-          message: "Capital call threshold not met",
-          error: "THRESHOLD_NOT_MET",
+          message: "Initial closing threshold not met",
+          error: "INITIAL_THRESHOLD_NOT_MET",
           details: {
-            thresholdAmount,
+            initialThresholdAmount,
             totalCommitted,
             remaining,
-            percentComplete: Math.round((totalCommitted / thresholdAmount) * 100),
+            percentComplete: Math.round((totalCommitted / initialThresholdAmount) * 100),
           },
         });
       }

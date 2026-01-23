@@ -57,6 +57,10 @@ interface FundDetails {
   callFrequency: string;
   capitalCallThresholdEnabled: boolean;
   capitalCallThreshold: number | null;
+  initialThresholdEnabled: boolean;
+  initialThresholdAmount: number | null;
+  fullAuthorizedAmount: number | null;
+  initialThresholdMet: boolean;
   stagedCommitmentsEnabled: boolean;
   closingDate: string | null;
   createdAt: string;
@@ -66,6 +70,12 @@ interface FundDetails {
     totalCommitted: number;
     thresholdEnabled: boolean;
     thresholdAmount: number | null;
+    initialThresholdEnabled: boolean;
+    initialThresholdAmount: number | null;
+    fullAuthorizedAmount: number | null;
+    initialThresholdMet: boolean;
+    initialThresholdMetAt: string | null;
+    fullAuthorizedProgress: number;
   } | null;
   investors: Array<{
     id: string;
@@ -175,6 +185,22 @@ export default function FundDetailPage() {
 
   if (!fund) return null;
 
+  // Initial closing threshold (gates capital calls)
+  const initialThresholdEnabled = fund.initialThresholdEnabled;
+  const initialThresholdAmount = fund.initialThresholdAmount;
+  const totalCommitted = fund.aggregate?.totalCommitted || 0;
+  const initialThresholdMet = fund.initialThresholdMet;
+  const initialThresholdProgress = initialThresholdAmount
+    ? Math.min(100, (totalCommitted / initialThresholdAmount) * 100)
+    : 0;
+
+  // Full authorized amount (for tracking only)
+  const fullAuthorizedAmount = fund.fullAuthorizedAmount;
+  const fullAuthorizedProgress = fullAuthorizedAmount
+    ? Math.min(100, (totalCommitted / fullAuthorizedAmount) * 100)
+    : fund.aggregate?.fullAuthorizedProgress || 0;
+
+  // Legacy threshold calculations
   const thresholdMet = fund.aggregate
     ? fund.aggregate.totalCommitted >= (fund.aggregate.thresholdAmount || 0)
     : false;
@@ -243,32 +269,90 @@ export default function FundDetailPage() {
             </Link>
           </div>
 
-          {fund.aggregate?.thresholdEnabled && (
-            <Card className={`mb-6 ${thresholdMet ? "border-green-500" : "border-amber-500"}`}>
-              <CardContent className="pt-4">
-                <div className="flex items-center gap-3">
-                  {thresholdMet ? (
-                    <CheckCircle2 className="h-6 w-6 text-green-500" />
-                  ) : (
-                    <AlertTriangle className="h-6 w-6 text-amber-500" />
-                  )}
-                  <div className="flex-1">
-                    <p className={`font-medium ${thresholdMet ? "text-green-700" : "text-amber-700"}`}>
-                      {thresholdMet
-                        ? "Capital Call Threshold Met - Calls Enabled"
-                        : "Capital Call Threshold Not Met - Calls Blocked"}
-                    </p>
-                    <div className="flex items-center gap-4 mt-2">
-                      <Progress value={thresholdProgress} className="flex-1 h-2" />
-                      <span className="text-sm text-muted-foreground whitespace-nowrap">
-                        {formatCurrency(fund.aggregate?.totalCommitted || 0)} /{" "}
-                        {formatCurrency(fund.aggregate?.thresholdAmount || 0)}
-                      </span>
+          {(initialThresholdEnabled || fullAuthorizedAmount) && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+              {initialThresholdEnabled && initialThresholdAmount && (
+                <Card className={`${initialThresholdMet ? "border-green-500 bg-green-50/50 dark:bg-green-950/20" : "border-amber-500 bg-amber-50/50 dark:bg-amber-950/20"}`}>
+                  <CardHeader className="pb-2">
+                    <div className="flex items-center gap-2">
+                      <Target className="h-5 w-5 text-blue-600" />
+                      <CardTitle className="text-base">Initial Closing Threshold</CardTitle>
                     </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                    <CardDescription className="text-xs">
+                      Gates capital calls until met
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center gap-3">
+                      {initialThresholdMet ? (
+                        <CheckCircle2 className="h-5 w-5 text-green-500 flex-shrink-0" />
+                      ) : (
+                        <AlertTriangle className="h-5 w-5 text-amber-500 flex-shrink-0" />
+                      )}
+                      <div className="flex-1">
+                        <p className={`text-sm font-medium ${initialThresholdMet ? "text-green-700 dark:text-green-400" : "text-amber-700 dark:text-amber-400"}`}>
+                          {initialThresholdMet
+                            ? "Threshold Met - Capital Calls Enabled"
+                            : "Threshold Not Met - Capital Calls Blocked"}
+                        </p>
+                        <div className="mt-2">
+                          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
+                            <div
+                              className={`h-2.5 rounded-full transition-all ${
+                                initialThresholdMet ? "bg-green-500" : "bg-blue-500"
+                              }`}
+                              style={{ width: `${Math.min(100, initialThresholdProgress)}%` }}
+                            />
+                          </div>
+                          <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                            <span>{formatCurrency(totalCommitted)}</span>
+                            <span>{initialThresholdProgress.toFixed(0)}%</span>
+                            <span>{formatCurrency(initialThresholdAmount)}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {fullAuthorizedAmount && (
+                <Card className="border-purple-200 bg-purple-50/50 dark:bg-purple-950/20">
+                  <CardHeader className="pb-2">
+                    <div className="flex items-center gap-2">
+                      <DollarSign className="h-5 w-5 text-purple-600" />
+                      <CardTitle className="text-base">Full Authorized Amount</CardTitle>
+                    </div>
+                    <CardDescription className="text-xs">
+                      Progress tracking only (no gating)
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center gap-3">
+                      <TrendingUp className="h-5 w-5 text-purple-500 flex-shrink-0" />
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-purple-700 dark:text-purple-400">
+                          {fullAuthorizedProgress.toFixed(0)}% of Full Authorization
+                        </p>
+                        <div className="mt-2">
+                          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
+                            <div
+                              className="h-2.5 rounded-full bg-purple-500 transition-all"
+                              style={{ width: `${Math.min(100, fullAuthorizedProgress)}%` }}
+                            />
+                          </div>
+                          <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                            <span>{formatCurrency(totalCommitted)}</span>
+                            <span>{fullAuthorizedProgress.toFixed(0)}%</span>
+                            <span>{formatCurrency(fullAuthorizedAmount)}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
           )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
@@ -509,17 +593,33 @@ export default function FundDetailPage() {
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Threshold</p>
+                  <p className="text-sm text-muted-foreground">Initial Threshold</p>
                   <p className="font-medium">
-                    {fund.capitalCallThresholdEnabled
-                      ? formatCurrency(fund.capitalCallThreshold || 0)
+                    {fund.initialThresholdEnabled
+                      ? formatCurrency(fund.initialThresholdAmount || fund.capitalCallThreshold || 0)
                       : "Disabled"}
                   </p>
                 </div>
                 <div>
+                  <p className="text-sm text-muted-foreground">Full Authorized</p>
+                  <p className="font-medium">
+                    {fund.fullAuthorizedAmount
+                      ? formatCurrency(fund.fullAuthorizedAmount)
+                      : "Not Set"}
+                  </p>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4 pt-4 border-t">
+                <div>
                   <p className="text-sm text-muted-foreground">Staged Commitments</p>
                   <p className="font-medium">
                     {fund.stagedCommitmentsEnabled ? "Enabled" : "Disabled"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Threshold Status</p>
+                  <p className={`font-medium ${fund.initialThresholdMet ? "text-green-600" : "text-amber-600"}`}>
+                    {fund.initialThresholdMet ? "Met" : "Not Met"}
                   </p>
                 </div>
               </div>

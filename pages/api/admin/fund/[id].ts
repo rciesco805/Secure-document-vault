@@ -83,6 +83,29 @@ export default async function handler(
       return res.status(404).json({ error: "Fund not found" });
     }
 
+    // Get threshold values (prioritize new fields, fallback to legacy)
+    const initialThresholdEnabled = fund.initialThresholdEnabled || 
+      fund.aggregate?.initialThresholdEnabled || 
+      fund.capitalCallThresholdEnabled ||
+      fund.aggregate?.thresholdEnabled || 
+      false;
+    const initialThresholdAmount = fund.initialThresholdAmount 
+      ? Number(fund.initialThresholdAmount)
+      : fund.aggregate?.initialThresholdAmount
+        ? Number(fund.aggregate.initialThresholdAmount)
+        : fund.capitalCallThreshold 
+          ? Number(fund.capitalCallThreshold)
+          : fund.aggregate?.thresholdAmount
+            ? Number(fund.aggregate.thresholdAmount)
+            : null;
+    const fullAuthorizedAmount = fund.fullAuthorizedAmount
+      ? Number(fund.fullAuthorizedAmount)
+      : fund.aggregate?.fullAuthorizedAmount
+        ? Number(fund.aggregate.fullAuthorizedAmount)
+        : null;
+    const totalCommitted = fund.aggregate ? Number(fund.aggregate.totalCommitted) : Number(fund.currentRaise);
+    const initialThresholdMet = !initialThresholdEnabled || !initialThresholdAmount || totalCommitted >= initialThresholdAmount;
+
     const response = {
       id: fund.id,
       name: fund.name,
@@ -98,6 +121,11 @@ export default async function handler(
       capitalCallThreshold: fund.capitalCallThreshold
         ? Number(fund.capitalCallThreshold)
         : null,
+      // New threshold fields
+      initialThresholdEnabled,
+      initialThresholdAmount,
+      fullAuthorizedAmount,
+      initialThresholdMet,
       stagedCommitmentsEnabled: fund.stagedCommitmentsEnabled,
       closingDate: fund.closingDate?.toISOString() || null,
       createdAt: fund.createdAt.toISOString(),
@@ -110,6 +138,19 @@ export default async function handler(
             thresholdAmount: fund.aggregate.thresholdAmount
               ? Number(fund.aggregate.thresholdAmount)
               : null,
+            // New threshold fields in aggregate
+            initialThresholdEnabled: fund.aggregate.initialThresholdEnabled,
+            initialThresholdAmount: fund.aggregate.initialThresholdAmount
+              ? Number(fund.aggregate.initialThresholdAmount)
+              : null,
+            fullAuthorizedAmount: fund.aggregate.fullAuthorizedAmount
+              ? Number(fund.aggregate.fullAuthorizedAmount)
+              : null,
+            initialThresholdMet: fund.aggregate.initialThresholdMet,
+            initialThresholdMetAt: fund.aggregate.initialThresholdMetAt?.toISOString() || null,
+            fullAuthorizedProgress: fund.aggregate.fullAuthorizedProgress
+              ? Number(fund.aggregate.fullAuthorizedProgress)
+              : 0,
           }
         : null,
       investors: fund.investments.map((inv) => ({

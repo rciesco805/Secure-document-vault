@@ -195,8 +195,8 @@ describe("Fund Capital Call Threshold", () => {
 
       expect(res._getStatusCode()).toBe(403);
       const data = JSON.parse(res._getData());
-      expect(data.error).toBe("THRESHOLD_NOT_MET");
-      expect(data.details.thresholdAmount).toBe(1800000);
+      expect(data.error).toBe("INITIAL_THRESHOLD_NOT_MET");
+      expect(data.details.initialThresholdAmount).toBe(1800000);
       expect(data.details.remaining).toBe(800000);
     });
 

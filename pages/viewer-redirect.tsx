@@ -50,6 +50,20 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
         },
       };
     }
+    
+    // Check if user is an LP investor
+    const investor = await prisma.investor.findUnique({
+      where: { userId: user.id },
+    });
+
+    if (investor) {
+      return {
+        redirect: {
+          destination: "/lp/dashboard",
+          permanent: false,
+        },
+      };
+    }
   }
 
   // For visitor mode or non-admin users, find their viewer access

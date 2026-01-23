@@ -14,6 +14,12 @@ import { LinkWithDataroom } from "@/lib/types";
 
 import { Button } from "@/components/ui/button";
 import LoadingSpinner from "@/components/ui/loading-spinner";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import AccessForm, {
   DEFAULT_ACCESS_FORM_DATA,
   DEFAULT_ACCESS_FORM_TYPE,
@@ -385,14 +391,23 @@ export default function DataroomView({
           backgroundColor: brand?.accentColor || "rgb(3, 7, 18)",
         }}
       >
-        <Button
-          variant="default"
-          size="lg"
-          className="fixed top-4 right-4 z-50 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-lg"
-          asChild
-        >
-          <Link href="/lp/onboard">Sign Me Up</Link>
-        </Button>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="default"
+                size="lg"
+                className="fixed top-3 right-3 z-50 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-lg transition-all duration-200 hover:scale-105 sm:top-4 sm:right-4 text-sm sm:text-base px-3 sm:px-4 py-2 sm:py-2.5"
+                asChild
+              >
+                <Link href="/lp/onboard">Sign Me Up</Link>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" className="max-w-xs text-center">
+              <p>Become an investor - complete your onboarding to access the fund</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
         <DataroomViewer
           accessControls={link.accessControls || group?.accessControls || []}
           brand={brand!}

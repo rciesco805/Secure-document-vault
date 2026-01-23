@@ -1,6 +1,7 @@
 import prisma from "@/lib/prisma";
 import { log } from "@/lib/utils";
 import { triggerPersonaVerification } from "@/lib/persona-hooks";
+import { sendWebhooks } from "@/lib/webhook/send-webhooks";
 
 export type SignatureEventType = 
   | "signature.recipient_signed"
@@ -54,6 +55,53 @@ export async function emitSignatureEvent({
       },
     });
 
+    // Also update auditTrail JSON on the document for compliance
+    await appendSignatureAuditEntry(data.documentId, {
+      event,
+      timestamp: data.timestamp,
+      recipientEmail: data.recipientEmail || null,
+      recipientName: data.recipientName || null,
+      status: data.status,
+      ipAddress: data.ipAddress || null,
+      userAgent: data.userAgent || null,
+    });
+
+    // Dispatch to registered team webhooks
+    try {
+      const teamWebhooks = await prisma.webhook.findMany({
+        where: {
+          teamId: data.teamId,
+        },
+        select: {
+          pId: true,
+          url: true,
+          secret: true,
+          triggers: true,
+        },
+      });
+
+      // Filter webhooks that have this event in their triggers array
+      const matchingWebhooks = teamWebhooks.filter((w) => {
+        const triggers = w.triggers as string[] | null;
+        return triggers?.includes(event);
+      });
+
+      if (matchingWebhooks.length > 0) {
+        await sendWebhooks({
+          webhooks: matchingWebhooks,
+          trigger: event,
+          data: {
+            id: data.documentId,
+            documentId: data.documentId,
+            name: data.documentTitle,
+            teamId: data.teamId,
+          } as any,
+        });
+      }
+    } catch (webhookError) {
+      console.error(`[SIGNATURE_EVENT] Webhook dispatch error:`, webhookError);
+    }
+
     console.log(`[SIGNATURE_EVENT] ${event}:`, {
       documentId: data.documentId,
       recipientEmail: data.recipientEmail,
@@ -65,6 +113,38 @@ export async function emitSignatureEvent({
       type: "error",
       mention: false,
     });
+  }
+}
+
+interface AuditEntry {
+  event: string;
+  timestamp: string;
+  recipientEmail?: string | null;
+  recipientName?: string | null;
+  status: string;
+  ipAddress?: string | null;
+  userAgent?: string | null;
+}
+
+async function appendSignatureAuditEntry(documentId: string, entry: AuditEntry) {
+  try {
+    const doc = await prisma.signatureDocument.findUnique({
+      where: { id: documentId },
+      select: { auditTrail: true },
+    });
+
+    const currentAudit = (doc?.auditTrail as { entries?: AuditEntry[] }) || { entries: [] };
+    const entries = currentAudit.entries || [];
+    entries.push(entry);
+
+    await prisma.signatureDocument.update({
+      where: { id: documentId },
+      data: {
+        auditTrail: JSON.parse(JSON.stringify({ entries })),
+      },
+    });
+  } catch (error) {
+    console.error("[AUDIT_TRAIL] Failed to append signature audit entry:", error);
   }
 }
 
@@ -142,11 +222,12 @@ export async function onDocumentCompleted({
   // Check document metadata or title for subscription document detection
   const doc = await prisma.signatureDocument.findUnique({
     where: { id: documentId },
-    select: { metadata: true },
+    select: { auditTrail: true },
   });
   
-  // @ts-ignore - metadata may have triggerKyc field
-  const explicitKycTrigger = doc?.metadata?.triggerKyc === true;
+  // @ts-ignore - auditTrail may have triggerKyc field
+  const auditTrailData = doc?.auditTrail as Record<string, unknown> | null;
+  const explicitKycTrigger = auditTrailData?.triggerKyc === true;
   const titleBasedDetection = documentTitle.toLowerCase().includes("subscription") ||
     documentTitle.toLowerCase().includes("sub agreement") ||
     documentTitle.toLowerCase().includes("investor agreement");

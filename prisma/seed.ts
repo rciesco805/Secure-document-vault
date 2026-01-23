@@ -14,6 +14,7 @@ interface ImportData {
   };
   data: {
     funds?: any[];
+    fundAggregates?: any[];
     investors?: any[];
     investments?: any[];
     capitalCalls?: any[];
@@ -25,6 +26,7 @@ interface ImportData {
     accreditationAcks?: any[];
     bankLinks?: any[];
     transactions?: any[];
+    subscriptions?: any[];
   };
 }
 
@@ -121,6 +123,46 @@ async function main() {
       }
     }
     console.log(`  Created: ${results.funds.created}, Skipped: ${results.funds.skipped}, Errors: ${results.funds.errors}`);
+  }
+
+  if (importData.data.fundAggregates?.length) {
+    console.log("\n📊 Importing Fund Aggregates...");
+    results.fundAggregates = { created: 0, skipped: 0, errors: 0 };
+
+    for (const agg of importData.data.fundAggregates) {
+      try {
+        const fundId = idMappings.funds[agg.fundId] || agg.fundId;
+        
+        const existing = await prisma.fundAggregate.findFirst({
+          where: { fundId },
+        });
+
+        if (existing) {
+          results.fundAggregates.skipped++;
+          continue;
+        }
+
+        if (!dryRun) {
+          await prisma.fundAggregate.create({
+            data: {
+              fundId,
+              totalInbound: agg.totalInbound || 0,
+              totalOutbound: agg.totalOutbound || 0,
+              totalCommitted: agg.totalCommitted || 0,
+              currentBalance: agg.currentBalance || null,
+              thresholdEnabled: agg.thresholdEnabled ?? false,
+              thresholdAmount: agg.thresholdAmount || null,
+              audit: agg.audit || null,
+            },
+          });
+        }
+        results.fundAggregates.created++;
+      } catch (err: any) {
+        console.error(`  Error importing fund aggregate: ${err.message}`);
+        results.fundAggregates.errors++;
+      }
+    }
+    console.log(`  Created: ${results.fundAggregates.created}, Skipped: ${results.fundAggregates.skipped}, Errors: ${results.fundAggregates.errors}`);
   }
 
   if (importData.data.investors?.length) {

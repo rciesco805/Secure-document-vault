@@ -42,6 +42,12 @@ The platform is built on Next.js 14, utilizing a hybrid Pages and App Router app
     - Toggle NDA gate on/off per fund
     - Role-based access control (ADMIN/OWNER only)
 *   **Authentication**: Primarily via email magic links, with Google OAuth for admin users.
+*   **User Role-Based Access Control (LP/GP)**:
+    - `UserRole` enum on User model: `LP` (default for investors) and `GP` (fund managers)
+    - LP users: Filtered to own data only (transactions, documents scoped to investorId)
+    - GP users: Full access to fund aggregates within their teams (team-scoped authorization)
+    - Role-checking utility at `lib/auth/with-role.ts` for API route protection
+    - Fund aggregates endpoint at `/api/funds/[fundId]/aggregates` (GP-only)
 *   **Admin/Viewer Separation**: Distinct interfaces and server-side protection based on user roles (SUPER\_ADMIN, ADMIN, MANAGER, MEMBER).
 *   **Hybrid Routing Architecture**: Pages Router for the main application, API routes, and viewer pages; App Router for authentication, Enterprise Edition (EE) APIs, and admin pages.
 *   **Database Schema**: A comprehensive Prisma schema incorporating models for Users, Teams, Documents, Datarooms, Links, Viewers, E-signatures (SignatureDocument, SignatureRecipient, SignatureField, SignatureTemplate), LP Portal (Investor, InvestorDocument, AccreditationAck, Fund, Investment, CapitalCall, Distribution, BankLink, Transaction), Analytics, and Q&A. This is designed for extensibility to support future GP/LP fund management features.
@@ -93,7 +99,7 @@ The platform is built on Next.js 14, utilizing a hybrid Pages and App Router app
 - `POST /api/lp/bank/link-token` - Create Plaid Link token for bank connection
 - `POST /api/lp/bank/connect` - Exchange public token and store bank link
 - `GET /api/lp/bank/status` - Get investor's bank connection status
-- `GET /api/lp/transactions` - Get investor's transaction history
+- `GET /api/lp/transactions` - Get investor's transaction history (LP: own data, GP: team-scoped)
 
 ### Webhooks
 - `POST /api/webhooks/persona` - Persona KYC webhook (requires signature verification)
@@ -102,6 +108,7 @@ The platform is built on Next.js 14, utilizing a hybrid Pages and App Router app
 - `GET /api/teams/[teamId]/funds` - List funds for team (admin only)
 - `GET /api/funds/[fundId]/settings` - Get fund settings
 - `PATCH /api/funds/[fundId]/settings` - Update fund settings (NDA gate toggle)
+- `GET /api/funds/[fundId]/aggregates` - Fund aggregates with investor data (GP-only, team-scoped)
 
 ### E-Signature
 - `GET /api/sign/[token]` - Get signature document for signing

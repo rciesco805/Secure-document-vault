@@ -142,6 +142,19 @@ model View {
 
   isArchived Boolean @default(false) // Indicates if the view is archived and not counted in the analytics
 
+  // Audit Trail Fields (506(c) Compliance)
+  ipAddress           String?  // Viewer's IP address
+  userAgent           String?  // Browser user agent
+  geoCountry          String?  // Country from IP geolocation
+  geoCity             String?  // City from IP geolocation
+  geoRegion           String?  // Region/state from IP geolocation
+  deviceType          String?  // Desktop, Mobile, Tablet
+  browserName         String?  // Chrome, Firefox, Safari, etc.
+  osName              String?  // Windows, macOS, Linux, iOS, Android
+  sessionId           String?  // Unique session identifier
+  referrer            String?  // HTTP referrer URL
+  auditMetadata       Json?    // Additional audit data (timestamps, actions, etc.)
+
   // conversation
   conversationViews    ConversationView[]
   messages             Message[]

@@ -12,6 +12,9 @@ A comprehensive 506(c) fund GP/LP management suite designed to streamline invest
 
 ## Recent Changes (January 2026)
 
+- **View Audit Extension**: Extended View model with comprehensive audit fields (ipAddress, userAgent, geo location, device/browser/OS info, sessionId, referrer, auditMetadata) for 506(c) compliance tracking
+- **Form D Reminder**: Added Form D filing reminder display in accreditation wizard showing filing date and annual amendment due date
+- **View Audit Helper**: Created lib/audit/view-audit.ts utility for extracting audit data from requests
 - **Entity Model Added**: Standalone Entity model with FUND/STARTUP mode toggle, JSON configs, and EntityInvestor junction table for investor linkage
 - **Admin Entity Management**: New /admin/entities page with mode toggle switch, create/delete functionality, and investor count display
 - **OpenSign Removed**: E-signature is now fully self-hosted with custom React drag-drop field placement (no external API dependencies)

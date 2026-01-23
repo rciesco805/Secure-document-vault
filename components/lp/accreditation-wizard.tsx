@@ -24,6 +24,8 @@ import {
   ArrowRight,
   ArrowLeft,
   Loader2,
+  Calendar,
+  FileText,
 } from "lucide-react";
 
 export type AccreditationType =
@@ -41,6 +43,12 @@ interface AccreditationDetails {
   description?: string;
 }
 
+interface FormDInfo {
+  filingDate?: string;
+  amendmentDue?: string;
+  reminderSent?: boolean;
+}
+
 interface AccreditationWizardProps {
   onComplete: (data: {
     accreditationType: AccreditationType;
@@ -52,6 +60,7 @@ interface AccreditationWizardProps {
   }) => Promise<void>;
   onCancel?: () => void;
   isLoading?: boolean;
+  formDInfo?: FormDInfo;
 }
 
 const ACCREDITATION_TYPES = [
@@ -143,6 +152,7 @@ export function AccreditationWizard({
   onComplete,
   onCancel,
   isLoading = false,
+  formDInfo,
 }: AccreditationWizardProps) {
   const [step, setStep] = useState(1);
   const [accreditationType, setAccreditationType] =
@@ -339,6 +349,28 @@ export function AccreditationWizard({
                 </p>
               </div>
             </div>
+
+            {formDInfo?.filingDate && (
+              <div className="flex items-start gap-2 sm:gap-3 p-3 sm:p-4 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 mb-4">
+                <FileText className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-xs sm:text-sm font-medium text-blue-800 dark:text-blue-200">
+                    SEC Form D Filing
+                  </p>
+                  <p className="text-xs sm:text-sm text-blue-700 dark:text-blue-300 mt-1">
+                    Form D filed: {new Date(formDInfo.filingDate).toLocaleDateString()}
+                  </p>
+                  {formDInfo.amendmentDue && (
+                    <div className="flex items-center gap-1 mt-2">
+                      <Calendar className="h-3 w-3 text-blue-600" />
+                      <p className="text-xs text-blue-600 dark:text-blue-400">
+                        Annual amendment due: {new Date(formDInfo.amendmentDue).toLocaleDateString()}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
 
             <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">
               Please acknowledge the following:

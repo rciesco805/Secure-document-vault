@@ -23,7 +23,8 @@
     "test:coverage": "jest --coverage",
     "test:sign": "jest __tests__/api/sign",
     "test:auth": "jest __tests__/api/auth",
-    "test:datarooms": "jest __tests__/api/datarooms"
+    "test:datarooms": "jest __tests__/api/datarooms",
+    "test:e2e": "jest __tests__/e2e"
   },
   "dependencies": {
     "@ai-sdk/openai": "^2.0.80",

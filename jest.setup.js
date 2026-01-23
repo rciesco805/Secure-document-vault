@@ -19,10 +19,12 @@ jest.mock('@/lib/prisma', () => ({
       findFirst: jest.fn(),
       update: jest.fn(),
       findMany: jest.fn(),
+      create: jest.fn(),
     },
     signatureField: {
       findMany: jest.fn(),
       updateMany: jest.fn(),
+      create: jest.fn(),
     },
     signatureAuditLog: {
       create: jest.fn(),
@@ -40,6 +42,7 @@ jest.mock('@/lib/prisma', () => ({
       findUnique: jest.fn(),
       findFirst: jest.fn(),
       update: jest.fn(),
+      create: jest.fn(),
     },
     dataroom: {
       findUnique: jest.fn(),
@@ -105,5 +108,21 @@ jest.mock('@/pages/api/teams/[teamId]/signature-documents/[documentId]/send', ()
   sendToNextSigners: jest.fn().mockResolvedValue(undefined),
 }));
 
+jest.mock('@/lib/tinybird', () => ({
+  recordAnalytics: jest.fn().mockResolvedValue(undefined),
+  recordSignatureEvent: jest.fn().mockResolvedValue(undefined),
+}));
+
+jest.mock('resend', () => ({
+  Resend: jest.fn().mockImplementation(() => ({
+    emails: {
+      send: jest.fn().mockResolvedValue({ id: 'test-email-id' }),
+    },
+  })),
+}));
+
 process.env.NEXTAUTH_SECRET = 'test-secret';
 process.env.NEXTAUTH_URL = 'http://localhost:5000';
+process.env.RESEND_API_KEY = 'test-resend-key';
+process.env.PERSONA_API_KEY = 'test-persona-key';
+process.env.PERSONA_TEMPLATE_ID = 'test-template-id';

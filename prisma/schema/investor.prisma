@@ -141,7 +141,14 @@ model Fund {
   
   ndaGateEnabled    Boolean  @default(true)
   
-  // Configurable Capital Call Threshold
+  // Initial Closing Threshold (gates capital calls until met)
+  initialThresholdEnabled Boolean  @default(false)
+  initialThresholdAmount  Decimal? @db.Decimal(18, 2)  // e.g., $1.8M before first capital use
+  
+  // Full Authorized Amount (for progress tracking, not gating)
+  fullAuthorizedAmount    Decimal? @db.Decimal(18, 2)  // e.g., $9.55M raise target
+  
+  // Legacy: Configurable Capital Call Threshold (deprecated, use initialThreshold*)
   capitalCallThresholdEnabled Boolean  @default(false)
   capitalCallThreshold        Decimal? @db.Decimal(18, 2)
   
@@ -183,7 +190,17 @@ model FundAggregate {
   totalCommitted    Decimal  @default(0) @db.Decimal(15, 2)  // From subscriptions
   currentBalance    Json?    // Breakdowns by type/period
   
-  // Configurable Threshold (can override Fund-level settings)
+  // Initial Closing Threshold (gates capital calls)
+  initialThresholdEnabled Boolean  @default(false)
+  initialThresholdAmount  Decimal? @db.Decimal(15, 2)  // e.g., $1.8M
+  initialThresholdMet     Boolean  @default(false)     // True when totalCommitted >= initialThresholdAmount
+  initialThresholdMetAt   DateTime?                    // When threshold was first met
+  
+  // Full Authorized Amount Progress (tracking only, not gating)
+  fullAuthorizedAmount    Decimal? @db.Decimal(15, 2)  // e.g., $9.55M
+  fullAuthorizedProgress  Decimal  @default(0) @db.Decimal(5, 2)  // Percentage (0-100)
+  
+  // Legacy: Configurable Threshold (deprecated, use initialThreshold*)
   thresholdEnabled  Boolean  @default(false)
   thresholdAmount   Decimal? @db.Decimal(15, 2)
   

@@ -1,13 +1,20 @@
 import prisma from "@/lib/prisma";
-import { Decimal } from "@prisma/client/runtime/library";
 
 export type ThresholdCheckResult = {
   allowed: boolean;
+  initialThresholdEnabled: boolean;
+  initialThreshold: number | null;
+  fullAuthorizedAmount: number | null;
+  totalCommitted: number;
+  initialThresholdProgress: number;
+  fullAuthorizedProgress: number;
+  initialThresholdMet: boolean;
+  message?: string;
+  // Legacy fields for backward compatibility
   thresholdEnabled: boolean;
   threshold: number | null;
   currentRaise: number;
   percentComplete: number;
-  message?: string;
 };
 
 export async function checkCapitalCallThreshold(
@@ -15,39 +22,74 @@ export async function checkCapitalCallThreshold(
 ): Promise<ThresholdCheckResult> {
   const fund = await prisma.fund.findUnique({
     where: { id: fundId },
-    select: {
-      capitalCallThresholdEnabled: true,
-      capitalCallThreshold: true,
-      currentRaise: true,
-      targetRaise: true,
-      name: true,
+    include: {
+      aggregate: true,
     },
   });
 
   if (!fund) {
     return {
       allowed: false,
+      initialThresholdEnabled: false,
+      initialThreshold: null,
+      fullAuthorizedAmount: null,
+      totalCommitted: 0,
+      initialThresholdProgress: 0,
+      fullAuthorizedProgress: 0,
+      initialThresholdMet: false,
+      message: "Fund not found",
       thresholdEnabled: false,
       threshold: null,
       currentRaise: 0,
       percentComplete: 0,
-      message: "Fund not found",
     };
   }
 
+  const totalCommitted = fund.aggregate ? Number(fund.aggregate.totalCommitted) : Number(fund.currentRaise);
   const currentRaise = Number(fund.currentRaise);
-  const threshold = fund.capitalCallThreshold
-    ? Number(fund.capitalCallThreshold)
-    : null;
-  const targetRaise = Number(fund.targetRaise);
+  
+  // Check initial threshold (new fields first, then legacy)
+  const initialThresholdEnabled = fund.initialThresholdEnabled || fund.capitalCallThresholdEnabled;
+  const initialThreshold = fund.initialThresholdAmount 
+    ? Number(fund.initialThresholdAmount) 
+    : fund.capitalCallThreshold 
+      ? Number(fund.capitalCallThreshold) 
+      : null;
+  
+  // Full authorized amount (for progress tracking)
+  const fullAuthorizedAmount = fund.fullAuthorizedAmount 
+    ? Number(fund.fullAuthorizedAmount) 
+    : Number(fund.targetRaise);
 
+  // Calculate progress percentages
+  const initialThresholdProgress = initialThreshold && initialThreshold > 0 
+    ? Math.min(100, Math.round((totalCommitted / initialThreshold) * 100)) 
+    : 0;
+  
+  const fullAuthorizedProgress = fullAuthorizedAmount > 0 
+    ? Math.min(100, Math.round((totalCommitted / fullAuthorizedAmount) * 100)) 
+    : 0;
+
+  const initialThresholdMet = !initialThresholdEnabled || 
+    !initialThreshold || 
+    totalCommitted >= initialThreshold;
+
+  // Legacy percentComplete based on targetRaise
+  const targetRaise = Number(fund.targetRaise);
   const percentComplete = targetRaise > 0 
     ? Math.round((currentRaise / targetRaise) * 100) 
     : 0;
 
-  if (!fund.capitalCallThresholdEnabled || !threshold) {
+  if (!initialThresholdEnabled || !initialThreshold) {
     return {
       allowed: true,
+      initialThresholdEnabled: false,
+      initialThreshold: null,
+      fullAuthorizedAmount,
+      totalCommitted,
+      initialThresholdProgress: 0,
+      fullAuthorizedProgress,
+      initialThresholdMet: true,
       thresholdEnabled: false,
       threshold: null,
       currentRaise,
@@ -55,24 +97,38 @@ export async function checkCapitalCallThreshold(
     };
   }
 
-  if (currentRaise >= threshold) {
+  if (totalCommitted >= initialThreshold) {
     return {
       allowed: true,
+      initialThresholdEnabled: true,
+      initialThreshold,
+      fullAuthorizedAmount,
+      totalCommitted,
+      initialThresholdProgress,
+      fullAuthorizedProgress,
+      initialThresholdMet: true,
       thresholdEnabled: true,
-      threshold,
+      threshold: initialThreshold,
       currentRaise,
       percentComplete,
     };
   }
 
-  const remaining = threshold - currentRaise;
+  const remaining = initialThreshold - totalCommitted;
   return {
     allowed: false,
+    initialThresholdEnabled: true,
+    initialThreshold,
+    fullAuthorizedAmount,
+    totalCommitted,
+    initialThresholdProgress,
+    fullAuthorizedProgress,
+    initialThresholdMet: false,
+    message: `Initial closing threshold not met. Capital calls require at least $${initialThreshold.toLocaleString()} in committed capital. Current: $${totalCommitted.toLocaleString()} (${initialThresholdProgress}%). Need $${remaining.toLocaleString()} more.`,
     thresholdEnabled: true,
-    threshold,
+    threshold: initialThreshold,
     currentRaise,
     percentComplete,
-    message: `Capital calls require at least $${threshold.toLocaleString()} in committed capital. Current: $${currentRaise.toLocaleString()} (${percentComplete}%). Need $${remaining.toLocaleString()} more.`,
   };
 }
 
@@ -80,8 +136,51 @@ export async function enforceCapitalCallThreshold(fundId: string): Promise<void>
   const result = await checkCapitalCallThreshold(fundId);
 
   if (!result.allowed) {
-    throw new Error(result.message || "Capital call threshold not met");
+    throw new Error(result.message || "Initial closing threshold not met");
   }
+}
+
+export async function updateAggregateProgress(
+  fundId: string,
+  newCommittedAmount?: number
+): Promise<void> {
+  const fund = await prisma.fund.findUnique({
+    where: { id: fundId },
+    include: { aggregate: true },
+  });
+
+  if (!fund || !fund.aggregate) return;
+
+  const totalCommitted = newCommittedAmount ?? Number(fund.aggregate.totalCommitted);
+  
+  const initialThreshold = fund.initialThresholdAmount 
+    ? Number(fund.initialThresholdAmount) 
+    : fund.capitalCallThreshold 
+      ? Number(fund.capitalCallThreshold) 
+      : null;
+  
+  const fullAuthorizedAmount = fund.fullAuthorizedAmount 
+    ? Number(fund.fullAuthorizedAmount) 
+    : Number(fund.targetRaise);
+
+  const initialThresholdMet = !initialThreshold || totalCommitted >= initialThreshold;
+  const fullAuthorizedProgress = fullAuthorizedAmount > 0 
+    ? Math.min(100, (totalCommitted / fullAuthorizedAmount) * 100) 
+    : 0;
+
+  const updates: any = {
+    fullAuthorizedProgress,
+  };
+
+  if (initialThresholdMet && !fund.aggregate.initialThresholdMet) {
+    updates.initialThresholdMet = true;
+    updates.initialThresholdMetAt = new Date();
+  }
+
+  await prisma.fundAggregate.update({
+    where: { id: fund.aggregate.id },
+    data: updates,
+  });
 }
 
 export async function checkAndMarkThresholdReached(
@@ -89,57 +188,69 @@ export async function checkAndMarkThresholdReached(
 ): Promise<{ reached: boolean; shouldNotify: boolean; fund: any }> {
   const fund = await prisma.fund.findUnique({
     where: { id: fundId },
-    select: {
-      id: true,
-      name: true,
-      capitalCallThresholdEnabled: true,
-      capitalCallThreshold: true,
-      currentRaise: true,
-      customSettings: true,
-    },
+    include: { aggregate: true },
   });
 
-  if (!fund || !fund.capitalCallThresholdEnabled || !fund.capitalCallThreshold) {
+  if (!fund) {
     return { reached: false, shouldNotify: false, fund: null };
   }
 
-  const currentRaise = Number(fund.currentRaise);
-  const threshold = Number(fund.capitalCallThreshold);
-  const reached = currentRaise >= threshold;
+  const initialThresholdEnabled = fund.initialThresholdEnabled || fund.capitalCallThresholdEnabled;
+  const initialThreshold = fund.initialThresholdAmount 
+    ? Number(fund.initialThresholdAmount) 
+    : fund.capitalCallThreshold 
+      ? Number(fund.capitalCallThreshold) 
+      : null;
 
-  const customSettings = (fund.customSettings as Record<string, any>) || {};
-  const previouslyNotified = customSettings.thresholdNotifiedAt;
+  if (!initialThresholdEnabled || !initialThreshold) {
+    return { reached: false, shouldNotify: false, fund: null };
+  }
 
-  if (!reached || previouslyNotified) {
+  const totalCommitted = fund.aggregate ? Number(fund.aggregate.totalCommitted) : Number(fund.currentRaise);
+  const reached = totalCommitted >= initialThreshold;
+
+  // Check if already notified via aggregate or customSettings
+  const alreadyNotified = fund.aggregate?.initialThresholdMet || 
+    (fund.customSettings as any)?.thresholdNotifiedAt;
+
+  if (!reached || alreadyNotified) {
     return { reached, shouldNotify: false, fund };
   }
 
-  // Atomic update to prevent race condition
-  try {
-    const updated = await prisma.fund.updateMany({
-      where: {
-        id: fundId,
-        customSettings: {
-          path: ["thresholdNotifiedAt"],
-          equals: null,
+  // Mark as reached in aggregate
+  if (fund.aggregate) {
+    try {
+      const updated = await prisma.fundAggregate.updateMany({
+        where: {
+          id: fund.aggregate.id,
+          initialThresholdMet: false,
         },
-      },
-      data: {
-        customSettings: {
-          ...customSettings,
-          thresholdNotifiedAt: new Date().toISOString(),
+        data: {
+          initialThresholdMet: true,
+          initialThresholdMetAt: new Date(),
         },
-      },
-    });
+      });
 
-    // If no rows updated, another process already marked it
-    if (updated.count === 0) {
-      return { reached: true, shouldNotify: false, fund };
+      if (updated.count === 0) {
+        return { reached: true, shouldNotify: false, fund };
+      }
+
+      return { reached: true, shouldNotify: true, fund };
+    } catch {
+      await prisma.fundAggregate.update({
+        where: { id: fund.aggregate.id },
+        data: {
+          initialThresholdMet: true,
+          initialThresholdMetAt: new Date(),
+        },
+      });
+      return { reached: true, shouldNotify: true, fund };
     }
+  }
 
-    return { reached: true, shouldNotify: true, fund };
-  } catch {
-    // Fallback for JSON path query not supported - use simple update
+  // Fallback to customSettings for funds without aggregate
+  const customSettings = (fund.customSettings as Record<string, any>) || {};
+  try {
     await prisma.fund.update({
       where: { id: fundId },
       data: {
@@ -149,7 +260,9 @@ export async function checkAndMarkThresholdReached(
         },
       },
     });
-    return { reached: true, shouldNotify: !previouslyNotified, fund };
+    return { reached: true, shouldNotify: true, fund };
+  } catch {
+    return { reached: true, shouldNotify: false, fund };
   }
 }
 
@@ -158,46 +271,60 @@ export async function checkThresholdReached(
 ): Promise<{ reached: boolean; wasJustReached: boolean }> {
   const fund = await prisma.fund.findUnique({
     where: { id: fundId },
-    select: {
-      capitalCallThresholdEnabled: true,
-      capitalCallThreshold: true,
-      currentRaise: true,
-      customSettings: true,
-    },
+    include: { aggregate: true },
   });
 
-  if (!fund || !fund.capitalCallThresholdEnabled || !fund.capitalCallThreshold) {
+  if (!fund) {
     return { reached: false, wasJustReached: false };
   }
 
-  const currentRaise = Number(fund.currentRaise);
-  const threshold = Number(fund.capitalCallThreshold);
-  const reached = currentRaise >= threshold;
+  const initialThresholdEnabled = fund.initialThresholdEnabled || fund.capitalCallThresholdEnabled;
+  const initialThreshold = fund.initialThresholdAmount 
+    ? Number(fund.initialThresholdAmount) 
+    : fund.capitalCallThreshold 
+      ? Number(fund.capitalCallThreshold) 
+      : null;
 
-  const customSettings = (fund.customSettings as Record<string, any>) || {};
-  const previouslyNotified = customSettings.thresholdNotifiedAt;
+  if (!initialThresholdEnabled || !initialThreshold) {
+    return { reached: false, wasJustReached: false };
+  }
+
+  const totalCommitted = fund.aggregate ? Number(fund.aggregate.totalCommitted) : Number(fund.currentRaise);
+  const reached = totalCommitted >= initialThreshold;
+
+  const alreadyNotified = fund.aggregate?.initialThresholdMet || 
+    (fund.customSettings as any)?.thresholdNotifiedAt;
 
   return {
     reached,
-    wasJustReached: reached && !previouslyNotified,
+    wasJustReached: reached && !alreadyNotified,
   };
 }
 
 export async function markThresholdNotified(fundId: string): Promise<void> {
   const fund = await prisma.fund.findUnique({
     where: { id: fundId },
-    select: { customSettings: true },
+    include: { aggregate: true },
   });
 
-  const currentSettings = (fund?.customSettings as Record<string, any>) || {};
-
-  await prisma.fund.update({
-    where: { id: fundId },
-    data: {
-      customSettings: {
-        ...currentSettings,
-        thresholdNotifiedAt: new Date().toISOString(),
+  if (fund?.aggregate) {
+    await prisma.fundAggregate.update({
+      where: { id: fund.aggregate.id },
+      data: {
+        initialThresholdMet: true,
+        initialThresholdMetAt: new Date(),
       },
-    },
-  });
+    });
+  } else if (fund) {
+    const currentSettings = (fund.customSettings as Record<string, any>) || {};
+    await prisma.fund.update({
+      where: { id: fundId },
+      data: {
+        customSettings: {
+          ...currentSettings,
+          thresholdNotifiedAt: new Date().toISOString(),
+        },
+      },
+    });
+  }
 }

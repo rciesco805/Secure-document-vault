@@ -95,7 +95,7 @@ The platform is built on Next.js 14, utilizing a hybrid Pages and App Router app
 ## Key API Endpoints
 
 ### LP Portal
-- `GET /api/lp/me` - Get investor profile, investments, capital calls, NDA gate status, KYC status
+- `GET /api/lp/me` - Get investor profile, investments, capital calls, NDA gate status, KYC status, fund association
 - `GET /api/lp/docs` - Get investor's signed documents with signed URLs
 - `GET /api/lp/pending-signatures` - Get documents awaiting signature
 - `POST /api/lp/complete-gate` - Complete NDA/accreditation acknowledgment

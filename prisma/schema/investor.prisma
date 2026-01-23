@@ -3,6 +3,10 @@ model Investor {
   userId                String   @unique
   user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   
+  // Fund Association (many-to-one: multiple investors per fund)
+  fundId                String?
+  fund                  Fund?    @relation(fields: [fundId], references: [id], onDelete: SetNull)
+  
   entityName            String?
   entityType            String   @default("INDIVIDUAL")
   taxId                 String?
@@ -44,6 +48,7 @@ model Investor {
   updatedAt             DateTime @updatedAt
 
   @@index([userId])
+  @@index([fundId])
   @@index([accreditationStatus])
 }
 
@@ -124,9 +129,12 @@ model Fund {
   
   name              String
   description       String?
+  style             String?  // e.g., "Staged Commitments", "Traditional", "Evergreen"
+  
   targetRaise       Decimal  @db.Decimal(18, 2)
   minimumInvestment Decimal  @db.Decimal(18, 2)
   currentRaise      Decimal  @default(0) @db.Decimal(18, 2)
+  aumTarget         Decimal? @db.Decimal(18, 2)  // Optional AUM goal
   
   status            String   @default("RAISING")
   closingDate       DateTime?
@@ -138,7 +146,7 @@ model Fund {
   capitalCallThreshold        Decimal? @db.Decimal(18, 2)
   
   // Call Frequency Configuration
-  callFrequency     String   @default("AS_NEEDED")  // AS_NEEDED, QUARTERLY, SEMI_ANNUAL, ANNUAL
+  callFrequency     String   @default("AS_NEEDED")  // AS_NEEDED, MONTHLY, QUARTERLY, SEMI_ANNUAL, ANNUAL
   
   // Staged Commitments
   stagedCommitmentsEnabled Boolean @default(false)
@@ -146,16 +154,22 @@ model Fund {
   // Flexible Custom Settings (JSON for extensibility)
   customSettings    Json?
   
+  // Audit and Tracking
+  createdBy         String?  // GP User ID who created the fund
+  audit             Json?    // Changes log: [{ timestamp, userId, action, previousValue, newValue }]
+  
   investments       Investment[]
   capitalCalls      CapitalCall[]
   distributions     Distribution[]
   reports           FundReport[]
   aggregate         FundAggregate?
+  investors         Investor[]
   
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
   @@index([teamId])
+  @@index([createdBy])
 }
 
 model FundAggregate {

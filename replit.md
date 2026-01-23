@@ -28,6 +28,7 @@ The platform is built on Next.js 14, utilizing a hybrid Pages and App Router app
 *   **BF Fund Sign (E-Signature)**: Drag-and-drop field placement, multi-recipient roles (Signer, Viewer, Approver), sequential signing, bulk sending, in-person QR signing, document expiration, 'Correct & Resend' functionality, reusable templates, and detailed audit trails with embedded PDF signatures.
 *   **LP Fundroom Portal**: Personalized investor dashboards with:
     - 3-step investor onboarding at `/lp/onboard` (name/email → entity → magic link verification)
+    - **2-Step Accreditation Wizard**: NDA acceptance → SEC 506(c) criteria confirmation ($200K income or $1M net worth) with IP/timestamp logging
     - Optional NDA/accreditation gate modal with 506(c) compliance (IP/user agent logging) - toggleable per fund
     - Per-LP document vault at `/lp/docs` storing all signed documents with view/download
     - Auto-storage of completed signature documents in LP vault via webhook

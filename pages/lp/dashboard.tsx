@@ -1,5 +1,5 @@
 import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import Head from "next/head";
 import Link from "next/link";
@@ -36,10 +36,15 @@ import {
   ExternalLink,
   Building2,
   CreditCard,
+  RefreshCw,
 } from "lucide-react";
 import { KycVerification } from "@/components/lp/kyc-verification";
 import { ActivityTimeline } from "@/components/lp/activity-timeline";
 import { SignaturePad } from "@/components/lp/signature-pad";
+import { FundCard } from "@/components/lp/fund-card";
+import { DocumentsVault } from "@/components/lp/documents-vault";
+import { NotesCard } from "@/components/lp/notes-card";
+import { DashboardSummary } from "@/components/lp/dashboard-summary";
 
 interface InvestorDocument {
   id: string;
@@ -100,6 +105,23 @@ interface SignedDocument {
   createdAt: string;
 }
 
+interface FundDetailsData {
+  summary: {
+    totalCommitment: number;
+    totalFunded: number;
+    totalDistributions: number;
+    activeFunds: number;
+    pendingCapitalCallsCount: number;
+    pendingCapitalCallsTotal: number;
+  };
+  funds: any[];
+  pendingCapitalCalls: any[];
+  recentTransactions: any[];
+  documents: any[];
+  notes: any[];
+  lastUpdated: string;
+}
+
 export default function LPDashboard() {
   const router = useRouter();
   const { data: session, status: sessionStatus } = useSession();
@@ -139,6 +161,31 @@ export default function LPDashboard() {
   const [fundAggregates, setFundAggregates] = useState<FundAggregate[]>([]);
   const [signedDocs, setSignedDocs] = useState<SignedDocument[]>([]);
   const [noteSent, setNoteSent] = useState(false);
+  const [fundDetails, setFundDetails] = useState<FundDetailsData | null>(null);
+  const [fundDetailsError, setFundDetailsError] = useState<string | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const POLL_INTERVAL = 30000; // 30 seconds for real-time updates
+
+  const fetchFundDetails = useCallback(async (silent = false) => {
+    if (!silent) setIsRefreshing(true);
+    try {
+      const res = await fetch("/api/lp/fund-details");
+      if (res.ok) {
+        const data = await res.json();
+        setFundDetails(data);
+        setFundDetailsError(null);
+      } else if (res.status !== 404) {
+        setFundDetailsError("Unable to load fund details. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error fetching fund details:", error);
+      if (!silent) {
+        setFundDetailsError("Connection error. Please check your internet.");
+      }
+    } finally {
+      if (!silent) setIsRefreshing(false);
+    }
+  }, []);
 
   useEffect(() => {
     if (sessionStatus === "loading") return;
@@ -149,7 +196,19 @@ export default function LPDashboard() {
     }
 
     fetchInvestorData();
-  }, [sessionStatus, router]);
+    fetchFundDetails();
+  }, [sessionStatus, router, fetchFundDetails]);
+
+  // Real-time polling for dashboard updates
+  useEffect(() => {
+    if (sessionStatus !== "authenticated" || !investor) return;
+
+    const pollInterval = setInterval(() => {
+      fetchFundDetails(true);
+    }, POLL_INTERVAL);
+
+    return () => clearInterval(pollInterval);
+  }, [sessionStatus, investor, fetchFundDetails]);
 
   const fetchInvestorData = async () => {
     try {
@@ -271,12 +330,36 @@ export default function LPDashboard() {
         setNoteContent("");
         setNoteSent(true);
         setTimeout(() => setNoteSent(false), 3000);
+        fetchFundDetails(true);
       }
     } catch (error) {
       console.error("Error sending note:", error);
     } finally {
       setNoteSending(false);
     }
+  };
+
+  const handleSendNoteFromCard = async (content: string): Promise<boolean> => {
+    try {
+      const res = await fetch("/api/lp/notes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content }),
+      });
+      if (res.ok) {
+        fetchFundDetails(true);
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error("Error sending note:", error);
+      return false;
+    }
+  };
+
+  const handleRefresh = () => {
+    fetchInvestorData();
+    fetchFundDetails();
   };
 
   const formatCurrency = (amount: number | string) => {
@@ -337,15 +420,60 @@ export default function LPDashboard() {
         </nav>
 
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-          <div className="mb-6 sm:mb-8">
-            <h1 className="text-2xl sm:text-3xl font-bold text-white">
-              Welcome, {investor?.entityName || session?.user?.name || "Investor"}
-            </h1>
-            <p className="text-gray-400 mt-1 text-sm sm:text-base">
-              Your personalized investor portal
-            </p>
+          <div className="flex items-center justify-between mb-6 sm:mb-8">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-white">
+                Welcome, {investor?.entityName || session?.user?.name || "Investor"}
+              </h1>
+              <p className="text-gray-400 mt-1 text-sm sm:text-base">
+                Your personalized investor portal
+              </p>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              className="text-gray-400 hover:text-white"
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? "animate-spin" : ""}`} />
+              {isRefreshing ? "Refreshing..." : "Refresh"}
+            </Button>
           </div>
 
+          {fundDetailsError && (
+            <Card className="bg-red-900/20 border-red-700/50 mb-6">
+              <CardContent className="p-4 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <AlertCircle className="h-5 w-5 text-red-400" />
+                  <span className="text-red-300">{fundDetailsError}</span>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleRefresh}
+                  className="border-red-700 text-red-300 hover:bg-red-900/30"
+                >
+                  Retry
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+
+          {fundDetails && (
+            <div className="mb-6 sm:mb-8">
+              <DashboardSummary
+                summary={fundDetails.summary}
+                documentsCount={fundDetails.documents.length}
+                ndaSigned={investor?.ndaSigned || false}
+                accreditationStatus={investor?.accreditationStatus || "PENDING"}
+                formatCurrency={formatCurrency}
+                lastUpdated={fundDetails.lastUpdated}
+              />
+            </div>
+          )}
+
+          {!fundDetails && (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
             <Card className="bg-gray-800/50 border-gray-700 col-span-2 sm:col-span-1">
               <CardHeader className="pb-2 p-3 sm:p-6 sm:pb-2">
@@ -425,6 +553,18 @@ export default function LPDashboard() {
               </CardContent>
             </Card>
           </div>
+          )}
+
+          {fundDetails && fundDetails.funds.length > 0 && (
+            <div className="mb-6 sm:mb-8">
+              <h2 className="text-lg font-semibold text-white mb-4">Your Fund Investments</h2>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+                {fundDetails.funds.map((fund) => (
+                  <FundCard key={fund.id} fund={fund} formatCurrency={formatCurrency} />
+                ))}
+              </div>
+            </div>
+          )}
 
           {pendingSignatures.length > 0 && (
             <Card className="bg-gradient-to-r from-amber-900/30 to-orange-900/30 border-amber-700/50 mb-6">
@@ -536,163 +676,78 @@ export default function LPDashboard() {
           )}
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <Card className="lg:col-span-2 bg-gray-800/50 border-gray-700">
-              <CardHeader>
-                <CardTitle className="text-white flex items-center">
-                  <Clock className="h-5 w-5 mr-2 text-blue-500" />
-                  Capital Calls
-                </CardTitle>
-                <CardDescription className="text-gray-400">
-                  Outstanding capital call notices
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {capitalCalls.length === 0 ? (
-                  <div className="text-center py-8 text-gray-500">
-                    <AlertCircle className="h-12 w-12 mx-auto mb-3 text-gray-600" />
-                    <p>No capital calls at this time</p>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {capitalCalls.map((call) => (
-                      <div
-                        key={call.id}
-                        className="flex items-center justify-between p-4 bg-gray-700/50 rounded-lg"
-                      >
-                        <div>
-                          <p className="text-white font-medium">
-                            Capital Call #{call.callNumber}
-                          </p>
-                          <p className="text-gray-400 text-sm">
-                            Due: {new Date(call.dueDate).toLocaleDateString()}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-white font-bold">${call.amount}</p>
-                          <span
-                            className={`text-xs px-2 py-1 rounded ${
-                              call.status === "PAID"
-                                ? "bg-emerald-500/20 text-emerald-400"
-                                : "bg-amber-500/20 text-amber-400"
-                            }`}
-                          >
-                            {call.status}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            <Card className="bg-gray-800/50 border-gray-700">
-              <CardHeader className="p-4 sm:p-6">
-                <CardTitle className="text-white flex items-center text-base sm:text-lg">
-                  <MessageSquare className="h-5 w-5 mr-2 text-emerald-500" />
-                  Message GP
-                </CardTitle>
-                <CardDescription className="text-gray-400 text-sm">
-                  Send a note to the fund manager
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
-                {noteSent ? (
-                  <div className="flex items-center justify-center p-6 bg-emerald-900/20 rounded-lg border border-emerald-700/30">
-                    <CheckCircle2 className="h-5 w-5 text-emerald-400 mr-2" />
-                    <span className="text-emerald-300">Message sent successfully!</span>
-                  </div>
-                ) : (
-                  <>
-                    <Textarea
-                      placeholder="Type your message here..."
-                      value={noteContent}
-                      onChange={(e) => setNoteContent(e.target.value)}
-                      className="bg-gray-700/50 border-gray-600 text-white placeholder:text-gray-500 min-h-[100px] text-sm"
-                    />
-                    <Button
-                      onClick={handleSendNote}
-                      disabled={!noteContent.trim() || noteSending}
-                      className="w-full mt-4 bg-emerald-600 hover:bg-emerald-700"
-                    >
-                      <Send className="h-4 w-4 mr-2" />
-                      {noteSending ? "Sending..." : "Send Message"}
-                    </Button>
-                  </>
-                )}
-              </CardContent>
-            </Card>
-
-            <Card className="lg:col-span-3 bg-gray-800/50 border-gray-700">
-              <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 sm:p-6">
-                <div>
-                  <CardTitle className="text-white flex items-center text-base sm:text-lg">
-                    <FileText className="h-5 w-5 mr-2 text-purple-500" />
-                    Your Documents
+            <div className="lg:col-span-2 space-y-6">
+              <Card className="bg-gray-800/50 border-gray-700">
+                <CardHeader>
+                  <CardTitle className="text-white flex items-center">
+                    <Clock className="h-5 w-5 mr-2 text-blue-500" />
+                    Capital Calls
                   </CardTitle>
-                  <CardDescription className="text-gray-400 text-sm">
-                    Signed agreements and fund documents
+                  <CardDescription className="text-gray-400">
+                    Outstanding capital call notices
                   </CardDescription>
-                </div>
-                <Link href="/lp/docs">
-                  <Button variant="outline" size="sm" className="border-gray-600 text-gray-300 hover:bg-gray-700">
-                    View All
-                  </Button>
-                </Link>
-              </CardHeader>
-              <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-                  {investor?.ndaSigned && (
-                    <div className="p-3 sm:p-4 bg-gray-700/50 rounded-lg flex items-center">
-                      <CheckCircle2 className="h-6 sm:h-8 w-6 sm:w-8 text-emerald-500 mr-3 flex-shrink-0" />
-                      <div className="min-w-0">
-                        <p className="text-white font-medium text-sm sm:text-base">NDA</p>
-                        <p className="text-gray-400 text-xs sm:text-sm">Signed</p>
-                      </div>
+                </CardHeader>
+                <CardContent>
+                  {capitalCalls.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500">
+                      <AlertCircle className="h-12 w-12 mx-auto mb-3 text-gray-600" />
+                      <p>No capital calls at this time</p>
                     </div>
-                  )}
-                  {investor?.accreditationStatus !== "PENDING" && (
-                    <div className="p-3 sm:p-4 bg-gray-700/50 rounded-lg flex items-center">
-                      <CheckCircle2 className="h-6 sm:h-8 w-6 sm:w-8 text-emerald-500 mr-3 flex-shrink-0" />
-                      <div className="min-w-0">
-                        <p className="text-white font-medium text-sm sm:text-base">Accreditation</p>
-                        <p className="text-gray-400 text-xs sm:text-sm">Self-Certified</p>
-                      </div>
-                    </div>
-                  )}
-                  {signedDocs.slice(0, 4).map((doc) => (
-                    <div key={doc.id} className="p-3 sm:p-4 bg-gray-700/50 rounded-lg flex items-center justify-between group">
-                      <div className="flex items-center min-w-0 flex-1">
-                        <FileText className="h-6 sm:h-8 w-6 sm:w-8 text-purple-500 mr-3 flex-shrink-0" />
-                        <div className="min-w-0">
-                          <p className="text-white font-medium text-sm sm:text-base truncate">{doc.title}</p>
-                          <p className="text-gray-400 text-xs sm:text-sm">
-                            {doc.signedAt ? `Signed ${new Date(doc.signedAt).toLocaleDateString()}` : doc.documentType}
-                          </p>
-                        </div>
-                      </div>
-                      {doc.fileUrl && (
-                        <a
-                          href={doc.fileUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="ml-2 p-2 text-gray-400 hover:text-white hover:bg-gray-600 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
-                          title="Download"
+                  ) : (
+                    <div className="space-y-3">
+                      {capitalCalls.map((call) => (
+                        <div
+                          key={call.id}
+                          className="flex items-center justify-between p-4 bg-gray-700/50 rounded-lg"
                         >
-                          <ExternalLink className="h-4 w-4" />
-                        </a>
-                      )}
-                    </div>
-                  ))}
-                  {!investor?.ndaSigned && investor?.accreditationStatus === "PENDING" && signedDocs.length === 0 && (
-                    <div className="col-span-full p-6 text-center text-gray-500">
-                      <FileText className="h-10 w-10 mx-auto mb-2 text-gray-600" />
-                      <p>Complete NDA and accreditation to access documents</p>
+                          <div>
+                            <p className="text-white font-medium">
+                              Capital Call #{call.callNumber}
+                            </p>
+                            <p className="text-gray-400 text-sm">
+                              Due: {new Date(call.dueDate).toLocaleDateString()}
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-white font-bold">${call.amount}</p>
+                            <span
+                              className={`text-xs px-2 py-1 rounded ${
+                                call.status === "PAID"
+                                  ? "bg-emerald-500/20 text-emerald-400"
+                                  : "bg-amber-500/20 text-amber-400"
+                              }`}
+                            >
+                              {call.status}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   )}
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+
+              <DocumentsVault
+                documents={fundDetails?.documents || signedDocs.map(d => ({
+                  id: d.id,
+                  title: d.title,
+                  documentType: d.documentType,
+                  fileUrl: d.fileUrl,
+                  signedAt: d.signedAt,
+                  createdAt: d.createdAt,
+                }))}
+                ndaSigned={investor?.ndaSigned || false}
+                accreditationStatus={investor?.accreditationStatus || "PENDING"}
+                onViewAll={() => router.push("/lp/docs")}
+              />
+            </div>
+
+            <div className="space-y-6">
+              <NotesCard
+                notes={fundDetails?.notes || []}
+                onSendNote={handleSendNoteFromCard}
+              />
+            </div>
           </div>
 
           <div className="mt-6">

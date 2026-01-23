@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { useRouter } from "next/router";
 
 import React, { useEffect, useRef, useState } from "react";
@@ -11,6 +12,7 @@ import { SUPPORTED_DOCUMENT_SIMPLE_TYPES } from "@/lib/constants";
 import { useDisablePrint } from "@/lib/hooks/use-disable-print";
 import { LinkWithDataroom } from "@/lib/types";
 
+import { Button } from "@/components/ui/button";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import AccessForm, {
   DEFAULT_ACCESS_FORM_DATA,
@@ -378,11 +380,19 @@ export default function DataroomView({
   if (submitted) {
     return (
       <div 
-        className="min-h-screen"
+        className="min-h-screen relative"
         style={{
           backgroundColor: brand?.accentColor || "rgb(3, 7, 18)",
         }}
       >
+        <Button
+          variant="default"
+          size="lg"
+          className="fixed top-4 right-4 z-50 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-lg"
+          asChild
+        >
+          <Link href="/lp/onboard">Sign Me Up</Link>
+        </Button>
         <DataroomViewer
           accessControls={link.accessControls || group?.accessControls || []}
           brand={brand!}

@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { getServerSession } from "next-auth";
+import crypto from "crypto";
 import prisma from "@/lib/prisma";
 import { authOptions } from "../auth/[...nextauth]";
 import { sendEmail } from "@/lib/resend";
@@ -7,11 +8,13 @@ import AccreditationConfirmedEmail from "@/components/emails/accreditation-confi
 
 interface CompleteGateBody {
   ndaAccepted: boolean;
+  ndaSignature?: string;
   accreditationType?: string;
   confirmIncome?: boolean;
   confirmNetWorth?: boolean;
   confirmAccredited?: boolean;
   confirmRiskAware?: boolean;
+  resendConfirmation?: boolean;
 }
 
 export default async function handler(
@@ -31,16 +34,59 @@ export default async function handler(
 
     const { 
       ndaAccepted, 
+      ndaSignature,
       accreditationType,
       confirmIncome,
       confirmNetWorth,
       confirmAccredited,
       confirmRiskAware,
+      resendConfirmation,
     } = req.body as CompleteGateBody;
+
+    // Handle resend confirmation request
+    if (resendConfirmation) {
+      try {
+        await sendEmail({
+          to: session.user.email,
+          subject: "Accreditation Confirmation - BF Fund",
+          react: AccreditationConfirmedEmail({
+            investorName: session.user.name || "Investor",
+            email: session.user.email,
+            accreditationType: "Resent Confirmation",
+            completedAt: new Date().toISOString(),
+          }),
+        });
+        return res.status(200).json({ success: true, message: "Confirmation resent" });
+      } catch (emailError) {
+        console.error("Failed to resend confirmation:", emailError);
+        return res.status(500).json({ message: "Failed to resend confirmation" });
+      }
+    }
 
     if (!ndaAccepted) {
       return res.status(400).json({ 
         message: "NDA acceptance is required" 
+      });
+    }
+
+    // Validate signature is present and within size limits (max 500KB base64)
+    if (!ndaSignature || typeof ndaSignature !== "string") {
+      return res.status(400).json({ 
+        message: "Signature is required" 
+      });
+    }
+
+    const maxSignatureSize = 500 * 1024; // 500KB
+    if (ndaSignature.length > maxSignatureSize) {
+      return res.status(400).json({ 
+        message: "Signature data exceeds maximum allowed size" 
+      });
+    }
+
+    // Validate signature is a valid data URL
+    if (!ndaSignature.startsWith("data:image/png;base64,")) {
+      return res.status(400).json({ 
+        message: "Invalid signature format" 
       });
     }
 
@@ -73,11 +119,20 @@ export default async function handler(
     const timestamp = new Date();
 
     const signedDocsData = user.investorProfile.signedDocs || [];
+    // Create signature hash for integrity verification
+    const signatureHash = crypto
+      .createHash("sha256")
+      .update(ndaSignature)
+      .digest("hex");
+
     const ndaRecord = {
       type: "NDA",
       signedAt: timestamp.toISOString(),
       ipAddress,
       userAgent,
+      signature: "captured",
+      signatureHash,
+      signatureData: ndaSignature,
     };
 
     const accreditationRecord = {

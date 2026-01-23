@@ -39,6 +39,7 @@ import {
 } from "lucide-react";
 import { KycVerification } from "@/components/lp/kyc-verification";
 import { ActivityTimeline } from "@/components/lp/activity-timeline";
+import { SignaturePad } from "@/components/lp/signature-pad";
 
 interface InvestorDocument {
   id: string;
@@ -108,6 +109,8 @@ export default function LPDashboard() {
   const [showNdaModal, setShowNdaModal] = useState(false);
   const [wizardStep, setWizardStep] = useState(1);
   const [ndaAccepted, setNdaAccepted] = useState(false);
+  const [ndaSignature, setNdaSignature] = useState<string | null>(null);
+  const [showResendConfirmation, setShowResendConfirmation] = useState(false);
   const [accreditationData, setAccreditationData] = useState({
     confirmIncome: false,
     confirmNetWorth: false,
@@ -207,7 +210,7 @@ export default function LPDashboard() {
     }
   };
 
-  const canProceedToStep2 = ndaAccepted;
+  const canProceedToStep2 = ndaAccepted && ndaSignature;
   const canSubmit = 
     accreditationData.confirmAccredited && 
     accreditationData.confirmRiskAware &&
@@ -223,6 +226,7 @@ export default function LPDashboard() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ndaAccepted,
+          ndaSignature,
           accreditationType: accreditationData.confirmIncome && accreditationData.confirmNetWorth 
             ? "INCOME_AND_NET_WORTH" 
             : accreditationData.confirmIncome 
@@ -239,9 +243,13 @@ export default function LPDashboard() {
         throw new Error("Failed to complete verification");
       }
 
-      setShowNdaModal(false);
-      setWizardStep(1);
-      fetchInvestorData();
+      setShowResendConfirmation(true);
+      setTimeout(() => {
+        setShowResendConfirmation(false);
+        setShowNdaModal(false);
+        setWizardStep(1);
+        fetchInvestorData();
+      }, 3000);
     } catch (error) {
       console.error("Error completing gate:", error);
     } finally {
@@ -694,6 +702,37 @@ export default function LPDashboard() {
 
         <Dialog open={showNdaModal} onOpenChange={() => {}}>
           <DialogContent className="bg-gray-800 border-gray-700 text-white max-w-lg sm:max-w-xl">
+            {showResendConfirmation ? (
+              <div className="py-12 text-center">
+                <div className="w-16 h-16 bg-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <CheckCircle2 className="h-10 w-10 text-white" />
+                </div>
+                <h3 className="text-xl font-semibold text-white mb-2">Verification Complete!</h3>
+                <p className="text-gray-400 mb-4">
+                  A confirmation email has been sent to your inbox.
+                </p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-emerald-400 border-emerald-600 hover:bg-emerald-600/20"
+                  onClick={async () => {
+                    try {
+                      await fetch("/api/lp/complete-gate", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ resendConfirmation: true }),
+                      });
+                    } catch (e) {
+                      console.error("Resend error:", e);
+                    }
+                  }}
+                >
+                  <Send className="h-4 w-4 mr-2" />
+                  Resend Confirmation
+                </Button>
+              </div>
+            ) : (
+            <>
             <DialogHeader>
               <DialogTitle className="text-lg sm:text-xl">
                 {wizardStep === 1 ? "Non-Disclosure Agreement" : "Accredited Investor Verification"}
@@ -753,7 +792,7 @@ export default function LPDashboard() {
 
               {wizardStep === 1 ? (
                 <>
-                  <div className="p-4 bg-gray-700/50 rounded-lg border border-gray-600">
+                  <div className="p-4 bg-gray-700/50 rounded-lg border border-gray-600 space-y-4">
                     <div className="flex items-start space-x-3">
                       <Checkbox
                         id="nda"
@@ -772,6 +811,16 @@ export default function LPDashboard() {
                         </p>
                       </div>
                     </div>
+                    
+                    {ndaAccepted && (
+                      <div className="pt-4 border-t border-gray-600">
+                        <Label className="text-white font-medium mb-3 block">
+                          <PenTool className="inline h-4 w-4 mr-2" />
+                          Sign Below
+                        </Label>
+                        <SignaturePad onSignatureChange={setNdaSignature} />
+                      </div>
+                    )}
                   </div>
 
                   <Button
@@ -906,6 +955,8 @@ export default function LPDashboard() {
                 </>
               )}
             </div>
+            </>
+            )}
           </DialogContent>
         </Dialog>
       </div>

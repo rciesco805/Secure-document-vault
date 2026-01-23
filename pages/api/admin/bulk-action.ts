@@ -51,11 +51,40 @@ export default async function handler(
             investor: true,
           },
         },
+        aggregate: true,
       },
     });
 
     if (!fund) {
       return res.status(404).json({ message: "Fund not found" });
+    }
+
+    // Enforce capital call threshold for capital calls only
+    if (actionType === "capital_call") {
+      const aggregate = fund.aggregate;
+      const thresholdEnabled = aggregate?.thresholdEnabled || fund.capitalCallThresholdEnabled;
+      const thresholdAmount = aggregate?.thresholdAmount 
+        ? Number(aggregate.thresholdAmount) 
+        : fund.capitalCallThreshold 
+          ? Number(fund.capitalCallThreshold) 
+          : null;
+      const totalCommitted = aggregate?.totalCommitted 
+        ? Number(aggregate.totalCommitted) 
+        : Number(fund.currentRaise);
+
+      if (thresholdEnabled && thresholdAmount && totalCommitted < thresholdAmount) {
+        const remaining = thresholdAmount - totalCommitted;
+        return res.status(403).json({
+          message: "Capital call threshold not met",
+          error: "THRESHOLD_NOT_MET",
+          details: {
+            thresholdAmount,
+            totalCommitted,
+            remaining,
+            percentComplete: Math.round((totalCommitted / thresholdAmount) * 100),
+          },
+        });
+      }
     }
 
     let investors = fund.investments;

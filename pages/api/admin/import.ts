@@ -21,6 +21,7 @@ interface ImportData {
   };
   data: {
     funds?: any[];
+    fundAggregates?: any[];
     investors?: any[];
     investments?: any[];
     capitalCalls?: any[];
@@ -142,6 +143,44 @@ export default async function handler(
           result.imported.funds++;
         } catch (err: any) {
           result.errors.push({ model: "fund", error: err.message });
+        }
+      }
+    }
+
+    if (importData.data.fundAggregates && importData.data.fundAggregates.length > 0) {
+      result.imported.fundAggregates = 0;
+      result.skipped.fundAggregates = 0;
+
+      for (const agg of importData.data.fundAggregates) {
+        try {
+          const fundId = idMappings.funds[agg.fundId] || agg.fundId;
+
+          const existing = await prisma.fundAggregate.findFirst({
+            where: { fundId },
+          });
+
+          if (existing) {
+            result.skipped.fundAggregates++;
+            continue;
+          }
+
+          if (!dryRun) {
+            await prisma.fundAggregate.create({
+              data: {
+                fundId,
+                totalInbound: agg.totalInbound || 0,
+                totalOutbound: agg.totalOutbound || 0,
+                totalCommitted: agg.totalCommitted || 0,
+                currentBalance: agg.currentBalance || null,
+                thresholdEnabled: agg.thresholdEnabled ?? false,
+                thresholdAmount: agg.thresholdAmount || null,
+                audit: agg.audit || null,
+              },
+            });
+          }
+          result.imported.fundAggregates++;
+        } catch (err: any) {
+          result.errors.push({ model: "fundAggregate", error: err.message });
         }
       }
     }

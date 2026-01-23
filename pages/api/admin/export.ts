@@ -12,6 +12,7 @@ export const config = {
 
 const EXPORTABLE_MODELS = [
   "fund",
+  "fundAggregate",
   "investor",
   "investment",
   "capitalCall",
@@ -106,6 +107,14 @@ export default async function handler(
     if (modelsToExport.includes("fund")) {
       exportData.data.funds = funds;
       exportData.metadata.modelCounts.funds = funds.length;
+    }
+
+    if (modelsToExport.includes("fundAggregate")) {
+      const aggregates = await prisma.fundAggregate.findMany({
+        where: { fundId: { in: fundIds } },
+      });
+      exportData.data.fundAggregates = aggregates;
+      exportData.metadata.modelCounts.fundAggregates = aggregates.length;
     }
 
     if (modelsToExport.includes("investment")) {

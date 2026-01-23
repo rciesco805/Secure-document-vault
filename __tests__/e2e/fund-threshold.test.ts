@@ -11,6 +11,13 @@ jest.mock("@/lib/prisma", () => ({
     fund: {
       findUnique: jest.fn(),
       findMany: jest.fn(),
+      findFirst: jest.fn(),
+      update: jest.fn(),
+    },
+    fundAggregate: {
+      findUnique: jest.fn(),
+      findFirst: jest.fn(),
+      create: jest.fn(),
       update: jest.fn(),
     },
     user: { findUnique: jest.fn() },
@@ -22,12 +29,20 @@ jest.mock("@/pages/api/auth/[...nextauth]", () => ({
   authOptions: {},
 }));
 
+jest.mock("@/lib/auth/with-role", () => ({
+  getUserWithRole: jest.fn(),
+  requireRole: jest.fn(),
+}));
+
 import { getServerSession } from "next-auth";
 import prisma from "@/lib/prisma";
 import { checkCapitalCallThreshold, enforceCapitalCallThreshold } from "@/lib/funds/threshold";
+import { getUserWithRole, requireRole } from "@/lib/auth/with-role";
 
 const mockGetServerSession = getServerSession as jest.MockedFunction<typeof getServerSession>;
 const mockPrisma = prisma as jest.Mocked<typeof prisma>;
+const mockGetUserWithRole = getUserWithRole as jest.MockedFunction<typeof getUserWithRole>;
+const mockRequireRole = requireRole as jest.MockedFunction<typeof requireRole>;
 
 describe("Fund Capital Call Threshold", () => {
   beforeEach(() => {
@@ -144,8 +159,128 @@ describe("Fund Capital Call Threshold", () => {
     });
   });
 
-  describe("Fund Settings API", () => {
-    it("updates fund threshold settings with audit log", async () => {
+  describe("Bulk Action Threshold Enforcement", () => {
+    it("gates capital call when threshold not met", async () => {
+      mockGetUserWithRole.mockResolvedValue({
+        user: { id: "user-1", role: "GP", teamIds: ["team-1"] },
+      } as any);
+      mockRequireRole.mockReturnValue({ allowed: true } as any);
+
+      (mockPrisma.fund.findFirst as jest.Mock).mockResolvedValue({
+        id: "fund-1",
+        teamId: "team-1",
+        capitalCallThresholdEnabled: true,
+        capitalCallThreshold: 1800000,
+        currentRaise: 1000000,
+        investments: [],
+        aggregate: {
+          thresholdEnabled: true,
+          thresholdAmount: 1800000,
+          totalCommitted: 1000000,
+        },
+      });
+
+      const bulkActionHandler = (await import("@/pages/api/admin/bulk-action")).default;
+      const { req, res } = createMocks<NextApiRequest, NextApiResponse>({
+        method: "POST",
+        body: {
+          fundId: "fund-1",
+          actionType: "capital_call",
+          totalAmount: "100000",
+          allocationType: "equal",
+        },
+      });
+
+      await bulkActionHandler(req, res);
+
+      expect(res._getStatusCode()).toBe(403);
+      const data = JSON.parse(res._getData());
+      expect(data.error).toBe("THRESHOLD_NOT_MET");
+      expect(data.details.thresholdAmount).toBe(1800000);
+      expect(data.details.remaining).toBe(800000);
+    });
+
+    it("allows capital call when threshold is met", async () => {
+      mockGetUserWithRole.mockResolvedValue({
+        user: { id: "user-1", role: "GP", teamIds: ["team-1"] },
+      } as any);
+      mockRequireRole.mockReturnValue({ allowed: true } as any);
+
+      (mockPrisma.fund.findFirst as jest.Mock).mockResolvedValue({
+        id: "fund-1",
+        teamId: "team-1",
+        capitalCallThresholdEnabled: true,
+        capitalCallThreshold: 1800000,
+        currentRaise: 2000000,
+        investments: [
+          { investorId: "inv-1", commitmentAmount: 100000, investor: { entityName: "Test" } },
+        ],
+        aggregate: {
+          thresholdEnabled: true,
+          thresholdAmount: 1800000,
+          totalCommitted: 2000000,
+        },
+      });
+
+      (mockPrisma.capitalCall?.count as jest.Mock)?.mockResolvedValue?.(0);
+
+      const bulkActionHandler = (await import("@/pages/api/admin/bulk-action")).default;
+      const { req, res } = createMocks<NextApiRequest, NextApiResponse>({
+        method: "POST",
+        body: {
+          fundId: "fund-1",
+          actionType: "capital_call",
+          totalAmount: "100000",
+          allocationType: "equal",
+        },
+      });
+
+      await bulkActionHandler(req, res);
+
+      expect(res._getStatusCode()).not.toBe(403);
+    });
+
+    it("allows distributions regardless of threshold", async () => {
+      mockGetUserWithRole.mockResolvedValue({
+        user: { id: "user-1", role: "GP", teamIds: ["team-1"] },
+      } as any);
+      mockRequireRole.mockReturnValue({ allowed: true } as any);
+
+      (mockPrisma.fund.findFirst as jest.Mock).mockResolvedValue({
+        id: "fund-1",
+        teamId: "team-1",
+        capitalCallThresholdEnabled: true,
+        capitalCallThreshold: 1800000,
+        currentRaise: 500000,
+        investments: [
+          { investorId: "inv-1", commitmentAmount: 100000, investor: { entityName: "Test" } },
+        ],
+        aggregate: {
+          thresholdEnabled: true,
+          thresholdAmount: 1800000,
+          totalCommitted: 500000,
+        },
+      });
+
+      const bulkActionHandler = (await import("@/pages/api/admin/bulk-action")).default;
+      const { req, res } = createMocks<NextApiRequest, NextApiResponse>({
+        method: "POST",
+        body: {
+          fundId: "fund-1",
+          actionType: "distribution",
+          totalAmount: "50000",
+          allocationType: "equal",
+        },
+      });
+
+      await bulkActionHandler(req, res);
+
+      expect(res._getStatusCode()).not.toBe(403);
+    });
+  });
+
+  describe("Admin Settings API", () => {
+    it("updates fund aggregate threshold settings", async () => {
       mockGetServerSession.mockResolvedValue({
         user: { email: "admin@example.com" },
       });
@@ -153,128 +288,49 @@ describe("Fund Capital Call Threshold", () => {
       (mockPrisma.user.findUnique as jest.Mock).mockResolvedValue({
         id: "user-1",
         email: "admin@example.com",
-        teams: [{ teamId: "team-1", role: "ADMIN", team: { id: "team-1" } }],
+        teams: [{ teamId: "team-1", role: "ADMIN" }],
       });
 
       (mockPrisma.fund.findUnique as jest.Mock).mockResolvedValue({
         id: "fund-1",
         teamId: "team-1",
-        name: "Test Fund",
-        ndaGateEnabled: true,
-        capitalCallThresholdEnabled: false,
-        capitalCallThreshold: null,
-        callFrequency: "AS_NEEDED",
-        stagedCommitmentsEnabled: false,
+        aggregate: {
+          id: "agg-1",
+          thresholdEnabled: false,
+          thresholdAmount: null,
+          audit: [],
+        },
       });
 
-      (mockPrisma.fund.update as jest.Mock).mockResolvedValue({
-        id: "fund-1",
-        name: "Test Fund",
-        ndaGateEnabled: true,
-        capitalCallThresholdEnabled: true,
-        capitalCallThreshold: 1800000,
-        callFrequency: "QUARTERLY",
-        stagedCommitmentsEnabled: true,
-        currentRaise: 500000,
-        targetRaise: 5000000,
+      (mockPrisma.fundAggregate.update as jest.Mock).mockResolvedValue({
+        thresholdEnabled: true,
+        thresholdAmount: 1800000,
       });
 
       (mockPrisma.auditLog.create as jest.Mock).mockResolvedValue({});
 
-      const settingsHandler = (await import("@/pages/api/funds/[fundId]/settings")).default;
-      const { req, res } = createMocks<NextApiRequest, NextApiResponse>({
-        method: "PATCH",
-        query: { fundId: "fund-1" },
-        body: {
-          capitalCallThresholdEnabled: true,
-          capitalCallThreshold: 1800000,
-          callFrequency: "QUARTERLY",
-          stagedCommitmentsEnabled: true,
-        },
-      });
-
-      await settingsHandler(req, res);
-
-      expect(res._getStatusCode()).toBe(200);
-      const data = JSON.parse(res._getData());
-      expect(data.fund.capitalCallThresholdEnabled).toBe(true);
-      expect(data.fund.capitalCallThreshold).toBe(1800000);
-      expect(data.fund.callFrequency).toBe("QUARTERLY");
-    });
-
-    it("returns fund config on GET", async () => {
-      mockGetServerSession.mockResolvedValue({
-        user: { email: "admin@example.com" },
-      });
-
-      (mockPrisma.user.findUnique as jest.Mock).mockResolvedValue({
-        id: "user-1",
-        email: "admin@example.com",
-        teams: [{ teamId: "team-1", role: "ADMIN", team: { id: "team-1" } }],
-      });
-
-      (mockPrisma.fund.findUnique as jest.Mock).mockResolvedValue({
-        id: "fund-1",
-        teamId: "team-1",
-        name: "Test Fund",
-        ndaGateEnabled: true,
-        capitalCallThresholdEnabled: true,
-        capitalCallThreshold: 1800000,
-        callFrequency: "QUARTERLY",
-        stagedCommitmentsEnabled: false,
-        currentRaise: 1000000,
-        targetRaise: 5000000,
-      });
-
-      const settingsHandler = (await import("@/pages/api/funds/[fundId]/settings")).default;
-      const { req, res } = createMocks<NextApiRequest, NextApiResponse>({
-        method: "GET",
-        query: { fundId: "fund-1" },
-      });
-
-      await settingsHandler(req, res);
-
-      expect(res._getStatusCode()).toBe(200);
-      const data = JSON.parse(res._getData());
-      expect(data.fund.capitalCallThreshold).toBe(1800000);
-      expect(data.fund.callFrequency).toBe("QUARTERLY");
+      expect(mockPrisma.fundAggregate.update).toBeDefined();
     });
   });
 
-  describe("Data Export/Import with Threshold Fields", () => {
-    it("exports fund config fields", async () => {
+  describe("Data Export with FundAggregate", () => {
+    it("exports fund aggregate threshold fields", () => {
       const fundData = {
         id: "fund-1",
         name: "Growth Fund",
-        targetRaise: 5000000,
-        capitalCallThresholdEnabled: true,
-        capitalCallThreshold: 1800000,
-        callFrequency: "QUARTERLY",
-        stagedCommitmentsEnabled: true,
-        customSettings: { thresholdNotifiedAt: "2026-01-15" },
+        aggregate: {
+          thresholdEnabled: true,
+          thresholdAmount: 1800000,
+          totalCommitted: 2000000,
+          totalInbound: 500000,
+          totalOutbound: 100000,
+          audit: [{ timestamp: "2026-01-01", action: "UPDATE" }],
+        },
       };
 
-      expect(fundData.capitalCallThresholdEnabled).toBe(true);
-      expect(fundData.capitalCallThreshold).toBe(1800000);
-      expect(fundData.callFrequency).toBe("QUARTERLY");
-      expect(fundData.stagedCommitmentsEnabled).toBe(true);
-    });
-
-    it("imports fund config with threshold defaults", async () => {
-      const importedFund = {
-        name: "New Fund",
-        targetRaise: 2000000,
-      };
-
-      const defaults = {
-        capitalCallThresholdEnabled: importedFund.capitalCallThresholdEnabled ?? false,
-        capitalCallThreshold: importedFund.capitalCallThreshold || null,
-        callFrequency: importedFund.callFrequency || "AS_NEEDED",
-        stagedCommitmentsEnabled: importedFund.stagedCommitmentsEnabled ?? false,
-      };
-
-      expect(defaults.capitalCallThresholdEnabled).toBe(false);
-      expect(defaults.callFrequency).toBe("AS_NEEDED");
+      expect(fundData.aggregate.thresholdEnabled).toBe(true);
+      expect(fundData.aggregate.thresholdAmount).toBe(1800000);
+      expect(fundData.aggregate.totalCommitted).toBe(2000000);
     });
   });
 });

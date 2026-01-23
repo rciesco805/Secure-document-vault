@@ -122,6 +122,12 @@ model AccreditationAck {
   @@index([createdAt])
 }
 
+// Entity Mode: Determines whether this is a Fund (LP/GP with units/calls) or Startup (cap table with shares)
+enum EntityMode {
+  FUND      // Traditional fund: units, capital calls, distributions, K1s
+  STARTUP   // Startup equity: shares, price per share, vesting, cap table
+}
+
 model Fund {
   id                String   @id @default(cuid())
   teamId            String
@@ -130,6 +136,9 @@ model Fund {
   name              String
   description       String?
   style             String?  // e.g., "Staged Commitments", "Traditional", "Evergreen"
+  
+  // Entity Mode: FUND (default) or STARTUP for cap table features
+  entityMode        EntityMode @default(FUND)
   
   targetRaise       Decimal  @db.Decimal(18, 2)
   minimumInvestment Decimal  @db.Decimal(18, 2)

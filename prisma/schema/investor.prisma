@@ -170,6 +170,12 @@ model Fund {
   // Flexible Custom Settings (JSON for extensibility)
   customSettings    Json?
   
+  // SEC Form D Compliance
+  formDFilingDate     DateTime?  // Date Form D was filed with SEC
+  formDAmendmentDue   DateTime?  // Annual amendment due date (1 year after initial)
+  formDReminderSent   Boolean   @default(false)  // Reminder notification sent
+  stateNoticesRequired Json?    // Array of { state, filed, filedAt, dueDate }
+  
   // Audit and Tracking
   createdBy         String?  // GP User ID who created the fund
   audit             Json?    // Changes log: [{ timestamp, userId, action, previousValue, newValue }]

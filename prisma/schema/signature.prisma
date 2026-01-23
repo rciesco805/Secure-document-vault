@@ -10,10 +10,6 @@ model SignatureDocument {
   numPages          Int?
   status            SignatureDocumentStatus @default(DRAFT)
   
-  // OpenSign integration
-  openSignDocumentId String?               // External reference from OpenSign API
-  openSignData       Json?                 // Store OpenSign API response data
-  
   // Expiration and tracking
   expirationDate    DateTime?
   sentAt            DateTime?
@@ -50,7 +46,6 @@ model SignatureDocument {
   @@index([status])
   @@index([createdById])
   @@index([teamId, status])
-  @@index([openSignDocumentId])
 }
 
 enum SignatureDocumentStatus {
@@ -87,8 +82,6 @@ model SignatureRecipient {
   ipAddress         String?                   // IP address when signed
   userAgent         String?                   // Browser info when signed
   
-  // OpenSign integration
-  openSignRecipientId String?                 // External reference from OpenSign
   signingUrl        String?                   // URL for recipient to sign
   
   // The actual signature data

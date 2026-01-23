@@ -117,6 +117,12 @@ The platform is built on Next.js 14, utilizing a hybrid Pages and App Router app
 - `PATCH /api/funds/[fundId]/settings` - Update fund settings (NDA gate toggle)
 - `GET /api/funds/[fundId]/aggregates` - Fund aggregates with investor data (GP-only, team-scoped)
 
+### Data Migration (AWS RDS/S3)
+- `POST /api/admin/export` - Export all fund data as JSON/CSV (admin only)
+- `POST /api/admin/export-blobs` - Export blob manifest with signed URLs for S3 migration
+- `POST /api/admin/import` - Import data from JSON export (supports dry run)
+- Admin UI: `/settings/data-migration` - Export/Import wizard with model selection
+
 ### E-Signature
 - `GET /api/sign/[token]` - Get signature document for signing
 - `POST /api/sign/[token]` - Complete signature (auto-stores in LP vault)
@@ -153,6 +159,7 @@ npm run test:e2e       # E2E flow tests
 - **Dataroom Gates (15 tests)**: Logic tests for NDA, accreditation, KYC gates
 - **Role Access (20 tests)**: LP/GP role filtering, team scoping, authentication
 - **Admin Fund Dashboard (19 tests)**: GP aggregates, anonymization, bulk actions, validation
+- **Data Migration (11 tests)**: Export/import endpoints, blob manifest, audit logging, ID mapping
 - **E2E Flows (61 tests)**:
   - LP Onboarding: Registration, entity selection, magic link verification
   - NDA Gate: 2-step accreditation wizard, SEC 506(c) compliance logging

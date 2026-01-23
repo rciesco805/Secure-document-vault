@@ -22,6 +22,7 @@ jest.mock("@/lib/prisma", () => ({
     accreditationAck: { findMany: jest.fn() },
     bankLink: { findMany: jest.fn() },
     transaction: { findMany: jest.fn(), create: jest.fn() },
+    subscription: { findMany: jest.fn(), findFirst: jest.fn(), create: jest.fn() },
     auditLog: { create: jest.fn() },
   },
 }));
@@ -82,6 +83,7 @@ describe("Data Migration E2E", () => {
       (mockPrisma.accreditationAck.findMany as jest.Mock).mockResolvedValue([]);
       (mockPrisma.bankLink.findMany as jest.Mock).mockResolvedValue([]);
       (mockPrisma.transaction.findMany as jest.Mock).mockResolvedValue([]);
+      (mockPrisma.subscription.findMany as jest.Mock).mockResolvedValue([]);
 
       const { req, res } = createMocks<NextApiRequest, NextApiResponse>({
         method: "POST",

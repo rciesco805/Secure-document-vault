@@ -32,6 +32,7 @@ interface ImportData {
     accreditationAcks?: any[];
     bankLinks?: any[];
     transactions?: any[];
+    subscriptions?: any[];
   };
 }
 
@@ -345,6 +346,42 @@ export default async function handler(
           result.imported.transactions++;
         } catch (err: any) {
           result.errors.push({ model: "transaction", error: err.message });
+        }
+      }
+    }
+
+    if (importData.data.subscriptions && importData.data.subscriptions.length > 0) {
+      result.imported.subscriptions = 0;
+      result.skipped.subscriptions = 0;
+
+      for (const sub of importData.data.subscriptions) {
+        try {
+          const investorId = idMappings.investors[sub.investorId] || sub.investorId;
+          const fundId = sub.fundId ? idMappings.funds[sub.fundId] || sub.fundId : null;
+
+          const existing = await prisma.subscription.findFirst({
+            where: { investorId, signatureDocumentId: sub.signatureDocumentId },
+          });
+
+          if (existing) {
+            result.skipped.subscriptions++;
+            continue;
+          }
+
+          if (!dryRun) {
+            await prisma.subscription.create({
+              data: {
+                investorId,
+                fundId,
+                signatureDocumentId: sub.signatureDocumentId,
+                amount: sub.amount,
+                status: sub.status || "PENDING",
+              },
+            });
+          }
+          result.imported.subscriptions++;
+        } catch (err: any) {
+          result.errors.push({ model: "subscription", error: err.message });
         }
       }
     }

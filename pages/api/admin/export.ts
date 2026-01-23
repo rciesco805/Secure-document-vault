@@ -23,6 +23,7 @@ const EXPORTABLE_MODELS = [
   "accreditationAck",
   "bankLink",
   "transaction",
+  "subscription",
 ] as const;
 
 type ExportableModel = (typeof EXPORTABLE_MODELS)[number];
@@ -212,6 +213,14 @@ export default async function handler(
       });
       exportData.data.transactions = transactions;
       exportData.metadata.modelCounts.transactions = transactions.length;
+    }
+
+    if (modelsToExport.includes("subscription") && uniqueInvestorIds.length > 0) {
+      const subscriptions = await prisma.subscription.findMany({
+        where: { investorId: { in: uniqueInvestorIds } },
+      });
+      exportData.data.subscriptions = subscriptions;
+      exportData.metadata.modelCounts.subscriptions = subscriptions.length;
     }
 
     await prisma.auditLog.create({

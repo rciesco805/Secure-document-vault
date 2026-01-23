@@ -3,6 +3,15 @@ import { getServerSession } from "next-auth";
 import prisma from "@/lib/prisma";
 import { authOptions } from "../auth/[...nextauth]";
 
+interface CompleteGateBody {
+  ndaAccepted: boolean;
+  accreditationType?: string;
+  confirmIncome?: boolean;
+  confirmNetWorth?: boolean;
+  confirmAccredited?: boolean;
+  confirmRiskAware?: boolean;
+}
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
@@ -18,11 +27,30 @@ export default async function handler(
       return res.status(401).json({ message: "Unauthorized" });
     }
 
-    const { ndaAccepted, accreditationAck } = req.body;
+    const { 
+      ndaAccepted, 
+      accreditationType,
+      confirmIncome,
+      confirmNetWorth,
+      confirmAccredited,
+      confirmRiskAware,
+    } = req.body as CompleteGateBody;
 
-    if (!ndaAccepted || !accreditationAck) {
+    if (!ndaAccepted) {
       return res.status(400).json({ 
-        message: "Both NDA and accreditation acknowledgment are required" 
+        message: "NDA acceptance is required" 
+      });
+    }
+
+    if (!confirmAccredited || !confirmRiskAware) {
+      return res.status(400).json({ 
+        message: "Accreditation confirmation is required" 
+      });
+    }
+
+    if (!confirmIncome && !confirmNetWorth) {
+      return res.status(400).json({ 
+        message: "At least one accreditation criterion (income or net worth) must be selected" 
       });
     }
 
@@ -40,11 +68,24 @@ export default async function handler(
       req.socket.remoteAddress ||
       "unknown";
     const userAgent = req.headers["user-agent"] || "unknown";
+    const timestamp = new Date();
 
     const signedDocsData = user.investorProfile.signedDocs || [];
     const ndaRecord = {
       type: "NDA",
-      signedAt: new Date().toISOString(),
+      signedAt: timestamp.toISOString(),
+      ipAddress,
+      userAgent,
+    };
+
+    const accreditationRecord = {
+      type: "ACCREDITATION_ACK",
+      signedAt: timestamp.toISOString(),
+      accreditationType: accreditationType || (confirmIncome && confirmNetWorth ? "INCOME_AND_NET_WORTH" : confirmIncome ? "INCOME" : "NET_WORTH"),
+      criteria: {
+        income: confirmIncome || false,
+        netWorth: confirmNetWorth || false,
+      },
       ipAddress,
       userAgent,
     };
@@ -54,9 +95,10 @@ export default async function handler(
         where: { id: user.investorProfile.id },
         data: {
           ndaSigned: true,
-          ndaSignedAt: new Date(),
+          ndaSignedAt: timestamp,
           accreditationStatus: "SELF_CERTIFIED",
-          signedDocs: [...(signedDocsData as any[]), ndaRecord],
+          accreditationType: accreditationType || (confirmIncome && confirmNetWorth ? "INCOME_AND_NET_WORTH" : confirmIncome ? "INCOME" : "NET_WORTH"),
+          signedDocs: [...(signedDocsData as any[]), ndaRecord, accreditationRecord],
         },
       }),
       prisma.accreditationAck.create({
@@ -64,8 +106,24 @@ export default async function handler(
           investorId: user.investorProfile.id,
           acknowledged: true,
           method: "SELF_CERTIFIED",
+          accreditationType: accreditationType || (confirmIncome && confirmNetWorth ? "INCOME_AND_NET_WORTH" : confirmIncome ? "INCOME" : "NET_WORTH"),
+          accreditationDetails: {
+            incomeQualification: confirmIncome || false,
+            netWorthQualification: confirmNetWorth || false,
+            incomeThreshold: "$200K individual / $300K joint",
+            netWorthThreshold: "$1M excluding primary residence",
+          },
+          confirmAccredited: confirmAccredited || false,
+          confirmRiskAware: confirmRiskAware || false,
+          confirmDocReview: true,
+          confirmRepresentations: true,
           ipAddress,
           userAgent,
+          completedAt: timestamp,
+          completedSteps: {
+            step1_nda: { completed: true, timestamp: timestamp.toISOString() },
+            step2_accreditation: { completed: true, timestamp: timestamp.toISOString() },
+          },
         },
       }),
     ]);

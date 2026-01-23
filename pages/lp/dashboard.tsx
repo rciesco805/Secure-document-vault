@@ -85,8 +85,14 @@ export default function LPDashboard() {
   const [capitalCalls, setCapitalCalls] = useState<CapitalCall[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showNdaModal, setShowNdaModal] = useState(false);
+  const [wizardStep, setWizardStep] = useState(1);
   const [ndaAccepted, setNdaAccepted] = useState(false);
-  const [accreditationAck, setAccreditationAck] = useState(false);
+  const [accreditationData, setAccreditationData] = useState({
+    confirmIncome: false,
+    confirmNetWorth: false,
+    confirmAccredited: false,
+    confirmRiskAware: false,
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [noteContent, setNoteContent] = useState("");
   const [noteSending, setNoteSending] = useState(false);
@@ -157,8 +163,14 @@ export default function LPDashboard() {
     }
   };
 
+  const canProceedToStep2 = ndaAccepted;
+  const canSubmit = 
+    accreditationData.confirmAccredited && 
+    accreditationData.confirmRiskAware &&
+    (accreditationData.confirmIncome || accreditationData.confirmNetWorth);
+
   const handleNdaSubmit = async () => {
-    if (!ndaAccepted || !accreditationAck) return;
+    if (!canSubmit) return;
 
     setIsSubmitting(true);
     try {
@@ -167,7 +179,15 @@ export default function LPDashboard() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ndaAccepted,
-          accreditationAck,
+          accreditationType: accreditationData.confirmIncome && accreditationData.confirmNetWorth 
+            ? "INCOME_AND_NET_WORTH" 
+            : accreditationData.confirmIncome 
+              ? "INCOME" 
+              : "NET_WORTH",
+          confirmIncome: accreditationData.confirmIncome,
+          confirmNetWorth: accreditationData.confirmNetWorth,
+          confirmAccredited: accreditationData.confirmAccredited,
+          confirmRiskAware: accreditationData.confirmRiskAware,
         }),
       });
 
@@ -176,6 +196,7 @@ export default function LPDashboard() {
       }
 
       setShowNdaModal(false);
+      setWizardStep(1);
       fetchInvestorData();
     } catch (error) {
       console.error("Error completing gate:", error);
@@ -577,10 +598,12 @@ export default function LPDashboard() {
           <DialogContent className="bg-gray-800 border-gray-700 text-white max-w-lg">
             <DialogHeader>
               <DialogTitle className="text-xl">
-                Complete Verification
+                {wizardStep === 1 ? "Non-Disclosure Agreement" : "Accredited Investor Verification"}
               </DialogTitle>
               <DialogDescription className="text-gray-400">
-                Please review and accept the following to access your investor portal.
+                {wizardStep === 1 
+                  ? "Step 1 of 2: Review and accept the confidentiality agreement"
+                  : "Step 2 of 2: Confirm your accredited investor status (SEC 506(c))"}
               </DialogDescription>
             </DialogHeader>
 
@@ -588,16 +611,16 @@ export default function LPDashboard() {
               <div className="flex items-center justify-center">
                 <div className="flex items-center space-x-4">
                   <div
-                    className={`w-8 h-8 rounded-full flex items-center justify-center text-sm ${
-                      ndaAccepted ? "bg-emerald-600" : "bg-gray-700"
+                    className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium ${
+                      wizardStep >= 1 ? "bg-emerald-600" : "bg-gray-700"
                     }`}
                   >
-                    1
+                    {wizardStep > 1 ? <CheckCircle2 className="h-5 w-5" /> : "1"}
                   </div>
-                  <div className="w-16 h-0.5 bg-gray-700" />
+                  <div className={`w-20 h-1 rounded ${wizardStep > 1 ? "bg-emerald-600" : "bg-gray-700"}`} />
                   <div
-                    className={`w-8 h-8 rounded-full flex items-center justify-center text-sm ${
-                      accreditationAck ? "bg-emerald-600" : "bg-gray-700"
+                    className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium ${
+                      wizardStep === 2 ? "bg-emerald-600" : "bg-gray-700"
                     }`}
                   >
                     2
@@ -605,53 +628,160 @@ export default function LPDashboard() {
                 </div>
               </div>
 
-              <div className="p-4 bg-gray-700/50 rounded-lg">
-                <div className="flex items-start space-x-3">
-                  <Checkbox
-                    id="nda"
-                    checked={ndaAccepted}
-                    onCheckedChange={(checked) => setNdaAccepted(checked as boolean)}
-                    className="mt-1"
-                  />
-                  <div>
-                    <Label htmlFor="nda" className="text-white font-medium cursor-pointer">
-                      Non-Disclosure Agreement
-                    </Label>
-                    <p className="text-gray-400 text-sm mt-1">
-                      I agree to keep all fund information confidential and will not share
-                      materials with third parties without prior written consent.
+              {wizardStep === 1 ? (
+                <>
+                  <div className="p-4 bg-gray-700/50 rounded-lg border border-gray-600">
+                    <div className="flex items-start space-x-3">
+                      <Checkbox
+                        id="nda"
+                        checked={ndaAccepted}
+                        onCheckedChange={(checked) => setNdaAccepted(checked as boolean)}
+                        className="mt-1"
+                      />
+                      <div>
+                        <Label htmlFor="nda" className="text-white font-medium cursor-pointer">
+                          I Accept the Non-Disclosure Agreement
+                        </Label>
+                        <p className="text-gray-400 text-sm mt-2">
+                          I agree to keep all fund information, investment terms, and related materials 
+                          strictly confidential. I will not share, distribute, or disclose any information 
+                          to third parties without prior written consent from the fund manager.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <Button
+                    onClick={() => setWizardStep(2)}
+                    disabled={!canProceedToStep2}
+                    className="w-full bg-emerald-600 hover:bg-emerald-700 h-12 text-lg"
+                  >
+                    Continue to Accreditation
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <div className="p-4 bg-blue-900/30 border border-blue-700/50 rounded-lg">
+                    <p className="text-blue-200 text-sm">
+                      This is a Rule 506(c) offering. By law, we must take reasonable steps to verify 
+                      that all investors are accredited. Please confirm your status below.
                     </p>
                   </div>
-                </div>
-              </div>
 
-              <div className="p-4 bg-gray-700/50 rounded-lg">
-                <div className="flex items-start space-x-3">
-                  <Checkbox
-                    id="accreditation"
-                    checked={accreditationAck}
-                    onCheckedChange={(checked) => setAccreditationAck(checked as boolean)}
-                    className="mt-1"
-                  />
-                  <div>
-                    <Label htmlFor="accreditation" className="text-white font-medium cursor-pointer">
-                      Accredited Investor Acknowledgment
-                    </Label>
-                    <p className="text-gray-400 text-sm mt-1">
-                      I certify that I am an accredited investor as defined under SEC Rule 501
-                      of Regulation D. I understand this is a 506(c) offering.
-                    </p>
+                  <div className="space-y-3">
+                    <p className="text-white font-medium">Select at least one that applies:</p>
+                    
+                    <div className="p-4 bg-gray-700/50 rounded-lg border border-gray-600">
+                      <div className="flex items-start space-x-3">
+                        <Checkbox
+                          id="income"
+                          checked={accreditationData.confirmIncome}
+                          onCheckedChange={(checked) => 
+                            setAccreditationData(prev => ({ ...prev, confirmIncome: checked as boolean }))
+                          }
+                          className="mt-1"
+                        />
+                        <div>
+                          <Label htmlFor="income" className="text-white font-medium cursor-pointer">
+                            Income Qualification
+                          </Label>
+                          <p className="text-gray-400 text-sm mt-1">
+                            I have earned individual income exceeding $200,000 (or $300,000 with spouse) 
+                            in each of the past two years and expect the same this year.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="p-4 bg-gray-700/50 rounded-lg border border-gray-600">
+                      <div className="flex items-start space-x-3">
+                        <Checkbox
+                          id="networth"
+                          checked={accreditationData.confirmNetWorth}
+                          onCheckedChange={(checked) => 
+                            setAccreditationData(prev => ({ ...prev, confirmNetWorth: checked as boolean }))
+                          }
+                          className="mt-1"
+                        />
+                        <div>
+                          <Label htmlFor="networth" className="text-white font-medium cursor-pointer">
+                            Net Worth Qualification
+                          </Label>
+                          <p className="text-gray-400 text-sm mt-1">
+                            I have a net worth exceeding $1,000,000, either individually or with my spouse, 
+                            excluding my primary residence.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
 
-              <Button
-                onClick={handleNdaSubmit}
-                disabled={!ndaAccepted || !accreditationAck || isSubmitting}
-                className="w-full bg-emerald-600 hover:bg-emerald-700"
-              >
-                {isSubmitting ? "Processing..." : "Continue to Dashboard"}
-              </Button>
+                  <div className="space-y-3">
+                    <p className="text-white font-medium">Required acknowledgments:</p>
+                    
+                    <div className="p-4 bg-gray-700/50 rounded-lg border border-gray-600">
+                      <div className="flex items-start space-x-3">
+                        <Checkbox
+                          id="confirmAccredited"
+                          checked={accreditationData.confirmAccredited}
+                          onCheckedChange={(checked) => 
+                            setAccreditationData(prev => ({ ...prev, confirmAccredited: checked as boolean }))
+                          }
+                          className="mt-1"
+                        />
+                        <div>
+                          <Label htmlFor="confirmAccredited" className="text-white font-medium cursor-pointer">
+                            I Confirm I Am an Accredited Investor
+                          </Label>
+                          <p className="text-gray-400 text-sm mt-1">
+                            I certify that I meet the SEC definition of an accredited investor under Rule 501 
+                            of Regulation D.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="p-4 bg-gray-700/50 rounded-lg border border-gray-600">
+                      <div className="flex items-start space-x-3">
+                        <Checkbox
+                          id="riskAware"
+                          checked={accreditationData.confirmRiskAware}
+                          onCheckedChange={(checked) => 
+                            setAccreditationData(prev => ({ ...prev, confirmRiskAware: checked as boolean }))
+                          }
+                          className="mt-1"
+                        />
+                        <div>
+                          <Label htmlFor="riskAware" className="text-white font-medium cursor-pointer">
+                            I Understand the Investment Risks
+                          </Label>
+                          <p className="text-gray-400 text-sm mt-1">
+                            I understand that private fund investments are illiquid, carry significant risk 
+                            of loss, and are suitable only for accredited investors.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-3">
+                    <Button
+                      variant="outline"
+                      onClick={() => setWizardStep(1)}
+                      className="flex-1 border-gray-600 text-gray-300 hover:bg-gray-700"
+                    >
+                      Back
+                    </Button>
+                    <Button
+                      onClick={handleNdaSubmit}
+                      disabled={!canSubmit || isSubmitting}
+                      className="flex-[2] bg-emerald-600 hover:bg-emerald-700 h-12 text-lg"
+                    >
+                      {isSubmitting ? "Processing..." : "Confirm & Access Dashboard"}
+                    </Button>
+                  </div>
+                </>
+              )}
             </div>
           </DialogContent>
         </Dialog>

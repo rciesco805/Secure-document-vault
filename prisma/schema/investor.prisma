@@ -236,6 +236,28 @@ model FundReport {
   @@index([fundId])
 }
 
+model Subscription {
+  id                  String   @id @default(cuid())
+  investorId          String
+  fundId              String?
+  signatureDocumentId String   @unique
+  
+  amount              Decimal  @db.Decimal(18, 2)
+  status              String   @default("PENDING")
+  
+  signedAt            DateTime?
+  ipAddress           String?
+  userAgent           String?
+  
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@index([investorId])
+  @@index([fundId])
+  @@index([signatureDocumentId])
+  @@index([status])
+}
+
 model InvestorNote {
   id              String   @id @default(cuid())
   investorId      String

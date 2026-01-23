@@ -533,7 +533,77 @@ async function handlePost(
         }
       } catch (lpError) {
         console.error("Failed to store document in LP vault:", lpError);
-        // Non-blocking - don't fail the signing if vault storage fails
+      }
+
+      // Process subscription completion - update Subscription and Fund.currentRaise
+      if (document.documentType === "SUBSCRIPTION" && document.subscriptionAmount) {
+        try {
+          const subscription = await prisma.subscription.findUnique({
+            where: { signatureDocumentId: document.id },
+          });
+
+          if (subscription && subscription.status !== "SIGNED") {
+            const signerInfo = result.allRecipients.find(
+              (r) => r.role === "SIGNER" && r.status === "SIGNED"
+            );
+
+            await prisma.subscription.update({
+              where: { id: subscription.id },
+              data: {
+                status: "SIGNED",
+                signedAt: new Date(),
+                ipAddress: signerInfo?.ipAddress || null,
+                userAgent: signerInfo?.userAgent || null,
+              },
+            });
+
+            // Update fund currentRaise if linked to a fund
+            if (subscription.fundId) {
+              await prisma.fund.update({
+                where: { id: subscription.fundId },
+                data: {
+                  currentRaise: {
+                    increment: subscription.amount,
+                  },
+                },
+              });
+
+              // Create or update Investment record
+              const investor = await prisma.investor.findFirst({
+                where: {
+                  user: { email: result.allRecipients.find((r) => r.role === "SIGNER")?.email },
+                },
+              });
+
+              if (investor) {
+                await prisma.investment.upsert({
+                  where: {
+                    fundId_investorId: {
+                      fundId: subscription.fundId,
+                      investorId: investor.id,
+                    },
+                  },
+                  update: {
+                    commitmentAmount: {
+                      increment: subscription.amount,
+                    },
+                    subscriptionDate: new Date(),
+                  },
+                  create: {
+                    fundId: subscription.fundId,
+                    investorId: investor.id,
+                    commitmentAmount: subscription.amount,
+                    fundedAmount: 0,
+                    status: "COMMITTED",
+                    subscriptionDate: new Date(),
+                  },
+                });
+              }
+            }
+          }
+        } catch (subError) {
+          console.error("Failed to process subscription completion:", subError);
+        }
       }
 
       onDocumentCompleted({

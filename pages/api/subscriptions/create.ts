@@ -111,6 +111,16 @@ export default async function handler(
       },
     });
 
+    await prisma.subscription.create({
+      data: {
+        investorId,
+        fundId: fundId || null,
+        signatureDocumentId: document.id,
+        amount: parseFloat(amount),
+        status: "PENDING",
+      },
+    });
+
     const signingUrl = `${process.env.NEXTAUTH_URL}/view/sign/${signingToken}`;
 
     if (investor.user?.email) {

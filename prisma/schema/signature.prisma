@@ -29,6 +29,12 @@ model SignatureDocument {
   // Audit trail
   auditTrail        Json?                  // Store complete audit trail
   
+  // Subscription/investment metadata
+  documentType      String?                // "SUBSCRIPTION", "K1", "SIDE_LETTER", etc.
+  subscriptionAmount Decimal?              @db.Decimal(15, 2)  // For subscription agreements
+  metadata          Json?                  // Additional metadata (fund info, etc.)
+  investorId        String?                // Link to investor for LP documents
+  
   // Relations
   teamId            String
   team              Team                   @relation(fields: [teamId], references: [id], onDelete: Cascade)

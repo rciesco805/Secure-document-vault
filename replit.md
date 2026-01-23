@@ -126,6 +126,11 @@ The platform is built on Next.js 14, utilizing a hybrid Pages and App Router app
 ### E-Signature
 - `GET /api/sign/[token]` - Get signature document for signing
 - `POST /api/sign/[token]` - Complete signature (auto-stores in LP vault)
+
+### Subscriptions (Admin Push)
+- `POST /api/subscriptions/create` - GP creates subscription doc with amount, pushes for LP signing
+- `GET /api/teams/[teamId]/investors` - List investors for team (for admin dropdowns)
+- Admin UI: `/admin/subscriptions/new` - Upload PDF, select investor, enter amount, push for signing
 - `GET /api/sign/status` - Real-time signature status polling (requires auth)
 
 ### E-Sign Webhooks

@@ -23,6 +23,10 @@ import {
   ZoomOutIcon,
   SettingsIcon,
   MapPinIcon,
+  SendIcon,
+  FileTextIcon,
+  UsersIcon,
+  MousePointerClickIcon,
 } from "lucide-react";
 import { Document, Page, pdfjs } from "react-pdf";
 
@@ -34,6 +38,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Progress } from "@/components/ui/progress";
 import {
   Card,
   CardContent,
@@ -48,8 +53,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+
+// Progress steps for the wizard
+const WIZARD_STEPS = [
+  { id: 1, label: "Upload", icon: FileTextIcon, description: "Upload document" },
+  { id: 2, label: "Recipients", icon: UsersIcon, description: "Add signers" },
+  { id: 3, label: "Place Fields", icon: MousePointerClickIcon, description: "Add signature fields" },
+  { id: 4, label: "Send", icon: SendIcon, description: "Review & send" },
+];
 
 const fieldTypes = [
   { type: "SIGNATURE", label: "Signature", icon: PenIcon },
@@ -99,8 +118,15 @@ export default function PrepareDocument() {
 
   const containerRef = useRef<HTMLDivElement>(null);
   const pageRef = useRef<HTMLDivElement>(null);
+  const [draggedFieldType, setDraggedFieldType] = useState<string | null>(null);
 
   const selectedField = fields.find(f => f.id === selectedFieldId);
+
+  // Calculate wizard progress
+  const hasRecipients = (document?.recipients?.length || 0) > 0;
+  const hasFields = fields.length > 0;
+  const currentStep = 3; // We're on the "Place Fields" step
+  const progressPercent = hasFields ? 75 : 50;
 
   useEffect(() => {
     if (document?.recipients?.length && !selectedRecipient) {
@@ -160,6 +186,54 @@ export default function PrepareDocument() {
     setFields([...fields, newField]);
     setSelectedFieldId(newField.id);
     toast.success(`Added ${selectedFieldType.toLowerCase().replace("_", " ")} field`);
+  };
+
+  // Handle drag from sidebar field types
+  const handleFieldTypeDragStart = (e: React.DragEvent, type: string) => {
+    e.dataTransfer.setData("fieldType", type);
+    setDraggedFieldType(type);
+  };
+
+  const handleFieldTypeDragEnd = () => {
+    setDraggedFieldType(null);
+  };
+
+  const handlePageDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "copy";
+  };
+
+  const handlePageDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    const fieldType = e.dataTransfer.getData("fieldType");
+    if (!fieldType || !pageRef.current || !selectedRecipient) {
+      setDraggedFieldType(null);
+      return;
+    }
+
+    const rect = pageRef.current.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+
+    const fieldConfig = getFieldDimensions(fieldType);
+
+    const newField: PlacedField = {
+      id: `temp-${Date.now()}`,
+      type: fieldType,
+      recipientId: selectedRecipient,
+      pageNumber: currentPage,
+      x: Math.max(0, Math.min(x - fieldConfig.width / 2, 100 - fieldConfig.width)),
+      y: Math.max(0, Math.min(y - fieldConfig.height / 2, 100 - fieldConfig.height)),
+      width: fieldConfig.width,
+      height: fieldConfig.height,
+      label: "",
+      required: true,
+    };
+
+    setFields([...fields, newField]);
+    setSelectedFieldId(newField.id);
+    setDraggedFieldType(null);
+    toast.success(`Added ${fieldType.toLowerCase().replace("_", " ")} field`);
   };
 
   const getFieldDimensions = (type: string) => {
@@ -374,33 +448,98 @@ export default function PrepareDocument() {
   return (
     <AppLayout>
       <div className="sticky top-0 mb-4 min-h-[calc(100vh-72px)] rounded-lg bg-white p-4 dark:bg-gray-900 sm:mx-4 sm:pt-8">
-        <section className="mb-6 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Link href={`/sign/${document.id}`}>
-              <Button variant="ghost" size="icon">
-                <ArrowLeftIcon className="h-5 w-5" />
+        {/* Progress Wizard Stepper */}
+        <div className="mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-4">
+              <Link href={`/sign/${document.id}`}>
+                <Button variant="ghost" size="icon">
+                  <ArrowLeftIcon className="h-5 w-5" />
+                </Button>
+              </Link>
+              <div>
+                <h2 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
+                  Prepare: {document.title}
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  Drag fields from the sidebar or click on the document to place them
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" onClick={handleSave} disabled={isSaving}>
+                <SaveIcon className="mr-2 h-4 w-4" />
+                {isSaving ? "Saving..." : "Save"}
               </Button>
-            </Link>
-            <div>
-              <h2 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
-                Prepare: {document.title}
-              </h2>
-              <p className="text-sm text-muted-foreground">
-                Click on the document to place signature fields
-              </p>
+              <Link href={`/sign/${document.id}`}>
+                <Button>
+                  <SendIcon className="mr-2 h-4 w-4" />
+                  Review & Send
+                </Button>
+              </Link>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" onClick={handleSave} disabled={isSaving}>
-              <SaveIcon className="mr-2 h-4 w-4" />
-              {isSaving ? "Saving..." : "Save"}
-            </Button>
-            <Link href={`/sign/${document.id}`}>
-              <Button>
-                <CheckIcon className="mr-2 h-4 w-4" />
-                Done
-              </Button>
-            </Link>
+
+          {/* Visual Progress Steps */}
+          <TooltipProvider>
+            <div className="relative">
+              <Progress value={progressPercent} className="h-2 mb-4" />
+              <div className="flex justify-between">
+                {WIZARD_STEPS.map((step, index) => {
+                  const StepIcon = step.icon;
+                  const isCompleted = step.id < currentStep || (step.id === 3 && hasFields);
+                  const isCurrent = step.id === currentStep;
+                  
+                  return (
+                    <Tooltip key={step.id}>
+                      <TooltipTrigger asChild>
+                        <div 
+                          className={`flex flex-col items-center gap-1 ${
+                            isCurrent ? 'text-primary' : isCompleted ? 'text-green-600' : 'text-muted-foreground'
+                          }`}
+                        >
+                          <div 
+                            className={`flex h-8 w-8 items-center justify-center rounded-full border-2 transition-colors ${
+                              isCurrent 
+                                ? 'border-primary bg-primary text-white' 
+                                : isCompleted 
+                                  ? 'border-green-600 bg-green-600 text-white' 
+                                  : 'border-muted-foreground/30 bg-background'
+                            }`}
+                          >
+                            {isCompleted && step.id !== currentStep ? (
+                              <CheckIcon className="h-4 w-4" />
+                            ) : (
+                              <StepIcon className="h-4 w-4" />
+                            )}
+                          </div>
+                          <span className="text-xs font-medium hidden sm:block">{step.label}</span>
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>{step.description}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  );
+                })}
+              </div>
+            </div>
+          </TooltipProvider>
+        </div>
+
+        <section className="mb-4 flex items-center justify-between">
+          {/* Field count indicator */}
+          <div className="flex items-center gap-2 text-sm">
+            <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+              fields.length > 0 ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+            }`}>
+              {fields.length} {fields.length === 1 ? 'field' : 'fields'} placed
+            </span>
+            {!hasRecipients && (
+              <span className="inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-800 dark:bg-red-900 dark:text-red-200">
+                No recipients added
+              </span>
+            )}
           </div>
         </section>
 
@@ -456,7 +595,11 @@ export default function PrepareDocument() {
                     <div 
                       ref={pageRef}
                       onClick={handlePageClick}
-                      className="relative cursor-crosshair shadow-lg"
+                      onDragOver={handlePageDragOver}
+                      onDrop={handlePageDrop}
+                      className={`relative cursor-crosshair shadow-lg transition-all ${
+                        draggedFieldType ? 'ring-2 ring-primary ring-offset-2' : ''
+                      }`}
                     >
                       {document.fileUrl ? (
                         <Document
@@ -674,18 +817,24 @@ export default function PrepareDocument() {
                     {fieldTypes.map(({ type, label, icon: Icon }) => (
                       <button
                         key={type}
+                        draggable
                         onClick={() => setSelectedFieldType(type)}
-                        className={`flex flex-col items-center gap-1 rounded-lg border p-3 text-xs transition-colors ${
+                        onDragStart={(e) => handleFieldTypeDragStart(e, type)}
+                        onDragEnd={handleFieldTypeDragEnd}
+                        className={`flex flex-col items-center gap-1 rounded-lg border p-3 text-xs transition-colors cursor-grab active:cursor-grabbing ${
                           selectedFieldType === type
                             ? "border-primary bg-primary/10"
                             : "border-gray-200 hover:border-gray-300 dark:border-gray-700"
-                        }`}
+                        } ${draggedFieldType === type ? "opacity-50" : ""}`}
                       >
                         <Icon className="h-4 w-4" />
                         {label}
                       </button>
                     ))}
                   </div>
+                  <p className="mt-3 text-xs text-muted-foreground text-center">
+                    Drag to document or click to select, then click on page
+                  </p>
                 </CardContent>
               </Card>
             )}

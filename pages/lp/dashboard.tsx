@@ -38,6 +38,7 @@ import {
   CreditCard,
 } from "lucide-react";
 import { KycVerification } from "@/components/lp/kyc-verification";
+import { ActivityTimeline } from "@/components/lp/activity-timeline";
 
 interface InvestorDocument {
   id: string;
@@ -684,6 +685,10 @@ export default function LPDashboard() {
                 </div>
               </CardContent>
             </Card>
+          </div>
+
+          <div className="mt-6">
+            <ActivityTimeline />
           </div>
         </main>
 

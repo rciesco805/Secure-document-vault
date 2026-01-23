@@ -12,15 +12,26 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { fundId, thresholdEnabled, thresholdAmount } = body;
+    const { 
+      fundId, 
+      initialThresholdEnabled, 
+      initialThresholdAmount,
+      fullAuthorizedAmount,
+      // Legacy fields for backward compatibility
+      thresholdEnabled, 
+      thresholdAmount 
+    } = body;
 
     if (!fundId) {
       return NextResponse.json({ message: "Fund ID required" }, { status: 400 });
     }
 
-    if (thresholdEnabled && (!thresholdAmount || thresholdAmount <= 0)) {
+    const effectiveThresholdEnabled = initialThresholdEnabled ?? thresholdEnabled;
+    const effectiveThresholdAmount = initialThresholdAmount ?? thresholdAmount;
+
+    if (effectiveThresholdEnabled && (!effectiveThresholdAmount || effectiveThresholdAmount <= 0)) {
       return NextResponse.json(
-        { message: "Threshold amount must be greater than 0 when enabled" },
+        { message: "Initial threshold amount must be greater than 0 when enabled" },
         { status: 400 }
       );
     }
@@ -62,28 +73,54 @@ export async function POST(request: NextRequest) {
       timestamp: new Date().toISOString(),
       ip,
       userAgent,
-      action: "UPDATE_THRESHOLD",
+      action: "UPDATE_THRESHOLD_SETTINGS",
       userId: user.id,
       previousValue: {
-        thresholdEnabled: fund.aggregate?.thresholdEnabled || false,
-        thresholdAmount: fund.aggregate?.thresholdAmount
-          ? Number(fund.aggregate.thresholdAmount)
-          : null,
+        initialThresholdEnabled: fund.initialThresholdEnabled || fund.aggregate?.initialThresholdEnabled || false,
+        initialThresholdAmount: fund.initialThresholdAmount 
+          ? Number(fund.initialThresholdAmount)
+          : fund.aggregate?.initialThresholdAmount 
+            ? Number(fund.aggregate.initialThresholdAmount) 
+            : null,
+        fullAuthorizedAmount: fund.fullAuthorizedAmount 
+          ? Number(fund.fullAuthorizedAmount) 
+          : fund.aggregate?.fullAuthorizedAmount
+            ? Number(fund.aggregate.fullAuthorizedAmount)
+            : null,
       },
       newValue: {
-        thresholdEnabled,
-        thresholdAmount: thresholdEnabled ? thresholdAmount : null,
+        initialThresholdEnabled: effectiveThresholdEnabled,
+        initialThresholdAmount: effectiveThresholdEnabled ? effectiveThresholdAmount : null,
+        fullAuthorizedAmount: fullAuthorizedAmount || null,
       },
     };
 
+    // Update Fund model with new threshold fields
+    await prisma.fund.update({
+      where: { id: fundId },
+      data: {
+        initialThresholdEnabled: effectiveThresholdEnabled,
+        initialThresholdAmount: effectiveThresholdEnabled ? effectiveThresholdAmount : null,
+        fullAuthorizedAmount: fullAuthorizedAmount || null,
+        // Keep legacy fields in sync
+        capitalCallThresholdEnabled: effectiveThresholdEnabled,
+        capitalCallThreshold: effectiveThresholdEnabled ? effectiveThresholdAmount : null,
+      },
+    });
+
     const existingAudit = (fund.aggregate?.audit as any[]) || [];
 
+    // Update or create FundAggregate
     if (fund.aggregate) {
       await prisma.fundAggregate.update({
         where: { id: fund.aggregate.id },
         data: {
-          thresholdEnabled,
-          thresholdAmount: thresholdEnabled ? thresholdAmount : null,
+          initialThresholdEnabled: effectiveThresholdEnabled,
+          initialThresholdAmount: effectiveThresholdEnabled ? effectiveThresholdAmount : null,
+          fullAuthorizedAmount: fullAuthorizedAmount || null,
+          // Keep legacy fields in sync
+          thresholdEnabled: effectiveThresholdEnabled,
+          thresholdAmount: effectiveThresholdEnabled ? effectiveThresholdAmount : null,
           audit: [...existingAudit, auditEntry],
         },
       });
@@ -91,8 +128,11 @@ export async function POST(request: NextRequest) {
       await prisma.fundAggregate.create({
         data: {
           fundId,
-          thresholdEnabled,
-          thresholdAmount: thresholdEnabled ? thresholdAmount : null,
+          initialThresholdEnabled: effectiveThresholdEnabled,
+          initialThresholdAmount: effectiveThresholdEnabled ? effectiveThresholdAmount : null,
+          fullAuthorizedAmount: fullAuthorizedAmount || null,
+          thresholdEnabled: effectiveThresholdEnabled,
+          thresholdAmount: effectiveThresholdEnabled ? effectiveThresholdAmount : null,
           audit: [auditEntry],
         },
       });
@@ -100,10 +140,10 @@ export async function POST(request: NextRequest) {
 
     await prisma.auditLog.create({
       data: {
-        eventType: "FUND_AGGREGATE_UPDATE",
+        eventType: "FUND_THRESHOLD_UPDATE",
         userId: user.id,
         teamId: fund.teamId,
-        resourceType: "FUND_AGGREGATE",
+        resourceType: "FUND",
         resourceId: fundId,
         ipAddress: ip,
         userAgent,

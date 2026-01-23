@@ -21,7 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Loader2, Info, CheckCircle, AlertTriangle, Target, DollarSign } from "lucide-react";
 
 interface Fund {
   id: string;
@@ -29,11 +29,17 @@ interface Fund {
 }
 
 interface FundSettings {
-  thresholdEnabled: boolean;
-  thresholdAmount: number | null;
+  initialThresholdEnabled: boolean;
+  initialThresholdAmount: number | null;
+  fullAuthorizedAmount: number | null;
   totalCommitted: number;
   totalInbound: number;
   totalOutbound: number;
+  initialThresholdMet: boolean;
+  fullAuthorizedProgress: number;
+  // Legacy fields
+  thresholdEnabled: boolean;
+  thresholdAmount: number | null;
 }
 
 export default function FundSettingsPage() {
@@ -43,13 +49,19 @@ export default function FundSettingsPage() {
   const [funds, setFunds] = useState<Fund[]>([]);
   const [selectedFundId, setSelectedFundId] = useState<string>("");
   const [settings, setSettings] = useState<FundSettings>({
-    thresholdEnabled: false,
-    thresholdAmount: null,
+    initialThresholdEnabled: false,
+    initialThresholdAmount: null,
+    fullAuthorizedAmount: null,
     totalCommitted: 0,
     totalInbound: 0,
     totalOutbound: 0,
+    initialThresholdMet: false,
+    fullAuthorizedProgress: 0,
+    thresholdEnabled: false,
+    thresholdAmount: null,
   });
-  const [amountInput, setAmountInput] = useState("");
+  const [initialAmountInput, setInitialAmountInput] = useState("");
+  const [fullAmountInput, setFullAmountInput] = useState("");
 
   useEffect(() => {
     if (status === "authenticated") {
@@ -85,8 +97,20 @@ export default function FundSettingsPage() {
       const res = await fetch(`/api/fund-settings/${fundId}`);
       if (res.ok) {
         const data = await res.json();
-        setSettings(data);
-        setAmountInput(data.thresholdAmount?.toString() || "");
+        setSettings({
+          initialThresholdEnabled: data.initialThresholdEnabled ?? data.thresholdEnabled ?? false,
+          initialThresholdAmount: data.initialThresholdAmount ?? data.thresholdAmount ?? null,
+          fullAuthorizedAmount: data.fullAuthorizedAmount ?? null,
+          totalCommitted: data.totalCommitted ?? 0,
+          totalInbound: data.totalInbound ?? 0,
+          totalOutbound: data.totalOutbound ?? 0,
+          initialThresholdMet: data.initialThresholdMet ?? false,
+          fullAuthorizedProgress: data.fullAuthorizedProgress ?? 0,
+          thresholdEnabled: data.thresholdEnabled ?? false,
+          thresholdAmount: data.thresholdAmount ?? null,
+        });
+        setInitialAmountInput((data.initialThresholdAmount ?? data.thresholdAmount)?.toString() || "");
+        setFullAmountInput(data.fullAuthorizedAmount?.toString() || "");
       }
     } catch (error) {
       toast.error("Failed to load settings");
@@ -94,8 +118,8 @@ export default function FundSettingsPage() {
   };
 
   const handleSave = async () => {
-    if (settings.thresholdEnabled && (!amountInput || parseFloat(amountInput) <= 0)) {
-      toast.error("Threshold amount must be greater than 0");
+    if (settings.initialThresholdEnabled && (!initialAmountInput || parseFloat(initialAmountInput) <= 0)) {
+      toast.error("Initial closing threshold must be greater than 0");
       return;
     }
 
@@ -106,8 +130,12 @@ export default function FundSettingsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           fundId: selectedFundId,
-          thresholdEnabled: settings.thresholdEnabled,
-          thresholdAmount: settings.thresholdEnabled ? parseFloat(amountInput) : null,
+          initialThresholdEnabled: settings.initialThresholdEnabled,
+          initialThresholdAmount: settings.initialThresholdEnabled ? parseFloat(initialAmountInput) : null,
+          fullAuthorizedAmount: fullAmountInput ? parseFloat(fullAmountInput) : null,
+          // Legacy fields for backward compatibility
+          thresholdEnabled: settings.initialThresholdEnabled,
+          thresholdAmount: settings.initialThresholdEnabled ? parseFloat(initialAmountInput) : null,
         }),
       });
 
@@ -141,8 +169,12 @@ export default function FundSettingsPage() {
     );
   }
 
-  const thresholdProgress = settings.thresholdAmount
-    ? Math.min(100, Math.round((settings.totalCommitted / settings.thresholdAmount) * 100))
+  const initialThresholdProgress = settings.initialThresholdAmount
+    ? Math.min(100, Math.round((settings.totalCommitted / settings.initialThresholdAmount) * 100))
+    : 0;
+
+  const fullAuthorizedProgress = settings.fullAuthorizedAmount
+    ? Math.min(100, Math.round((settings.totalCommitted / settings.fullAuthorizedAmount) * 100))
     : 0;
 
   return (
@@ -151,7 +183,7 @@ export default function FundSettingsPage() {
         <CardHeader>
           <CardTitle>Fund Threshold Settings</CardTitle>
           <CardDescription>
-            Configure capital call thresholds for your funds
+            Configure initial closing threshold and full authorized amount for your funds
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -179,75 +211,148 @@ export default function FundSettingsPage() {
             </div>
           )}
 
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <Label>Enable Capital Call Threshold</Label>
-                <p className="text-sm text-muted-foreground">
-                  Require minimum committed capital before allowing capital calls
-                </p>
-              </div>
-              <Switch
-                checked={settings.thresholdEnabled}
-                onCheckedChange={(checked) =>
-                  setSettings({ ...settings, thresholdEnabled: checked })
-                }
-              />
-            </div>
-
-            {settings.thresholdEnabled && (
-              <div className="space-y-4 ml-0">
-                <div className="space-y-2">
-                  <Label htmlFor="amount">Threshold Amount ($)</Label>
-                  <Input
-                    id="amount"
-                    type="number"
-                    min="0"
-                    step="1000"
-                    placeholder="e.g., 1800000"
-                    value={amountInput}
-                    onChange={(e) => setAmountInput(e.target.value)}
-                    className="text-lg"
+          <div className="space-y-6">
+            <Card className="border-blue-200 bg-blue-50/50 dark:bg-blue-950/20">
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-2">
+                  <Target className="h-5 w-5 text-blue-600" />
+                  <CardTitle className="text-base">Initial Closing Threshold</CardTitle>
+                </div>
+                <CardDescription className="text-sm">
+                  <span className="flex items-start gap-2 mt-1">
+                    <Info className="h-4 w-4 mt-0.5 flex-shrink-0 text-blue-500" />
+                    <span>
+                      The minimum committed capital required before the first capital call. 
+                      This gates capital calls until the threshold is met.
+                    </span>
+                  </span>
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label>Enable Initial Threshold</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Block capital calls until threshold is reached
+                    </p>
+                  </div>
+                  <Switch
+                    checked={settings.initialThresholdEnabled}
+                    onCheckedChange={(checked) =>
+                      setSettings({ ...settings, initialThresholdEnabled: checked })
+                    }
                   />
-                  <p className="text-xs text-muted-foreground">
-                    Minimum committed capital required before capital calls
-                  </p>
                 </div>
 
-                {settings.thresholdAmount && (
-                  <div className="bg-muted p-4 rounded-lg space-y-3">
-                    <div className="flex justify-between text-sm">
-                      <span>Progress to Threshold</span>
-                      <span className="font-medium">{thresholdProgress}%</span>
+                {settings.initialThresholdEnabled && (
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="initialAmount">Initial Threshold Amount ($)</Label>
+                      <Input
+                        id="initialAmount"
+                        type="number"
+                        min="0"
+                        step="10000"
+                        placeholder="e.g., 1800000 for $1.8M"
+                        value={initialAmountInput}
+                        onChange={(e) => setInitialAmountInput(e.target.value)}
+                        className="text-lg"
+                      />
                     </div>
-                    <div className="w-full bg-gray-200 rounded-full h-3">
+
+                    {settings.initialThresholdAmount && (
+                      <div className="bg-white dark:bg-gray-900 p-4 rounded-lg border space-y-3">
+                        <div className="flex justify-between text-sm">
+                          <span>Progress to Initial Threshold</span>
+                          <span className="font-medium">{initialThresholdProgress}%</span>
+                        </div>
+                        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
+                          <div
+                            className={`h-3 rounded-full transition-all ${
+                              initialThresholdProgress >= 100 ? "bg-green-500" : "bg-blue-500"
+                            }`}
+                            style={{ width: `${Math.min(100, initialThresholdProgress)}%` }}
+                          />
+                        </div>
+                        <div className="flex justify-between text-xs text-muted-foreground">
+                          <span>Committed: ${settings.totalCommitted.toLocaleString()}</span>
+                          <span>Threshold: ${settings.initialThresholdAmount.toLocaleString()}</span>
+                        </div>
+                        {initialThresholdProgress >= 100 ? (
+                          <div className="flex items-center gap-2 text-sm text-green-600 font-medium">
+                            <CheckCircle className="h-4 w-4" />
+                            Initial threshold met - capital calls enabled
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2 text-sm text-amber-600">
+                            <AlertTriangle className="h-4 w-4" />
+                            ${(settings.initialThresholdAmount - settings.totalCommitted).toLocaleString()} more needed before first capital call
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card className="border-purple-200 bg-purple-50/50 dark:bg-purple-950/20">
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-2">
+                  <DollarSign className="h-5 w-5 text-purple-600" />
+                  <CardTitle className="text-base">Full Authorized Amount</CardTitle>
+                </div>
+                <CardDescription className="text-sm">
+                  <span className="flex items-start gap-2 mt-1">
+                    <Info className="h-4 w-4 mt-0.5 flex-shrink-0 text-purple-500" />
+                    <span>
+                      The total authorized raise target (e.g., $9.55M). 
+                      This is for progress tracking only and does not gate any actions.
+                    </span>
+                  </span>
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="fullAmount">Full Authorized Amount ($)</Label>
+                  <Input
+                    id="fullAmount"
+                    type="number"
+                    min="0"
+                    step="100000"
+                    placeholder="e.g., 9550000 for $9.55M"
+                    value={fullAmountInput}
+                    onChange={(e) => setFullAmountInput(e.target.value)}
+                    className="text-lg"
+                  />
+                </div>
+
+                {fullAmountInput && parseFloat(fullAmountInput) > 0 && (
+                  <div className="bg-white dark:bg-gray-900 p-4 rounded-lg border space-y-3">
+                    <div className="flex justify-between text-sm">
+                      <span>Progress to Full Authorization</span>
+                      <span className="font-medium">{fullAuthorizedProgress}%</span>
+                    </div>
+                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
                       <div
-                        className={`h-3 rounded-full transition-all ${
-                          thresholdProgress >= 100 ? "bg-green-500" : "bg-blue-500"
-                        }`}
-                        style={{ width: `${Math.min(100, thresholdProgress)}%` }}
+                        className="h-3 rounded-full transition-all bg-purple-500"
+                        style={{ width: `${Math.min(100, fullAuthorizedProgress)}%` }}
                       />
                     </div>
                     <div className="flex justify-between text-xs text-muted-foreground">
                       <span>Committed: ${settings.totalCommitted.toLocaleString()}</span>
-                      <span>Threshold: ${settings.thresholdAmount.toLocaleString()}</span>
+                      <span>Target: ${parseFloat(fullAmountInput).toLocaleString()}</span>
                     </div>
-                    {thresholdProgress >= 100 ? (
-                      <p className="text-sm text-green-600 font-medium">
-                        Threshold met - capital calls enabled
-                      </p>
-                    ) : (
-                      <p className="text-sm text-amber-600">
-                        ${(settings.thresholdAmount - settings.totalCommitted).toLocaleString()} more needed
-                      </p>
-                    )}
+                    <p className="text-xs text-muted-foreground">
+                      ${(parseFloat(fullAmountInput) - settings.totalCommitted).toLocaleString()} remaining to reach full authorization
+                    </p>
                   </div>
                 )}
-              </div>
-            )}
+              </CardContent>
+            </Card>
 
             <div className="bg-muted/50 p-4 rounded-lg space-y-2">
-              <p className="text-sm font-medium">Current Aggregates</p>
+              <p className="text-sm font-medium">Current Fund Aggregates</p>
               <div className="grid grid-cols-3 gap-4 text-center">
                 <div>
                   <p className="text-lg font-bold">${settings.totalCommitted.toLocaleString()}</p>

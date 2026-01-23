@@ -43,22 +43,63 @@ export async function GET(
       return NextResponse.json({ message: "Forbidden" }, { status: 403 });
     }
 
-    const aggregate = fund.aggregate || {
-      thresholdEnabled: false,
-      thresholdAmount: null,
-      totalCommitted: 0,
-      totalInbound: 0,
-      totalOutbound: 0,
-    };
+    const aggregate = fund.aggregate;
+
+    // Get initial threshold values (prioritize new fields, fallback to legacy)
+    const initialThresholdEnabled = fund.initialThresholdEnabled || 
+      aggregate?.initialThresholdEnabled || 
+      fund.capitalCallThresholdEnabled ||
+      aggregate?.thresholdEnabled || 
+      false;
+    
+    const initialThresholdAmount = fund.initialThresholdAmount 
+      ? Number(fund.initialThresholdAmount)
+      : aggregate?.initialThresholdAmount 
+        ? Number(aggregate.initialThresholdAmount)
+        : fund.capitalCallThreshold
+          ? Number(fund.capitalCallThreshold)
+          : aggregate?.thresholdAmount
+            ? Number(aggregate.thresholdAmount)
+            : null;
+
+    // Full authorized amount
+    const fullAuthorizedAmount = fund.fullAuthorizedAmount
+      ? Number(fund.fullAuthorizedAmount)
+      : aggregate?.fullAuthorizedAmount
+        ? Number(aggregate.fullAuthorizedAmount)
+        : null;
+
+    // Aggregate values
+    const totalCommitted = aggregate ? Number(aggregate.totalCommitted) : 0;
+    const totalInbound = aggregate ? Number(aggregate.totalInbound) : 0;
+    const totalOutbound = aggregate ? Number(aggregate.totalOutbound) : 0;
+
+    // Threshold met status
+    const initialThresholdMet = aggregate?.initialThresholdMet || 
+      (initialThresholdAmount && totalCommitted >= initialThresholdAmount) ||
+      false;
+
+    // Progress calculations
+    const fullAuthorizedProgress = fullAuthorizedAmount && fullAuthorizedAmount > 0
+      ? Math.min(100, (totalCommitted / fullAuthorizedAmount) * 100)
+      : aggregate?.fullAuthorizedProgress
+        ? Number(aggregate.fullAuthorizedProgress)
+        : 0;
 
     return NextResponse.json({
-      thresholdEnabled: aggregate.thresholdEnabled,
-      thresholdAmount: aggregate.thresholdAmount
-        ? Number(aggregate.thresholdAmount)
-        : null,
-      totalCommitted: Number(aggregate.totalCommitted || 0),
-      totalInbound: Number(aggregate.totalInbound || 0),
-      totalOutbound: Number(aggregate.totalOutbound || 0),
+      // New fields
+      initialThresholdEnabled,
+      initialThresholdAmount,
+      fullAuthorizedAmount,
+      initialThresholdMet,
+      fullAuthorizedProgress,
+      // Aggregates
+      totalCommitted,
+      totalInbound,
+      totalOutbound,
+      // Legacy fields for backward compatibility
+      thresholdEnabled: initialThresholdEnabled,
+      thresholdAmount: initialThresholdAmount,
     });
   } catch (error: any) {
     console.error("Error fetching fund settings:", error);

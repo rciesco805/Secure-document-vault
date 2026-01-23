@@ -1,10 +1,61 @@
 {
+  "buildCommand": "prisma generate --schema=./prisma/schema && next build",
+  "framework": "nextjs",
   "functions": {
     "pages/api/mupdf/convert-page.ts": {
-      "memory": 2048
+      "memory": 2048,
+      "maxDuration": 60
     },
     "pages/api/mupdf/annotate-document.ts": {
-      "memory": 2048
+      "memory": 2048,
+      "maxDuration": 60
+    },
+    "pages/api/sign/[token].ts": {
+      "memory": 1024,
+      "maxDuration": 30
+    },
+    "pages/api/webhooks/persona.ts": {
+      "maxDuration": 30
+    },
+    "pages/api/webhooks/esign.ts": {
+      "maxDuration": 30
     }
-  }
+  },
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        { "key": "Access-Control-Allow-Credentials", "value": "true" },
+        { "key": "Access-Control-Allow-Origin", "value": "*" },
+        { "key": "Access-Control-Allow-Methods", "value": "GET,OPTIONS,PATCH,DELETE,POST,PUT" },
+        { "key": "Access-Control-Allow-Headers", "value": "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version" }
+      ]
+    },
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "X-Frame-Options", "value": "DENY" },
+        { "key": "X-XSS-Protection", "value": "1; mode=block" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }
+      ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/lp/:path*",
+      "destination": "/lp/:path*"
+    },
+    {
+      "source": "/sign/:token",
+      "destination": "/sign/:token"
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/home",
+      "destination": "/dashboard",
+      "permanent": true
+    }
+  ]
 }

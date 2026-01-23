@@ -130,12 +130,18 @@ npm test:coverage
 npm run test:sign      # Signing flow tests
 npm run test:auth      # Authentication tests
 npm run test:datarooms # Dataroom gate tests
+npm run test:e2e       # E2E flow tests
 ```
 
 ### Test Coverage
 - **Sign Routes (12 tests)**: E2E tests calling actual API handler with Prisma mocks
 - **Auth Flows (6 tests)**: Logic tests for magic link, session, OTP validation
 - **Dataroom Gates (15 tests)**: Logic tests for NDA, accreditation, KYC gates
+- **E2E Flows (61 tests)**:
+  - LP Onboarding: Registration, entity selection, magic link verification
+  - NDA Gate: 2-step accreditation wizard, SEC 506(c) compliance logging
+  - E-Sign Wizard: Document upload, recipients, field placement, signing, completion
+  - Compliance Hooks: Webhooks, email notifications, audit trail export
 
 ## Database Commands
 

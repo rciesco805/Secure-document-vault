@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import { nanoid } from "nanoid";
 import { sendEmail } from "@/lib/resend";
 import NewQuestion from "@/components/emails/new-question";
+import { getTeamAdminEmails } from "@/lib/constants/admins";
 
 export default async function handle(
   req: NextApiRequest,
@@ -62,12 +63,12 @@ export default async function handle(
         },
       });
 
-      const AUTHORIZED_ADMIN_EMAILS = [
-        "rciesco@gmail.com",
-        "investors@bermudafranchisegroup.com",
-      ];
+      // Get admin emails dynamically from the team
+      const adminEmails = view.teamId 
+        ? await getTeamAdminEmails(view.teamId)
+        : [];
 
-      for (const adminEmail of AUTHORIZED_ADMIN_EMAILS) {
+      for (const adminEmail of adminEmails) {
         try {
           await sendEmail({
             to: adminEmail,

@@ -1,9 +1,22 @@
 import { randomUUID } from "crypto";
 
-import { ADMIN_EMAILS, isAdminEmail } from "@/lib/constants/admins";
 import prisma from "@/lib/prisma";
 
 const ADMIN_MAGIC_LINK_EXPIRY_MINUTES = 60; // 1 hour expiry for admin magic links
+
+/**
+ * Check if a user is an admin of any team (dynamic database lookup)
+ */
+async function isUserAdmin(email: string): Promise<boolean> {
+  const adminTeam = await prisma.userTeam.findFirst({
+    where: {
+      user: { email: { equals: email, mode: "insensitive" } },
+      role: { in: ["ADMIN", "SUPER_ADMIN"] },
+      status: "ACTIVE",
+    },
+  });
+  return !!adminTeam;
+}
 
 export async function createAdminMagicLink({
   email,
@@ -17,8 +30,10 @@ export async function createAdminMagicLink({
   try {
     const normalizedEmail = email.trim().toLowerCase();
     
-    if (!isAdminEmail(normalizedEmail)) {
-      console.error("[ADMIN_MAGIC_LINK] Email not in admin list:", normalizedEmail);
+    // Dynamic check if user is an admin of any team
+    const isAdmin = await isUserAdmin(normalizedEmail);
+    if (!isAdmin) {
+      console.error("[ADMIN_MAGIC_LINK] Email not an admin of any team:", normalizedEmail);
       return null;
     }
 
@@ -62,7 +77,9 @@ export async function verifyAdminMagicLink({
   try {
     const normalizedEmail = email.trim().toLowerCase();
     
-    if (!isAdminEmail(normalizedEmail)) {
+    // Dynamic check if user is an admin of any team
+    const isAdmin = await isUserAdmin(normalizedEmail);
+    if (!isAdmin) {
       return false;
     }
 

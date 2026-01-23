@@ -3,7 +3,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { z } from "zod";
 
 import { createAdminMagicLink } from "@/lib/auth/admin-magic-link";
-import { ADMIN_EMAILS } from "@/lib/constants/admins";
+import { getAllAdminEmails } from "@/lib/constants/admins";
 import { sendEmail } from "@/lib/resend";
 
 import InviteRequest from "@/components/emails/invite-request";
@@ -37,7 +37,10 @@ export default async function handler(
     const baseUrl = process.env.NEXTAUTH_URL || "https://dataroom.bermudafranchisegroup.com";
     const quickAddPath = `/admin/quick-add?email=${encodeURIComponent(email)}`;
     
-    for (const adminEmail of ADMIN_EMAILS) {
+    // Get admin emails dynamically from the database
+    const adminEmails = await getAllAdminEmails();
+    
+    for (const adminEmail of adminEmails) {
       const magicLinkResult = await createAdminMagicLink({
         email: adminEmail,
         redirectPath: quickAddPath,

@@ -2,7 +2,6 @@ import { NextApiRequest, NextApiResponse } from "next";
 
 import { getServerSession } from "next-auth/next";
 
-import { ADMIN_EMAILS, isAdminEmail } from "@/lib/constants/admins";
 import prisma from "@/lib/prisma";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 
@@ -15,7 +14,19 @@ export default async function handler(
   }
 
   const session = await getServerSession(req, res, authOptions);
-  if (!session?.user?.email || !isAdminEmail(session.user.email)) {
+  
+  // Check if user is an admin of any team
+  const isAdmin = session?.user?.email 
+    ? await prisma.userTeam.findFirst({
+        where: {
+          user: { email: { equals: session.user.email, mode: "insensitive" } },
+          role: { in: ["ADMIN", "SUPER_ADMIN"] },
+          status: "ACTIVE",
+        },
+      })
+    : null;
+    
+  if (!session?.user?.email || !isAdmin) {
     return res.status(401).json({ error: "Unauthorized - admin access required" });
   }
 
@@ -56,26 +67,35 @@ export default async function handler(
     const results: string[] = [];
     results.push(`Primary team: ${primaryTeam.name} (ID: ${primaryTeam.id})`);
 
-    // Find the other two admin users
-    const otherAdmins = await prisma.user.findMany({
+    // Find other admin users (dynamically from database)
+    const allAdminMemberships = await prisma.userTeam.findMany({
       where: {
-        email: {
-          in: ADMIN_EMAILS.filter(e => e !== "investors@bermudafranchisegroup.com"),
+        role: { in: ["ADMIN", "SUPER_ADMIN"] },
+        status: "ACTIVE",
+        user: {
+          email: { not: "investors@bermudafranchisegroup.com" },
         },
       },
       include: {
-        teams: {
+        user: {
           include: {
-            team: {
+            teams: {
               include: {
-                documents: true,
-                datarooms: true,
+                team: {
+                  include: {
+                    documents: true,
+                    datarooms: true,
+                  },
+                },
               },
             },
           },
         },
       },
+      distinct: ["userId"],
     });
+    
+    const otherAdmins = allAdminMemberships.map(m => m.user);
 
     // For each other admin, move their assets and add them to the primary team
     for (const admin of otherAdmins) {
@@ -177,9 +197,8 @@ export default async function handler(
     const finalTeamCount = await prisma.team.count();
     const finalAdminCheck = await prisma.userTeam.findMany({
       where: {
-        user: {
-          email: { in: [...ADMIN_EMAILS] },
-        },
+        role: { in: ["ADMIN", "SUPER_ADMIN"] },
+        status: "ACTIVE",
       },
       include: {
         user: { select: { email: true } },

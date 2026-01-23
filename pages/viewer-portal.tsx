@@ -5,7 +5,6 @@ import useSWR from "swr";
 import { useEffect, useRef, useState } from "react";
 
 import { fetcher } from "@/lib/utils";
-import { ADMIN_EMAILS } from "@/lib/constants/admins";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -35,14 +34,25 @@ interface ViewerDataResponse {
   viewerEmail: string;
 }
 
+interface Team {
+  id: string;
+  role: string;
+}
+
 export default function ViewerPortal() {
   const router = useRouter();
   const { data: session, status } = useSession();
   const hasRedirected = useRef(false);
   const [isRedirecting, setIsRedirecting] = useState(false);
 
-  const isAdmin = session?.user?.email && 
-    ADMIN_EMAILS.map(e => e.toLowerCase()).includes(session.user.email.toLowerCase());
+  // Check if user is an admin by fetching their teams
+  const { data: teamsData } = useSWR<Team[]>(
+    status === "authenticated" ? "/api/teams" : null,
+    fetcher
+  );
+
+  // User is admin if they have any team membership (ADMIN/SUPER_ADMIN checked on API side)
+  const isAdmin = teamsData && teamsData.length > 0;
 
   useEffect(() => {
     if (status === "authenticated" && isAdmin && !hasRedirected.current) {

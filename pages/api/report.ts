@@ -4,6 +4,7 @@ import { waitUntil } from "@vercel/functions";
 import { z } from "zod";
 
 import AbuseReportEmail from "@/components/emails/abuse-report";
+import { getAllAdminEmails } from "@/lib/constants/admins";
 import prisma from "@/lib/prisma";
 import { redis } from "@/lib/redis";
 import { sendEmail } from "@/lib/resend";
@@ -129,11 +130,8 @@ export default async function handler(
       );
     }
 
-    // Send email notification to authorized admins
-    const adminEmails = [
-      "rciesco@gmail.com",
-      "investors@bermudafranchisegroup.com",
-    ];
+    // Send email notification to authorized admins (dynamic lookup)
+    const adminEmails = await getAllAdminEmails();
 
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://dataroom.bermudafranchisegroup.com";
     const documentUrl = documentInfo?.teamId 

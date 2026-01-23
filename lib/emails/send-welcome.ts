@@ -1,6 +1,5 @@
 import { sendEmail } from "@/lib/resend";
 import prisma from "@/lib/prisma";
-import { ADMIN_EMAILS } from "@/lib/constants/admins";
 
 import WelcomeEmail from "@/components/emails/welcome";
 import ViewerWelcomeEmail from "@/components/emails/viewer-welcome";
@@ -14,7 +13,16 @@ export const sendWelcomeEmail = async (params: CreateUserEmailProps) => {
   
   const emailLower = email.toLowerCase().trim();
   
-  const isAdmin = ADMIN_EMAILS.map(e => e.toLowerCase()).includes(emailLower);
+  // Check if user is an admin of any team (dynamic lookup)
+  const adminTeam = await prisma.userTeam.findFirst({
+    where: {
+      user: { email: { equals: emailLower, mode: "insensitive" } },
+      role: { in: ["ADMIN", "SUPER_ADMIN"] },
+      status: "ACTIVE",
+    },
+  });
+  
+  const isAdmin = !!adminTeam;
   
   if (isAdmin) {
     const emailTemplate = WelcomeEmail({ name });

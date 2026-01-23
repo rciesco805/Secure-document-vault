@@ -41,6 +41,7 @@ model User {
   email          String?    @unique
   emailVerified  DateTime?
   image          String?
+  role           UserRole   @default(LP)
   createdAt      DateTime   @default(now())
   accounts       Account[]
   sessions       Session[]
@@ -69,6 +70,8 @@ model User {
   
   // LP Portal - Investor profile
   investorProfile   Investor?
+
+  @@index([role])
 }
 
 model Brand {
@@ -176,6 +179,11 @@ model View {
 enum ViewType {
   DOCUMENT_VIEW
   DATAROOM_VIEW
+}
+
+enum UserRole {
+  LP
+  GP
 }
 
 model PageView {

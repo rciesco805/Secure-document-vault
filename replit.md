@@ -151,6 +151,8 @@ npm run test:e2e       # E2E flow tests
 - **Sign Routes (12 tests)**: E2E tests calling actual API handler with Prisma mocks
 - **Auth Flows (6 tests)**: Logic tests for magic link, session, OTP validation
 - **Dataroom Gates (15 tests)**: Logic tests for NDA, accreditation, KYC gates
+- **Role Access (20 tests)**: LP/GP role filtering, team scoping, authentication
+- **Admin Fund Dashboard (19 tests)**: GP aggregates, anonymization, bulk actions, validation
 - **E2E Flows (61 tests)**:
   - LP Onboarding: Registration, entity selection, magic link verification
   - NDA Gate: 2-step accreditation wizard, SEC 506(c) compliance logging

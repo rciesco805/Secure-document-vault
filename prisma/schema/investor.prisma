@@ -133,6 +133,19 @@ model Fund {
   
   ndaGateEnabled    Boolean  @default(true)
   
+  // Configurable Capital Call Threshold
+  capitalCallThresholdEnabled Boolean  @default(false)
+  capitalCallThreshold        Decimal? @db.Decimal(18, 2)
+  
+  // Call Frequency Configuration
+  callFrequency     String   @default("AS_NEEDED")  // AS_NEEDED, QUARTERLY, SEMI_ANNUAL, ANNUAL
+  
+  // Staged Commitments
+  stagedCommitmentsEnabled Boolean @default(false)
+  
+  // Flexible Custom Settings (JSON for extensibility)
+  customSettings    Json?
+  
   investments       Investment[]
   capitalCalls      CapitalCall[]
   distributions     Distribution[]

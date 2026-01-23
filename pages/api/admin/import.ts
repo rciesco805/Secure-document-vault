@@ -130,6 +130,11 @@ export default async function handler(
                 status: fund.status || "RAISING",
                 closingDate: fund.closingDate ? new Date(fund.closingDate) : null,
                 ndaGateEnabled: fund.ndaGateEnabled ?? true,
+                capitalCallThresholdEnabled: fund.capitalCallThresholdEnabled ?? false,
+                capitalCallThreshold: fund.capitalCallThreshold || null,
+                callFrequency: fund.callFrequency || "AS_NEEDED",
+                stagedCommitmentsEnabled: fund.stagedCommitmentsEnabled ?? false,
+                customSettings: fund.customSettings || null,
               },
             });
             idMappings.funds[fund.id] = created.id;

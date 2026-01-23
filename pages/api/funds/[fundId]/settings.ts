@@ -56,27 +56,91 @@ export default async function handler(
         id: fund.id,
         name: fund.name,
         ndaGateEnabled: fund.ndaGateEnabled,
+        capitalCallThresholdEnabled: fund.capitalCallThresholdEnabled,
+        capitalCallThreshold: fund.capitalCallThreshold ? Number(fund.capitalCallThreshold) : null,
+        callFrequency: fund.callFrequency,
+        stagedCommitmentsEnabled: fund.stagedCommitmentsEnabled,
+        currentRaise: Number(fund.currentRaise),
+        targetRaise: Number(fund.targetRaise),
       },
     });
   }
 
   if (req.method === "PATCH") {
-    const { ndaGateEnabled } = req.body;
+    const {
+      ndaGateEnabled,
+      capitalCallThresholdEnabled,
+      capitalCallThreshold,
+      callFrequency,
+      stagedCommitmentsEnabled,
+    } = req.body;
 
-    if (typeof ndaGateEnabled !== "boolean") {
-      return res.status(400).json({ message: "ndaGateEnabled must be a boolean" });
+    const updateData: Record<string, any> = {};
+
+    if (typeof ndaGateEnabled === "boolean") {
+      updateData.ndaGateEnabled = ndaGateEnabled;
+    }
+
+    if (typeof capitalCallThresholdEnabled === "boolean") {
+      updateData.capitalCallThresholdEnabled = capitalCallThresholdEnabled;
+    }
+
+    if (capitalCallThreshold !== undefined) {
+      updateData.capitalCallThreshold = capitalCallThreshold
+        ? parseFloat(capitalCallThreshold)
+        : null;
+    }
+
+    if (callFrequency && ["AS_NEEDED", "QUARTERLY", "SEMI_ANNUAL", "ANNUAL"].includes(callFrequency)) {
+      updateData.callFrequency = callFrequency;
+    }
+
+    if (typeof stagedCommitmentsEnabled === "boolean") {
+      updateData.stagedCommitmentsEnabled = stagedCommitmentsEnabled;
+    }
+
+    if (Object.keys(updateData).length === 0) {
+      return res.status(400).json({ message: "No valid fields to update" });
     }
 
     const updatedFund = await prisma.fund.update({
       where: { id: fundId },
-      data: { ndaGateEnabled },
+      data: updateData,
     });
+
+    await prisma.auditLog.create({
+      data: {
+        eventType: "FUND_SETTINGS_UPDATE",
+        userId: user.id,
+        teamId: fund.teamId,
+        resourceType: "FUND",
+        resourceId: fundId,
+        ipAddress: (req.headers["x-forwarded-for"] as string)?.split(",")[0] || req.socket.remoteAddress || "",
+        userAgent: req.headers["user-agent"] || "",
+        metadata: {
+          previousSettings: {
+            ndaGateEnabled: fund.ndaGateEnabled,
+            capitalCallThresholdEnabled: fund.capitalCallThresholdEnabled,
+            capitalCallThreshold: fund.capitalCallThreshold ? Number(fund.capitalCallThreshold) : null,
+            callFrequency: fund.callFrequency,
+            stagedCommitmentsEnabled: fund.stagedCommitmentsEnabled,
+          },
+          newSettings: updateData,
+        },
+      },
+    }).catch(() => {});
 
     return res.status(200).json({
       fund: {
         id: updatedFund.id,
         name: updatedFund.name,
         ndaGateEnabled: updatedFund.ndaGateEnabled,
+        capitalCallThresholdEnabled: updatedFund.capitalCallThresholdEnabled,
+        capitalCallThreshold: updatedFund.capitalCallThreshold ? Number(updatedFund.capitalCallThreshold) : null,
+        callFrequency: updatedFund.callFrequency,
+        stagedCommitmentsEnabled: updatedFund.stagedCommitmentsEnabled,
+        currentRaise: Number(updatedFund.currentRaise),
+        targetRaise: Number(updatedFund.targetRaise),
       },
     });
   }

@@ -568,6 +568,43 @@ async function handlePost(
                 },
               });
 
+              // Check if threshold was just reached and send notification (atomic to prevent duplicates)
+              try {
+                const { checkAndMarkThresholdReached } = await import("@/lib/funds/threshold");
+                const thresholdCheck = await checkAndMarkThresholdReached(subscription.fundId);
+                
+                if (thresholdCheck.shouldNotify && thresholdCheck.fund) {
+                  const fundWithTeam = await prisma.fund.findUnique({
+                    where: { id: subscription.fundId },
+                    include: { team: { include: { users: { include: { user: true } } } } },
+                  });
+
+                  if (fundWithTeam) {
+                    const { sendEmail } = await import("@/lib/resend");
+                    const gpEmails = fundWithTeam.team.users
+                      .filter((ut) => ["ADMIN", "OWNER"].includes(ut.role))
+                      .map((ut) => ut.user.email)
+                      .filter(Boolean) as string[];
+
+                    for (const email of gpEmails) {
+                      await sendEmail({
+                        to: email,
+                        subject: `${fundWithTeam.name} has reached capital call threshold`,
+                        html: `
+                          <h2>Capital Call Threshold Reached</h2>
+                          <p><strong>${fundWithTeam.name}</strong> has reached the configured capital call threshold.</p>
+                          <p>Current committed capital: <strong>$${Number(fundWithTeam.currentRaise).toLocaleString()}</strong></p>
+                          <p>Threshold: <strong>$${Number(fundWithTeam.capitalCallThreshold).toLocaleString()}</strong></p>
+                          <p>You can now proceed with capital calls for this fund.</p>
+                        `,
+                      }).catch(() => {});
+                    }
+                  }
+                }
+              } catch (thresholdError) {
+                console.error("Failed to check/notify threshold:", thresholdError);
+              }
+
               // Create or update Investment record
               const investor = await prisma.investor.findFirst({
                 where: {

@@ -105,6 +105,13 @@ The platform is built on Next.js 14, utilizing a hybrid Pages and App Router app
 ### E-Signature
 - `GET /api/sign/[token]` - Get signature document for signing
 - `POST /api/sign/[token]` - Complete signature (auto-stores in LP vault)
+- `GET /api/sign/status` - Real-time signature status polling (requires auth)
+
+### E-Sign Webhooks
+- `POST /api/webhooks/esign` - Receive e-sign events (HMAC-SHA256 verified)
+  - Events: `document.viewed`, `document.signed`, `document.declined`, `document.completed`
+  - Security: Requires `ESIGN_WEBHOOK_SECRET` in production
+  - Headers: `x-esign-signature` for HMAC verification
 
 ## Testing
 

@@ -21,7 +21,8 @@ A comprehensive 506(c) fund GP/LP management suite designed to streamline invest
 - **Form D Compliance**: Added SEC Form D filing date tracking, amendment reminders, and state notice fields to Fund model
 - **Dual Threshold System**: Initial Closing Threshold (gates capital calls) vs Full Authorized Amount (progress tracking only) with color-coded UI
 - **EntityMode Enum**: FUND (LP/GP with units, capital calls) vs STARTUP (cap table with shares, vesting) for Phase 3 expansion
-- **191 Passing Tests**: Comprehensive E2E coverage for threshold gating, export/import, and multi-fund scenarios
+- **208 Passing Tests**: Comprehensive E2E coverage for threshold gating, export/import, multi-fund scenarios, and full dataroom→dashboard flow
+- **GitHub Actions CI**: Added .github/workflows/test.yml for automated testing on push/PR
 
 ## System Architecture
 

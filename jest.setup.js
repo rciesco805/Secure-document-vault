@@ -33,6 +33,8 @@ jest.mock('@/lib/prisma', () => ({
     user: {
       findUnique: jest.fn(),
       findFirst: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
     },
     team: {
       findUnique: jest.fn(),
@@ -43,6 +45,27 @@ jest.mock('@/lib/prisma', () => ({
       findFirst: jest.fn(),
       update: jest.fn(),
       create: jest.fn(),
+    },
+    fund: {
+      findUnique: jest.fn(),
+      findFirst: jest.fn(),
+      findMany: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+    },
+    view: {
+      findUnique: jest.fn(),
+      findFirst: jest.fn(),
+      findMany: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+    },
+    accreditationAck: {
+      findUnique: jest.fn(),
+      findFirst: jest.fn(),
+      findMany: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
     },
     dataroom: {
       findUnique: jest.fn(),

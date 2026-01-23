@@ -1,6 +1,5 @@
 export const ADMIN_EMAILS = [
   "investors@bermudafranchisegroup.com",
-  "rciesco@gmail.com",
 ] as const;
 
 export function isAdminEmail(email: string): boolean {

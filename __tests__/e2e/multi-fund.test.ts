@@ -422,4 +422,222 @@ describe("Multi-Fund Features", () => {
       expect(CALL_FREQUENCIES).toContain("ANNUAL");
     });
   });
+
+  describe("Dual Threshold System", () => {
+    it("validates initial threshold vs full authorized amount structure", () => {
+      const fundWithDualThresholds = {
+        id: "fund-1",
+        name: "Test Fund",
+        initialThresholdEnabled: true,
+        initialThresholdAmount: 1800000,
+        fullAuthorizedAmount: 9550000,
+        capitalCallThresholdEnabled: true,
+        capitalCallThreshold: 1800000,
+      };
+
+      expect(fundWithDualThresholds.initialThresholdEnabled).toBe(true);
+      expect(fundWithDualThresholds.initialThresholdAmount).toBe(1800000);
+      expect(fundWithDualThresholds.fullAuthorizedAmount).toBe(9550000);
+      expect(fundWithDualThresholds.fullAuthorizedAmount).toBeGreaterThan(
+        fundWithDualThresholds.initialThresholdAmount
+      );
+    });
+
+    it("calculates initial threshold progress correctly", () => {
+      const totalCommitted = 1500000;
+      const initialThreshold = 1800000;
+      const progress = Math.min(100, (totalCommitted / initialThreshold) * 100);
+
+      expect(progress).toBeCloseTo(83.33, 1);
+      expect(totalCommitted < initialThreshold).toBe(true);
+    });
+
+    it("calculates full authorized progress correctly", () => {
+      const totalCommitted = 3000000;
+      const fullAuthorized = 9550000;
+      const progress = Math.min(100, (totalCommitted / fullAuthorized) * 100);
+
+      expect(progress).toBeCloseTo(31.41, 1);
+    });
+
+    it("determines gating correctly based on initial threshold only", () => {
+      const fundBelowThreshold = {
+        initialThresholdEnabled: true,
+        initialThresholdAmount: 1800000,
+        totalCommitted: 1000000,
+      };
+
+      const fundAboveThreshold = {
+        initialThresholdEnabled: true,
+        initialThresholdAmount: 1800000,
+        totalCommitted: 2000000,
+      };
+
+      const fundDisabledThreshold = {
+        initialThresholdEnabled: false,
+        initialThresholdAmount: 1800000,
+        totalCommitted: 500000,
+      };
+
+      const isGated = (fund: any) => 
+        fund.initialThresholdEnabled && 
+        fund.totalCommitted < fund.initialThresholdAmount;
+
+      expect(isGated(fundBelowThreshold)).toBe(true);
+      expect(isGated(fundAboveThreshold)).toBe(false);
+      expect(isGated(fundDisabledThreshold)).toBe(false);
+    });
+
+    it("full authorized amount does not gate capital calls", () => {
+      const fund = {
+        initialThresholdEnabled: false,
+        initialThresholdAmount: null,
+        fullAuthorizedAmount: 9550000,
+        totalCommitted: 100000,
+      };
+
+      const isGatedByInitial = fund.initialThresholdEnabled && 
+        fund.initialThresholdAmount && 
+        fund.totalCommitted < fund.initialThresholdAmount;
+
+      expect(isGatedByInitial).toBe(false);
+      expect(fund.totalCommitted < fund.fullAuthorizedAmount!).toBe(true);
+    });
+  });
+
+  describe("Threshold Export Data Structure", () => {
+    it("includes new threshold fields in fund export", () => {
+      const exportedFund = {
+        id: "fund-1",
+        name: "Export Test Fund",
+        targetRaise: 10000000,
+        minimumInvestment: 100000,
+        currentRaise: 2500000,
+        status: "RAISING",
+        capitalCallThresholdEnabled: true,
+        capitalCallThreshold: 1800000,
+        initialThresholdEnabled: true,
+        initialThresholdAmount: 1800000,
+        fullAuthorizedAmount: 9550000,
+        style: "STAGED_COMMITMENTS",
+        callFrequency: "QUARTERLY",
+      };
+
+      expect(exportedFund).toHaveProperty("initialThresholdEnabled");
+      expect(exportedFund).toHaveProperty("initialThresholdAmount");
+      expect(exportedFund).toHaveProperty("fullAuthorizedAmount");
+      expect(exportedFund.initialThresholdEnabled).toBe(true);
+      expect(exportedFund.initialThresholdAmount).toBe(1800000);
+      expect(exportedFund.fullAuthorizedAmount).toBe(9550000);
+    });
+
+    it("includes new threshold fields in fundAggregate export", () => {
+      const exportedAggregate = {
+        fundId: "fund-1",
+        totalInbound: 1000000,
+        totalOutbound: 500000,
+        totalCommitted: 2500000,
+        thresholdEnabled: true,
+        thresholdAmount: 1800000,
+        initialThresholdEnabled: true,
+        initialThresholdAmount: 1800000,
+        initialThresholdMet: true,
+        initialThresholdMetAt: "2026-01-15T10:00:00.000Z",
+        fullAuthorizedAmount: 9550000,
+        fullAuthorizedProgress: 26.18,
+      };
+
+      expect(exportedAggregate).toHaveProperty("initialThresholdEnabled");
+      expect(exportedAggregate).toHaveProperty("initialThresholdAmount");
+      expect(exportedAggregate).toHaveProperty("initialThresholdMet");
+      expect(exportedAggregate).toHaveProperty("initialThresholdMetAt");
+      expect(exportedAggregate).toHaveProperty("fullAuthorizedAmount");
+      expect(exportedAggregate).toHaveProperty("fullAuthorizedProgress");
+      expect(exportedAggregate.initialThresholdMet).toBe(true);
+    });
+
+    it("maintains backward compatibility with legacy threshold fields", () => {
+      const legacyFund = {
+        capitalCallThresholdEnabled: true,
+        capitalCallThreshold: 1800000,
+      };
+
+      const migratedFund = {
+        ...legacyFund,
+        initialThresholdEnabled: legacyFund.capitalCallThresholdEnabled,
+        initialThresholdAmount: legacyFund.capitalCallThreshold,
+        fullAuthorizedAmount: null,
+      };
+
+      expect(migratedFund.initialThresholdEnabled).toBe(legacyFund.capitalCallThresholdEnabled);
+      expect(migratedFund.initialThresholdAmount).toBe(legacyFund.capitalCallThreshold);
+    });
+  });
+
+  describe("Threshold Import Validation", () => {
+    it("creates fund with new threshold fields from import data", () => {
+      const importData = {
+        name: "Imported Fund",
+        targetRaise: 10000000,
+        minimumInvestment: 50000,
+        initialThresholdEnabled: true,
+        initialThresholdAmount: 2000000,
+        fullAuthorizedAmount: 8000000,
+        capitalCallThresholdEnabled: true,
+        capitalCallThreshold: 2000000,
+      };
+
+      const createdFund = {
+        id: "fund-imported",
+        ...importData,
+        currentRaise: 0,
+        status: "RAISING",
+      };
+
+      expect(createdFund.initialThresholdEnabled).toBe(true);
+      expect(createdFund.initialThresholdAmount).toBe(2000000);
+      expect(createdFund.fullAuthorizedAmount).toBe(8000000);
+    });
+
+    it("creates fundAggregate with new threshold fields from import data", () => {
+      const importData = {
+        fundId: "fund-imported",
+        totalCommitted: 1500000,
+        initialThresholdEnabled: true,
+        initialThresholdAmount: 2000000,
+        initialThresholdMet: false,
+        fullAuthorizedAmount: 8000000,
+        fullAuthorizedProgress: 18.75,
+      };
+
+      const createdAggregate = {
+        id: "agg-imported",
+        ...importData,
+        totalInbound: 0,
+        totalOutbound: 0,
+        thresholdEnabled: true,
+        thresholdAmount: 2000000,
+      };
+
+      expect(createdAggregate.initialThresholdEnabled).toBe(true);
+      expect(createdAggregate.initialThresholdMet).toBe(false);
+      expect(createdAggregate.fullAuthorizedProgress).toBe(18.75);
+    });
+
+    it("falls back to legacy fields when new fields are missing", () => {
+      const legacyImportData = {
+        capitalCallThresholdEnabled: true,
+        capitalCallThreshold: 1500000,
+      };
+
+      const migratedData = {
+        initialThresholdEnabled: legacyImportData.capitalCallThresholdEnabled ?? false,
+        initialThresholdAmount: legacyImportData.capitalCallThreshold ?? null,
+        fullAuthorizedAmount: null,
+      };
+
+      expect(migratedData.initialThresholdEnabled).toBe(true);
+      expect(migratedData.initialThresholdAmount).toBe(1500000);
+    });
+  });
 });

@@ -112,6 +112,21 @@ async function main() {
               status: fund.status || "RAISING",
               closingDate: fund.closingDate ? new Date(fund.closingDate) : null,
               ndaGateEnabled: fund.ndaGateEnabled ?? true,
+              // Threshold fields
+              style: fund.style || null,
+              aumTarget: fund.aumTarget ? new Decimal(fund.aumTarget) : null,
+              callFrequency: fund.callFrequency || "AS_NEEDED",
+              capitalCallThresholdEnabled: fund.capitalCallThresholdEnabled ?? false,
+              capitalCallThreshold: fund.capitalCallThreshold ? new Decimal(fund.capitalCallThreshold) : null,
+              stagedCommitmentsEnabled: fund.stagedCommitmentsEnabled ?? false,
+              // New initial/full threshold fields
+              initialThresholdEnabled: fund.initialThresholdEnabled ?? fund.capitalCallThresholdEnabled ?? false,
+              initialThresholdAmount: fund.initialThresholdAmount 
+                ? new Decimal(fund.initialThresholdAmount) 
+                : fund.capitalCallThreshold 
+                  ? new Decimal(fund.capitalCallThreshold) 
+                  : null,
+              fullAuthorizedAmount: fund.fullAuthorizedAmount ? new Decimal(fund.fullAuthorizedAmount) : null,
             },
           });
           idMappings.funds[fund.id] = created.id;
@@ -152,6 +167,13 @@ async function main() {
               currentBalance: agg.currentBalance || null,
               thresholdEnabled: agg.thresholdEnabled ?? false,
               thresholdAmount: agg.thresholdAmount || null,
+              // New initial/full threshold fields
+              initialThresholdEnabled: agg.initialThresholdEnabled ?? agg.thresholdEnabled ?? false,
+              initialThresholdAmount: agg.initialThresholdAmount || agg.thresholdAmount || null,
+              initialThresholdMet: agg.initialThresholdMet ?? false,
+              initialThresholdMetAt: agg.initialThresholdMetAt ? new Date(agg.initialThresholdMetAt) : null,
+              fullAuthorizedAmount: agg.fullAuthorizedAmount || null,
+              fullAuthorizedProgress: agg.fullAuthorizedProgress || 0,
               audit: agg.audit || null,
             },
           });

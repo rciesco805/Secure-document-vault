@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import Head from "next/head";
+import Link from "next/link";
 import {
   Card,
   CardContent,
@@ -244,8 +245,12 @@ export default function FundDashboard() {
               </p>
             </div>
 
-            <Dialog open={wizardOpen} onOpenChange={setWizardOpen}>
-              <DialogTrigger asChild>
+            <div className="flex gap-2">
+              <Link href="/admin/funds/new">
+                <Button variant="outline">Create New Fund</Button>
+              </Link>
+              <Dialog open={wizardOpen} onOpenChange={setWizardOpen}>
+                <DialogTrigger asChild>
                 <Button onClick={() => setWizardOpen(true)}>
                   Bulk Action Wizard
                 </Button>
@@ -396,6 +401,7 @@ export default function FundDashboard() {
                 </DialogFooter>
               </DialogContent>
             </Dialog>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
@@ -540,12 +546,13 @@ export default function FundDashboard() {
                       <TableHead className="text-right">Distributed</TableHead>
                       <TableHead className="text-right">Investors</TableHead>
                       <TableHead className="hidden sm:table-cell">Progress</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {data.funds.map((fund) => (
-                      <TableRow key={fund.id}>
-                        <TableCell className="font-medium">{fund.name}</TableCell>
+                      <TableRow key={fund.id} className="cursor-pointer hover:bg-muted/50" onClick={() => router.push(`/admin/fund/${fund.id}`)}>
+                        <TableCell className="font-medium text-primary hover:underline">{fund.name}</TableCell>
                         <TableCell>
                           <Badge
                             variant={
@@ -576,6 +583,18 @@ export default function FundDashboard() {
                               {fund.progress}%
                             </span>
                           </div>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              router.push(`/admin/fund/${fund.id}`);
+                            }}
+                          >
+                            View
+                          </Button>
                         </TableCell>
                       </TableRow>
                     ))}

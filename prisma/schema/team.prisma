@@ -44,6 +44,7 @@ model Team {
   // LP Portal - Fund Management
   funds              Fund[]
   investorNotes      InvestorNote[]
+  entities           Entity[]
 
   plan           String    @default("datarooms-plus")
   stripeId       String?   @unique // Stripe customer ID

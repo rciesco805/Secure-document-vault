@@ -43,6 +43,7 @@ model Investor {
   documents             InvestorDocument[]
   bankLinks             BankLink[]
   transactions          Transaction[]
+  entities              EntityInvestor[]
   
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt

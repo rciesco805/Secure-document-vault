@@ -12,6 +12,8 @@ A comprehensive 506(c) fund GP/LP management suite designed to streamline invest
 
 ## Recent Changes (January 2026)
 
+- **Entity Model Added**: Standalone Entity model with FUND/STARTUP mode toggle, JSON configs, and EntityInvestor junction table for investor linkage
+- **Admin Entity Management**: New /admin/entities page with mode toggle switch, create/delete functionality, and investor count display
 - **OpenSign Removed**: E-signature is now fully self-hosted with custom React drag-drop field placement (no external API dependencies)
 - **Form D Compliance**: Added SEC Form D filing date tracking, amendment reminders, and state notice fields to Fund model
 - **Dual Threshold System**: Initial Closing Threshold (gates capital calls) vs Full Authorized Amount (progress tracking only) with color-coded UI

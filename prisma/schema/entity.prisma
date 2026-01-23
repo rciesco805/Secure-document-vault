@@ -1,0 +1,35 @@
+model Entity {
+  id                String       @id @default(cuid())
+  teamId            String
+  team              Team         @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  
+  name              String
+  description       String?
+  
+  mode              EntityMode   @default(FUND)
+  
+  fundConfig        Json?
+  startupConfig     Json?
+  
+  investors         EntityInvestor[]
+  
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  @@index([teamId])
+  @@index([mode])
+}
+
+model EntityInvestor {
+  id                String   @id @default(cuid())
+  entityId          String
+  entity            Entity   @relation(fields: [entityId], references: [id], onDelete: Cascade)
+  investorId        String
+  investor          Investor @relation(fields: [investorId], references: [id], onDelete: Cascade)
+  
+  createdAt         DateTime @default(now())
+
+  @@unique([entityId, investorId])
+  @@index([entityId])
+  @@index([investorId])
+}

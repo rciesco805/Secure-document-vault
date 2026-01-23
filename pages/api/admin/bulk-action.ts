@@ -21,10 +21,23 @@ export default async function handler(
     }
 
     const user = result.user!;
-    const { fundId, actionType, totalAmount, allocationType, selectedInvestors } = req.body;
+    const { fundId, actionType, totalAmount, allocationType = "pro_rata", selectedInvestors } = req.body;
 
-    if (!fundId || !actionType || !totalAmount) {
+    if (!fundId || !actionType) {
       return res.status(400).json({ message: "Missing required fields" });
+    }
+
+    const amount = parseFloat(totalAmount);
+    if (isNaN(amount) || amount <= 0) {
+      return res.status(400).json({ message: "Amount must be a positive number" });
+    }
+
+    if (!["capital_call", "distribution"].includes(actionType)) {
+      return res.status(400).json({ message: "Invalid action type" });
+    }
+
+    if (!["equal", "pro_rata"].includes(allocationType)) {
+      return res.status(400).json({ message: "Invalid allocation type" });
     }
 
     const fund = await prisma.fund.findFirst({
@@ -61,24 +74,28 @@ export default async function handler(
       0
     );
 
+    if (allocationType === "pro_rata" && totalCommitments === 0) {
+      return res.status(400).json({ message: "Cannot use pro-rata allocation: no commitments found" });
+    }
+
     const allocations = investors.map((inv) => {
-      let amount: number;
+      let allocationAmount: number;
 
       if (allocationType === "equal") {
-        amount = totalAmount / investors.length;
-      } else if (allocationType === "pro_rata") {
-        const share = Number(inv.commitmentAmount) / totalCommitments;
-        amount = totalAmount * share;
+        allocationAmount = amount / investors.length;
       } else {
-        amount = totalAmount / investors.length;
+        const share = Number(inv.commitmentAmount) / totalCommitments;
+        allocationAmount = amount * share;
       }
 
       return {
         investorId: inv.investorId,
         investorName: inv.investor.entityName || "Unknown",
         commitment: Number(inv.commitmentAmount),
-        allocation: Math.round(amount * 100) / 100,
-        percentage: Math.round((Number(inv.commitmentAmount) / totalCommitments) * 10000) / 100,
+        allocation: Math.round(allocationAmount * 100) / 100,
+        percentage: totalCommitments > 0
+          ? Math.round((Number(inv.commitmentAmount) / totalCommitments) * 10000) / 100
+          : Math.round((100 / investors.length) * 100) / 100,
       };
     });
 
@@ -91,7 +108,7 @@ export default async function handler(
         data: {
           fundId,
           callNumber: callNumber + 1,
-          amount: totalAmount,
+          amount: amount,
           purpose: `Capital Call #${callNumber + 1}`,
           dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
           status: "PENDING",
@@ -121,7 +138,7 @@ export default async function handler(
         data: {
           fundId,
           distributionNumber: distNumber + 1,
-          totalAmount: totalAmount,
+          totalAmount: amount,
           distributionType: "DIVIDEND",
           distributionDate: new Date(),
           status: "PENDING",

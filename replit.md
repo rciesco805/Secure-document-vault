@@ -41,6 +41,11 @@ The platform is built on Next.js 14, utilizing a hybrid Pages and App Router app
     - View all funds for team with status and investor counts
     - Toggle NDA gate on/off per fund
     - Role-based access control (ADMIN/OWNER only)
+*   **GP Admin Dashboard** (`/admin/fund`):
+    - Summary cards: Total Raised, Total Distributed, Total Commitments, Total Investors
+    - Recharts visualizations: Bar chart (Raised vs Distributed), Pie chart (Fund Allocation)
+    - Funds table with progress indicators
+    - Bulk Action Wizard: Create capital calls or distributions with pro-rata or equal allocation
 *   **Authentication**: Primarily via email magic links, with Google OAuth for admin users.
 *   **User Role-Based Access Control (LP/GP)**:
     - `UserRole` enum on User model: `LP` (default for investors) and `GP` (fund managers)

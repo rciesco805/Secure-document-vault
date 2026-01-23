@@ -503,6 +503,45 @@ describe("Multi-Fund Features", () => {
       expect(isGatedByInitial).toBe(false);
       expect(fund.totalCommitted < fund.fullAuthorizedAmount!).toBe(true);
     });
+
+    it("allows funds without any thresholds", () => {
+      const fundWithNoThresholds = {
+        id: "fund-no-threshold",
+        name: "No Threshold Fund",
+        initialThresholdEnabled: false,
+        initialThresholdAmount: null,
+        fullAuthorizedAmount: null,
+        capitalCallThresholdEnabled: false,
+        capitalCallThreshold: null,
+        totalCommitted: 50000,
+      };
+
+      const isGated = fundWithNoThresholds.initialThresholdEnabled && 
+        fundWithNoThresholds.initialThresholdAmount && 
+        fundWithNoThresholds.totalCommitted < fundWithNoThresholds.initialThresholdAmount;
+
+      expect(isGated).toBe(false);
+      expect(fundWithNoThresholds.initialThresholdAmount).toBeNull();
+      expect(fundWithNoThresholds.fullAuthorizedAmount).toBeNull();
+    });
+
+    it("calculates progress as 0 when no thresholds are set", () => {
+      const fund = {
+        totalCommitted: 500000,
+        initialThresholdAmount: null as number | null,
+        fullAuthorizedAmount: null as number | null,
+      };
+
+      const initialProgress = fund.initialThresholdAmount 
+        ? Math.min(100, (fund.totalCommitted / fund.initialThresholdAmount) * 100)
+        : 0;
+      const fullProgress = fund.fullAuthorizedAmount
+        ? Math.min(100, (fund.totalCommitted / fund.fullAuthorizedAmount) * 100)
+        : 0;
+
+      expect(initialProgress).toBe(0);
+      expect(fullProgress).toBe(0);
+    });
   });
 
   describe("Threshold Export Data Structure", () => {

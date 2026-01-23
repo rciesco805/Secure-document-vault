@@ -186,7 +186,7 @@ GIT_ASKPASS= GIT_TERMINAL_PROMPT=0 git -c credential.helper= pull --rebase https
 | Service | Purpose | Env Variables |
 |---------|---------|---------------|
 | Resend | Transactional emails | `RESEND_API_KEY` |
-| Persona | KYC/AML verification | `PERSONA_API_KEY`, `PERSONA_TEMPLATE_ID`, `PERSONA_WEBHOOK_SECRET`, `PERSONA_ENVIRONMENT_ID` |
+| Persona | KYC/AML verification | `PERSONA_API_KEY`, `PERSONA_TEMPLATE_ID`, `PERSONA_WEBHOOK_SECRET`, `PERSONA_ENVIRONMENT_ID`, `PERSONA_CLIENT_ID` (sandbox) |
 | Plaid | Bank connect & ACH transfers | `PLAID_CLIENT_ID`, `PLAID_SECRET`, `PLAID_ENV`, `PLAID_WEBHOOK_URL` |
 | Google | Admin OAuth | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` |
 | OpenAI | AI features (optional) | `OPENAI_API_KEY` |

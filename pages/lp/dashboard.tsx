@@ -407,9 +407,12 @@ export default function LPDashboard() {
             </Card>
           )}
 
-          <div className="mb-6">
-            <KycVerification />
-          </div>
+          {/* KYC Verification - Only show after NDA is signed */}
+          {investor?.ndaSigned && (
+            <div className="mb-6">
+              <KycVerification />
+            </div>
+          )}
 
           {bankStatus?.configured && (
             <Card className={`mb-6 ${bankStatus.hasBankLink ? 'bg-emerald-900/20 border-emerald-700/50' : 'bg-blue-900/20 border-blue-700/50'}`}>

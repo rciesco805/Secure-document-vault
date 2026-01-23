@@ -58,6 +58,8 @@ import {
   Loader2,
   AlertCircle,
   CheckCircle2,
+  ArrowUpRight,
+  ArrowDownRight,
 } from "lucide-react";
 
 interface FundData {
@@ -76,6 +78,24 @@ interface FundData {
   progress: number;
 }
 
+interface TransactionData {
+  id: string;
+  investorId: string;
+  investorName: string;
+  type: string;
+  amount: number;
+  status: string;
+  createdAt: string;
+}
+
+interface TransactionSummary {
+  investorId: string;
+  investorName: string;
+  type: string;
+  totalAmount: number;
+  count: number;
+}
+
 interface DashboardData {
   funds: FundData[];
   totals: {
@@ -91,6 +111,8 @@ interface DashboardData {
     distributed: number;
     target: number;
   }>;
+  transactions: TransactionData[];
+  transactionSummary: TransactionSummary[];
 }
 
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884D8"];
@@ -562,6 +584,139 @@ export default function FundDashboard() {
               </div>
             </CardContent>
           </Card>
+
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle>Fund-Wide Transactions</CardTitle>
+              <CardDescription>
+                Recent transactions across all funds (anonymized for compliance)
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {data.transactions && data.transactions.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Investor</TableHead>
+                        <TableHead>Type</TableHead>
+                        <TableHead className="text-right">Amount</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead className="hidden sm:table-cell">Date</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {data.transactions.map((tx) => (
+                        <TableRow key={tx.id}>
+                          <TableCell>
+                            <div className="flex flex-col">
+                              <span className="font-medium">{tx.investorName}</span>
+                              <span className="text-xs text-muted-foreground">
+                                {tx.investorId}
+                              </span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-1">
+                              {tx.type === "CAPITAL_CALL" ? (
+                                <ArrowUpRight className="h-4 w-4 text-green-600" />
+                              ) : (
+                                <ArrowDownRight className="h-4 w-4 text-blue-600" />
+                              )}
+                              <span className="text-sm">
+                                {tx.type === "CAPITAL_CALL" ? "Capital Call" : "Distribution"}
+                              </span>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right font-medium">
+                            {formatCurrency(tx.amount)}
+                          </TableCell>
+                          <TableCell>
+                            <Badge
+                              variant={
+                                tx.status === "COMPLETED"
+                                  ? "default"
+                                  : tx.status === "PENDING"
+                                  ? "secondary"
+                                  : tx.status === "FAILED"
+                                  ? "destructive"
+                                  : "outline"
+                              }
+                            >
+                              {tx.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="hidden sm:table-cell text-sm text-muted-foreground">
+                            {new Date(tx.createdAt).toLocaleDateString()}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  <DollarSign className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                  <p>No transactions recorded yet</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {data.transactionSummary && data.transactionSummary.length > 0 && (
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle>Transaction Summary by Investor</CardTitle>
+                <CardDescription>
+                  Aggregated totals grouped by investor (anonymized)
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Investor</TableHead>
+                        <TableHead>Type</TableHead>
+                        <TableHead className="text-right">Total Amount</TableHead>
+                        <TableHead className="text-right">Tx Count</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {data.transactionSummary.map((summary, idx) => (
+                        <TableRow key={`${summary.investorId}-${summary.type}-${idx}`}>
+                          <TableCell>
+                            <div className="flex flex-col">
+                              <span className="font-medium">{summary.investorName}</span>
+                              <span className="text-xs text-muted-foreground">
+                                {summary.investorId}
+                              </span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-1">
+                              {summary.type === "CAPITAL_CALL" ? (
+                                <ArrowUpRight className="h-4 w-4 text-green-600" />
+                              ) : (
+                                <ArrowDownRight className="h-4 w-4 text-blue-600" />
+                              )}
+                              <span className="text-sm">
+                                {summary.type === "CAPITAL_CALL" ? "Capital Call" : "Distribution"}
+                              </span>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right font-medium">
+                            {formatCurrency(summary.totalAmount)}
+                          </TableCell>
+                          <TableCell className="text-right">{summary.count}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
     </>

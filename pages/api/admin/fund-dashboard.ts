@@ -96,6 +96,60 @@ export default async function handler(
       target: f.targetRaise,
     }));
 
+    const fundIds = funds.map((f) => f.id);
+    const transactions = await prisma.transaction.findMany({
+      where: { fundId: { in: fundIds } },
+      include: {
+        investor: { select: { id: true, entityName: true } },
+      },
+      orderBy: { createdAt: "desc" },
+      take: 100,
+    });
+
+    const transactionsByInvestor = await prisma.transaction.groupBy({
+      by: ["investorId", "type"],
+      where: { fundId: { in: fundIds } },
+      _sum: { amount: true },
+      _count: { id: true },
+    });
+
+    const investorIds = [...new Set(transactionsByInvestor.map((t) => t.investorId))];
+    const investors = await prisma.investor.findMany({
+      where: { id: { in: investorIds } },
+      select: { id: true, entityName: true },
+    });
+    const investorMap = new Map(investors.map((i) => [i.id, i.entityName]));
+
+    function anonymizeInvestor(investorId: string, entityName: string | null): string {
+      const name = entityName || "Investor";
+      if (name.length <= 3) return name[0] + "***";
+      return name.slice(0, 2) + "***" + name.slice(-1);
+    }
+
+    const investorIdMap = new Map<string, string>();
+    let investorCounter = 1;
+    investorIds.forEach((id) => {
+      investorIdMap.set(id, `INV-${String(investorCounter++).padStart(3, "0")}`);
+    });
+
+    const aggregatedTransactions = transactionsByInvestor.map((t) => ({
+      investorId: investorIdMap.get(t.investorId) || "INV-000",
+      investorName: anonymizeInvestor(t.investorId, investorMap.get(t.investorId) || null),
+      type: t.type,
+      totalAmount: Number(t._sum.amount || 0),
+      count: t._count.id,
+    }));
+
+    const recentTransactions = transactions.slice(0, 50).map((t, index) => ({
+      id: t.id,
+      investorId: `INV-${String(index + 1).padStart(3, "0")}`,
+      investorName: anonymizeInvestor(t.investorId, t.investor?.entityName || null),
+      type: t.type,
+      amount: Number(t.amount),
+      status: t.status,
+      createdAt: t.createdAt,
+    }));
+
     return res.status(200).json({
       funds: fundData,
       totals: {
@@ -106,6 +160,8 @@ export default async function handler(
         totalFunds: funds.length,
       },
       chartData,
+      transactions: recentTransactions,
+      transactionSummary: aggregatedTransactions,
     });
   } catch (error) {
     console.error("Error fetching fund dashboard:", error);

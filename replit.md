@@ -45,6 +45,8 @@ The platform is built on Next.js 14, utilizing a hybrid Pages and App Router app
     - Summary cards: Total Raised, Total Distributed, Total Commitments, Total Investors
     - Recharts visualizations: Bar chart (Raised vs Distributed), Pie chart (Fund Allocation)
     - Funds table with progress indicators
+    - Fund-wide transaction table with anonymized investor data (Prisma groupBy for compliance)
+    - Transaction summary by investor with aggregated totals
     - Bulk Action Wizard: Create capital calls or distributions with pro-rata or equal allocation
 *   **Authentication**: Primarily via email magic links, with Google OAuth for admin users.
 *   **User Role-Based Access Control (LP/GP)**:

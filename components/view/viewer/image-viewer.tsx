@@ -123,7 +123,8 @@ export default function ImageViewer({
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [containerRef.current, imageDimensions]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [imageDimensions]);
 
   useEffect(() => {
     const updateImageDimensions = () => {
@@ -272,6 +273,7 @@ export default function ImageViewer({
     if (!dataroomId && router.query.token) {
       removeQueryParams(["token", "email", "domain", "slug", "linkId"]);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Run once on mount
 
   // Start interval tracking when component mounts

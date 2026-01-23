@@ -383,6 +383,7 @@ export default function PagesHorizontalViewer({
     if (!dataroomId && router.query.token) {
       removeQueryParams(["token", "email", "domain", "slug", "linkId"]);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Run once on mount
 
   // Function to preload next image

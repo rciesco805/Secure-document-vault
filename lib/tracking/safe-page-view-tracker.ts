@@ -257,15 +257,6 @@ export function useSafePageViewTracker(options: TrackingOptions = {}) {
         startInactivityTimeout();
     }, [startInactivityTimeout]);
 
-    // TODO: for debugging
-    // const getTrackingState = () => ({
-    //     hasTrackedUnload: hasTrackedUnloadRef.current,
-    //     isTracking: isTrackingRef.current,
-    //     isActive: isActiveRef.current,
-    //     lastActivityTime: lastActivityTimeRef.current,
-    //     accumulatedActiveTime: accumulatedActiveTimeRef.current,
-    // });
-
     // Cleanup on unmount
     useEffect(() => {
         return () => {
@@ -276,7 +267,6 @@ export function useSafePageViewTracker(options: TrackingOptions = {}) {
     return {
         trackPageViewSafely,
         resetTrackingState,
-        // getTrackingState,
         startIntervalTracking,
         stopIntervalTracking,
         getActiveDuration,

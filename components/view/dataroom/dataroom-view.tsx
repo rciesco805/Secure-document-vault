@@ -305,6 +305,7 @@ export default function DataroomView({
         didMount.current = true;
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [submitted, isProtected, token, preview, previewToken]);
 
   // Handle token updates AFTER initial mount (e.g., when parent verifies magic link)
@@ -316,6 +317,7 @@ export default function DataroomView({
       handleSubmission();
     }
     prevTokenRef.current = token;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token, submitted, isLoading]);
 
   // Handle magic link tokens separately to account for Next.js hydration timing
@@ -330,6 +332,7 @@ export default function DataroomView({
       setMagicLinkProcessed(true);
       handleSubmission(magicLinkToken);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router.isReady, magicLinkToken, verifiedEmail, magicLinkProcessed, submitted]);
 
   // Components to render when email is submitted but verification is pending

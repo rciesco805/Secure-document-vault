@@ -240,6 +240,7 @@ export default function DocumentView({
       }
       didMount.current = true;
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [submitted, isProtected, token, previewToken]);
 
   // Handle magic link tokens separately to account for Next.js hydration timing
@@ -254,6 +255,7 @@ export default function DocumentView({
       setMagicLinkProcessed(true);
       handleSubmission(magicLinkToken);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router.isReady, magicLinkToken, verifiedEmail, magicLinkProcessed, submitted]);
 
   // Components to render when email is submitted but verification is pending

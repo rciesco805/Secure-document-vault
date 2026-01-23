@@ -67,6 +67,7 @@ export default function DownloadOnlyViewer({
     if (router.query.token) {
       removeQueryParams(["token", "email", "domain", "slug", "linkId"]);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {

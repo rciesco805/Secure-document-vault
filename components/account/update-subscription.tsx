@@ -1,7 +1,6 @@
 import { useOptimisticUpdate } from "../hooks/use-optimistic-update";
 import { Switch } from "../ui/switch";
 
-// TODO: MAIL SUBSCRIPTION FOR LATER USE
 export const UpdateMailSubscribe = () => {
   const { data, isLoading, update } = useOptimisticUpdate<{
     subscribed: boolean;

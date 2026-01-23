@@ -56,8 +56,6 @@ const ProfilePage: NextPage = () => {
               type: "email",
             }}
             defaultValue={session?.user?.email ?? ""}
-            // TODO: MAIL SUBSCRIPTION
-            // helpText={<UpdateMailSubscribe />}
             validate={validateEmail}
             helpText=""
             handleSubmit={(data) =>

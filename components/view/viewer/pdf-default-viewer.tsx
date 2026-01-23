@@ -130,6 +130,7 @@ export default function PDFViewer(props: any) {
     if (numPages > 0) {
       updateNumPages(numPages);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [numPages]); // monitor numPages for changes
 
   function onDocumentLoadSuccess({

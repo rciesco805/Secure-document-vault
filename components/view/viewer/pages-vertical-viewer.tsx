@@ -401,6 +401,7 @@ export default function PagesVerticalViewer({
     if (!dataroomId && router.query.token) {
       removeQueryParams(["token", "email", "domain", "slug", "linkId"]);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Run once on mount
 
   const handleScroll = () => {

@@ -670,23 +670,6 @@ export default function DocumentHeader({
             </AddDocumentModal>
           )}
 
-          {/* TODO: Assistant feature temporarily disabled. Will be re-enabled in a future update */}
-          {/* {prismaDocument.type !== "notion" &&
-            prismaDocument.type !== "sheet" &&
-            prismaDocument.type !== "zip" &&
-            prismaDocument.type !== "video" &&
-            prismaDocument.assistantEnabled && (
-              <Button
-                className="group hidden h-8 space-x-1 whitespace-nowrap bg-gradient-to-r from-[#16222A] via-emerald-500 to-[#16222A] text-xs duration-200 ease-linear hover:bg-right md:flex lg:h-9 lg:text-sm"
-                variant={"special"}
-                size={"icon"}
-                style={{ backgroundSize: "200% auto" }}
-                onClick={() => activateOrRedirectAssistant(prismaDocument)}
-                title="Open AI Assistant"
-              >
-                <PapermarkSparkle className="h-5 w-5" />
-              </Button>
-            )} */}
 
           <div className="flex items-center gap-x-1">
             {actionRows.map((row, i) => (
@@ -739,60 +722,8 @@ export default function DocumentHeader({
                     </DropdownMenuItem>
                   )}
 
-                {/* TODO: Assistant feature temporarily disabled. Will be re-enabled in a future update */}
-                {/* {prismaDocument.type !== "notion" &&
-                  prismaDocument.type !== "sheet" &&
-                  prismaDocument.type !== "zip" &&
-                  primaryVersion.type !== "video" && (
-                    <>
-                      <DropdownMenuItem
-                        onClick={() => changeDocumentOrientation()}
-                      >
-                        <PortraitLandscape
-                          className={cn(
-                            "mr-2 h-4 w-4",
-                            !primaryVersion.isVertical &&
-                              "-rotate-90 transform",
-                          )}
-                        />
-                        Change orientation
-                      </DropdownMenuItem>
-
-                      <DropdownMenuItem
-                        onClick={() =>
-                          activateOrRedirectAssistant(prismaDocument)
-                        }
-                      >
-                        <PapermarkSparkle className="mr-2 h-4 w-4" />
-                        Open AI Assistant
-                      </DropdownMenuItem>
-                    </>
-                  )} */}
-
                 <DropdownMenuSeparator />
               </DropdownMenuGroup>
-              {/* TODO: Assistant feature temporarily disabled. Will be re-enabled in a future update */}
-              {/* {primaryVersion.type !== "notion" &&
-                primaryVersion.type !== "sheet" &&
-                primaryVersion.type !== "zip" &&
-                primaryVersion.type !== "video" &&
-                (!prismaDocument.assistantEnabled ? (
-                  <DropdownMenuItem
-                    onClick={() =>
-                      activateOrDeactivateAssistant(true, prismaDocument.id)
-                    }
-                  >
-                    <Sparkles className="mr-2 h-4 w-4" /> Activate Assistant
-                  </DropdownMenuItem>
-                ) : (
-                  <DropdownMenuItem
-                    onClick={() =>
-                      activateOrDeactivateAssistant(false, prismaDocument.id)
-                    }
-                  >
-                    <Sparkles className="mr-2 h-4 w-4" /> Disable Assistant
-                  </DropdownMenuItem>
-                ))} */}
               {prismaDocument.type === "sheet" &&
                 supportsAdvancedExcelMode(primaryVersion.contentType) &&
                 (isPro || isBusiness || isDatarooms || isTrial) && (

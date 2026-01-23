@@ -45,10 +45,23 @@ export default async function handler(
       return res.status(403).json({ message: "Admin access required" });
     }
 
+    const documents = await prisma.signatureDocument.findMany({
+      where: { teamId },
+      select: { id: true, title: true },
+    });
+
+    const documentMap = new Map(documents.map((d) => [d.id, d.title]));
+    const teamDocumentIds = documents.map((d) => d.id);
+
     const whereClause: any = {};
 
     if (documentId && typeof documentId === "string") {
+      if (!teamDocumentIds.includes(documentId)) {
+        return res.status(403).json({ message: "Document does not belong to this team" });
+      }
       whereClause.documentId = documentId;
+    } else {
+      whereClause.documentId = { in: teamDocumentIds };
     }
 
     if (startDate && typeof startDate === "string") {
@@ -63,17 +76,6 @@ export default async function handler(
         ...whereClause.createdAt,
         lte: new Date(endDate + "T23:59:59.999Z"),
       };
-    }
-
-    const documents = await prisma.signatureDocument.findMany({
-      where: { teamId },
-      select: { id: true, title: true },
-    });
-
-    const documentMap = new Map(documents.map((d) => [d.id, d.title]));
-
-    if (!documentId) {
-      whereClause.documentId = { in: documents.map((d) => d.id) };
     }
 
     // @ts-ignore - Model exists in schema

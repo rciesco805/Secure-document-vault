@@ -11,6 +11,7 @@ import {
   onDocumentDeclined,
   onDocumentViewed,
 } from "@/lib/webhook/triggers/signature-events";
+import { logSignatureEvent } from "@/lib/signature/audit-logger";
 
 export default async function handler(
   req: NextApiRequest,
@@ -141,6 +142,13 @@ async function handleGet(
         });
       }
 
+      logSignatureEvent(req, {
+        documentId: document.id,
+        event: "document.viewed",
+        recipientId: recipient.id,
+        recipientEmail: recipient.email,
+      }).catch(console.error);
+
       onDocumentViewed({
         documentId: document.id,
         documentTitle: document.title,
@@ -270,6 +278,14 @@ async function handlePost(
         });
       });
 
+      logSignatureEvent(req, {
+        documentId: document.id,
+        event: "recipient.declined",
+        recipientId: recipient.id,
+        recipientEmail: recipient.email,
+        metadata: { reason: declinedReason },
+      }).catch(console.error);
+
       onDocumentDeclined({
         documentId: document.id,
         documentTitle: document.title,
@@ -387,6 +403,13 @@ async function handlePost(
       return { allSigned, newStatus, allRecipients };
     });
 
+    logSignatureEvent(req, {
+      documentId: document.id,
+      event: "recipient.signed",
+      recipientId: recipient.id,
+      recipientEmail: recipient.email,
+    }).catch(console.error);
+
     onRecipientSigned({
       documentId: document.id,
       documentTitle: document.title,
@@ -400,6 +423,11 @@ async function handlePost(
     }).catch(console.error);
 
     if (result.allSigned && result.newStatus === "COMPLETED") {
+      logSignatureEvent(req, {
+        documentId: document.id,
+        event: "document.completed",
+        metadata: { signerCount: result.allRecipients.filter((r) => r.status === "SIGNED").length },
+      }).catch(console.error);
       const completedAt = new Date().toLocaleDateString("en-US", {
         year: "numeric",
         month: "long",

@@ -75,17 +75,23 @@ interface SignatureDocument {
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 const EVENT_LABELS: Record<string, { label: string; color: string }> = {
+  "document.created": { label: "Created", color: "bg-gray-100 text-gray-800" },
+  "document.sent": { label: "Sent", color: "bg-purple-100 text-purple-800" },
   "document.viewed": { label: "Viewed", color: "bg-blue-100 text-blue-800" },
   "recipient.signed": {
     label: "Signed",
     color: "bg-emerald-100 text-emerald-800",
   },
+  "recipient.declined": { label: "Declined", color: "bg-red-100 text-red-800" },
   "document.completed": {
     label: "Completed",
     color: "bg-green-100 text-green-800",
   },
   "document.declined": { label: "Declined", color: "bg-red-100 text-red-800" },
-  "document.sent": { label: "Sent", color: "bg-purple-100 text-purple-800" },
+  "document.voided": { label: "Voided", color: "bg-orange-100 text-orange-800" },
+  "document.expired": { label: "Expired", color: "bg-yellow-100 text-yellow-800" },
+  "document.downloaded": { label: "Downloaded", color: "bg-indigo-100 text-indigo-800" },
+  "reminder.sent": { label: "Reminder Sent", color: "bg-cyan-100 text-cyan-800" },
 };
 
 function SignatureAuditSettings() {
@@ -500,7 +506,6 @@ function SignatureAuditSettings() {
   );
 }
 
-export default withAdminGuard(SignatureAuditSettings, {
-  requiredRoles: ["ADMIN", "OWNER"],
-  teamRequired: true,
-});
+export default SignatureAuditSettings;
+
+export const getServerSideProps = withAdminGuard();

@@ -156,6 +156,7 @@ export default async function handler(
         status: document.status,
       },
       auditTrail,
+      auditLogs,
       rawLogs: auditLogs,
     });
   } catch (error) {

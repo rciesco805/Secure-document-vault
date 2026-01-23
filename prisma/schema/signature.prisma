@@ -204,10 +204,30 @@ model SignatureAuditLog {
   userAgent         String?
   metadata          Json?
   
+  // Extended tracking for compliance
+  country           String?
+  city              String?
+  region            String?
+  browser           String?
+  browserVersion    String?
+  os                String?
+  osVersion         String?
+  device            String?  @default("Desktop")
+  deviceVendor      String?
+  deviceModel       String?
+  referer           String?
+  
+  // Session and action tracking
+  sessionId         String?
+  actionDuration    Int?     // Duration of action in milliseconds
+  pageNumber        Int?     // For document view events
+  
   createdAt         DateTime @default(now())
   
   @@index([documentId])
   @@index([event])
   @@index([documentId, event])
   @@index([createdAt])
+  @@index([recipientEmail])
+  @@index([ipAddress])
 }

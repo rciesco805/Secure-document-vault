@@ -112,6 +112,35 @@ export const recordClickEvent = tb.buildIngestEndpoint({
   }),
 });
 
+// Signature audit events for compliance tracking
+export const recordSignatureEvent = tb.buildIngestEndpoint({
+  datasource: "signature_events__v1",
+  event: z.object({
+    timestamp: z.string(),
+    event_id: z.string(),
+    document_id: z.string(),
+    event: z.string(), // document.viewed, recipient.signed, document.completed, etc.
+    recipient_id: z.string().nullable(),
+    recipient_email: z.string().nullable(),
+    ip_address: z.string().nullable(),
+    session_id: z.string().nullable(),
+    page_number: z.number().nullable(),
+    action_duration: z.number().nullable(),
+    country: z.string().optional().default("Unknown"),
+    city: z.string().optional().default("Unknown"),
+    region: z.string().optional().default("Unknown"),
+    device: z.string().optional().default("Desktop"),
+    device_model: z.string().optional().default("Unknown"),
+    device_vendor: z.string().optional().default("Unknown"),
+    browser: z.string().optional().default("Unknown"),
+    browser_version: z.string().optional().default("Unknown"),
+    os: z.string().optional().default("Unknown"),
+    os_version: z.string().optional().default("Unknown"),
+    ua: z.string().optional().default("Unknown"),
+    referer: z.string().optional().default("(direct)"),
+  }),
+});
+
 // Event track when a visitor opens a link
 export const recordLinkViewTB = tb.buildIngestEndpoint({
   datasource: "pm_click_events__v1",

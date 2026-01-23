@@ -111,6 +111,13 @@ export default function BankConnectPage() {
       setExistingLink(data.bankLink);
       setConnected(true);
       toast.success("Bank account connected successfully!");
+      
+      // Trigger KYC verification after bank connect if not already verified
+      if (data.requiresKyc) {
+        setTimeout(() => {
+          router.push("/lp/dashboard?triggerKyc=true");
+        }, 1500);
+      }
     } catch (err: any) {
       console.error("Error connecting bank:", err);
       toast.error(err.message || "Failed to connect bank account");

@@ -97,8 +97,12 @@ export default async function handler(
       },
     });
 
+    const requiresKyc = !investor.personaStatus || 
+      !["APPROVED", "VERIFIED"].includes(investor.personaStatus);
+
     return res.status(200).json({
       success: true,
+      requiresKyc,
       bankLink: {
         id: bankLink.id,
         institutionName: bankLink.institutionName,

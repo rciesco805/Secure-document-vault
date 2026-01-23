@@ -165,6 +165,7 @@ npm run test:e2e       # E2E flow tests
 - **Role Access (20 tests)**: LP/GP role filtering, team scoping, authentication
 - **Admin Fund Dashboard (19 tests)**: GP aggregates, anonymization, bulk actions, validation
 - **Data Migration (11 tests)**: Export/import endpoints, blob manifest, audit logging, ID mapping
+- **MVP Flow E2E (9 tests)**: Full dataroom → NDA → subscription → sign → KYC gate flow
 - **E2E Flows (61 tests)**:
   - LP Onboarding: Registration, entity selection, magic link verification
   - NDA Gate: 2-step accreditation wizard, SEC 506(c) compliance logging

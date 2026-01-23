@@ -68,6 +68,43 @@ export default async function handler(
       ? investments.some((inv: any) => inv.fund?.ndaGateEnabled !== false)
       : true;
 
+    // Get fund aggregate data for progress bar
+    const fundIds = [...new Set(investments.map((inv: any) => inv.fundId))];
+    let fundAggregates: Array<{
+      id: string;
+      name: string;
+      targetRaise: string;
+      currentRaise: string;
+      status: string;
+      investorCount: number;
+    }> = [];
+
+    if (fundIds.length > 0) {
+      const funds = await prisma.fund.findMany({
+        where: { id: { in: fundIds } },
+        include: {
+          _count: { select: { investments: true } },
+        },
+      });
+      fundAggregates = funds.map((f) => ({
+        id: f.id,
+        name: f.name,
+        targetRaise: f.targetRaise.toString(),
+        currentRaise: f.currentRaise.toString(),
+        status: f.status,
+        investorCount: f._count.investments,
+      }));
+    }
+
+    // Calculate total commitment from investments
+    const totalCommitment = investments.reduce((sum: number, inv: any) => {
+      return sum + parseFloat(inv.commitmentAmount?.toString() || "0");
+    }, 0);
+
+    const totalFunded = investments.reduce((sum: number, inv: any) => {
+      return sum + parseFloat(inv.fundedAmount?.toString() || "0");
+    }, 0);
+
     // Get Persona KYC status using raw query (new fields may not be in Prisma types)
     const personaData = await prisma.$queryRaw<Array<{
       personaStatus: string;
@@ -111,10 +148,13 @@ export default async function handler(
           accreditationType: latestAck.accreditationType,
           method: latestAck.method,
         } : null,
+        totalCommitment,
+        totalFunded,
       },
       capitalCalls,
       ndaGateEnabled,
       gateProgress,
+      fundAggregates,
     });
   } catch (error: any) {
     console.error("LP me error:", error);

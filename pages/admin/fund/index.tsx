@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/router";
 import Head from "next/head";
 import Link from "next/link";
+import AppLayout from "@/components/layouts/app";
 import {
   Card,
   CardContent,
@@ -223,19 +224,23 @@ export default function FundDashboard() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
+      <AppLayout>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
+      </AppLayout>
     );
   }
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen gap-4">
-        <AlertCircle className="h-12 w-12 text-destructive" />
-        <p className="text-destructive">{error}</p>
-        <Button onClick={() => window.location.reload()}>Retry</Button>
-      </div>
+      <AppLayout>
+        <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+          <AlertCircle className="h-12 w-12 text-destructive" />
+          <p className="text-destructive">{error}</p>
+          <Button onClick={() => window.location.reload()}>Retry</Button>
+        </div>
+      </AppLayout>
     );
   }
 
@@ -247,7 +252,7 @@ export default function FundDashboard() {
   }));
 
   return (
-    <>
+    <AppLayout>
       <Head>
         <title>Fund Dashboard | GP Admin</title>
       </Head>
@@ -763,6 +768,6 @@ export default function FundDashboard() {
           )}
         </div>
       </div>
-    </>
+    </AppLayout>
   );
 }

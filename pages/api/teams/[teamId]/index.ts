@@ -43,6 +43,7 @@ export default async function handle(
               teamId: true,
               userId: true,
               status: true,
+              hasFundroomAccess: true,
               user: {
                 select: {
                   email: true,

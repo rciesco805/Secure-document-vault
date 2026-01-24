@@ -91,6 +91,7 @@ model UserTeam {
 
   blockedAt               DateTime? // When the user was blocked
   notificationPreferences Json? // Format: { yearInReview: { "enabled": false } }
+  hasFundroomAccess       Boolean   @default(true) // Whether user can access the fundroom
 
   @@id([userId, teamId])
   @@index([userId])

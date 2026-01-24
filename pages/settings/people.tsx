@@ -28,6 +28,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Switch } from "@/components/ui/switch";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export default function People() {
   const [isTeamMemberInviteModalOpen, setTeamMemberInviteModalOpen] =
@@ -78,6 +85,32 @@ export default function People() {
 
   const isCurrentUserSuperAdmin = () => {
     return currentUserTeamMember && isSuperAdminRole(currentUserTeamMember.role);
+  };
+
+  const toggleFundroomAccess = async (
+    teamId: string,
+    userId: string,
+    hasFundroomAccess: boolean,
+  ) => {
+    const response = await fetch(`/api/teams/${teamId}/toggle-fundroom-access`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        userId,
+        hasFundroomAccess,
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      toast.error(error?.error || "Failed to update fundroom access");
+      return;
+    }
+
+    mutate(`/api/teams/${teamId}`);
+    toast.success(hasFundroomAccess ? "Fundroom access granted" : "Fundroom access revoked");
   };
 
   const changeRole = async (
@@ -295,12 +328,37 @@ export default function People() {
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-12">
+                <div className="flex items-center gap-6">
                   <div className="flex flex-col items-end gap-1">
                     <span className="text-sm text-foreground">
                       {getRoleLabel(member.role)}
                     </span>
                   </div>
+                  {isCurrentUserAdmin() && !isCurrentUser(member.userId) && (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-muted-foreground">Fundroom</span>
+                            <Switch
+                              checked={member.role === "ADMIN" || member.hasFundroomAccess}
+                              disabled={member.role === "ADMIN"}
+                              onCheckedChange={(checked) =>
+                                toggleFundroomAccess(member.teamId, member.userId, checked)
+                              }
+                            />
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          {member.role === "ADMIN"
+                            ? "Super admins always have fundroom access"
+                            : member.hasFundroomAccess
+                            ? "Click to revoke fundroom access"
+                            : "Click to grant fundroom access"}
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  )}
                   {leavingUserId === member.userId ? (
                     <span className="text-xs">leaving...</span>
                   ) : (

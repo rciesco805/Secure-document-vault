@@ -1,6 +1,8 @@
 import { NextApiRequest, NextApiResponse } from "next";
+import { getServerSession } from "next-auth/next";
 import prisma from "@/lib/prisma";
-import { getUserWithRole } from "@/lib/auth/with-role";
+import { authOptions } from "@/pages/api/auth/[...nextauth]";
+import { CustomUser } from "@/lib/types";
 
 export default async function handler(
   req: NextApiRequest,
@@ -11,25 +13,44 @@ export default async function handler(
   }
 
   try {
-    const result = await getUserWithRole(req, res);
+    const session = await getServerSession(req, res, authOptions);
 
-    if (!result.user) {
-      return res.status(result.statusCode || 401).json({
-        message: result.error || "Not authenticated",
-      });
+    if (!session?.user?.email) {
+      return res.status(401).json({ message: "Not authenticated" });
     }
 
-    const user = result.user;
-    
-    // Allow access if user is a team member (dataroom admin) - auto-authorize for fundroom
-    if (!user.teamIds || user.teamIds.length === 0) {
+    const user = session.user as CustomUser;
+
+    // Get user's team memberships with fundroom access flag
+    const userTeams = await prisma.userTeam.findMany({
+      where: { userId: user.id },
+      select: {
+        teamId: true,
+        role: true,
+        hasFundroomAccess: true,
+      },
+    });
+
+    if (userTeams.length === 0) {
       return res.status(403).json({
-        message: "You need to be a team admin to access the fund dashboard",
+        message: "You need to be a team member to access the fund dashboard",
       });
     }
+
+    // Check if user has fundroom access (either explicitly or as super admin)
+    const isSuperAdmin = userTeams.some((ut) => ut.role === "ADMIN");
+    const hasFundroomAccess = userTeams.some((ut) => ut.hasFundroomAccess) || isSuperAdmin;
+
+    if (!hasFundroomAccess) {
+      return res.status(403).json({
+        message: "You don't have access to the fundroom. Please contact your administrator.",
+      });
+    }
+
+    const teamIds = userTeams.map((ut) => ut.teamId);
 
     const funds = await prisma.fund.findMany({
-      where: { teamId: { in: user.teamIds } },
+      where: { teamId: { in: teamIds } },
       include: {
         investments: true,
         distributions: true,

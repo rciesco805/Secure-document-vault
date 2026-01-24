@@ -45,7 +45,7 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
     if (userTeam) {
       return {
         redirect: {
-          destination: "/dashboard",
+          destination: "/hub",
           permanent: false,
         },
       };

@@ -13,6 +13,7 @@ import {
   ContactIcon,
   FolderIcon,
   HouseIcon,
+  LandmarkIcon,
   Loader,
   PenLineIcon,
   ServerIcon,
@@ -101,6 +102,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         url: "/sign",
         icon: PenLineIcon,
         current: router.pathname.includes("/sign"),
+        disabled: false,
+      },
+      {
+        title: "Fundroom",
+        url: "/admin/fund",
+        icon: LandmarkIcon,
+        current: router.pathname.includes("/admin/fund"),
         disabled: false,
       },
       {

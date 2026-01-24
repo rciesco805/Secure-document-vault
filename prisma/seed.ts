@@ -1,4 +1,5 @@
-import { PrismaClient, Decimal } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
+import { Decimal } from "@prisma/client/runtime/library";
 import * as fs from "fs";
 import * as path from "path";
 

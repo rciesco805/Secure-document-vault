@@ -11,6 +11,10 @@ jest.mock("@/lib/prisma", () => ({
     user: {
       findUnique: jest.fn(),
     },
+    userTeam: {
+      findMany: jest.fn(),
+      findFirst: jest.fn(),
+    },
     fund: {
       findMany: jest.fn(),
       findFirst: jest.fn(),
@@ -67,6 +71,10 @@ describe("Admin Fund Dashboard E2E", () => {
         user: { email: "gp@example.com" },
       });
       (mockPrisma.user.findUnique as jest.Mock).mockResolvedValue(gpUser);
+      (mockPrisma.userTeam.findMany as jest.Mock).mockResolvedValue([
+        { teamId: "team-1", role: "ADMIN", hasFundroomAccess: true },
+        { teamId: "team-2", role: "MEMBER", hasFundroomAccess: true },
+      ]);
     });
 
     it("GP can access fund dashboard with aggregates", async () => {
@@ -202,6 +210,7 @@ describe("Admin Fund Dashboard E2E", () => {
         ...gpUser,
         teams: [],
       });
+      (mockPrisma.userTeam.findMany as jest.Mock).mockResolvedValue([]);
 
       await fundDashboardHandler(req as unknown as NextApiRequest, res as unknown as NextApiResponse);
 
@@ -226,6 +235,7 @@ describe("Admin Fund Dashboard E2E", () => {
         investorProfile: { id: "investor-1" },
         teams: [{ teamId: "team-1" }],
       });
+      (mockPrisma.userTeam.findMany as jest.Mock).mockResolvedValue([]);
 
       await fundDashboardHandler(req as unknown as NextApiRequest, res as unknown as NextApiResponse);
 

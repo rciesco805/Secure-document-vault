@@ -651,7 +651,7 @@ export default function LPDashboard() {
                         </div>
                       </div>
                       <a
-                        href={`/sign/${sig.signingToken}`}
+                        href={`/view/sign/${sig.signingToken}`}
                         className="inline-flex items-center gap-2 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-medium transition-colors"
                       >
                         <PenTool className="h-4 w-4" />

@@ -113,6 +113,20 @@ git remote set-url bitget https://${GITHUB_TOKEN}@github.com/rciesco805/bitget.g
 
 **Note**: The GITHUB_TOKEN secret is already configured in this project.
 
+**TROUBLESHOOTING**: If you get "Repository not found":
+1. First, check the current remote URL: `git remote get-url bitget`
+2. If it shows literal `${GITHUB_TOKEN}` instead of the actual token, the variable didn't expand
+3. Fix by removing and re-adding with the actual token value:
+   ```bash
+   git remote remove bitget
+   echo $GITHUB_TOKEN
+   ```
+4. Copy the token output and use it directly:
+   ```bash
+   git remote add bitget https://YOUR_ACTUAL_TOKEN_HERE@github.com/rciesco805/bitget.git
+   git push bitget main
+   ```
+
 ## Phase Status
 
 - **Phase 1 (MVP)**: ~90% complete - Core onboarding, NDA gate, accreditation, fundroom, e-signature, dual thresholds

@@ -92,6 +92,27 @@ The platform is built on Next.js 14, using a hybrid Pages and App Router archite
 *   **Stripe**: Platform billing/subscriptions (NOT capital movements)
 *   **Replit Object Storage**: Primary storage solution for documents and files
 
+## GitHub Push Instructions (Bitget Repo)
+
+To push to the bitget repository:
+
+1. Open the **Shell** tab in Replit
+2. Add the bitget remote (first time only):
+   ```bash
+   git remote add bitget https://${GITHUB_TOKEN}@github.com/rciesco805/bitget.git
+   ```
+3. Push to bitget:
+   ```bash
+   git push bitget main
+   ```
+
+If the remote already exists and you need to update the URL:
+```bash
+git remote set-url bitget https://${GITHUB_TOKEN}@github.com/rciesco805/bitget.git
+```
+
+**Note**: The GITHUB_TOKEN secret is already configured in this project.
+
 ## Phase Status
 
 - **Phase 1 (MVP)**: ~90% complete - Core onboarding, NDA gate, accreditation, fundroom, e-signature, dual thresholds

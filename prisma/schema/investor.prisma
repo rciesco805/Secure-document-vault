@@ -181,12 +181,16 @@ model Fund {
   createdBy         String?  // GP User ID who created the fund
   audit             Json?    // Changes log: [{ timestamp, userId, action, previousValue, newValue }]
   
+  flatModeEnabled   Boolean  @default(false)
+  
   investments       Investment[]
   capitalCalls      CapitalCall[]
   distributions     Distribution[]
   reports           FundReport[]
   aggregate         FundAggregate?
   investors         Investor[]
+  pricingTiers      FundPricingTier[]
+  subscriptions     Subscription[]
   
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
@@ -325,9 +329,14 @@ model Subscription {
   id                  String   @id @default(cuid())
   investorId          String
   fundId              String?
+  fund                Fund?    @relation(fields: [fundId], references: [id], onDelete: SetNull)
   signatureDocumentId String   @unique
   
   amount              Decimal  @db.Decimal(18, 2)
+  units               Int?
+  pricingTierId       String?
+  pricingTier         FundPricingTier? @relation(fields: [pricingTierId], references: [id], onDelete: SetNull)
+  tierBreakdown       Json?
   status              String   @default("PENDING")
   
   signedAt            DateTime?
@@ -341,6 +350,29 @@ model Subscription {
   @@index([fundId])
   @@index([signatureDocumentId])
   @@index([status])
+  @@index([pricingTierId])
+}
+
+model FundPricingTier {
+  id              String   @id @default(cuid())
+  fundId          String
+  fund            Fund     @relation(fields: [fundId], references: [id], onDelete: Cascade)
+  
+  tranche         Int
+  pricePerUnit    Decimal  @db.Decimal(18, 2)
+  unitsAvailable  Int
+  unitsTotal      Int
+  
+  isActive        Boolean  @default(true)
+  
+  subscriptions   Subscription[]
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([fundId, tranche])
+  @@index([fundId])
+  @@index([isActive])
 }
 
 model InvestorNote {

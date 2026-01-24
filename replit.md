@@ -12,6 +12,10 @@ A comprehensive 506(c) fund GP/LP management suite designed to streamline invest
 
 ## Recent Changes (January 2026)
 
+- **Subscription Modal with Multi-Tier Pricing**: Post-NDA subscription modal with unit-based pricing tiers, blended pricing for multi-tier subscriptions, server-side amount validation, Review→Sign flow, sticky banner for pending subscriptions
+- **FundPricingTier Model**: New Prisma model for tiered pricing (tranche, unitsAvailable, pricePerUnit) with first-come tier deduction, multi-tier allocation, and tierBreakdown JSON storage
+- **Admin Units by Tier Card**: Real-time pricing tier management with flat mode toggle, add/delete tiers, subscription counts
+- **Server-Side Subscription Security**: Accreditation verification, fund eligibility checks, NaN/invalid input validation, amount mismatch protection
 - **LP Portal UI Polish**: Added skeleton loading states, welcome banner with onboarding progress, tooltips for financial terms (commitment, funded, distributions, capital calls), empty state component, smooth card animations with staggered fade-in effects, hover lift states, and animated progress bars with prefers-reduced-motion support
 - **Real-time Dashboard Updates**: 30-second auto-refresh polling on LP and admin dashboards with manual refresh buttons
 - **View Audit Extension**: Extended View model with comprehensive audit fields (ipAddress, userAgent, geo location, device/browser/OS info, sessionId, referrer, auditMetadata) for 506(c) compliance tracking

@@ -108,6 +108,7 @@ export default async function handler(
 
     const response = {
       id: fund.id,
+      teamId: fund.teamId,
       name: fund.name,
       description: fund.description,
       style: fund.style,

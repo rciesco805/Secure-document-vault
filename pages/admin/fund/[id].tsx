@@ -44,11 +44,13 @@ import {
   Calendar,
   RefreshCw,
 } from "lucide-react";
+import { UnitsByTierCard } from "@/components/admin/units-by-tier-card";
 
 const POLL_INTERVAL = 30000; // 30 seconds for real-time updates
 
 interface FundDetails {
   id: string;
+  teamId: string;
   name: string;
   description: string | null;
   style: string | null;
@@ -529,6 +531,11 @@ export default function FundDetailPage() {
                 </div>
               </CardContent>
             </Card>
+          </div>
+
+          {/* Units by Tier Card */}
+          <div className="mb-6">
+            <UnitsByTierCard fundId={fund.id} teamId={fund.teamId} />
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

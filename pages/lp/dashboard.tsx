@@ -48,6 +48,8 @@ import { DashboardSummary } from "@/components/lp/dashboard-summary";
 import { DashboardSkeleton, FundCardSkeleton } from "@/components/lp/dashboard-skeleton";
 import { WelcomeBanner } from "@/components/lp/welcome-banner";
 import { EmptyState } from "@/components/lp/empty-state";
+import { SubscriptionModal } from "@/components/lp/subscription-modal";
+import { SubscriptionBanner } from "@/components/lp/subscription-banner";
 
 interface InvestorDocument {
   id: string;
@@ -170,6 +172,16 @@ export default function LPDashboard() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const POLL_INTERVAL = 30000; // 30 seconds for real-time updates
 
+  const [subscriptionStatus, setSubscriptionStatus] = useState<{
+    hasSubscription: boolean;
+    canSubscribe: boolean;
+    fund: any;
+    pendingSubscription: any;
+    entityName: string | null;
+  } | null>(null);
+  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
+  const [bannerDismissed, setBannerDismissed] = useState(false);
+
   const fetchFundDetails = useCallback(async (silent = false) => {
     if (!silent) setIsRefreshing(true);
     try {
@@ -195,6 +207,50 @@ export default function LPDashboard() {
     }
   }, []);
 
+  const fetchSubscriptionStatus = useCallback(async () => {
+    try {
+      const res = await fetch("/api/lp/subscription-status");
+      if (res.ok) {
+        const data = await res.json();
+        setSubscriptionStatus(data);
+        if (data.canSubscribe && !data.hasSubscription && investor?.ndaSigned) {
+          setShowSubscriptionModal(true);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching subscription status:", error);
+    }
+  }, [investor?.ndaSigned]);
+
+  const handleSubscribe = async (data: { units?: number; amount: number; tierId?: string }) => {
+    if (!subscriptionStatus?.fund) return;
+
+    const res = await fetch("/api/lp/subscribe", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        fundId: subscriptionStatus.fund.id,
+        units: data.units,
+        amount: data.amount,
+        tierId: data.tierId,
+      }),
+    });
+
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(error.message || "Subscription failed");
+    }
+
+    const result = await res.json();
+    setShowSubscriptionModal(false);
+    if (result.signingUrl) {
+      window.location.href = result.signingUrl;
+    } else {
+      fetchSubscriptionStatus();
+      fetchFundDetails();
+    }
+  };
+
   useEffect(() => {
     if (sessionStatus === "loading") return;
 
@@ -217,6 +273,13 @@ export default function LPDashboard() {
 
     return () => clearInterval(pollInterval);
   }, [sessionStatus, investor, fetchFundDetails]);
+
+  // Fetch subscription status after NDA is signed
+  useEffect(() => {
+    if (investor?.ndaSigned && investor?.accreditationStatus !== "PENDING") {
+      fetchSubscriptionStatus();
+    }
+  }, [investor?.ndaSigned, investor?.accreditationStatus, fetchSubscriptionStatus]);
 
   const fetchInvestorData = async () => {
     try {
@@ -426,6 +489,32 @@ export default function LPDashboard() {
             </div>
           </div>
         </nav>
+
+        {/* Subscription Banner - Sticky after NDA gate */}
+        {!bannerDismissed && subscriptionStatus && (
+          <SubscriptionBanner
+            status={
+              subscriptionStatus.pendingSubscription
+                ? "pending"
+                : subscriptionStatus.canSubscribe
+                ? "available"
+                : "none"
+            }
+            fundName={subscriptionStatus.fund?.name || subscriptionStatus.pendingSubscription?.fundName}
+            pendingAmount={
+              subscriptionStatus.pendingSubscription
+                ? parseFloat(subscriptionStatus.pendingSubscription.amount)
+                : undefined
+            }
+            onSubscribe={() => setShowSubscriptionModal(true)}
+            onSignPending={() => {
+              if (subscriptionStatus.pendingSubscription?.signingToken) {
+                window.location.href = `/view/sign/${subscriptionStatus.pendingSubscription.signingToken}`;
+              }
+            }}
+            onDismiss={() => setBannerDismissed(true)}
+          />
+        )}
 
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
           <div className="flex items-center justify-between mb-6 sm:mb-8">
@@ -975,6 +1064,15 @@ export default function LPDashboard() {
           </DialogContent>
         </Dialog>
       </div>
+
+      {/* Subscription Modal */}
+      <SubscriptionModal
+        isOpen={showSubscriptionModal}
+        onClose={() => setShowSubscriptionModal(false)}
+        entityName={subscriptionStatus?.entityName || investor?.entityName || null}
+        fund={subscriptionStatus?.fund}
+        onSubscribe={handleSubscribe}
+      />
     </>
   );
 }

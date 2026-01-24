@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/lib/prisma";
-import { getUserWithRole, requireRole } from "@/lib/auth/with-role";
+import { getUserWithRole } from "@/lib/auth/with-role";
 
 export default async function handler(
   req: NextApiRequest,
@@ -12,27 +12,19 @@ export default async function handler(
 
   try {
     const result = await getUserWithRole(req, res);
-    const roleCheck = requireRole(["GP"], result);
 
-    if (!roleCheck.allowed) {
-      return res.status(roleCheck.statusCode || 403).json({
-        message: roleCheck.error,
+    if (!result.user) {
+      return res.status(result.statusCode || 401).json({
+        message: result.error || "Not authenticated",
       });
     }
 
-    const user = result.user!;
-
+    const user = result.user;
+    
+    // Allow access if user is a team member (dataroom admin) - auto-authorize for fundroom
     if (!user.teamIds || user.teamIds.length === 0) {
-      return res.status(200).json({
-        funds: [],
-        totals: {
-          totalRaised: "0.00",
-          totalDistributed: "0.00",
-          totalCommitments: "0.00",
-          totalInvestors: 0,
-          totalFunds: 0,
-        },
-        chartData: [],
+      return res.status(403).json({
+        message: "You need to be a team admin to access the fund dashboard",
       });
     }
 

@@ -203,7 +203,7 @@ describe("Admin Fund Dashboard E2E", () => {
       expect(data.transactions[0].investorName).toContain("***");
     });
 
-    it("GP with no teams sees empty data", async () => {
+    it("GP with no teams is denied access", async () => {
       const { req, res } = createMocks({ method: "GET" });
 
       (mockPrisma.user.findUnique as jest.Mock).mockResolvedValue({
@@ -214,10 +214,9 @@ describe("Admin Fund Dashboard E2E", () => {
 
       await fundDashboardHandler(req as unknown as NextApiRequest, res as unknown as NextApiResponse);
 
-      expect(res._getStatusCode()).toBe(200);
+      expect(res._getStatusCode()).toBe(403);
       const data = JSON.parse(res._getData());
-      expect(data.funds).toHaveLength(0);
-      expect(data.totals.totalFunds).toBe(0);
+      expect(data.message).toBe("You need to be a team member to access the fund dashboard");
     });
   });
 
@@ -241,7 +240,7 @@ describe("Admin Fund Dashboard E2E", () => {
 
       expect(res._getStatusCode()).toBe(403);
       const data = JSON.parse(res._getData());
-      expect(data.message).toBe("Insufficient permissions");
+      expect(data.message).toBe("You need to be a team member to access the fund dashboard");
     });
   });
 

@@ -81,7 +81,7 @@ export function DashboardSummary({
     <TooltipProvider delayDuration={200}>
     <div className="space-y-4">
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <Card className="bg-gradient-to-br from-emerald-900/30 to-gray-800/50 border-emerald-700/30">
+        <Card className="bg-gradient-to-br from-emerald-900/30 to-gray-800/50 border-emerald-700/30 card-hover-lift animate-fade-in-up stagger-1">
           <CardHeader className="pb-2 p-3 sm:p-4">
             <CardDescription className="text-emerald-300/70 flex items-center text-xs sm:text-sm">
               <Wallet className="h-4 w-4 mr-2 text-emerald-400" />
@@ -100,7 +100,7 @@ export function DashboardSummary({
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-blue-900/30 to-gray-800/50 border-blue-700/30">
+        <Card className="bg-gradient-to-br from-blue-900/30 to-gray-800/50 border-blue-700/30 card-hover-lift animate-fade-in-up stagger-2">
           <CardHeader className="pb-2 p-3 sm:p-4">
             <CardDescription className="text-blue-300/70 flex items-center text-xs sm:text-sm">
               <DollarSign className="h-4 w-4 mr-2 text-blue-400" />
@@ -116,7 +116,7 @@ export function DashboardSummary({
             <div className="flex items-center gap-2 mt-1">
               <div className="flex-1 bg-gray-700 rounded-full h-1.5">
                 <div
-                  className="bg-blue-400 h-1.5 rounded-full transition-all"
+                  className="bg-blue-400 h-1.5 rounded-full progress-bar-animated"
                   style={{ width: `${fundedPercentage}%` }}
                 />
               </div>
@@ -125,7 +125,7 @@ export function DashboardSummary({
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-purple-900/30 to-gray-800/50 border-purple-700/30">
+        <Card className="bg-gradient-to-br from-purple-900/30 to-gray-800/50 border-purple-700/30 card-hover-lift animate-fade-in-up stagger-3">
           <CardHeader className="pb-2 p-3 sm:p-4">
             <CardDescription className="text-purple-300/70 flex items-center text-xs sm:text-sm">
               <ArrowDownRight className="h-4 w-4 mr-2 text-purple-400" />
@@ -144,7 +144,7 @@ export function DashboardSummary({
           </CardContent>
         </Card>
 
-        <Card className={`bg-gradient-to-br ${
+        <Card className={`bg-gradient-to-br card-hover-lift animate-fade-in-up stagger-4 ${
           summary.pendingCapitalCallsCount > 0 
             ? "from-amber-900/30 to-gray-800/50 border-amber-700/30"
             : "from-gray-800/50 to-gray-900/50 border-gray-700/30"

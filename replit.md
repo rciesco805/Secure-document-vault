@@ -12,7 +12,7 @@ A comprehensive 506(c) fund GP/LP management suite designed to streamline invest
 
 ## Recent Changes (January 2026)
 
-- **LP Portal UI Polish**: Added skeleton loading states, welcome banner with onboarding progress, tooltips for financial terms (commitment, funded, distributions, capital calls), and empty state component for better UX
+- **LP Portal UI Polish**: Added skeleton loading states, welcome banner with onboarding progress, tooltips for financial terms (commitment, funded, distributions, capital calls), empty state component, smooth card animations with staggered fade-in effects, hover lift states, and animated progress bars with prefers-reduced-motion support
 - **Real-time Dashboard Updates**: 30-second auto-refresh polling on LP and admin dashboards with manual refresh buttons
 - **View Audit Extension**: Extended View model with comprehensive audit fields (ipAddress, userAgent, geo location, device/browser/OS info, sessionId, referrer, auditMetadata) for 506(c) compliance tracking
 - **Form D Reminder**: Added Form D filing reminder display in accreditation wizard showing filing date and annual amendment due date

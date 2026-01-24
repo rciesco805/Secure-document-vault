@@ -67,7 +67,7 @@ export function FundCard({ fund, formatCurrency }: FundCardProps) {
   const { investment, metrics } = fund;
 
   return (
-    <Card className="bg-gradient-to-br from-gray-800/80 to-gray-900/80 border-gray-700 overflow-hidden">
+    <Card className="bg-gradient-to-br from-gray-800/80 to-gray-900/80 border-gray-700 overflow-hidden card-hover-lift animate-fade-in-up">
       <CardHeader className="pb-3 border-b border-gray-700/50">
         <div className="flex items-center justify-between">
           <div>
@@ -120,7 +120,7 @@ export function FundCard({ fund, formatCurrency }: FundCardProps) {
             </div>
             <div className="w-full bg-gray-700 rounded-full h-2">
               <div
-                className="bg-gradient-to-r from-emerald-600 to-emerald-400 h-2 rounded-full transition-all"
+                className="bg-gradient-to-r from-emerald-600 to-emerald-400 h-2 rounded-full progress-bar-animated"
                 style={{ width: `${investment.fundedPercentage}%` }}
               />
             </div>
@@ -133,7 +133,7 @@ export function FundCard({ fund, formatCurrency }: FundCardProps) {
             </div>
             <div className="w-full bg-gray-700 rounded-full h-2">
               <div
-                className="bg-gradient-to-r from-blue-600 to-blue-400 h-2 rounded-full transition-all"
+                className="bg-gradient-to-r from-blue-600 to-blue-400 h-2 rounded-full progress-bar-animated"
                 style={{ width: `${metrics.raiseProgress}%` }}
               />
             </div>

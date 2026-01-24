@@ -440,6 +440,7 @@ export default function DataroomViewer({
         viewerId={viewerId}
         conversationsEnabled={viewData.conversationsEnabled}
         isTeamMember={viewData.isTeamMember}
+        isInvestor={viewData.isInvestor}
       />
       <ViewerChatLayout>
         <div 

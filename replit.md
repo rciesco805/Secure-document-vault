@@ -13,6 +13,7 @@ A comprehensive 506(c) fund GP/LP management suite designed to streamline invest
 ## Recent Changes (January 2026)
 
 - **Unified Admin Access Control with Hub Navigation**: Added `/hub` landing page for admins to choose between Dataroom and Fundroom. Login redirects to `/hub` for team members. Added `hasFundroomAccess` field to UserTeam model - super admins (ADMIN role) always have both access, managers/members need explicit fundroom access toggle. Team Settings page now shows fundroom access toggle per member.
+- **LP/Dataroom Cross-Navigation**: LP investors can now navigate between their Fundroom dashboard and the Dataroom. Added "View Dataroom" link in LP dashboard header, and "My Fundroom" button in dataroom nav for authenticated investors. Same login portal for all users - LPs auto-redirect to LP dashboard, viewers to dataroom, admins to hub.
 - **Subscription Modal with Multi-Tier Pricing**: Post-NDA subscription modal with unit-based pricing tiers, blended pricing for multi-tier subscriptions, server-side amount validation, Review→Sign flow, sticky banner for pending subscriptions
 - **FundPricingTier Model**: New Prisma model for tiered pricing (tranche, unitsAvailable, pricePerUnit) with first-come tier deduction, multi-tier allocation, and tierBreakdown JSON storage
 - **Admin Units by Tier Card**: Real-time pricing tier management with flat mode toggle, add/delete tiers, subscription counts

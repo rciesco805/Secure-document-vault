@@ -4,7 +4,7 @@ import { useRouter } from "next/router";
 import React, { useEffect, useState } from "react";
 
 import { DataroomBrand } from "@prisma/client";
-import { BadgeInfoIcon, Download, UserPlus } from "lucide-react";
+import { BadgeInfoIcon, Download, UserPlus, LandmarkIcon } from "lucide-react";
 import { toast } from "sonner";
 
 import { formatDate } from "@/lib/utils";
@@ -35,6 +35,7 @@ export default function DataroomNav({
   conversationsEnabled,
   isTeamMember,
   showSignUp = true,
+  isInvestor = false,
 }: {
   allowDownload?: boolean;
   allowBulkDownload?: boolean;
@@ -48,6 +49,7 @@ export default function DataroomNav({
   conversationsEnabled?: boolean;
   isTeamMember?: boolean;
   showSignUp?: boolean;
+  isInvestor?: boolean;
 }) {
   const router = useRouter();
   const [loading, setLoading] = useState<boolean>(false);
@@ -175,7 +177,16 @@ export default function DataroomNav({
                 </Tooltip>
               </TooltipProvider>
             ) : null}
-            {showSignUp && !isTeamMember && (
+            {isInvestor && (
+              <Button
+                onClick={() => router.push("/lp/dashboard")}
+                className="bg-green-600 text-white hover:bg-green-700 font-semibold"
+              >
+                <LandmarkIcon className="mr-2 h-4 w-4" />
+                My Fundroom
+              </Button>
+            )}
+            {showSignUp && !isTeamMember && !isInvestor && (
               <Button
                 onClick={() => router.push("/lp/onboard")}
                 className="bg-emerald-600 text-white hover:bg-emerald-700 font-semibold"

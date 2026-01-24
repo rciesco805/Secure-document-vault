@@ -171,6 +171,7 @@ export async function POST(request: NextRequest) {
     let hashedVerificationToken: string | null = null;
     // Check if the user is part of the team and therefore skip verification steps
     let isTeamMember: boolean = false;
+    let isInvestor: boolean = false;
     let isPreview: boolean = false;
     let sessionVerifiedEmail: string | null = null;
     
@@ -223,6 +224,17 @@ export async function POST(request: NextRequest) {
           isEmailVerified = true;
           sessionVerifiedEmail = sessionEmail;
           console.log("[SESSION_AUTH] User authenticated via NextAuth session:", sessionEmail);
+        }
+        
+        // Check if user is an LP investor
+        const sessionUserId = (session.user as CustomUser).id;
+        if (sessionUserId) {
+          const investorRecord = await prisma.investor.findUnique({
+            where: { userId: sessionUserId },
+          });
+          if (investorRecord) {
+            isInvestor = true;
+          }
         }
       }
     }
@@ -812,6 +824,7 @@ export async function POST(request: NextRequest) {
           agentsEnabled: link.dataroom?.agentsEnabled ?? false,
           dataroomName: link.dataroom?.name,
           ...(isTeamMember && { isTeamMember: true }),
+          ...(isInvestor && { isInvestor: true }),
         };
 
         const response = NextResponse.json(returnObject, { status: 200 });
@@ -1135,6 +1148,7 @@ export async function POST(request: NextRequest) {
         agentsEnabled: link.dataroom?.agentsEnabled ?? false,
         dataroomName: link.dataroom?.name,
         ...(isTeamMember && { isTeamMember: true }),
+        ...(isInvestor && { isInvestor: true }),
       };
 
       const response = NextResponse.json(returnObject, { status: 200 });

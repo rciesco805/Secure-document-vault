@@ -474,6 +474,12 @@ export default function LPDashboard() {
                 BF Fund
               </Link>
               <div className="flex items-center space-x-2 sm:space-x-4">
+                <Link
+                  href="/viewer-redirect?mode=visitor"
+                  className="text-gray-400 hover:text-white text-sm hidden sm:inline transition-colors"
+                >
+                  View Dataroom
+                </Link>
                 <span className="text-gray-400 text-xs sm:text-sm hidden sm:inline">
                   {session?.user?.email}
                 </span>

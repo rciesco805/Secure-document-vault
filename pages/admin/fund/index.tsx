@@ -3,6 +3,7 @@ import { useRouter } from "next/router";
 import Head from "next/head";
 import Link from "next/link";
 import AppLayout from "@/components/layouts/app";
+import { withAdminGuard } from "@/lib/auth/admin-guard";
 import {
   Card,
   CardContent,
@@ -143,11 +144,15 @@ export default function FundDashboard() {
       if (!silent) setIsRefreshing(true);
       const res = await fetch("/api/admin/fund-dashboard");
       if (!res.ok) {
-        if (res.status === 403) {
+        const errorData = await res.json().catch(() => ({}));
+        if (res.status === 401) {
           router.push("/login");
           return;
         }
-        throw new Error("Failed to fetch dashboard");
+        if (res.status === 403) {
+          throw new Error(errorData.message || "You need GP (General Partner) access to view this dashboard. Please contact your administrator.");
+        }
+        throw new Error(errorData.message || "Failed to fetch dashboard");
       }
       const json = await res.json();
       setData(json);
@@ -771,3 +776,5 @@ export default function FundDashboard() {
     </AppLayout>
   );
 }
+
+export const getServerSideProps = withAdminGuard();

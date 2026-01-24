@@ -99,7 +99,7 @@ To push to the bitget repository:
 1. Open the **Shell** tab in Replit
 2. Add the bitget remote (first time only):
    ```bash
-   git remote add bitget https://${GITHUB_TOKEN}@github.com/rciesco805/bitget.git
+   git remote add bitget https://${GITHUB_PERSONAL_ACCESS_TOKEN}@github.com/rciesco805/bitget.git
    ```
 3. Push to bitget:
    ```bash
@@ -108,18 +108,18 @@ To push to the bitget repository:
 
 If the remote already exists and you need to update the URL:
 ```bash
-git remote set-url bitget https://${GITHUB_TOKEN}@github.com/rciesco805/bitget.git
+git remote set-url bitget https://${GITHUB_PERSONAL_ACCESS_TOKEN}@github.com/rciesco805/bitget.git
 ```
 
-**Note**: The GITHUB_TOKEN secret is already configured in this project.
+**Note**: The GITHUB_PERSONAL_ACCESS_TOKEN secret is already configured in this project.
 
 **TROUBLESHOOTING**: If you get "Repository not found":
 1. First, check the current remote URL: `git remote get-url bitget`
-2. If it shows literal `${GITHUB_TOKEN}` instead of the actual token, the variable didn't expand
+2. If it shows literal `${GITHUB_PERSONAL_ACCESS_TOKEN}` instead of the actual token, the variable didn't expand
 3. Fix by removing and re-adding with the actual token value:
    ```bash
    git remote remove bitget
-   echo $GITHUB_TOKEN
+   echo $GITHUB_PERSONAL_ACCESS_TOKEN
    ```
 4. Copy the token output and use it directly:
    ```bash

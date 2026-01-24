@@ -310,6 +310,23 @@ Only two authorized admins:
 
 ## User Flows
 
+### Unified Login & Navigation
+```
+All users use the same login portal. After login:
+
+1. Team Members (GP/Admin) → /hub
+   ├── Choose Dataroom (document management)
+   └── Choose Fundroom (investor management) - based on hasFundroomAccess flag
+   
+2. LP Investors → /lp/dashboard
+   ├── View personalized fund dashboard
+   ├── "View Dataroom" link → access dataroom documents
+   └── From dataroom: "My Fundroom" button → return to dashboard
+   
+3. Dataroom Viewers → Assigned dataroom link
+   └── View documents, optional "Sign Me Up" to become investor
+```
+
 ### Investor Access Flow
 ```
 1. Admin creates link to dataroom
@@ -319,6 +336,7 @@ Only two authorized admins:
 5. (Optional) Welcome screen display
 6. Investor views documents
 7. Analytics recorded for each page view
+8. If investor account exists: "My Fundroom" button shown in nav
 ```
 
 ### E-Signature Flow

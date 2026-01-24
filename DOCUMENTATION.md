@@ -298,33 +298,44 @@ Every gate completion captures:
 ```
 1. Sign Up / Login
    └── Email magic link or Google OAuth
+   └── Redirects to Hub (/hub) for navigation
 
-2. Team Setup
+2. Hub Navigation (/hub)
+   ├── Choose Dataroom (document management)
+   └── Choose Fundroom (investor management) - if access granted
+
+3. Team Setup
    ├── Create team/fund
    ├── Configure branding
-   └── Invite team members
+   ├── Invite team members
+   └── Toggle Fundroom access per member (Settings > People)
 
-3. Document Management
+4. Document Management (Dataroom)
    ├── Upload PPM, subscription docs, NDAs
    ├── Create dataroom with folders
    └── Configure access controls
 
-4. E-Signature Setup
+5. E-Signature Setup
    ├── Create signature templates
    ├── Place fields on documents
    └── Set recipient roles
 
-5. Investor Onboarding
+6. Investor Onboarding
    ├── Send dataroom links
    ├── Monitor document access
    └── Send signature requests
 
-6. Compliance Monitoring
+7. Fundroom Management (/admin/fund)
+   ├── View fund overview and metrics
+   ├── Track subscriptions and commitments
+   └── Manage investor relationships
+
+8. Compliance Monitoring
    ├── Track accreditation status
    ├── Monitor KYC verification
    └── Export audit logs
 
-7. Capital Management (Coming Soon)
+9. Capital Management (Coming Soon)
    ├── Issue capital calls
    ├── Track payments
    └── Process distributions
@@ -346,17 +357,24 @@ Every gate completion captures:
    ├── Complete accreditation wizard
    └── Confirm acknowledgments
 
-4. Review Documents
-   ├── Access dataroom
-   ├── View PPM, financial docs
-   └── Download materials
+4. Access Fundroom Dashboard (/lp/dashboard)
+   ├── View personalized fund overview
+   ├── Track investment progress
+   ├── Access signed documents vault
+   └── Navigate to Dataroom via "View Dataroom" link
 
-5. Sign Documents (/sign/[token])
+5. Review Documents in Dataroom
+   ├── Access dataroom (linked from Fundroom)
+   ├── View PPM, financial docs
+   ├── Download materials
+   └── Return to Fundroom via "My Fundroom" button
+
+6. Sign Documents (/sign/[token])
    ├── Review document
    ├── Complete all fields
    └── Submit signature
 
-6. Identity Verification (if required)
+7. Identity Verification (if required)
    ├── Launch Persona popup
    ├── Upload ID and selfie
    └── Await verification
@@ -1154,9 +1172,26 @@ Every investor action is logged:
 | Control | Implementation |
 |---------|----------------|
 | **Authentication** | Email magic links + optional Google OAuth |
-| **Authorization** | Role-based (SUPER_ADMIN, ADMIN, MANAGER, MEMBER) |
+| **Authorization** | Role-based (ADMIN, MANAGER, MEMBER) |
 | **Session Management** | NextAuth.js with Prisma adapter |
 | **API Protection** | Server-side session validation on all endpoints |
+
+#### Unified Admin Access Control (Hub System)
+
+| User Type | After Login Redirect | Access |
+|-----------|---------------------|--------|
+| **Team Member (ADMIN role)** | `/hub` | Full Dataroom + Fundroom access |
+| **Team Member (MANAGER/MEMBER)** | `/hub` | Dataroom always; Fundroom if `hasFundroomAccess=true` |
+| **LP Investor** | `/lp/dashboard` | Personal fund dashboard + Dataroom navigation |
+| **Dataroom Viewer** | Assigned dataroom link | Dataroom only |
+
+**Key Fields:**
+- `UserTeam.hasFundroomAccess` - Controls Fundroom access for non-ADMIN team members
+- `Investor.userId` - Links user to LP dashboard
+
+**Cross-Navigation:**
+- LP Dashboard → Dataroom: "View Dataroom" link in header
+- Dataroom → LP Dashboard: "My Fundroom" button (shown only to authenticated investors)
 
 #### Webhook Security
 

@@ -45,6 +45,9 @@ import { FundCard } from "@/components/lp/fund-card";
 import { DocumentsVault } from "@/components/lp/documents-vault";
 import { NotesCard } from "@/components/lp/notes-card";
 import { DashboardSummary } from "@/components/lp/dashboard-summary";
+import { DashboardSkeleton, FundCardSkeleton } from "@/components/lp/dashboard-skeleton";
+import { WelcomeBanner } from "@/components/lp/welcome-banner";
+import { EmptyState } from "@/components/lp/empty-state";
 
 interface InvestorDocument {
   id: string;
@@ -163,6 +166,7 @@ export default function LPDashboard() {
   const [noteSent, setNoteSent] = useState(false);
   const [fundDetails, setFundDetails] = useState<FundDetailsData | null>(null);
   const [fundDetailsError, setFundDetailsError] = useState<string | null>(null);
+  const [fundDetailsLoaded, setFundDetailsLoaded] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const POLL_INTERVAL = 30000; // 30 seconds for real-time updates
 
@@ -174,7 +178,10 @@ export default function LPDashboard() {
         const data = await res.json();
         setFundDetails(data);
         setFundDetailsError(null);
-      } else if (res.status !== 404) {
+      } else if (res.status === 404) {
+        setFundDetails(null);
+        setFundDetailsError(null);
+      } else {
         setFundDetailsError("Unable to load fund details. Please try again.");
       }
     } catch (error) {
@@ -183,6 +190,7 @@ export default function LPDashboard() {
         setFundDetailsError("Connection error. Please check your internet.");
       }
     } finally {
+      setFundDetailsLoaded(true);
       if (!silent) setIsRefreshing(false);
     }
   }, []);
@@ -460,6 +468,39 @@ export default function LPDashboard() {
             </Card>
           )}
 
+          {investor && (!investor.ndaSigned || investor.accreditationStatus === "PENDING" || !bankStatus?.hasBankLink) && (
+            <div className="mb-6">
+              <WelcomeBanner
+                investorName={investor.entityName || session?.user?.name || "Investor"}
+                ndaSigned={investor.ndaSigned}
+                accreditationStatus={investor.accreditationStatus}
+                hasBankLink={bankStatus?.hasBankLink || false}
+                hasInvestments={(fundDetails?.funds?.length || 0) > 0}
+                onStartNda={() => setShowNdaModal(true)}
+                onStartAccreditation={() => setWizardStep(1)}
+                onConnectBank={() => router.push("/lp/bank-connect")}
+              />
+            </div>
+          )}
+
+          {!fundDetailsLoaded && !fundDetailsError && (
+            <div className="mb-6 sm:mb-8">
+              <DashboardSkeleton />
+            </div>
+          )}
+
+          {fundDetailsLoaded && !fundDetails && !fundDetailsError && (
+            <div className="mb-6 sm:mb-8">
+              <EmptyState
+                title="No investments yet"
+                description="You haven't made any investments yet. Complete your onboarding to get started with available fund opportunities."
+                icon="chart"
+                showRefresh
+                onRefresh={handleRefresh}
+              />
+            </div>
+          )}
+
           {fundDetails && (
             <div className="mb-6 sm:mb-8">
               <DashboardSummary
@@ -473,87 +514,6 @@ export default function LPDashboard() {
             </div>
           )}
 
-          {!fundDetails && (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
-            <Card className="bg-gray-800/50 border-gray-700 col-span-2 sm:col-span-1">
-              <CardHeader className="pb-2 p-3 sm:p-6 sm:pb-2">
-                <CardDescription className="text-gray-400 flex items-center text-xs sm:text-sm">
-                  <TrendingUp className="h-4 w-4 mr-2 text-emerald-500" />
-                  Fund Progress
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="p-3 pt-0 sm:p-6 sm:pt-0">
-                <div className="text-xl sm:text-2xl font-bold text-white">
-                  {fundRaiseProgress > 0 ? `${fundRaiseProgress}%` : "—"}
-                </div>
-                <div className="w-full bg-gray-700 rounded-full h-2 mt-2">
-                  <div
-                    className="bg-emerald-500 h-2 rounded-full transition-all duration-500"
-                    style={{ width: `${fundRaiseProgress}%` }}
-                  />
-                </div>
-                <p className="text-gray-500 text-xs mt-2">
-                  {primaryFund ? `${formatCurrency(currentRaise)} of ${formatCurrency(targetRaise)}` : "No active funds"}
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-gray-800/50 border-gray-700">
-              <CardHeader className="pb-2 p-3 sm:p-6 sm:pb-2">
-                <CardDescription className="text-gray-400 flex items-center text-xs sm:text-sm">
-                  <DollarSign className="h-4 w-4 mr-2 text-blue-500" />
-                  Commitment
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="p-3 pt-0 sm:p-6 sm:pt-0">
-                <div className="text-xl sm:text-2xl font-bold text-white">
-                  {totalCommitment > 0 ? formatCurrency(totalCommitment) : "—"}
-                </div>
-                <p className="text-gray-500 text-xs mt-2">
-                  {totalCommitment > 0 
-                    ? `${formatCurrency(totalFunded)} funded`
-                    : "No commitments yet"}
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-gray-800/50 border-gray-700">
-              <CardHeader className="pb-2 p-3 sm:p-6 sm:pb-2">
-                <CardDescription className="text-gray-400 flex items-center text-xs sm:text-sm">
-                  <FileText className="h-4 w-4 mr-2 text-purple-500" />
-                  Documents
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="p-3 pt-0 sm:p-6 sm:pt-0">
-                <div className="text-xl sm:text-2xl font-bold text-white">
-                  {signedDocs.length || investor?.signedDocs?.length || 0}
-                </div>
-                <p className="text-gray-500 text-xs mt-2">
-                  {investor?.ndaSigned ? "NDA completed" : "Pending NDA"}
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-gray-800/50 border-gray-700">
-              <CardHeader className="pb-2">
-                <CardDescription className="text-gray-400 flex items-center">
-                  <CheckCircle2 className="h-4 w-4 mr-2 text-amber-500" />
-                  Accreditation
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-white">
-                  {investor?.accreditationStatus === "VERIFIED" ? (
-                    <span className="text-emerald-500">Verified</span>
-                  ) : (
-                    <span className="text-amber-500">Self-Certified</span>
-                  )}
-                </div>
-                <p className="text-gray-500 text-xs mt-2">506(c) compliant</p>
-              </CardContent>
-            </Card>
-          </div>
-          )}
 
           {fundDetails && fundDetails.funds.length > 0 && (
             <div className="mb-6 sm:mb-8">

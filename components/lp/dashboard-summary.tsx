@@ -5,6 +5,12 @@ import {
   CardHeader,
 } from "@/components/ui/card";
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
   TrendingUp,
   DollarSign,
   FileText,
@@ -13,6 +19,7 @@ import {
   ArrowDownRight,
   AlertTriangle,
   Activity,
+  HelpCircle,
 } from "lucide-react";
 
 interface SummaryData {
@@ -33,6 +40,31 @@ interface DashboardSummaryProps {
   lastUpdated?: string;
 }
 
+function MetricTooltip({ children, content }: { children: React.ReactNode; content: string }) {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span 
+          className="inline-flex items-center gap-1 cursor-help"
+          role="term"
+          tabIndex={0}
+          aria-label={`${children}: ${content}`}
+        >
+          {children}
+          <HelpCircle className="h-3 w-3 text-gray-500 hover:text-gray-400 transition-colors" aria-hidden="true" />
+        </span>
+      </TooltipTrigger>
+      <TooltipContent 
+        side="top" 
+        className="max-w-xs bg-gray-800 border-gray-700 text-gray-200 text-xs"
+        role="tooltip"
+      >
+        {content}
+      </TooltipContent>
+    </Tooltip>
+  );
+}
+
 export function DashboardSummary({
   summary,
   documentsCount,
@@ -46,13 +78,16 @@ export function DashboardSummary({
     : 0;
 
   return (
+    <TooltipProvider delayDuration={200}>
     <div className="space-y-4">
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <Card className="bg-gradient-to-br from-emerald-900/30 to-gray-800/50 border-emerald-700/30">
           <CardHeader className="pb-2 p-3 sm:p-4">
             <CardDescription className="text-emerald-300/70 flex items-center text-xs sm:text-sm">
               <Wallet className="h-4 w-4 mr-2 text-emerald-400" />
-              Total Commitment
+              <MetricTooltip content="The total amount you've pledged to invest across all funds. This is your maximum potential investment.">
+                Total Commitment
+              </MetricTooltip>
             </CardDescription>
           </CardHeader>
           <CardContent className="p-3 pt-0 sm:p-4 sm:pt-0">
@@ -69,7 +104,9 @@ export function DashboardSummary({
           <CardHeader className="pb-2 p-3 sm:p-4">
             <CardDescription className="text-blue-300/70 flex items-center text-xs sm:text-sm">
               <DollarSign className="h-4 w-4 mr-2 text-blue-400" />
-              Capital Funded
+              <MetricTooltip content="The amount you've actually transferred to the fund through capital calls. This is your paid-in capital.">
+                Capital Funded
+              </MetricTooltip>
             </CardDescription>
           </CardHeader>
           <CardContent className="p-3 pt-0 sm:p-4 sm:pt-0">
@@ -92,7 +129,9 @@ export function DashboardSummary({
           <CardHeader className="pb-2 p-3 sm:p-4">
             <CardDescription className="text-purple-300/70 flex items-center text-xs sm:text-sm">
               <ArrowDownRight className="h-4 w-4 mr-2 text-purple-400" />
-              Distributions
+              <MetricTooltip content="Money returned to you from the fund, including profits and return of capital. This is cash you've received back.">
+                Distributions
+              </MetricTooltip>
             </CardDescription>
           </CardHeader>
           <CardContent className="p-3 pt-0 sm:p-4 sm:pt-0">
@@ -119,7 +158,9 @@ export function DashboardSummary({
               ) : (
                 <CheckCircle2 className="h-4 w-4 mr-2 text-gray-500" />
               )}
-              Capital Calls
+              <MetricTooltip content="Requests from the fund for you to transfer a portion of your commitment. These have due dates and require action.">
+                Capital Calls
+              </MetricTooltip>
             </CardDescription>
           </CardHeader>
           <CardContent className="p-3 pt-0 sm:p-4 sm:pt-0">
@@ -193,5 +234,6 @@ export function DashboardSummary({
         </div>
       )}
     </div>
+    </TooltipProvider>
   );
 }

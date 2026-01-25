@@ -1,0 +1,195 @@
+import { PrismaAdapter } from "@next-auth/prisma-adapter";
+import PasskeyProvider from "@teamhanko/passkeys-next-auth-provider";
+import { type NextAuthOptions } from "next-auth";
+import { Provider } from "next-auth/providers/index";
+import EmailProvider from "next-auth/providers/email";
+import GoogleProvider from "next-auth/providers/google";
+import LinkedInProvider from "next-auth/providers/linkedin";
+
+import { identifyUser, trackAnalytics } from "@/lib/analytics";
+import { sendVerificationRequestEmail } from "@/lib/emails/send-verification-request";
+import { sendWelcomeEmail } from "@/lib/emails/send-welcome";
+import hanko from "@/lib/hanko";
+import prisma from "@/lib/prisma";
+import { CreateUserEmailProps, CustomUser } from "@/lib/types";
+import { subscribe } from "@/lib/unsend";
+
+function getMainDomainUrl(): string {
+  if (process.env.NODE_ENV === "development") {
+    return process.env.NEXTAUTH_URL || "http://localhost:3000";
+  }
+  return process.env.NEXTAUTH_URL || "https://dataroom.bermudafranchisegroup.com";
+}
+
+const providers: Provider[] = [
+  GoogleProvider({
+    clientId: process.env.GOOGLE_CLIENT_ID as string,
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
+    allowDangerousEmailAccountLinking: true,
+  }),
+  LinkedInProvider({
+    clientId: process.env.LINKEDIN_CLIENT_ID as string,
+    clientSecret: process.env.LINKEDIN_CLIENT_SECRET as string,
+    authorization: {
+      params: { scope: "openid profile email" },
+    },
+    issuer: "https://www.linkedin.com/oauth",
+    jwks_endpoint: "https://www.linkedin.com/oauth/openid/jwks",
+    profile(profile, tokens) {
+      const defaultImage =
+        "https://cdn-icons-png.flaticon.com/512/174/174857.png";
+      return {
+        id: profile.sub,
+        name: profile.name,
+        email: profile.email,
+        image: profile.picture ?? defaultImage,
+      };
+    },
+    allowDangerousEmailAccountLinking: true,
+  }),
+  EmailProvider({
+    maxAge: 20 * 60,
+    async sendVerificationRequest({ identifier, url }) {
+      const hasValidNextAuthUrl = !!process.env.NEXTAUTH_URL;
+      let finalUrl = url;
+
+      if (!hasValidNextAuthUrl) {
+        const mainDomainUrl = getMainDomainUrl();
+        const urlObj = new URL(url);
+        const mainDomainObj = new URL(mainDomainUrl);
+        urlObj.hostname = mainDomainObj.hostname;
+        urlObj.protocol = mainDomainObj.protocol;
+        urlObj.port = mainDomainObj.port || "";
+
+        finalUrl = urlObj.toString();
+      }
+
+      await sendVerificationRequestEmail({
+        url: finalUrl,
+        email: identifier,
+      });
+    },
+  }),
+];
+
+if (hanko) {
+  providers.push(
+    PasskeyProvider({
+      tenant: hanko,
+      async authorize({ userId }) {
+        const user = await prisma.user.findUnique({ where: { id: userId } });
+        if (!user) return null;
+        return user;
+      },
+    }),
+  );
+}
+
+export const authOptions: NextAuthOptions = {
+  pages: {
+    error: "/login",
+  },
+  providers,
+  adapter: PrismaAdapter(prisma),
+  session: { strategy: "jwt" },
+  cookies: {
+    sessionToken: {
+      name: `next-auth.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: "none" as const,
+        path: "/",
+        secure: true,
+      },
+    },
+    callbackUrl: {
+      name: `next-auth.callback-url`,
+      options: {
+        httpOnly: true,
+        sameSite: "none" as const,
+        path: "/",
+        secure: true,
+      },
+    },
+    csrfToken: {
+      name: `next-auth.csrf-token`,
+      options: {
+        httpOnly: true,
+        sameSite: "none" as const,
+        path: "/",
+        secure: true,
+      },
+    },
+  },
+  debug: true,
+  callbacks: {
+    redirect: async ({ url, baseUrl }) => {
+      if (url === baseUrl || url === `${baseUrl}/` || url.includes('/login')) {
+        return `${baseUrl}/viewer-redirect`;
+      }
+      if (url.startsWith("/")) return `${baseUrl}${url}`;
+      if (new URL(url).origin === baseUrl) return url;
+      return `${baseUrl}/viewer-redirect`;
+    },
+    jwt: async (params) => {
+      const { token, user, trigger } = params;
+      if (!token.email) {
+        return {};
+      }
+      if (user) {
+        token.user = user;
+      }
+      if (trigger === "update") {
+        const user = token?.user as CustomUser;
+        const refreshedUser = await prisma.user.findUnique({
+          where: { id: user.id },
+        });
+        if (refreshedUser) {
+          token.user = refreshedUser;
+        } else {
+          return {};
+        }
+
+        if (refreshedUser?.email !== user.email) {
+          if (user.id && refreshedUser.email) {
+            await prisma.account.deleteMany({
+              where: { userId: user.id },
+            });
+          }
+        }
+      }
+      return token;
+    },
+    session: async ({ session, token }) => {
+      (session.user as CustomUser) = {
+        id: token.sub,
+        // @ts-ignore
+        ...(token || session).user,
+      };
+      return session;
+    },
+  },
+  events: {
+    async createUser(message) {
+      const params: CreateUserEmailProps = {
+        user: {
+          name: message.user.name,
+          email: message.user.email,
+        },
+      };
+
+      await identifyUser(message.user.email ?? message.user.id);
+      await trackAnalytics({
+        event: "User Signed Up",
+        email: message.user.email,
+        userId: message.user.id,
+      });
+
+      await sendWelcomeEmail(params);
+
+      if (message.user.email) {
+        await subscribe(message.user.email);
+      }
+    },
+  },
+};

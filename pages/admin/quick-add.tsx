@@ -8,7 +8,7 @@ import { useRouter } from "next/router";
 import { Loader2, UserPlus, Zap } from "lucide-react";
 import { toast } from "sonner";
 
-import { authOptions } from "@/pages/api/auth/[...nextauth]";
+import { authOptions } from "@/lib/auth/auth-options";
 
 import AppLayout from "@/components/layouts/app";
 import { Button } from "@/components/ui/button";

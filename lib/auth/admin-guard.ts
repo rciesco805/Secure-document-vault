@@ -4,7 +4,7 @@ import { getServerSession } from "next-auth/next";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 
-import { authOptions } from "@/pages/api/auth/[...nextauth]";
+import { authOptions } from "@/lib/auth/auth-options";
 
 export type AdminGuardResult =
   | { redirect: { destination: string; permanent: boolean } }

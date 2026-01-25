@@ -12,6 +12,12 @@ import {
   onDocumentViewed,
 } from "@/lib/webhook/triggers/signature-events";
 import { logSignatureEvent } from "@/lib/signature/audit-logger";
+import { 
+  createSignatureChecksum, 
+  createConsentRecord,
+  ESIGN_CONSENT_TEXT,
+  ESIGN_CONSENT_VERSION,
+} from "@/lib/signature/checksum";
 
 export default async function handler(
   req: NextApiRequest,
@@ -206,7 +212,7 @@ async function handlePost(
   token: string
 ) {
   try {
-    const { fields, signatureImage, declined, declinedReason } = req.body;
+    const { fields, signatureImage, declined, declinedReason, consentConfirmed } = req.body;
 
     const recipient = await prisma.signatureRecipient.findUnique({
       where: { signingToken: token },
@@ -318,6 +324,15 @@ async function handlePost(
       });
     }
 
+    if (!consentConfirmed) {
+      return res.status(400).json({
+        message: "You must consent to electronic signatures to sign this document",
+        requiresConsent: true,
+        consentText: ESIGN_CONSENT_TEXT,
+        consentVersion: ESIGN_CONSENT_VERSION,
+      });
+    }
+
     if (fields && Array.isArray(fields)) {
       for (const field of fields) {
         if (!recipientFieldIds.has(field.id)) {
@@ -342,6 +357,31 @@ async function handlePost(
       }
     }
 
+    const signedAt = new Date();
+    const consentRecord = createConsentRecord(ipAddress, userAgent, "BOTH");
+    
+    let documentContent: string;
+    try {
+      const fileUrl = await getFile({ 
+        type: document.storageType, 
+        data: document.file 
+      });
+      const response = await fetch(fileUrl);
+      const buffer = await response.arrayBuffer();
+      documentContent = Buffer.from(buffer).toString("base64");
+    } catch (error) {
+      console.error("Failed to fetch document for checksum:", error);
+      documentContent = document.file;
+    }
+    
+    const signatureChecksum = createSignatureChecksum(
+      recipient.id,
+      document.id,
+      documentContent,
+      signedAt,
+      ipAddress
+    );
+
     const result = await prisma.$transaction(async (tx) => {
       if (fields && Array.isArray(fields)) {
         for (const field of fields) {
@@ -361,10 +401,12 @@ async function handlePost(
         where: { id: recipient.id },
         data: {
           status: "SIGNED",
-          signedAt: new Date(),
+          signedAt,
           signatureImage: signatureImage || null,
           ipAddress,
           userAgent,
+          consentRecord,
+          signatureChecksum,
         },
       });
 

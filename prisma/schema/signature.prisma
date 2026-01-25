@@ -84,6 +84,10 @@ model SignatureRecipient {
   
   signingUrl        String?                   // URL for recipient to sign
   
+  // ESIGN/UETA Compliance
+  consentRecord     Json?                     // ESIGN consent capture (timestamp, version, text)
+  signatureChecksum Json?                     // Verification checksum (documentHash, signatureHash, token)
+  
   // The actual signature data
   signatureImage    String?                   // Base64 or URL to signature image
   

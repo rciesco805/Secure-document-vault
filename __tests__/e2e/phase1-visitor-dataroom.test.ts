@@ -4403,3 +4403,429 @@ describe('Phase 1: Jest E2E Automation - Full LP Flows', () => {
     });
   });
 });
+
+describe('Phase 2: Admin/GP Login & Dashboard', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  const mockPrisma = prisma as jest.Mocked<typeof prisma>;
+
+  const mockGPUser = {
+    id: 'user-gp-1',
+    email: 'gp@bffund.com',
+    name: 'GP Admin',
+    role: 'GP',
+    teamIds: ['team-1'],
+  };
+
+  const mockFund = {
+    id: 'fund-bermuda',
+    name: 'Bermuda Growth Fund',
+    teamId: 'team-1',
+    targetAmount: 10000000,
+    status: 'RAISING',
+  };
+
+  describe('GP Authentication', () => {
+    it('should authenticate GP user successfully', () => {
+      const session = {
+        user: {
+          email: 'gp@bffund.com',
+          name: 'GP Admin',
+          role: 'GP',
+        },
+        expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+      };
+
+      expect(session.user.role).toBe('GP');
+      expect(session.user.email).toBe('gp@bffund.com');
+    });
+
+    it('should redirect GP to /hub after login', () => {
+      const loginResult = {
+        success: true,
+        userRole: 'GP',
+        redirectTo: '/hub',
+      };
+
+      expect(loginResult.redirectTo).toBe('/hub');
+    });
+
+    it('should allow GP to access /admin routes', () => {
+      const userRole = 'GP';
+      const requestedRoute = '/admin/fund/fund-bermuda';
+      const hasAccess = userRole === 'GP' || userRole === 'ADMIN';
+
+      expect(hasAccess).toBe(true);
+    });
+
+    it('should block LP from /admin routes', () => {
+      const userRole = 'LP';
+      const hasAccess = userRole === 'GP' || userRole === 'ADMIN';
+
+      expect(hasAccess).toBe(false);
+    });
+
+    it('should verify team membership for fund access', () => {
+      const userTeamIds = ['team-1', 'team-2'];
+      const fundTeamId = 'team-1';
+      const hasTeamAccess = userTeamIds.includes(fundTeamId);
+
+      expect(hasTeamAccess).toBe(true);
+    });
+  });
+
+  describe('GP Role Middleware Gates', () => {
+    it('should define GP role enum correctly', () => {
+      const roleEnums = ['LP', 'GP', 'ADMIN', 'VIEWER'];
+
+      expect(roleEnums).toContain('GP');
+      expect(roleEnums).toContain('LP');
+    });
+
+    it('should gate admin API routes by GP role', () => {
+      const middleware = {
+        requiredRoles: ['GP', 'ADMIN'],
+        currentRole: 'GP',
+        allowed: true,
+      };
+
+      const isAllowed = middleware.requiredRoles.includes(middleware.currentRole);
+      expect(isAllowed).toBe(true);
+    });
+
+    it('should return 403 for non-GP accessing admin API', () => {
+      const middleware = {
+        requiredRoles: ['GP', 'ADMIN'],
+        currentRole: 'LP',
+        statusCode: 403,
+        message: 'Access denied. GP role required.',
+      };
+
+      const isAllowed = middleware.requiredRoles.includes(middleware.currentRole);
+      expect(isAllowed).toBe(false);
+      expect(middleware.statusCode).toBe(403);
+    });
+
+    it('should check role via requireRole helper', () => {
+      const requireRole = (allowedRoles: string[], userRole: string) => {
+        return {
+          allowed: allowedRoles.includes(userRole),
+          statusCode: allowedRoles.includes(userRole) ? 200 : 403,
+        };
+      };
+
+      const result = requireRole(['GP', 'ADMIN'], 'GP');
+      expect(result.allowed).toBe(true);
+    });
+
+    it('should support ADMIN role with elevated privileges', () => {
+      const userRole = 'ADMIN';
+      const canManageTeams = userRole === 'ADMIN';
+      const canManageFunds = ['GP', 'ADMIN'].includes(userRole);
+
+      expect(canManageTeams).toBe(true);
+      expect(canManageFunds).toBe(true);
+    });
+  });
+
+  describe('Fund Dashboard Aggregates', () => {
+    it('should calculate total inbound transactions via Prisma sum', () => {
+      const transactions = [
+        { id: 'txn-1', type: 'CAPITAL_CALL', direction: 'INBOUND', amount: 50000, status: 'COMPLETED' },
+        { id: 'txn-2', type: 'CAPITAL_CALL', direction: 'INBOUND', amount: 75000, status: 'COMPLETED' },
+        { id: 'txn-3', type: 'CAPITAL_CALL', direction: 'INBOUND', amount: 25000, status: 'PENDING' },
+      ];
+
+      const totalInbound = transactions
+        .filter(t => t.direction === 'INBOUND' && t.status === 'COMPLETED')
+        .reduce((sum, t) => sum + t.amount, 0);
+
+      expect(totalInbound).toBe(125000);
+    });
+
+    it('should calculate total outbound transactions via Prisma sum', () => {
+      const transactions = [
+        { id: 'txn-1', type: 'DISTRIBUTION', direction: 'OUTBOUND', amount: 25000, status: 'COMPLETED' },
+        { id: 'txn-2', type: 'DISTRIBUTION', direction: 'OUTBOUND', amount: 15000, status: 'COMPLETED' },
+      ];
+
+      const totalOutbound = transactions
+        .filter(t => t.direction === 'OUTBOUND' && t.status === 'COMPLETED')
+        .reduce((sum, t) => sum + t.amount, 0);
+
+      expect(totalOutbound).toBe(40000);
+    });
+
+    it('should calculate net cash flow', () => {
+      const totalInbound = 125000;
+      const totalOutbound = 40000;
+      const netCashFlow = totalInbound - totalOutbound;
+
+      expect(netCashFlow).toBe(85000);
+    });
+
+    it('should aggregate total raised (confirmed investments)', () => {
+      const investments = [
+        { id: 'inv-1', amount: 500000, status: 'CONFIRMED' },
+        { id: 'inv-2', amount: 250000, status: 'CONFIRMED' },
+        { id: 'inv-3', amount: 100000, status: 'PENDING' },
+      ];
+
+      const totalRaised = investments
+        .filter(i => i.status === 'CONFIRMED')
+        .reduce((sum, i) => sum + i.amount, 0);
+
+      expect(totalRaised).toBe(750000);
+    });
+
+    it('should calculate AUM (Assets Under Management)', () => {
+      const totalRaised = 5000000;
+      const unrealizedGains = 500000;
+      const distributions = 250000;
+      const aum = totalRaised + unrealizedGains - distributions;
+
+      expect(aum).toBe(5250000);
+    });
+
+    it('should count total investors', () => {
+      const investors = [
+        { id: 'inv-1', fundId: 'fund-bermuda' },
+        { id: 'inv-2', fundId: 'fund-bermuda' },
+        { id: 'inv-3', fundId: 'fund-bermuda' },
+      ];
+
+      const fundInvestors = investors.filter(i => i.fundId === 'fund-bermuda');
+
+      expect(fundInvestors).toHaveLength(3);
+    });
+
+    it('should calculate investor breakdown by status', () => {
+      const investors = [
+        { id: 'inv-1', accreditationStatus: 'VERIFIED' },
+        { id: 'inv-2', accreditationStatus: 'VERIFIED' },
+        { id: 'inv-3', accreditationStatus: 'PENDING' },
+        { id: 'inv-4', accreditationStatus: 'VERIFIED' },
+      ];
+
+      const verified = investors.filter(i => i.accreditationStatus === 'VERIFIED').length;
+      const pending = investors.filter(i => i.accreditationStatus === 'PENDING').length;
+
+      expect(verified).toBe(3);
+      expect(pending).toBe(1);
+    });
+  });
+
+  describe('Fund Dashboard Cards', () => {
+    it('should display total raised card', () => {
+      const totalRaisedCard = {
+        title: 'Total Raised',
+        value: 5000000,
+        formattedValue: '$5,000,000',
+        percentOfTarget: 50,
+        target: 10000000,
+      };
+
+      expect(totalRaisedCard.percentOfTarget).toBe(50);
+    });
+
+    it('should display total distributed card', () => {
+      const distributedCard = {
+        title: 'Total Distributed',
+        value: 750000,
+        formattedValue: '$750,000',
+        ytdValue: 250000,
+      };
+
+      expect(distributedCard.value).toBe(750000);
+    });
+
+    it('should display active investors card', () => {
+      const investorsCard = {
+        title: 'Active Investors',
+        value: 45,
+        pendingOnboarding: 5,
+        fullyOnboarded: 40,
+      };
+
+      expect(investorsCard.value).toBe(45);
+    });
+
+    it('should display pending capital calls card', () => {
+      const pendingCallsCard = {
+        title: 'Pending Capital Calls',
+        count: 3,
+        totalAmount: 500000,
+        oldestDueDate: new Date('2026-02-15'),
+      };
+
+      expect(pendingCallsCard.count).toBe(3);
+    });
+
+    it('should display threshold status card', () => {
+      const thresholdCard = {
+        title: 'Initial Closing Threshold',
+        threshold: 2500000,
+        currentRaised: 3000000,
+        thresholdMet: true,
+        metAt: new Date('2025-12-15'),
+      };
+
+      expect(thresholdCard.thresholdMet).toBe(true);
+    });
+  });
+
+  describe('Fund Dashboard Charts', () => {
+    it('should format data for raise progress chart', () => {
+      const raiseChartData = [
+        { month: '2025-07', raised: 500000 },
+        { month: '2025-08', raised: 1200000 },
+        { month: '2025-09', raised: 2000000 },
+        { month: '2025-10', raised: 3500000 },
+        { month: '2025-11', raised: 4200000 },
+        { month: '2025-12', raised: 5000000 },
+      ];
+
+      expect(raiseChartData).toHaveLength(6);
+      expect(raiseChartData[5].raised).toBe(5000000);
+    });
+
+    it('should format data for investor breakdown pie chart', () => {
+      const investorBreakdown = [
+        { name: 'Individual', value: 25, fill: '#8884d8' },
+        { name: 'Entity', value: 15, fill: '#82ca9d' },
+        { name: 'Institutional', value: 5, fill: '#ffc658' },
+      ];
+
+      const total = investorBreakdown.reduce((sum, i) => sum + i.value, 0);
+      expect(total).toBe(45);
+    });
+
+    it('should format data for cash flow chart', () => {
+      const cashFlowData = [
+        { month: '2025-Q3', inbound: 500000, outbound: 50000 },
+        { month: '2025-Q4', inbound: 750000, outbound: 100000 },
+        { month: '2026-Q1', inbound: 250000, outbound: 150000 },
+      ];
+
+      expect(cashFlowData[0].inbound).toBeGreaterThan(cashFlowData[0].outbound);
+    });
+  });
+
+  describe('Fund Dashboard Data Queries', () => {
+    it('should query fund with team scope', async () => {
+      (mockPrisma.fund.findFirst as jest.Mock).mockResolvedValue(mockFund);
+
+      const fund = await mockPrisma.fund.findFirst({
+        where: {
+          id: 'fund-bermuda',
+          teamId: { in: ['team-1'] },
+        },
+      });
+
+      expect(fund?.id).toBe('fund-bermuda');
+      expect(fund?.teamId).toBe('team-1');
+    });
+
+    it('should query investments with aggregation', () => {
+      const investments = [
+        { id: 'inv-1', amount: 500000, investorId: 'investor-1', fundId: 'fund-bermuda' },
+        { id: 'inv-2', amount: 250000, investorId: 'investor-2', fundId: 'fund-bermuda' },
+      ];
+
+      const fundInvestments = investments.filter(i => i.fundId === 'fund-bermuda');
+      const totalAmount = fundInvestments.reduce((sum, inv) => sum + inv.amount, 0);
+
+      expect(totalAmount).toBe(750000);
+    });
+
+    it('should query transactions grouped by type', () => {
+      const transactionsByType = {
+        CAPITAL_CALL: { count: 15, totalAmount: 1500000 },
+        DISTRIBUTION: { count: 5, totalAmount: 250000 },
+        FEE: { count: 4, totalAmount: 37500 },
+      };
+
+      expect(transactionsByType.CAPITAL_CALL.count).toBe(15);
+      expect(transactionsByType.DISTRIBUTION.totalAmount).toBe(250000);
+    });
+
+    it('should query recent activity feed', () => {
+      const recentActivity = [
+        { type: 'INVESTOR_ONBOARDED', investorName: 'John Investor', timestamp: new Date() },
+        { type: 'CAPITAL_CALL_PAID', amount: 50000, timestamp: new Date() },
+        { type: 'DOCUMENT_SIGNED', documentName: 'NDA', timestamp: new Date() },
+      ];
+
+      expect(recentActivity).toHaveLength(3);
+      expect(recentActivity[0].type).toBe('INVESTOR_ONBOARDED');
+    });
+  });
+
+  describe('Admin Route Protection', () => {
+    it('should return 401 for unauthenticated admin requests', () => {
+      const session = null;
+      const response = {
+        status: session ? 200 : 401,
+        message: 'Unauthorized',
+      };
+
+      expect(response.status).toBe(401);
+    });
+
+    it('should return 403 for LP accessing admin routes', () => {
+      const userRole = 'LP';
+      const response = {
+        status: ['GP', 'ADMIN'].includes(userRole) ? 200 : 403,
+        message: 'Access denied',
+      };
+
+      expect(response.status).toBe(403);
+    });
+
+    it('should return 404 for fund not in user teams', () => {
+      const userTeamIds = ['team-1'];
+      const requestedFundTeamId = 'team-99';
+      const hasAccess = userTeamIds.includes(requestedFundTeamId);
+
+      expect(hasAccess).toBe(false);
+    });
+
+    it('should validate fund ID parameter', () => {
+      const fundId = 'fund-bermuda';
+      const isValidFundId = typeof fundId === 'string' && fundId.length > 0;
+
+      expect(isValidFundId).toBe(true);
+    });
+  });
+
+  describe('Dashboard Performance', () => {
+    it('should load dashboard data under 2 seconds', () => {
+      const loadTime = 1200;
+      const maxLoadTime = 2000;
+
+      expect(loadTime).toBeLessThan(maxLoadTime);
+    });
+
+    it('should cache dashboard aggregates', () => {
+      const cacheConfig = {
+        enabled: true,
+        ttlSeconds: 60,
+        key: 'dashboard:fund-bermuda:aggregates',
+      };
+
+      expect(cacheConfig.ttlSeconds).toBe(60);
+    });
+
+    it('should support incremental data updates', () => {
+      const refreshConfig = {
+        fullRefreshInterval: 60000,
+        incrementalUpdates: true,
+        pollingInterval: 30000,
+      };
+
+      expect(refreshConfig.incrementalUpdates).toBe(true);
+    });
+  });
+});

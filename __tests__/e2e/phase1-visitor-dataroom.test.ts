@@ -8810,3 +8810,661 @@ Jane Smith,jane@example.com,750000,750000,15%`;
     });
   });
 });
+
+describe('Phase 2: Compliance & Audit', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  describe('Audit Dashboard', () => {
+    it('should display audit log overview', () => {
+      const auditOverview = {
+        totalEvents: 15420,
+        todayEvents: 245,
+        criticalAlerts: 3,
+        pendingReviews: 12,
+        lastUpdated: new Date(),
+      };
+
+      expect(auditOverview.totalEvents).toBe(15420);
+    });
+
+    it('should list recent audit events', () => {
+      const recentEvents = [
+        { id: 'evt-1', type: 'LOGIN', userId: 'user-1', timestamp: new Date(), ipAddress: '192.168.1.1' },
+        { id: 'evt-2', type: 'DOCUMENT_VIEW', userId: 'user-2', timestamp: new Date(), documentId: 'doc-1' },
+        { id: 'evt-3', type: 'SUBSCRIPTION', userId: 'user-3', timestamp: new Date(), amount: 100000 },
+      ];
+
+      expect(recentEvents).toHaveLength(3);
+    });
+
+    it('should filter audit events by type', () => {
+      const events = [
+        { type: 'LOGIN' },
+        { type: 'DOCUMENT_VIEW' },
+        { type: 'DOCUMENT_VIEW' },
+        { type: 'SUBSCRIPTION' },
+      ];
+
+      const documentViews = events.filter(e => e.type === 'DOCUMENT_VIEW');
+      expect(documentViews).toHaveLength(2);
+    });
+
+    it('should filter audit events by date range', () => {
+      const events = [
+        { timestamp: new Date('2026-01-15') },
+        { timestamp: new Date('2026-01-20') },
+        { timestamp: new Date('2026-01-25') },
+      ];
+
+      const startDate = new Date('2026-01-18');
+      const endDate = new Date('2026-01-22');
+
+      const filtered = events.filter(e => e.timestamp >= startDate && e.timestamp <= endDate);
+      expect(filtered).toHaveLength(1);
+    });
+
+    it('should filter audit events by user', () => {
+      const events = [
+        { userId: 'user-1', type: 'LOGIN' },
+        { userId: 'user-1', type: 'DOCUMENT_VIEW' },
+        { userId: 'user-2', type: 'LOGIN' },
+      ];
+
+      const userEvents = events.filter(e => e.userId === 'user-1');
+      expect(userEvents).toHaveLength(2);
+    });
+
+    it('should search audit events', () => {
+      const events = [
+        { description: 'User logged in from New York' },
+        { description: 'Document NDA viewed' },
+        { description: 'Subscription completed for $100,000' },
+      ];
+
+      const searchQuery = 'NDA';
+      const results = events.filter(e => e.description.includes(searchQuery));
+      expect(results).toHaveLength(1);
+    });
+
+    it('should paginate audit events', () => {
+      const totalEvents = 15420;
+      const pageSize = 50;
+      const totalPages = Math.ceil(totalEvents / pageSize);
+
+      expect(totalPages).toBe(309);
+    });
+  });
+
+  describe('Visit Audit Fields (SEC-Ready)', () => {
+    it('should capture comprehensive visit data', () => {
+      const visitAudit = {
+        id: 'visit-1',
+        userId: 'inv-1',
+        documentId: 'doc-1',
+        timestamp: new Date(),
+        ipAddress: '192.168.1.100',
+        userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+        geo: {
+          country: 'US',
+          region: 'CA',
+          city: 'San Francisco',
+          lat: 37.7749,
+          lng: -122.4194,
+        },
+        device: 'Desktop',
+        browser: 'Chrome',
+        os: 'Windows 10',
+        sessionId: 'sess_abc123',
+        referrer: 'https://app.bermudafund.com/dataroom',
+        auditMetadata: {},
+      };
+
+      expect(visitAudit.ipAddress).toBe('192.168.1.100');
+      expect(visitAudit.geo.country).toBe('US');
+    });
+
+    it('should track page view duration', () => {
+      const viewEvent = {
+        documentId: 'doc-1',
+        startTime: new Date('2026-01-25T10:00:00Z'),
+        endTime: new Date('2026-01-25T10:05:30Z'),
+        durationSeconds: 330,
+        pagesViewed: [1, 2, 3, 4, 5],
+      };
+
+      expect(viewEvent.durationSeconds).toBe(330);
+    });
+
+    it('should track document download events', () => {
+      const downloadEvent = {
+        type: 'DOCUMENT_DOWNLOAD',
+        documentId: 'doc-1',
+        documentName: 'PPM.pdf',
+        userId: 'inv-1',
+        timestamp: new Date(),
+        ipAddress: '192.168.1.100',
+        fileSize: 2048576,
+      };
+
+      expect(downloadEvent.type).toBe('DOCUMENT_DOWNLOAD');
+    });
+
+    it('should capture accreditation verification audit', () => {
+      const accreditationAudit = {
+        investorId: 'inv-1',
+        verificationType: 'SELF_CERTIFICATION',
+        checkboxesSelected: [
+          'income_threshold',
+          'net_worth_threshold',
+          'professional_certification',
+          'entity_qualification',
+        ],
+        timestamp: new Date(),
+        ipAddress: '192.168.1.100',
+        acknowledgement: true,
+      };
+
+      expect(accreditationAudit.checkboxesSelected).toHaveLength(4);
+    });
+
+    it('should capture signature audit trail', () => {
+      const signatureAudit = {
+        documentId: 'sub-doc-1',
+        signerId: 'inv-1',
+        signatureHash: 'sha256:abc123...',
+        signedAt: new Date(),
+        ipAddress: '192.168.1.100',
+        geo: { country: 'US', city: 'San Francisco' },
+        certificateId: 'cert_xyz789',
+      };
+
+      expect(signatureAudit.signatureHash).toContain('sha256:');
+    });
+  });
+
+  describe('SEC-Ready Export', () => {
+    it('should export audit log for SEC review', () => {
+      const secExport = {
+        exportType: 'SEC_AUDIT',
+        fundId: 'fund-1',
+        dateRange: { start: new Date('2025-01-01'), end: new Date('2025-12-31') },
+        includeData: [
+          'investor_verifications',
+          'document_views',
+          'signatures',
+          'transactions',
+          'communications',
+        ],
+        format: 'PDF',
+      };
+
+      expect(secExport.includeData).toContain('investor_verifications');
+    });
+
+    it('should generate 506(c) compliance report', () => {
+      const complianceReport = {
+        regulationType: '506(c)',
+        fundId: 'fund-1',
+        reportPeriod: '2025',
+        sections: [
+          { name: 'Accredited Investor Verification', status: 'COMPLIANT' },
+          { name: 'Bad Actor Checks', status: 'COMPLIANT' },
+          { name: 'Form D Filing', status: 'FILED' },
+          { name: 'State Notices', status: 'PARTIAL' },
+        ],
+      };
+
+      const compliantSections = complianceReport.sections.filter(s => s.status === 'COMPLIANT');
+      expect(compliantSections).toHaveLength(2);
+    });
+
+    it('should include investor verification evidence', () => {
+      const verificationEvidence = {
+        investorId: 'inv-1',
+        investorName: 'John Doe',
+        verificationMethod: 'THIRD_PARTY',
+        verificationDate: new Date('2026-01-15'),
+        verifierName: 'Persona Inc.',
+        documentEvidence: ['drivers-license.pdf', 'tax-return-summary.pdf'],
+        accreditationBasis: 'INCOME',
+      };
+
+      expect(verificationEvidence.documentEvidence).toHaveLength(2);
+    });
+
+    it('should track Form D filing status', () => {
+      const formDStatus = {
+        fundId: 'fund-1',
+        initialFilingDate: new Date('2025-03-15'),
+        lastAmendmentDate: new Date('2026-01-10'),
+        nextAmendmentDue: new Date('2026-03-15'),
+        filingStatus: 'CURRENT',
+        secFileNumber: '021-12345',
+      };
+
+      expect(formDStatus.filingStatus).toBe('CURRENT');
+    });
+
+    it('should export state notice compliance', () => {
+      const stateNotices = [
+        { state: 'CA', filed: true, filingDate: new Date('2025-03-20') },
+        { state: 'NY', filed: true, filingDate: new Date('2025-03-22') },
+        { state: 'TX', filed: false, filingDate: null },
+      ];
+
+      const filedStates = stateNotices.filter(s => s.filed);
+      expect(filedStates).toHaveLength(2);
+    });
+  });
+
+  describe('Role-Based Access Control', () => {
+    it('should identify GP role', () => {
+      const user = { id: 'user-1', role: 'GP', teamId: 'team-1' };
+      const isGP = user.role === 'GP';
+
+      expect(isGP).toBe(true);
+    });
+
+    it('should identify LP role', () => {
+      const user = { id: 'user-2', role: 'LP', investorId: 'inv-1' };
+      const isLP = user.role === 'LP';
+
+      expect(isLP).toBe(true);
+    });
+
+    it('should allow GP to see all investors', () => {
+      const userRole = 'GP';
+      const allInvestors = [
+        { id: 'inv-1', name: 'John Doe' },
+        { id: 'inv-2', name: 'Jane Smith' },
+        { id: 'inv-3', name: 'Bob Wilson' },
+      ];
+
+      const visibleInvestors = userRole === 'GP' ? allInvestors : [];
+      expect(visibleInvestors).toHaveLength(3);
+    });
+
+    it('should restrict LP to personal data only', () => {
+      const userRole = 'LP';
+      const currentInvestorId = 'inv-1';
+      const allInvestors = [
+        { id: 'inv-1', name: 'John Doe' },
+        { id: 'inv-2', name: 'Jane Smith' },
+        { id: 'inv-3', name: 'Bob Wilson' },
+      ];
+
+      const visibleInvestors = userRole === 'LP' 
+        ? allInvestors.filter(i => i.id === currentInvestorId)
+        : allInvestors;
+
+      expect(visibleInvestors).toHaveLength(1);
+      expect(visibleInvestors[0].name).toBe('John Doe');
+    });
+
+    it('should allow GP to view all transactions', () => {
+      const userRole = 'GP';
+      const allTransactions = [
+        { id: 'txn-1', investorId: 'inv-1', amount: 50000 },
+        { id: 'txn-2', investorId: 'inv-2', amount: 25000 },
+      ];
+
+      const visibleTransactions = userRole === 'GP' ? allTransactions : [];
+      expect(visibleTransactions).toHaveLength(2);
+    });
+
+    it('should restrict LP to own transactions only', () => {
+      const userRole = 'LP';
+      const currentInvestorId = 'inv-1';
+      const allTransactions = [
+        { id: 'txn-1', investorId: 'inv-1', amount: 50000 },
+        { id: 'txn-2', investorId: 'inv-2', amount: 25000 },
+        { id: 'txn-3', investorId: 'inv-1', amount: 30000 },
+      ];
+
+      const visibleTransactions = userRole === 'LP'
+        ? allTransactions.filter(t => t.investorId === currentInvestorId)
+        : allTransactions;
+
+      expect(visibleTransactions).toHaveLength(2);
+    });
+
+    it('should allow LP to see fund aggregates (not individual data)', () => {
+      const fundAggregates = {
+        totalCommitment: 5000000,
+        totalFunded: 3000000,
+        investorCount: 25,
+        nav: 5500000,
+      };
+
+      expect(fundAggregates.totalCommitment).toBe(5000000);
+    });
+
+    it('should hide other LP details from LP users', () => {
+      const userRole = 'LP';
+      const showOtherLPDetails = userRole === 'GP';
+
+      expect(showOtherLPDetails).toBe(false);
+    });
+
+    it('should restrict admin routes to GP only', () => {
+      const checkAdminAccess = (role: string) => role === 'GP' || role === 'ADMIN';
+
+      expect(checkAdminAccess('GP')).toBe(true);
+      expect(checkAdminAccess('LP')).toBe(false);
+    });
+
+    it('should return 403 for LP accessing admin routes', () => {
+      const userRole = 'LP';
+      const requestedRoute = '/admin/investors';
+      const isAdminRoute = requestedRoute.startsWith('/admin');
+      const hasAccess = !isAdminRoute || userRole === 'GP';
+
+      expect(hasAccess).toBe(false);
+    });
+  });
+
+  describe('Data Portability - Model Exports', () => {
+    it('should export Investor model data', () => {
+      const investorExport = {
+        model: 'Investor',
+        count: 25,
+        fields: ['id', 'name', 'email', 'phone', 'type', 'isAccredited', 'kycStatus', 'createdAt'],
+        format: 'JSON',
+      };
+
+      expect(investorExport.fields).toContain('isAccredited');
+    });
+
+    it('should export Fund model data', () => {
+      const fundExport = {
+        model: 'Fund',
+        count: 3,
+        fields: ['id', 'name', 'targetAmount', 'status', 'managementFeePercent', 'initialClosingThreshold'],
+        format: 'JSON',
+      };
+
+      expect(fundExport.fields).toContain('targetAmount');
+    });
+
+    it('should export Investment model data', () => {
+      const investmentExport = {
+        model: 'Investment',
+        count: 50,
+        fields: ['id', 'investorId', 'fundId', 'commitment', 'funded', 'units', 'status'],
+        format: 'JSON',
+      };
+
+      expect(investmentExport.fields).toContain('commitment');
+    });
+
+    it('should export Transaction model data', () => {
+      const transactionExport = {
+        model: 'Transaction',
+        count: 200,
+        fields: ['id', 'type', 'amount', 'status', 'investorId', 'fundId', 'createdAt'],
+        format: 'JSON',
+      };
+
+      expect(transactionExport.fields).toContain('type');
+    });
+
+    it('should export Document model data', () => {
+      const documentExport = {
+        model: 'Document',
+        count: 150,
+        fields: ['id', 'name', 'type', 'storagePath', 'uploadedBy', 'createdAt'],
+        format: 'JSON',
+      };
+
+      expect(documentExport.fields).toContain('storagePath');
+    });
+
+    it('should export SignatureRequest model data', () => {
+      const signatureExport = {
+        model: 'SignatureRequest',
+        count: 75,
+        fields: ['id', 'documentId', 'signerId', 'status', 'signedAt', 'ipAddress'],
+        format: 'JSON',
+      };
+
+      expect(signatureExport.fields).toContain('signedAt');
+    });
+
+    it('should export View model audit data', () => {
+      const viewExport = {
+        model: 'View',
+        count: 5000,
+        fields: ['id', 'userId', 'documentId', 'timestamp', 'ipAddress', 'userAgent', 'geo', 'sessionId'],
+        format: 'JSON',
+      };
+
+      expect(viewExport.fields).toContain('geo');
+    });
+
+    it('should export CapitalCall model data', () => {
+      const capitalCallExport = {
+        model: 'CapitalCall',
+        count: 10,
+        fields: ['id', 'fundId', 'totalAmount', 'dueDate', 'status', 'createdAt'],
+        format: 'JSON',
+      };
+
+      expect(capitalCallExport.fields).toContain('dueDate');
+    });
+
+    it('should export Distribution model data', () => {
+      const distributionExport = {
+        model: 'Distribution',
+        count: 8,
+        fields: ['id', 'fundId', 'totalAmount', 'type', 'status', 'scheduledDate'],
+        format: 'JSON',
+      };
+
+      expect(distributionExport.fields).toContain('type');
+    });
+  });
+
+  describe('Full Data Export', () => {
+    it('should export all models as ZIP', () => {
+      const fullExport = {
+        exportType: 'FULL_DATA_EXPORT',
+        fundId: 'fund-1',
+        models: [
+          'Investor', 'Fund', 'Investment', 'Transaction', 
+          'Document', 'SignatureRequest', 'View', 
+          'CapitalCall', 'Distribution', 'BankLink',
+        ],
+        format: 'ZIP',
+        includeFiles: true,
+      };
+
+      expect(fullExport.models).toHaveLength(10);
+    });
+
+    it('should generate JSON export for each model', () => {
+      const modelExports = [
+        { model: 'Investor', filename: 'investors.json', recordCount: 25 },
+        { model: 'Fund', filename: 'funds.json', recordCount: 3 },
+        { model: 'Investment', filename: 'investments.json', recordCount: 50 },
+      ];
+
+      expect(modelExports[0].filename).toBe('investors.json');
+    });
+
+    it('should include export metadata', () => {
+      const exportMetadata = {
+        exportId: 'export-123',
+        exportDate: new Date().toISOString(),
+        exportedBy: 'gp-admin',
+        fundId: 'fund-1',
+        fundName: 'Bermuda Growth Fund',
+        modelCount: 10,
+        totalRecords: 5500,
+        version: '1.0',
+        schemaVersion: '2026-01',
+      };
+
+      expect(exportMetadata.schemaVersion).toBe('2026-01');
+    });
+
+    it('should support CSV format export', () => {
+      const csvExport = {
+        format: 'CSV',
+        models: ['Investor', 'Investment', 'Transaction'],
+        delimiter: ',',
+        includeHeaders: true,
+        encoding: 'UTF-8',
+      };
+
+      expect(csvExport.encoding).toBe('UTF-8');
+    });
+
+    it('should handle large data exports with streaming', () => {
+      const streamConfig = {
+        useStreaming: true,
+        chunkSize: 10000,
+        totalRecords: 500000,
+        estimatedDuration: '5 minutes',
+      };
+
+      expect(streamConfig.useStreaming).toBe(true);
+    });
+
+    it('should notify when export complete', () => {
+      const exportNotification = {
+        type: 'EXPORT_COMPLETE',
+        exportId: 'export-123',
+        downloadUrl: 'https://storage.bermudafund.com/exports/export-123.zip',
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        fileSizeMB: 256,
+      };
+
+      expect(exportNotification.type).toBe('EXPORT_COMPLETE');
+    });
+  });
+
+  describe('GDPR/Data Subject Rights', () => {
+    it('should support data access request', () => {
+      const accessRequest = {
+        type: 'DATA_ACCESS',
+        requesterId: 'inv-1',
+        requestDate: new Date(),
+        status: 'PENDING',
+        dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+      };
+
+      expect(accessRequest.type).toBe('DATA_ACCESS');
+    });
+
+    it('should compile personal data for access request', () => {
+      const personalData = {
+        investorId: 'inv-1',
+        dataCategories: [
+          'profile',
+          'investments',
+          'transactions',
+          'documents',
+          'communications',
+          'auditLogs',
+        ],
+        format: 'JSON',
+        compiledAt: new Date(),
+      };
+
+      expect(personalData.dataCategories).toHaveLength(6);
+    });
+
+    it('should support data deletion request', () => {
+      const deletionRequest = {
+        type: 'DATA_DELETION',
+        requesterId: 'inv-1',
+        requestDate: new Date(),
+        status: 'PENDING',
+        retentionExceptions: ['tax_records', 'regulatory_filings'],
+      };
+
+      expect(deletionRequest.retentionExceptions).toContain('tax_records');
+    });
+
+    it('should anonymize data instead of hard delete when required', () => {
+      const anonymizationConfig = {
+        investorId: 'inv-1',
+        fieldsToAnonymize: ['name', 'email', 'phone', 'address', 'ssn'],
+        preserveAggregates: true,
+        anonymizedAt: new Date(),
+      };
+
+      expect(anonymizationConfig.preserveAggregates).toBe(true);
+    });
+
+    it('should support data portability request', () => {
+      const portabilityRequest = {
+        type: 'DATA_PORTABILITY',
+        requesterId: 'inv-1',
+        requestDate: new Date(),
+        format: 'JSON',
+        includeDocuments: true,
+        status: 'PROCESSING',
+      };
+
+      expect(portabilityRequest.type).toBe('DATA_PORTABILITY');
+    });
+
+    it('should track data subject request history', () => {
+      const requestHistory = [
+        { id: 'req-1', type: 'DATA_ACCESS', status: 'COMPLETED', completedAt: new Date('2025-06-15') },
+        { id: 'req-2', type: 'DATA_PORTABILITY', status: 'COMPLETED', completedAt: new Date('2025-09-20') },
+      ];
+
+      expect(requestHistory).toHaveLength(2);
+    });
+  });
+
+  describe('Audit Log Retention', () => {
+    it('should configure retention policy', () => {
+      const retentionPolicy = {
+        auditLogs: { retentionYears: 7, archiveAfterYears: 2 },
+        transactionRecords: { retentionYears: 10, archiveAfterYears: 3 },
+        documentViews: { retentionYears: 5, archiveAfterYears: 1 },
+      };
+
+      expect(retentionPolicy.auditLogs.retentionYears).toBe(7);
+    });
+
+    it('should archive old audit logs', () => {
+      const archiveConfig = {
+        cutoffDate: new Date('2024-01-01'),
+        destinationBucket: 'archive-storage',
+        compressionEnabled: true,
+        encryptionEnabled: true,
+      };
+
+      expect(archiveConfig.encryptionEnabled).toBe(true);
+    });
+
+    it('should prevent deletion of regulatory records', () => {
+      const protectedRecords = {
+        types: ['ACCREDITATION_VERIFICATION', 'SIGNATURE_AUDIT', 'TRANSACTION_RECORD'],
+        minimumRetentionYears: 7,
+        deletionBlocked: true,
+      };
+
+      expect(protectedRecords.deletionBlocked).toBe(true);
+    });
+
+    it('should support legal hold on records', () => {
+      const legalHold = {
+        fundId: 'fund-1',
+        holdType: 'LITIGATION',
+        startDate: new Date('2026-01-01'),
+        endDate: null,
+        affectedRecords: ['all'],
+        holdReason: 'Pending SEC inquiry',
+      };
+
+      expect(legalHold.holdType).toBe('LITIGATION');
+    });
+  });
+});

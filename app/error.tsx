@@ -1,9 +1,8 @@
 "use client";
 
 import { useEffect } from "react";
-import Rollbar from "rollbar";
+import { useRollbar } from "@rollbar/react";
 import { Button } from "@/components/ui/button";
-import { clientConfig } from "@/lib/rollbar";
 
 export default function Error({
   error,
@@ -12,12 +11,13 @@ export default function Error({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const rollbar = useRollbar();
+  
   useEffect(() => {
-    if (clientConfig.accessToken) {
-      const rollbar = new Rollbar(clientConfig);
+    if (rollbar) {
       rollbar.error(error);
     }
-  }, [error]);
+  }, [error, rollbar]);
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50">

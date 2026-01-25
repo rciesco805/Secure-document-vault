@@ -144,7 +144,7 @@ git remote set-url bitget https://${GITHUB_PERSONAL_ACCESS_TOKEN}@github.com/rci
 ## Phase Status
 
 - **Phase 1 (MVP)**: ~95% complete - Core onboarding, NDA gate, accreditation, fundroom, e-signature, dual thresholds
-- **Phase 2**: ~60% complete - Plaid transfers, AUM reporting, entity fee configs, wizard progress tracking
+- **Phase 2**: ~75% complete - Plaid transfers, AUM reporting, entity fee configs, wizard progress tracking, audit dashboard, PWA support
 - **Phase 3**: Planned - STARTUP mode (cap table), vesting schedules, equity management, QuickBooks/Wolters Kluwer integrations
 
 ## Documentation

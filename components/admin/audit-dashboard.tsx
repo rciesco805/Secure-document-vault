@@ -134,7 +134,6 @@ export function AuditDashboard({ teamId }: AuditDashboardProps) {
   const [eventFilter, setEventFilter] = useState("all");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
-  const [documentFilter, setDocumentFilter] = useState("");
 
   const [stats, setStats] = useState({
     totalEvents: 0,
@@ -154,7 +153,6 @@ export function AuditDashboard({ teamId }: AuditDashboardProps) {
       if (eventFilter && eventFilter !== "all") params.append("event", eventFilter);
       if (startDate) params.append("startDate", startDate);
       if (endDate) params.append("endDate", endDate);
-      if (documentFilter) params.append("documentId", documentFilter);
 
       const res = await fetch(
         `/api/teams/${teamId}/signature-audit/export?${params.toString()}`
@@ -217,7 +215,7 @@ export function AuditDashboard({ teamId }: AuditDashboardProps) {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `audit-report-${format === "csv" ? "csv" : "html"}.${format === "csv" ? "csv" : "html"}`;
+        a.download = format === "csv" ? "audit-report.csv" : "audit-report.html";
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(url);
@@ -319,7 +317,7 @@ export function AuditDashboard({ teamId }: AuditDashboardProps) {
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => handleExport("pdf")}>
                   <Printer className="h-4 w-4 mr-2" />
-                  Export as PDF/HTML
+                  Export Report (HTML)
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

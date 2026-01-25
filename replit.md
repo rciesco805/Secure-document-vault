@@ -22,7 +22,8 @@ A comprehensive 506(c) fund GP/LP management suite designed to streamline invest
 - **AUM Reporting**: New `/api/admin/reports/aum` endpoint with gross/net AUM, NAV, fee deductions (management, performance, organizational, expenses), and fund ratios
 - **Real-time Wizard Progress**: `/api/lp/wizard-progress` tracks 7 onboarding steps with prerequisites validation (NDA → Accreditation → KYC required before completion)
 - **Mobile Viewport Tests**: 30 additional tests for device detection, responsive UI, touch interactions
-- **1235+ Passing Tests**: Comprehensive E2E coverage across all phases
+- **API Error Path Tests**: 110 tests for transaction/subscription validation, auth utilities, and audit utilities
+- **1418+ Passing Tests**: Comprehensive E2E coverage across all phases
 
 ### Phase 1 Features
 - **Unified Admin Access Control with Hub Navigation**: `/hub` landing page for admins, `hasFundroomAccess` field for permission-based access

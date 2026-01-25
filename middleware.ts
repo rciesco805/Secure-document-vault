@@ -9,17 +9,53 @@ import IncomingWebhookMiddleware, {
 } from "./lib/middleware/incoming-webhooks";
 import PostHogMiddleware from "./lib/middleware/posthog";
 
-function isAnalyticsPath(path: string) {
-  // Create a regular expression
-  // ^ - asserts position at start of the line
-  // /ingest/ - matches the literal string "/ingest/"
-  // .* - matches any character (except for line terminators) 0 or more times
+function isAnalyticsPath(path: string): boolean {
   const pattern = /^\/ingest\/.*/;
-
   return pattern.test(path);
 }
 
-function isCustomDomain(host: string) {
+function validateHost(host: string | null): boolean {
+  if (!host) return false;
+  
+  const hostPattern = /^[a-zA-Z0-9][a-zA-Z0-9\-\.]*[a-zA-Z0-9]$|^[a-zA-Z0-9]$/;
+  const cleanHost = host.split(':')[0];
+  
+  if (cleanHost.length > 253) return false;
+  if (!hostPattern.test(cleanHost)) return false;
+  
+  return true;
+}
+
+function validateClientIP(req: NextRequest): string | null {
+  const forwardedFor = req.headers.get("x-forwarded-for");
+  const realIP = req.headers.get("x-real-ip");
+  
+  const ip = forwardedFor?.split(',')[0]?.trim() || realIP || null;
+  
+  if (ip) {
+    const ipv4Pattern = /^(\d{1,3}\.){3}\d{1,3}$/;
+    const ipv6Pattern = /^([a-fA-F0-9:]+)$/;
+    
+    if (!ipv4Pattern.test(ip) && !ipv6Pattern.test(ip)) {
+      return null;
+    }
+  }
+  
+  return ip;
+}
+
+function escapePath(path: string): string {
+  return path.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function sanitizePath(path: string): string {
+  let sanitized = path.replace(/\.{2,}/g, '');
+  sanitized = sanitized.replace(/\/+/g, '/');
+  sanitized = decodeURIComponent(sanitized).replace(/[<>'"]/g, '');
+  return sanitized;
+}
+
+function isCustomDomain(host: string): boolean {
   return (
     (process.env.NODE_ENV === "development" &&
       (host?.includes(".local") || host?.includes("papermark.dev"))) ||
@@ -37,57 +73,74 @@ function isCustomDomain(host: string) {
   );
 }
 
+function createErrorResponse(message: string, status: number): NextResponse {
+  return new NextResponse(
+    JSON.stringify({ error: message }),
+    {
+      status,
+      headers: { 'Content-Type': 'application/json' },
+    }
+  );
+}
+
 export const config = {
   matcher: [
-    /*
-     * Match all paths except for:
-     * 1. /api/ routes
-     * 2. /_next/ (Next.js internals)
-     * 3. /_static (inside /public)
-     * 4. /_vercel (Vercel internals)
-     * 5. /favicon.ico, /sitemap.xml (static files)
-     */
     "/((?!api/|_next/|_static|vendor|_icons|_vercel|favicon.ico|favicon.png|sitemap.xml).*)",
   ],
 };
 
 export default async function middleware(req: NextRequest, ev: NextFetchEvent) {
-  const path = req.nextUrl.pathname;
-  const host = req.headers.get("host");
+  try {
+    const path = sanitizePath(req.nextUrl.pathname);
+    const host = req.headers.get("host");
 
-  if (isAnalyticsPath(path)) {
-    return PostHogMiddleware(req);
+    if (!validateHost(host)) {
+      return createErrorResponse("Invalid host header", 400);
+    }
+
+    const clientIP = validateClientIP(req);
+    if (clientIP) {
+      req.headers.set("x-client-ip", clientIP);
+    }
+
+    if (isAnalyticsPath(path)) {
+      return PostHogMiddleware(req);
+    }
+
+    if (isWebhookPath(host)) {
+      return IncomingWebhookMiddleware(req);
+    }
+
+    if (isCustomDomain(host || "")) {
+      return DomainMiddleware(req);
+    }
+
+    if (
+      !path.startsWith("/view/") &&
+      !path.startsWith("/verify") &&
+      !path.startsWith("/unsubscribe")
+    ) {
+      return AppMiddleware(req);
+    }
+
+    if (path.startsWith("/view/")) {
+      const isBlocked = BLOCKED_PATHNAMES.some((blockedPath) => {
+        const escapedBlockedPath = escapePath(blockedPath);
+        const blockPattern = new RegExp(escapedBlockedPath);
+        return blockPattern.test(path);
+      });
+
+      if (isBlocked || path.includes(".")) {
+        const url = req.nextUrl.clone();
+        url.pathname = "/404";
+        return NextResponse.rewrite(url, { status: 404 });
+      }
+    }
+
+    return NextResponse.next();
+  } catch (error) {
+    console.error("[Middleware Error]", error instanceof Error ? error.message : "Unknown error");
+    
+    return createErrorResponse("Internal server error", 500);
   }
-
-  // Handle incoming webhooks
-  if (isWebhookPath(host)) {
-    return IncomingWebhookMiddleware(req);
-  }
-
-  // For custom domains, we need to handle them differently
-  if (isCustomDomain(host || "")) {
-    return DomainMiddleware(req);
-  }
-
-  // Handle standard app paths
-  if (
-    !path.startsWith("/view/") &&
-    !path.startsWith("/verify") &&
-    !path.startsWith("/unsubscribe")
-  ) {
-    return AppMiddleware(req);
-  }
-
-  // Check for blocked pathnames in view routes
-  if (
-    path.startsWith("/view/") &&
-    (BLOCKED_PATHNAMES.some((blockedPath) => path.includes(blockedPath)) ||
-      path.includes("."))
-  ) {
-    const url = req.nextUrl.clone();
-    url.pathname = "/404";
-    return NextResponse.rewrite(url, { status: 404 });
-  }
-
-  return NextResponse.next();
 }

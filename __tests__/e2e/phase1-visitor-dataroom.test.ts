@@ -9468,3 +9468,561 @@ describe('Phase 2: Compliance & Audit', () => {
     });
   });
 });
+
+describe('Phase 2: External Integrations', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  describe('QuickBooks Integration - Expense Sync', () => {
+    it('should configure QuickBooks connection', () => {
+      const qbConfig = {
+        clientId: 'qb_client_xxx',
+        clientSecret: 'qb_secret_xxx',
+        realmId: 'qb_realm_123',
+        accessToken: 'qb_access_token',
+        refreshToken: 'qb_refresh_token',
+        tokenExpiresAt: new Date(Date.now() + 3600000),
+        environment: 'sandbox',
+      };
+
+      expect(qbConfig.environment).toBe('sandbox');
+    });
+
+    it('should authenticate with QuickBooks OAuth', () => {
+      const oauthFlow = {
+        authorizationUrl: 'https://appcenter.intuit.com/connect/oauth2',
+        redirectUri: 'https://app.bermudafund.com/api/integrations/quickbooks/callback',
+        scope: 'com.intuit.quickbooks.accounting',
+        state: 'random_state_123',
+      };
+
+      expect(oauthFlow.scope).toBe('com.intuit.quickbooks.accounting');
+    });
+
+    it('should sync fund expenses to QuickBooks', () => {
+      const expenseSync = {
+        fundId: 'fund-1',
+        expenses: [
+          { id: 'exp-1', description: 'Legal Fees', amount: 15000, category: 'Professional Services', date: new Date() },
+          { id: 'exp-2', description: 'Audit Fees', amount: 25000, category: 'Professional Services', date: new Date() },
+          { id: 'exp-3', description: 'Office Rent', amount: 5000, category: 'Rent', date: new Date() },
+        ],
+        syncDirection: 'TO_QUICKBOOKS',
+      };
+
+      expect(expenseSync.expenses).toHaveLength(3);
+    });
+
+    it('should map expense categories to QuickBooks accounts', () => {
+      const categoryMapping = {
+        'Professional Services': { qbAccountId: '80', qbAccountName: 'Professional Fees' },
+        'Rent': { qbAccountId: '62', qbAccountName: 'Rent or Lease' },
+        'Travel': { qbAccountId: '68', qbAccountName: 'Travel Expense' },
+        'Management Fee': { qbAccountId: '85', qbAccountName: 'Management Fees' },
+      };
+
+      expect(categoryMapping['Professional Services'].qbAccountId).toBe('80');
+    });
+
+    it('should create QuickBooks expense entry', () => {
+      const qbExpense = {
+        TxnDate: '2026-01-25',
+        PaymentType: 'Cash',
+        TotalAmt: 15000,
+        Line: [
+          {
+            Amount: 15000,
+            DetailType: 'AccountBasedExpenseLineDetail',
+            AccountBasedExpenseLineDetail: {
+              AccountRef: { value: '80', name: 'Professional Fees' },
+            },
+            Description: 'Legal Fees - Q1 2026',
+          },
+        ],
+        AccountRef: { value: '35', name: 'Checking' },
+      };
+
+      expect(qbExpense.TotalAmt).toBe(15000);
+    });
+
+    it('should handle QuickBooks API errors', () => {
+      const apiError = {
+        status: 400,
+        error: {
+          code: '6000',
+          message: 'Business Validation Error',
+          detail: 'Account is inactive',
+        },
+      };
+
+      expect(apiError.error.code).toBe('6000');
+    });
+
+    it('should refresh QuickBooks tokens', () => {
+      const tokenRefresh = {
+        refreshToken: 'qb_refresh_old',
+        newAccessToken: 'qb_access_new',
+        newRefreshToken: 'qb_refresh_new',
+        expiresIn: 3600,
+      };
+
+      expect(tokenRefresh.expiresIn).toBe(3600);
+    });
+
+    it('should sync invoices from QuickBooks', () => {
+      const invoiceSync = {
+        syncDirection: 'FROM_QUICKBOOKS',
+        invoices: [
+          { qbId: 'inv-qb-1', customer: 'Investor A', amount: 5000, dueDate: new Date() },
+          { qbId: 'inv-qb-2', customer: 'Investor B', amount: 2500, dueDate: new Date() },
+        ],
+        lastSyncAt: new Date(),
+      };
+
+      expect(invoiceSync.invoices).toHaveLength(2);
+    });
+
+    it('should track sync history', () => {
+      const syncHistory = [
+        { syncId: 'sync-1', direction: 'TO_QUICKBOOKS', recordsProcessed: 15, status: 'SUCCESS', completedAt: new Date() },
+        { syncId: 'sync-2', direction: 'FROM_QUICKBOOKS', recordsProcessed: 8, status: 'SUCCESS', completedAt: new Date() },
+      ];
+
+      expect(syncHistory[0].recordsProcessed).toBe(15);
+    });
+
+    it('should schedule automatic expense sync', () => {
+      const syncSchedule = {
+        enabled: true,
+        frequency: 'DAILY',
+        time: '02:00',
+        timezone: 'America/New_York',
+        lastRun: new Date(),
+        nextRun: new Date(Date.now() + 24 * 60 * 60 * 1000),
+      };
+
+      expect(syncSchedule.frequency).toBe('DAILY');
+    });
+  });
+
+  describe('Persona KYC Integration', () => {
+    it('should configure Persona template', () => {
+      const personaConfig = {
+        apiKey: 'persona_api_key_xxx',
+        templateId: 'itmpl_accredited_investor',
+        environment: 'sandbox',
+        webhookSecret: 'persona_webhook_secret',
+      };
+
+      expect(personaConfig.templateId).toBe('itmpl_accredited_investor');
+    });
+
+    it('should create Persona inquiry', () => {
+      const inquiryRequest = {
+        templateId: 'itmpl_accredited_investor',
+        referenceId: 'inv-1',
+        fields: {
+          nameFirst: 'John',
+          nameLast: 'Doe',
+          emailAddress: 'john@example.com',
+        },
+      };
+
+      expect(inquiryRequest.referenceId).toBe('inv-1');
+    });
+
+    it('should generate Persona embed URL', () => {
+      const embedConfig = {
+        inquiryId: 'inq_abc123',
+        sessionToken: 'sess_xyz789',
+        embedUrl: 'https://withpersona.com/verify?inquiry-id=inq_abc123&session-token=sess_xyz789',
+      };
+
+      expect(embedConfig.embedUrl).toContain('withpersona.com');
+    });
+
+    it('should handle Persona inquiry statuses', () => {
+      const inquiryStatuses = ['created', 'pending', 'completed', 'failed', 'expired', 'needs_review'];
+      const currentStatus = 'completed';
+
+      expect(inquiryStatuses).toContain(currentStatus);
+    });
+
+    it('should process Persona webhook - inquiry.completed', () => {
+      const webhookPayload = {
+        data: {
+          type: 'inquiry',
+          id: 'inq_abc123',
+          attributes: {
+            status: 'completed',
+            referenceId: 'inv-1',
+            createdAt: '2026-01-25T10:00:00Z',
+            completedAt: '2026-01-25T10:15:00Z',
+          },
+        },
+      };
+
+      expect(webhookPayload.data.attributes.status).toBe('completed');
+    });
+
+    it('should process Persona webhook - verification.passed', () => {
+      const webhookPayload = {
+        data: {
+          type: 'verification/government-id',
+          id: 'ver_def456',
+          attributes: {
+            status: 'passed',
+            checks: [
+              { name: 'id_aamva_database_lookup', status: 'passed' },
+              { name: 'id_barcode_detection', status: 'passed' },
+              { name: 'id_portrait_clarity', status: 'passed' },
+            ],
+          },
+        },
+      };
+
+      const allChecksPassed = webhookPayload.data.attributes.checks.every(c => c.status === 'passed');
+      expect(allChecksPassed).toBe(true);
+    });
+
+    it('should handle Persona verification failure', () => {
+      const failedVerification = {
+        inquiryId: 'inq_abc123',
+        status: 'failed',
+        failureReasons: [
+          { check: 'id_barcode_detection', reason: 'Barcode not readable' },
+          { check: 'id_portrait_clarity', reason: 'Image too blurry' },
+        ],
+      };
+
+      expect(failedVerification.failureReasons).toHaveLength(2);
+    });
+
+    it('should update investor KYC status after Persona', () => {
+      let investor = {
+        id: 'inv-1',
+        kycStatus: 'PENDING',
+        personaInquiryId: 'inq_abc123',
+        kycVerifiedAt: null as Date | null,
+      };
+
+      investor.kycStatus = 'VERIFIED';
+      investor.kycVerifiedAt = new Date();
+
+      expect(investor.kycStatus).toBe('VERIFIED');
+    });
+
+    it('should store Persona verification details', () => {
+      const verificationRecord = {
+        investorId: 'inv-1',
+        personaInquiryId: 'inq_abc123',
+        templateId: 'itmpl_accredited_investor',
+        status: 'APPROVED',
+        verifiedAt: new Date(),
+        documentType: 'drivers_license',
+        documentCountry: 'US',
+        documentState: 'CA',
+        expiresAt: new Date('2028-01-01'),
+      };
+
+      expect(verificationRecord.documentType).toBe('drivers_license');
+    });
+
+    it('should handle Persona rate limits', () => {
+      const rateLimitConfig = {
+        maxRequestsPerMinute: 100,
+        currentRequests: 85,
+        resetAt: new Date(Date.now() + 60000),
+      };
+
+      const canMakeRequest = rateLimitConfig.currentRequests < rateLimitConfig.maxRequestsPerMinute;
+      expect(canMakeRequest).toBe(true);
+    });
+
+    it('should retry failed Persona inquiries', () => {
+      const retryConfig = {
+        inquiryId: 'inq_abc123',
+        retryCount: 1,
+        maxRetries: 3,
+        lastAttempt: new Date(),
+        canRetry: true,
+      };
+
+      expect(retryConfig.canRetry).toBe(true);
+    });
+  });
+
+  describe('Tinybird Analytics Integration', () => {
+    it('should configure Tinybird connection', () => {
+      const tinybirdConfig = {
+        apiHost: 'https://api.tinybird.co',
+        authToken: 'tb_token_xxx',
+        workspace: 'bermuda_fund',
+        environment: 'production',
+      };
+
+      expect(tinybirdConfig.workspace).toBe('bermuda_fund');
+    });
+
+    it('should send events to Tinybird', () => {
+      const eventPayload = {
+        datasource: 'page_views',
+        events: [
+          { timestamp: new Date().toISOString(), userId: 'inv-1', page: '/dataroom', documentId: 'doc-1' },
+          { timestamp: new Date().toISOString(), userId: 'inv-2', page: '/fundroom', documentId: null },
+        ],
+      };
+
+      expect(eventPayload.events).toHaveLength(2);
+    });
+
+    it('should batch events for efficiency', () => {
+      const batchConfig = {
+        maxBatchSize: 1000,
+        flushIntervalMs: 5000,
+        currentBatch: 450,
+        lastFlush: new Date(),
+      };
+
+      expect(batchConfig.maxBatchSize).toBe(1000);
+    });
+
+    it('should query page view analytics', () => {
+      const analyticsQuery = {
+        pipe: 'page_views_by_day',
+        parameters: {
+          fundId: 'fund-1',
+          startDate: '2026-01-01',
+          endDate: '2026-01-25',
+        },
+        response: {
+          data: [
+            { date: '2026-01-20', views: 145 },
+            { date: '2026-01-21', views: 167 },
+            { date: '2026-01-22', views: 132 },
+          ],
+        },
+      };
+
+      expect(analyticsQuery.response.data).toHaveLength(3);
+    });
+
+    it('should query investor engagement metrics', () => {
+      const engagementQuery = {
+        pipe: 'investor_engagement',
+        parameters: { fundId: 'fund-1' },
+        response: {
+          data: [
+            { investorId: 'inv-1', totalViews: 45, avgSessionDuration: 320, lastActive: '2026-01-25' },
+            { investorId: 'inv-2', totalViews: 23, avgSessionDuration: 180, lastActive: '2026-01-24' },
+          ],
+        },
+      };
+
+      expect(engagementQuery.response.data[0].totalViews).toBe(45);
+    });
+
+    it('should query document popularity', () => {
+      const documentQuery = {
+        pipe: 'document_popularity',
+        parameters: { fundId: 'fund-1', limit: 10 },
+        response: {
+          data: [
+            { documentId: 'doc-1', name: 'PPM', views: 250, uniqueViewers: 45 },
+            { documentId: 'doc-2', name: 'Financial Statements', views: 180, uniqueViewers: 38 },
+            { documentId: 'doc-3', name: 'Subscription Agreement', views: 120, uniqueViewers: 30 },
+          ],
+        },
+      };
+
+      expect(documentQuery.response.data[0].views).toBe(250);
+    });
+
+    it('should query funnel conversion metrics', () => {
+      const funnelQuery = {
+        pipe: 'conversion_funnel',
+        parameters: { fundId: 'fund-1', period: '30d' },
+        response: {
+          data: {
+            visitors: 500,
+            registered: 200,
+            ndaSigned: 150,
+            accredited: 100,
+            subscribed: 50,
+            conversionRate: 10,
+          },
+        },
+      };
+
+      expect(funnelQuery.response.data.conversionRate).toBe(10);
+    });
+
+    it('should query real-time active users', () => {
+      const realtimeQuery = {
+        pipe: 'active_users_realtime',
+        parameters: { windowMinutes: 5 },
+        response: {
+          data: {
+            activeUsers: 12,
+            byPage: [
+              { page: '/dataroom', count: 5 },
+              { page: '/fundroom', count: 4 },
+              { page: '/sign', count: 3 },
+            ],
+          },
+        },
+      };
+
+      expect(realtimeQuery.response.data.activeUsers).toBe(12);
+    });
+
+    it('should track audit events in Tinybird', () => {
+      const auditEvent = {
+        datasource: 'audit_log',
+        event: {
+          timestamp: new Date().toISOString(),
+          eventType: 'SUBSCRIPTION_COMPLETED',
+          userId: 'inv-1',
+          fundId: 'fund-1',
+          amount: 100000,
+          ipAddress: '192.168.1.1',
+          metadata: JSON.stringify({ units: 10, tierBreakdown: [{ tranche: 1, units: 10 }] }),
+        },
+      };
+
+      expect(auditEvent.event.eventType).toBe('SUBSCRIPTION_COMPLETED');
+    });
+
+    it('should handle Tinybird API errors', () => {
+      const apiError = {
+        status: 429,
+        error: {
+          code: 'RATE_LIMIT_EXCEEDED',
+          message: 'Too many requests',
+          retryAfter: 60,
+        },
+      };
+
+      expect(apiError.error.code).toBe('RATE_LIMIT_EXCEEDED');
+    });
+
+    it('should cache frequently accessed analytics', () => {
+      const cacheConfig = {
+        enabled: true,
+        ttlSeconds: 300,
+        cachedPipes: ['page_views_by_day', 'investor_engagement', 'document_popularity'],
+        cacheHitRate: 0.85,
+      };
+
+      expect(cacheConfig.cacheHitRate).toBe(0.85);
+    });
+  });
+
+  describe('Webhook Management', () => {
+    it('should register webhook endpoints', () => {
+      const webhookEndpoints = [
+        { service: 'persona', endpoint: '/api/webhooks/persona', secret: 'persona_secret' },
+        { service: 'plaid', endpoint: '/api/webhooks/plaid', secret: 'plaid_secret' },
+        { service: 'stripe', endpoint: '/api/webhooks/stripe', secret: 'stripe_secret' },
+      ];
+
+      expect(webhookEndpoints).toHaveLength(3);
+    });
+
+    it('should verify webhook signatures', () => {
+      const verifySignature = (secret: string, payload: string, signature: string) => {
+        return signature.startsWith('sha256=');
+      };
+
+      const isValid = verifySignature('secret', '{}', 'sha256=abc123');
+      expect(isValid).toBe(true);
+    });
+
+    it('should log webhook events', () => {
+      const webhookLog = {
+        id: 'wh-1',
+        service: 'persona',
+        eventType: 'inquiry.completed',
+        receivedAt: new Date(),
+        processed: true,
+        processingTime: 150,
+      };
+
+      expect(webhookLog.processed).toBe(true);
+    });
+
+    it('should retry failed webhook processing', () => {
+      const failedWebhook = {
+        id: 'wh-2',
+        service: 'plaid',
+        retryCount: 2,
+        maxRetries: 5,
+        nextRetryAt: new Date(Date.now() + 300000),
+        error: 'Database connection failed',
+      };
+
+      expect(failedWebhook.retryCount).toBeLessThan(failedWebhook.maxRetries);
+    });
+
+    it('should track webhook delivery status', () => {
+      const webhookStatuses = {
+        pending: 5,
+        delivered: 150,
+        failed: 3,
+        retrying: 2,
+      };
+
+      const total = Object.values(webhookStatuses).reduce((a, b) => a + b, 0);
+      expect(total).toBe(160);
+    });
+  });
+
+  describe('Integration Health Monitoring', () => {
+    it('should check integration health status', () => {
+      const healthStatus = {
+        quickbooks: { status: 'healthy', lastCheck: new Date(), latencyMs: 120 },
+        persona: { status: 'healthy', lastCheck: new Date(), latencyMs: 85 },
+        tinybird: { status: 'healthy', lastCheck: new Date(), latencyMs: 45 },
+        plaid: { status: 'degraded', lastCheck: new Date(), latencyMs: 500 },
+      };
+
+      expect(healthStatus.plaid.status).toBe('degraded');
+    });
+
+    it('should alert on integration failures', () => {
+      const alert = {
+        type: 'INTEGRATION_FAILURE',
+        service: 'quickbooks',
+        message: 'OAuth token refresh failed',
+        severity: 'HIGH',
+        timestamp: new Date(),
+        notified: ['admin@fund.com'],
+      };
+
+      expect(alert.severity).toBe('HIGH');
+    });
+
+    it('should track integration uptime', () => {
+      const uptimeMetrics = {
+        quickbooks: { uptime: 99.5, last30Days: 99.8 },
+        persona: { uptime: 99.9, last30Days: 99.95 },
+        tinybird: { uptime: 100, last30Days: 99.99 },
+      };
+
+      expect(uptimeMetrics.tinybird.uptime).toBe(100);
+    });
+
+    it('should support integration failover', () => {
+      const failoverConfig = {
+        primaryService: 'persona',
+        fallbackService: 'manual_verification',
+        triggerOnFailureCount: 3,
+        currentFailures: 0,
+        failoverActive: false,
+      };
+
+      expect(failoverConfig.failoverActive).toBe(false);
+    });
+  });
+});

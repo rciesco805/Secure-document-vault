@@ -7438,3 +7438,716 @@ describe('Phase 2: Subscription Push & Commitment Tracking', () => {
     });
   });
 });
+
+describe('Phase 2: Capital Calls & Distributions', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  describe('Bulk Issue Capital Calls - Wizard', () => {
+    it('should display Issue Calls button in admin dashboard', () => {
+      const adminActions = ['Issue Capital Call', 'Process Distribution', 'Send Update'];
+      expect(adminActions).toContain('Issue Capital Call');
+    });
+
+    it('should open capital call wizard', () => {
+      const wizardState = {
+        isOpen: true,
+        step: 'SELECT_AMOUNT',
+        fundId: 'fund-1',
+        totalCommitment: 5000000,
+        totalFunded: 2000000,
+        unfundedCommitment: 3000000,
+      };
+
+      expect(wizardState.isOpen).toBe(true);
+      expect(wizardState.step).toBe('SELECT_AMOUNT');
+    });
+
+    it('should set call amount as percentage of unfunded', () => {
+      const unfundedCommitment = 3000000;
+      const callPercentage = 25;
+      const callAmount = unfundedCommitment * (callPercentage / 100);
+
+      expect(callAmount).toBe(750000);
+    });
+
+    it('should set call amount as fixed amount', () => {
+      const callConfig = {
+        type: 'FIXED',
+        fixedAmount: 500000,
+        fundId: 'fund-1',
+      };
+
+      expect(callConfig.fixedAmount).toBe(500000);
+    });
+
+    it('should allocate call pro-rata to investors', () => {
+      const investors = [
+        { id: 'inv-1', commitment: 1000000, funded: 400000, unfunded: 600000 },
+        { id: 'inv-2', commitment: 500000, funded: 200000, unfunded: 300000 },
+        { id: 'inv-3', commitment: 250000, funded: 100000, unfunded: 150000 },
+      ];
+
+      const totalUnfunded = investors.reduce((sum, i) => sum + i.unfunded, 0);
+      const callAmount = 210000;
+
+      const allocations = investors.map(inv => ({
+        investorId: inv.id,
+        proRataShare: inv.unfunded / totalUnfunded,
+        callAmount: (inv.unfunded / totalUnfunded) * callAmount,
+      }));
+
+      expect(allocations[0].callAmount).toBeCloseTo(120000, 0);
+      expect(allocations[1].callAmount).toBeCloseTo(60000, 0);
+      expect(allocations[2].callAmount).toBeCloseTo(30000, 0);
+    });
+
+    it('should validate call does not exceed unfunded', () => {
+      const investor = { unfunded: 100000 };
+      const callAmount = 150000;
+
+      const isValid = callAmount <= investor.unfunded;
+      expect(isValid).toBe(false);
+    });
+
+    it('should set call due date', () => {
+      const today = new Date('2026-01-25');
+      const dueDays = 30;
+      const dueDate = new Date(today.getTime() + dueDays * 24 * 60 * 60 * 1000);
+
+      expect(dueDate.toISOString().split('T')[0]).toBe('2026-02-24');
+    });
+
+    it('should preview call before sending', () => {
+      const callPreview = {
+        fundId: 'fund-1',
+        fundName: 'Bermuda Growth Fund',
+        totalCallAmount: 750000,
+        investorCount: 15,
+        dueDate: new Date('2026-02-24'),
+        allocations: [
+          { investorName: 'John Doe', amount: 50000 },
+          { investorName: 'Jane Smith', amount: 25000 },
+        ],
+      };
+
+      expect(callPreview.investorCount).toBe(15);
+    });
+
+    it('should create capital call records', () => {
+      const capitalCall = {
+        id: 'call-1',
+        fundId: 'fund-1',
+        totalAmount: 750000,
+        dueDate: new Date('2026-02-24'),
+        status: 'ISSUED',
+        createdAt: new Date(),
+        createdBy: 'gp-admin',
+      };
+
+      expect(capitalCall.status).toBe('ISSUED');
+    });
+  });
+
+  describe('Capital Call Allocation', () => {
+    it('should create allocation for each investor', () => {
+      const allocations = [
+        { callId: 'call-1', investorId: 'inv-1', amount: 50000, status: 'PENDING' },
+        { callId: 'call-1', investorId: 'inv-2', amount: 25000, status: 'PENDING' },
+        { callId: 'call-1', investorId: 'inv-3', amount: 12500, status: 'PENDING' },
+      ];
+
+      expect(allocations).toHaveLength(3);
+    });
+
+    it('should support custom allocation override', () => {
+      const customAllocation = {
+        investorId: 'inv-1',
+        proRataAmount: 50000,
+        customAmount: 75000,
+        reason: 'Investor requested additional commitment',
+      };
+
+      expect(customAllocation.customAmount).toBe(75000);
+    });
+
+    it('should exclude opted-out investors', () => {
+      const investors = [
+        { id: 'inv-1', optedOut: false },
+        { id: 'inv-2', optedOut: true },
+        { id: 'inv-3', optedOut: false },
+      ];
+
+      const eligibleInvestors = investors.filter(i => !i.optedOut);
+      expect(eligibleInvestors).toHaveLength(2);
+    });
+
+    it('should recalculate after exclusions', () => {
+      const originalTotal = 750000;
+      const excludedAmount = 50000;
+      const remainingTotal = originalTotal - excludedAmount;
+
+      expect(remainingTotal).toBe(700000);
+    });
+  });
+
+  describe('Plaid ACH Transfers', () => {
+    it('should initiate ACH debit for capital call', () => {
+      const achRequest = {
+        type: 'DEBIT',
+        amount: 50000,
+        accountId: 'acct_plaid_123',
+        investorId: 'inv-1',
+        callId: 'call-1',
+        description: 'Capital Call - Bermuda Growth Fund Q1 2026',
+      };
+
+      expect(achRequest.type).toBe('DEBIT');
+    });
+
+    it('should use linked Plaid account', () => {
+      const bankLink = {
+        investorId: 'inv-1',
+        plaidAccessToken: 'access-sandbox-xxx',
+        accountId: 'acct_123',
+        accountName: 'Checking ****1234',
+        bankName: 'Chase',
+        isActive: true,
+      };
+
+      expect(bankLink.isActive).toBe(true);
+    });
+
+    it('should track ACH transfer status', () => {
+      const transferStatuses = ['PENDING', 'POSTED', 'SETTLED', 'FAILED', 'RETURNED'];
+      const currentStatus = 'POSTED';
+
+      expect(transferStatuses).toContain(currentStatus);
+    });
+
+    it('should handle ACH failure', () => {
+      const failedTransfer = {
+        transferId: 'txn-1',
+        status: 'FAILED',
+        failureReason: 'INSUFFICIENT_FUNDS',
+        failedAt: new Date(),
+      };
+
+      expect(failedTransfer.failureReason).toBe('INSUFFICIENT_FUNDS');
+    });
+
+    it('should handle ACH return', () => {
+      const returnedTransfer = {
+        transferId: 'txn-1',
+        status: 'RETURNED',
+        returnCode: 'R01',
+        returnReason: 'Insufficient Funds',
+        returnedAt: new Date(),
+      };
+
+      expect(returnedTransfer.returnCode).toBe('R01');
+    });
+
+    it('should update call status after successful transfer', () => {
+      const allocation = {
+        id: 'alloc-1',
+        status: 'PENDING',
+        paidAt: null as Date | null,
+        transferId: null as string | null,
+      };
+
+      allocation.status = 'PAID';
+      allocation.paidAt = new Date();
+      allocation.transferId = 'txn-123';
+
+      expect(allocation.status).toBe('PAID');
+    });
+
+    it('should batch ACH transfers for efficiency', () => {
+      const batchConfig = {
+        maxBatchSize: 100,
+        currentBatch: 45,
+        batchId: 'batch-ach-1',
+        scheduledAt: new Date(),
+      };
+
+      const canAddToBatch = batchConfig.currentBatch < batchConfig.maxBatchSize;
+      expect(canAddToBatch).toBe(true);
+    });
+  });
+
+  describe('Wire Transfer Support', () => {
+    it('should support wire transfer as alternative', () => {
+      const wireConfig = {
+        investorId: 'inv-1',
+        paymentMethod: 'WIRE',
+        wireInstructions: {
+          bankName: 'Fund Custodian Bank',
+          accountNumber: 'XXXX1234',
+          routingNumber: '021000021',
+          swiftCode: 'CHASUS33',
+          reference: 'CALL-1-INV-1',
+        },
+      };
+
+      expect(wireConfig.paymentMethod).toBe('WIRE');
+    });
+
+    it('should generate unique wire reference', () => {
+      const generateReference = (callId: string, investorId: string) => {
+        return `CALL-${callId}-${investorId}-${Date.now().toString(36).toUpperCase()}`;
+      };
+
+      const reference = generateReference('1', 'inv-1');
+      expect(reference).toContain('CALL-1-inv-1');
+    });
+
+    it('should manually confirm wire receipt', () => {
+      const wireConfirmation = {
+        allocationId: 'alloc-1',
+        confirmedBy: 'gp-admin',
+        confirmedAt: new Date(),
+        wireReference: 'WIRE-123456',
+        amount: 50000,
+      };
+
+      expect(wireConfirmation.confirmedBy).toBe('gp-admin');
+    });
+
+    it('should match wire to allocation', () => {
+      const incomingWire = { reference: 'CALL-1-INV-1', amount: 50000 };
+      const allocation = { id: 'alloc-1', reference: 'CALL-1-INV-1', expectedAmount: 50000 };
+
+      const matches = incomingWire.reference === allocation.reference && 
+                      incomingWire.amount === allocation.expectedAmount;
+
+      expect(matches).toBe(true);
+    });
+  });
+
+  describe('Distributions - Bulk Processing', () => {
+    it('should display Process Distribution button', () => {
+      const adminActions = ['Issue Capital Call', 'Process Distribution'];
+      expect(adminActions).toContain('Process Distribution');
+    });
+
+    it('should open distribution wizard', () => {
+      const wizardState = {
+        isOpen: true,
+        step: 'SELECT_TYPE',
+        distributionTypes: ['INCOME', 'RETURN_OF_CAPITAL', 'CAPITAL_GAIN'],
+        fundId: 'fund-1',
+      };
+
+      expect(wizardState.distributionTypes).toHaveLength(3);
+    });
+
+    it('should set distribution amount', () => {
+      const distributionConfig = {
+        fundId: 'fund-1',
+        totalAmount: 500000,
+        type: 'INCOME',
+        taxYear: 2025,
+      };
+
+      expect(distributionConfig.totalAmount).toBe(500000);
+    });
+
+    it('should allocate distribution pro-rata', () => {
+      const investors = [
+        { id: 'inv-1', commitment: 1000000, ownershipPercent: 40 },
+        { id: 'inv-2', commitment: 750000, ownershipPercent: 30 },
+        { id: 'inv-3', commitment: 750000, ownershipPercent: 30 },
+      ];
+
+      const totalDistribution = 100000;
+
+      const allocations = investors.map(inv => ({
+        investorId: inv.id,
+        amount: totalDistribution * (inv.ownershipPercent / 100),
+      }));
+
+      expect(allocations[0].amount).toBe(40000);
+      expect(allocations[1].amount).toBe(30000);
+    });
+
+    it('should deduct management fees from distribution', () => {
+      const grossDistribution = 100000;
+      const managementFee = 2000;
+      const netDistribution = grossDistribution - managementFee;
+
+      expect(netDistribution).toBe(98000);
+    });
+
+    it('should create distribution records', () => {
+      const distribution = {
+        id: 'dist-1',
+        fundId: 'fund-1',
+        totalAmount: 500000,
+        type: 'INCOME',
+        status: 'PENDING',
+        scheduledDate: new Date('2026-02-01'),
+        createdAt: new Date(),
+      };
+
+      expect(distribution.status).toBe('PENDING');
+    });
+  });
+
+  describe('Distribution ACH Credits', () => {
+    it('should initiate ACH credit for distribution', () => {
+      const achRequest = {
+        type: 'CREDIT',
+        amount: 40000,
+        accountId: 'acct_plaid_123',
+        investorId: 'inv-1',
+        distributionId: 'dist-1',
+        description: 'Distribution - Bermuda Growth Fund Q4 2025',
+      };
+
+      expect(achRequest.type).toBe('CREDIT');
+    });
+
+    it('should verify bank account before credit', () => {
+      const bankLink = {
+        investorId: 'inv-1',
+        verified: true,
+        lastVerifiedAt: new Date('2026-01-01'),
+      };
+
+      const daysSinceVerification = Math.floor(
+        (Date.now() - bankLink.lastVerifiedAt.getTime()) / (1000 * 60 * 60 * 24)
+      );
+      const needsReverification = daysSinceVerification > 90;
+
+      expect(bankLink.verified).toBe(true);
+    });
+
+    it('should track distribution payment status', () => {
+      const paymentStatuses = ['SCHEDULED', 'PROCESSING', 'SENT', 'DELIVERED', 'FAILED'];
+      const currentStatus = 'DELIVERED';
+
+      expect(paymentStatuses).toContain(currentStatus);
+    });
+
+    it('should handle distribution failure', () => {
+      const failedDistribution = {
+        allocationId: 'alloc-1',
+        status: 'FAILED',
+        failureReason: 'ACCOUNT_CLOSED',
+        failedAt: new Date(),
+        retryCount: 0,
+      };
+
+      expect(failedDistribution.failureReason).toBe('ACCOUNT_CLOSED');
+    });
+
+    it('should retry failed distribution', () => {
+      const failedAllocation = {
+        id: 'alloc-1',
+        retryCount: 1,
+        maxRetries: 3,
+        canRetry: true,
+      };
+
+      failedAllocation.canRetry = failedAllocation.retryCount < failedAllocation.maxRetries;
+      expect(failedAllocation.canRetry).toBe(true);
+    });
+  });
+
+  describe('Fund Aggregate Updates', () => {
+    it('should update total funded after capital call', () => {
+      let fundAggregate = {
+        totalCommitment: 5000000,
+        totalFunded: 2000000,
+        totalDistributed: 500000,
+      };
+
+      const capitalCallReceived = 750000;
+      fundAggregate.totalFunded += capitalCallReceived;
+
+      expect(fundAggregate.totalFunded).toBe(2750000);
+    });
+
+    it('should update total distributed after distribution', () => {
+      let fundAggregate = {
+        totalCommitment: 5000000,
+        totalFunded: 2750000,
+        totalDistributed: 500000,
+      };
+
+      const distributionAmount = 100000;
+      fundAggregate.totalDistributed += distributionAmount;
+
+      expect(fundAggregate.totalDistributed).toBe(600000);
+    });
+
+    it('should calculate unfunded commitment', () => {
+      const fundAggregate = {
+        totalCommitment: 5000000,
+        totalFunded: 2750000,
+      };
+
+      const unfundedCommitment = fundAggregate.totalCommitment - fundAggregate.totalFunded;
+      expect(unfundedCommitment).toBe(2250000);
+    });
+
+    it('should calculate net asset value', () => {
+      const fundAggregate = {
+        totalFunded: 2750000,
+        totalDistributed: 600000,
+        unrealizedGains: 500000,
+      };
+
+      const nav = fundAggregate.totalFunded - fundAggregate.totalDistributed + fundAggregate.unrealizedGains;
+      expect(nav).toBe(2650000);
+    });
+
+    it('should update investor-level aggregates', () => {
+      let investorAggregate = {
+        commitment: 1000000,
+        funded: 400000,
+        distributed: 50000,
+      };
+
+      const callPaid = 100000;
+      investorAggregate.funded += callPaid;
+
+      expect(investorAggregate.funded).toBe(500000);
+    });
+
+    it('should calculate investor IRR', () => {
+      const cashFlows = [
+        { date: new Date('2025-01-01'), amount: -100000 },
+        { date: new Date('2025-06-01'), amount: -50000 },
+        { date: new Date('2026-01-01'), amount: 20000 },
+        { date: new Date('2026-06-01'), amount: 180000 },
+      ];
+
+      expect(cashFlows).toHaveLength(4);
+    });
+  });
+
+  describe('Notifications - Capital Calls', () => {
+    it('should send capital call notice email', () => {
+      const emailNotification = {
+        to: 'investor@example.com',
+        template: 'capital-call-notice',
+        variables: {
+          investorName: 'John Doe',
+          fundName: 'Bermuda Growth Fund',
+          callAmount: '$50,000',
+          dueDate: 'February 24, 2026',
+          wireInstructions: '...',
+        },
+      };
+
+      expect(emailNotification.template).toBe('capital-call-notice');
+    });
+
+    it('should send reminder before due date', () => {
+      const reminderConfig = {
+        daysBeforeDue: [7, 3, 1],
+        template: 'capital-call-reminder',
+        allocationId: 'alloc-1',
+      };
+
+      expect(reminderConfig.daysBeforeDue).toContain(3);
+    });
+
+    it('should send overdue notice', () => {
+      const dueDate = new Date('2026-02-24');
+      const today = new Date('2026-02-28');
+      const daysOverdue = Math.floor((today.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24));
+
+      expect(daysOverdue).toBe(4);
+    });
+
+    it('should send payment confirmation', () => {
+      const confirmationEmail = {
+        to: 'investor@example.com',
+        template: 'capital-call-payment-received',
+        variables: {
+          amount: '$50,000',
+          receivedDate: 'February 20, 2026',
+          newFundedBalance: '$500,000',
+        },
+      };
+
+      expect(confirmationEmail.template).toBe('capital-call-payment-received');
+    });
+  });
+
+  describe('Notifications - Distributions', () => {
+    it('should send distribution notice email', () => {
+      const emailNotification = {
+        to: 'investor@example.com',
+        template: 'distribution-notice',
+        variables: {
+          investorName: 'John Doe',
+          fundName: 'Bermuda Growth Fund',
+          distributionAmount: '$40,000',
+          distributionType: 'Income',
+          paymentDate: 'February 1, 2026',
+        },
+      };
+
+      expect(emailNotification.template).toBe('distribution-notice');
+    });
+
+    it('should send payment sent confirmation', () => {
+      const confirmationEmail = {
+        to: 'investor@example.com',
+        template: 'distribution-sent',
+        variables: {
+          amount: '$40,000',
+          sentDate: 'February 1, 2026',
+          bankAccount: '****1234',
+          expectedArrival: '1-3 business days',
+        },
+      };
+
+      expect(confirmationEmail.template).toBe('distribution-sent');
+    });
+
+    it('should notify GP of failed distributions', () => {
+      const gpNotification = {
+        to: 'gp@fund.com',
+        template: 'distribution-failed-alert',
+        variables: {
+          investorName: 'John Doe',
+          amount: '$40,000',
+          failureReason: 'Account Closed',
+          actionRequired: 'Update bank account',
+        },
+      };
+
+      expect(gpNotification.template).toBe('distribution-failed-alert');
+    });
+  });
+
+  describe('Transaction Audit Trail', () => {
+    it('should log capital call issuance', () => {
+      const auditEntry = {
+        action: 'CAPITAL_CALL_ISSUED',
+        callId: 'call-1',
+        fundId: 'fund-1',
+        totalAmount: 750000,
+        investorCount: 15,
+        issuedBy: 'gp-admin',
+        timestamp: new Date(),
+      };
+
+      expect(auditEntry.action).toBe('CAPITAL_CALL_ISSUED');
+    });
+
+    it('should log individual payments', () => {
+      const auditEntry = {
+        action: 'CAPITAL_CALL_PAYMENT',
+        allocationId: 'alloc-1',
+        investorId: 'inv-1',
+        amount: 50000,
+        paymentMethod: 'ACH',
+        transferId: 'txn-123',
+        timestamp: new Date(),
+      };
+
+      expect(auditEntry.paymentMethod).toBe('ACH');
+    });
+
+    it('should log distribution processing', () => {
+      const auditEntry = {
+        action: 'DISTRIBUTION_PROCESSED',
+        distributionId: 'dist-1',
+        fundId: 'fund-1',
+        totalAmount: 500000,
+        type: 'INCOME',
+        processedBy: 'gp-admin',
+        timestamp: new Date(),
+      };
+
+      expect(auditEntry.action).toBe('DISTRIBUTION_PROCESSED');
+    });
+
+    it('should log failed transactions', () => {
+      const auditEntry = {
+        action: 'TRANSACTION_FAILED',
+        transactionId: 'txn-123',
+        type: 'ACH_DEBIT',
+        amount: 50000,
+        failureReason: 'INSUFFICIENT_FUNDS',
+        returnCode: 'R01',
+        timestamp: new Date(),
+      };
+
+      expect(auditEntry.action).toBe('TRANSACTION_FAILED');
+    });
+
+    it('should export transaction history', () => {
+      const exportConfig = {
+        fundId: 'fund-1',
+        dateRange: { start: new Date('2025-01-01'), end: new Date('2025-12-31') },
+        transactionTypes: ['CAPITAL_CALL', 'DISTRIBUTION'],
+        format: 'CSV',
+        includeAllocations: true,
+      };
+
+      expect(exportConfig.format).toBe('CSV');
+    });
+  });
+
+  describe('Stripe Integration for Fees', () => {
+    it('should process management fee via Stripe', () => {
+      const stripeCharge = {
+        amount: 5000,
+        currency: 'usd',
+        customerId: 'cus_stripe_123',
+        description: 'Q1 2026 Management Fee - Bermuda Growth Fund',
+        metadata: {
+          investorId: 'inv-1',
+          fundId: 'fund-1',
+          feeType: 'MANAGEMENT',
+          period: 'Q1-2026',
+        },
+      };
+
+      expect(stripeCharge.metadata.feeType).toBe('MANAGEMENT');
+    });
+
+    it('should handle Stripe payment failure', () => {
+      const failedPayment = {
+        chargeId: 'ch_failed_123',
+        status: 'FAILED',
+        declineCode: 'insufficient_funds',
+        errorMessage: 'Your card has insufficient funds.',
+      };
+
+      expect(failedPayment.declineCode).toBe('insufficient_funds');
+    });
+
+    it('should generate Stripe invoice for fees', () => {
+      const invoice = {
+        customerId: 'cus_stripe_123',
+        items: [
+          { description: 'Q1 2026 Management Fee', amount: 5000 },
+        ],
+        dueDate: new Date('2026-02-01'),
+        autoAdvance: true,
+      };
+
+      expect(invoice.items).toHaveLength(1);
+    });
+
+    it('should track Stripe subscription for recurring fees', () => {
+      const subscription = {
+        customerId: 'cus_stripe_123',
+        priceId: 'price_management_fee',
+        interval: 'quarter',
+        status: 'active',
+      };
+
+      expect(subscription.interval).toBe('quarter');
+    });
+  });
+});

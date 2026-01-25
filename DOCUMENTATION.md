@@ -1224,6 +1224,49 @@ Every investor action is logged:
 
 ---
 
+## Cache Management & Auto-Updates
+
+The platform uses a **zero-cache-clearing** update system. Visitors automatically receive the latest version without any manual intervention.
+
+### How It Works
+
+| Component | Strategy | Purpose |
+|-----------|----------|---------|
+| **Service Worker** | Versioned (`v2-2026-01-25`) | Triggers cache invalidation on deploy |
+| **HTML Pages** | `no-cache, no-store` | Always fetches fresh content |
+| **sw.js** | Never cached | Ensures updates are immediate |
+| **manifest.json** | 1-hour cache | Picks up app icon/name changes |
+| **Static Assets** | Network-first | Caches for offline, updates on load |
+
+### Automatic Update Flow
+
+1. User visits site after deploy
+2. Browser detects new service worker version
+3. Old caches (`bf-fund-v1`, etc.) automatically deleted
+4. New service worker activates with `skipWaiting()`
+5. Page auto-refreshes via `controllerchange` event
+6. User sees latest version - no manual refresh needed
+
+### Key Files
+
+| File | Purpose |
+|------|---------|
+| `public/sw.js` | Service worker with versioned cache names |
+| `components/pwa-install.tsx` | Auto-update detection and page refresh |
+| `next.config.mjs` | HTTP cache headers for all routes |
+
+### Cache Version Updates
+
+When deploying updates, increment the version in `public/sw.js`:
+
+```javascript
+const CACHE_VERSION = 'v2-2026-01-25';  // Update this on each deploy
+```
+
+This ensures all visitors get fresh content without 404 errors from stale cached routes.
+
+---
+
 ## Support
 
 For issues or questions, contact the development team or open a GitHub issue.

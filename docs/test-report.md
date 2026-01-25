@@ -161,7 +161,7 @@ All 1540 end-to-end tests pass successfully across Phase 1 (LP flows), Phase 2 (
 ### PWA Support Tests (30 tests)
 - Web manifest validation
 - Service worker strategies
-- Cache versioning
+- Cache versioning with auto-invalidation
 - Precache list
 - Offline page
 - Install prompt conditions
@@ -169,6 +169,7 @@ All 1540 end-to-end tests pass successfully across Phase 1 (LP flows), Phase 2 (
 - Meta tags (iOS, Windows)
 - Background sync
 - Offline detection
+- Auto-update flow (skipWaiting, controllerchange)
 
 ---
 

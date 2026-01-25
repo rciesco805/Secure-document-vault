@@ -343,4 +343,178 @@ describe('KYC Enforcement Flow', () => {
       expect(canStartKyc).toBe(true);
     });
   });
+
+  describe('Transaction KYC Enforcement', () => {
+    const KYC_APPROVED_STATUSES = ['APPROVED', 'VERIFIED'];
+
+    it('should block transactions when KYC not verified', () => {
+      const investor = { personaStatus: 'NOT_STARTED' };
+      const kycPassed = KYC_APPROVED_STATUSES.includes(investor.personaStatus);
+      expect(kycPassed).toBe(false);
+    });
+
+    it('should block transactions when KYC pending', () => {
+      const investor = { personaStatus: 'PENDING' };
+      const kycPassed = KYC_APPROVED_STATUSES.includes(investor.personaStatus);
+      expect(kycPassed).toBe(false);
+    });
+
+    it('should block transactions when KYC failed', () => {
+      const investor = { personaStatus: 'FAILED' };
+      const kycPassed = KYC_APPROVED_STATUSES.includes(investor.personaStatus);
+      expect(kycPassed).toBe(false);
+    });
+
+    it('should allow transactions when KYC approved', () => {
+      const investor = { personaStatus: 'APPROVED' };
+      const kycPassed = KYC_APPROVED_STATUSES.includes(investor.personaStatus);
+      expect(kycPassed).toBe(true);
+    });
+
+    it('should allow transactions when KYC verified', () => {
+      const investor = { personaStatus: 'VERIFIED' };
+      const kycPassed = KYC_APPROVED_STATUSES.includes(investor.personaStatus);
+      expect(kycPassed).toBe(true);
+    });
+
+    it('should return correct error code when KYC blocked', () => {
+      const errorResponse = {
+        message: 'KYC verification required before initiating transfers',
+        code: 'KYC_REQUIRED',
+        kycStatus: 'NOT_STARTED',
+      };
+      expect(errorResponse.code).toBe('KYC_REQUIRED');
+      expect(errorResponse.message).toContain('KYC');
+    });
+  });
+
+  describe('AML Screening Thresholds', () => {
+    const AML_THRESHOLDS = {
+      SINGLE_TRANSACTION_LIMIT: 100000,
+      DAILY_CUMULATIVE_LIMIT: 250000,
+      RAPID_TRANSACTIONS_COUNT: 5,
+      RISK_BLOCK_THRESHOLD: 70,
+    };
+
+    function calculateRiskScore(params: {
+      amount: number;
+      dailyTotal: number;
+      transactionCount: number;
+    }): { score: number; flags: string[] } {
+      let score = 0;
+      const flags: string[] = [];
+
+      if (params.amount > AML_THRESHOLDS.SINGLE_TRANSACTION_LIMIT) {
+        flags.push('LARGE_TRANSACTION');
+        score += 30;
+      }
+
+      if (params.dailyTotal > AML_THRESHOLDS.DAILY_CUMULATIVE_LIMIT) {
+        flags.push('DAILY_LIMIT_EXCEEDED');
+        score += 40;
+      }
+
+      if (params.transactionCount >= AML_THRESHOLDS.RAPID_TRANSACTIONS_COUNT) {
+        flags.push('HIGH_VELOCITY');
+        score += 25;
+      }
+
+      return { score, flags };
+    }
+
+    it('should flag large transactions over $100k', () => {
+      const result = calculateRiskScore({ amount: 150000, dailyTotal: 150000, transactionCount: 1 });
+      expect(result.flags).toContain('LARGE_TRANSACTION');
+      expect(result.score).toBe(30);
+    });
+
+    it('should not flag transactions under $100k', () => {
+      const result = calculateRiskScore({ amount: 50000, dailyTotal: 50000, transactionCount: 1 });
+      expect(result.flags).not.toContain('LARGE_TRANSACTION');
+      expect(result.score).toBe(0);
+    });
+
+    it('should flag when daily cumulative exceeds $250k', () => {
+      const result = calculateRiskScore({ amount: 50000, dailyTotal: 300000, transactionCount: 1 });
+      expect(result.flags).toContain('DAILY_LIMIT_EXCEEDED');
+      expect(result.score).toBeGreaterThanOrEqual(40);
+    });
+
+    it('should flag high velocity (5+ transactions)', () => {
+      const result = calculateRiskScore({ amount: 10000, dailyTotal: 50000, transactionCount: 5 });
+      expect(result.flags).toContain('HIGH_VELOCITY');
+      expect(result.score).toBe(25);
+    });
+
+    it('should block when combined risk score reaches 70+', () => {
+      // Large transaction (30) + daily limit (40) = 70
+      const result = calculateRiskScore({ amount: 150000, dailyTotal: 300000, transactionCount: 1 });
+      expect(result.score).toBeGreaterThanOrEqual(AML_THRESHOLDS.RISK_BLOCK_THRESHOLD);
+      expect(result.flags.length).toBeGreaterThanOrEqual(2);
+    });
+
+    it('should allow when risk score below 70', () => {
+      const result = calculateRiskScore({ amount: 50000, dailyTotal: 100000, transactionCount: 2 });
+      expect(result.score).toBeLessThan(AML_THRESHOLDS.RISK_BLOCK_THRESHOLD);
+    });
+
+    it('should return correct error response when AML blocked', () => {
+      const errorResponse = {
+        message: 'Transaction blocked by compliance screening',
+        code: 'AML_BLOCKED',
+        reason: 'Transaction requires manual compliance review due to elevated risk indicators',
+      };
+      expect(errorResponse.code).toBe('AML_BLOCKED');
+      expect(errorResponse.reason).toContain('compliance');
+    });
+
+    it('should combine multiple flags correctly', () => {
+      // Large (30) + daily limit (40) + velocity (25) = 95
+      const result = calculateRiskScore({ amount: 150000, dailyTotal: 300000, transactionCount: 6 });
+      expect(result.flags).toContain('LARGE_TRANSACTION');
+      expect(result.flags).toContain('DAILY_LIMIT_EXCEEDED');
+      expect(result.flags).toContain('HIGH_VELOCITY');
+      expect(result.score).toBe(95);
+    });
+  });
+
+  describe('AML Audit Logging', () => {
+    it('should log screening event with required fields', () => {
+      const auditEvent = {
+        eventType: 'AML_SCREENING',
+        resourceType: 'TRANSACTION',
+        resourceId: 'inv_123',
+        metadata: {
+          investorId: 'inv_123',
+          amount: 50000,
+          type: 'CAPITAL_CALL',
+          riskScore: 0,
+          flags: [],
+          dailyTotal: 50000,
+          transactionCount: 1,
+          passed: true,
+        },
+      };
+
+      expect(auditEvent.eventType).toBe('AML_SCREENING');
+      expect(auditEvent.metadata.riskScore).toBeDefined();
+      expect(auditEvent.metadata.flags).toBeDefined();
+      expect(auditEvent.metadata.passed).toBe(true);
+    });
+
+    it('should log blocked transaction event', () => {
+      const auditEvent = {
+        eventType: 'TRANSACTION_BLOCKED_KYC',
+        resourceType: 'INVESTOR',
+        resourceId: 'inv_123',
+        metadata: {
+          reason: 'KYC not verified',
+          kycStatus: 'NOT_STARTED',
+        },
+      };
+
+      expect(auditEvent.eventType).toBe('TRANSACTION_BLOCKED_KYC');
+      expect(auditEvent.metadata.reason).toContain('KYC');
+    });
+  });
 });

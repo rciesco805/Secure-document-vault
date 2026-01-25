@@ -180,6 +180,30 @@ const nextConfig = {
           },
         ],
       },
+      {
+        // Service worker - never cache to ensure updates are immediate
+        source: "/sw.js",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "no-cache, no-store, must-revalidate",
+          },
+          {
+            key: "Service-Worker-Allowed",
+            value: "/",
+          },
+        ],
+      },
+      {
+        // Manifest - short cache to pick up updates
+        source: "/manifest.json",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=3600",
+          },
+        ],
+      },
     ];
   },
   experimental: {

@@ -1,6 +1,7 @@
-const CACHE_NAME = 'bf-fund-v1';
-const STATIC_CACHE_NAME = 'bf-fund-static-v1';
-const DYNAMIC_CACHE_NAME = 'bf-fund-dynamic-v1';
+const CACHE_VERSION = 'v2-2026-01-25';
+const CACHE_NAME = `bf-fund-${CACHE_VERSION}`;
+const STATIC_CACHE_NAME = `bf-fund-static-${CACHE_VERSION}`;
+const DYNAMIC_CACHE_NAME = `bf-fund-dynamic-${CACHE_VERSION}`;
 
 const STATIC_ASSETS = [
   '/',
@@ -12,10 +13,11 @@ const STATIC_ASSETS = [
 const API_CACHE_DURATION = 5 * 60 * 1000;
 
 self.addEventListener('install', (event) => {
+  console.log('[SW] Installing new version:', CACHE_VERSION);
   event.waitUntil(
     caches.open(STATIC_CACHE_NAME).then((cache) => {
       return cache.addAll(STATIC_ASSETS).catch((error) => {
-        console.warn('Failed to cache some static assets:', error);
+        console.warn('[SW] Failed to cache some static assets:', error);
       });
     })
   );
@@ -23,20 +25,42 @@ self.addEventListener('install', (event) => {
 });
 
 self.addEventListener('activate', (event) => {
+  console.log('[SW] Activating new version:', CACHE_VERSION);
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames
           .filter((name) => {
             return name.startsWith('bf-fund-') && 
-                   name !== STATIC_CACHE_NAME && 
-                   name !== DYNAMIC_CACHE_NAME;
+                   !name.includes(CACHE_VERSION);
           })
-          .map((name) => caches.delete(name))
+          .map((name) => {
+            console.log('[SW] Deleting old cache:', name);
+            return caches.delete(name);
+          })
       );
+    }).then(() => {
+      console.log('[SW] Old caches cleared, claiming clients');
+      return self.clients.claim();
     })
   );
-  self.clients.claim();
+});
+
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+  if (event.data && event.data.type === 'CLEAR_CACHE') {
+    event.waitUntil(
+      caches.keys().then((cacheNames) => {
+        return Promise.all(
+          cacheNames.map((name) => caches.delete(name))
+        );
+      }).then(() => {
+        console.log('[SW] All caches cleared');
+      })
+    );
+  }
 });
 
 self.addEventListener('fetch', (event) => {
@@ -50,43 +74,32 @@ self.addEventListener('fetch', (event) => {
   if (url.pathname.startsWith('/api/')) {
     if (request.headers.get('Authorization') || 
         url.pathname.includes('/sign/') ||
-        url.pathname.includes('/transactions')) {
+        url.pathname.includes('/transactions') ||
+        url.pathname.includes('/lp/') ||
+        url.pathname.includes('/admin/')) {
       return;
     }
 
     event.respondWith(
-      caches.open(DYNAMIC_CACHE_NAME).then(async (cache) => {
-        try {
-          const networkResponse = await fetch(request);
-          if (networkResponse.ok) {
-            cache.put(request, networkResponse.clone());
-          }
-          return networkResponse;
-        } catch (error) {
-          const cachedResponse = await cache.match(request);
-          if (cachedResponse) {
-            return cachedResponse;
-          }
-          return new Response(
-            JSON.stringify({ error: 'Offline', message: 'This data is not available offline' }),
-            { status: 503, headers: { 'Content-Type': 'application/json' } }
-          );
+      fetch(request).catch(async (error) => {
+        const cachedResponse = await caches.match(request);
+        if (cachedResponse) {
+          return cachedResponse;
         }
+        return new Response(
+          JSON.stringify({ error: 'Offline', message: 'This data is not available offline' }),
+          { status: 503, headers: { 'Content-Type': 'application/json' } }
+        );
       })
     );
     return;
   }
 
-  if (url.pathname.match(/\.(js|css|png|jpg|jpeg|gif|svg|woff|woff2|ttf|eot)$/)) {
+  if (url.pathname.match(/\/_next\/static\//)) {
     event.respondWith(
       caches.open(STATIC_CACHE_NAME).then(async (cache) => {
         const cachedResponse = await cache.match(request);
         if (cachedResponse) {
-          fetch(request).then((response) => {
-            if (response.ok) {
-              cache.put(request, response);
-            }
-          }).catch(() => {});
           return cachedResponse;
         }
         
@@ -104,8 +117,31 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  if (url.pathname.match(/\.(js|css|png|jpg|jpeg|gif|svg|woff|woff2|ttf|eot)$/)) {
+    event.respondWith(
+      fetch(request).then((response) => {
+        if (response.ok) {
+          const responseClone = response.clone();
+          caches.open(STATIC_CACHE_NAME).then((cache) => {
+            cache.put(request, responseClone);
+          });
+        }
+        return response;
+      }).catch(async () => {
+        const cachedResponse = await caches.match(request);
+        if (cachedResponse) {
+          return cachedResponse;
+        }
+        return new Response('', { status: 404 });
+      })
+    );
+    return;
+  }
+
   event.respondWith(
-    fetch(request).catch(async () => {
+    fetch(request).then((response) => {
+      return response;
+    }).catch(async () => {
       const cachedResponse = await caches.match(request);
       if (cachedResponse) {
         return cachedResponse;
@@ -168,7 +204,7 @@ self.addEventListener('push', (event) => {
       self.registration.showNotification(data.title || 'BF Fund', options)
     );
   } catch (error) {
-    console.error('Push notification error:', error);
+    console.error('[SW] Push notification error:', error);
   }
 });
 
@@ -198,5 +234,5 @@ self.addEventListener('sync', (event) => {
 });
 
 async function syncPendingActions() {
-  console.log('Background sync triggered');
+  console.log('[SW] Background sync triggered');
 }

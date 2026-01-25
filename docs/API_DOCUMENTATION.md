@@ -809,11 +809,264 @@ if response.status_code == 403:
 
 ---
 
+## Form D Amendment Reminders
+
+### Get Form D Reminders
+**GET** `/api/admin/form-d-reminders`
+
+Get all funds with Form D filing information and upcoming amendment deadlines.
+
+**Response (200):**
+```json
+{
+  "reminders": [
+    {
+      "fundId": "fund_123",
+      "fundName": "BF Growth Fund I",
+      "formDFilingDate": "2025-02-01T00:00:00Z",
+      "amendmentDue": "2026-02-01T00:00:00Z",
+      "daysUntilDue": 17,
+      "urgency": "WARNING",
+      "reminderSent": false,
+      "stateNotices": [
+        { "state": "CA", "filed": true, "filedAt": "2025-02-05" },
+        { "state": "NY", "filed": false, "dueDate": "2025-03-01" }
+      ],
+      "status": "RAISING"
+    }
+  ],
+  "upcomingCount": 2,
+  "overdueCount": 0
+}
+```
+
+**Urgency Levels:**
+| Level | Days Until Due |
+|-------|----------------|
+| OVERDUE | <= 0 |
+| CRITICAL | 1-7 |
+| WARNING | 8-30 |
+| OK | > 30 |
+
+---
+
+### Send Form D Reminder
+**POST** `/api/admin/form-d-reminders`
+
+Send reminder emails or check all funds for upcoming deadlines.
+
+**Request Body (Send Single):**
+```json
+{
+  "action": "send_reminder",
+  "fundId": "fund_123"
+}
+```
+
+**Request Body (Check All):**
+```json
+{
+  "action": "check_all"
+}
+```
+
+**Request Body (Update Filing):**
+```json
+{
+  "action": "update_filing",
+  "fundId": "fund_123",
+  "formDFilingDate": "2025-02-01",
+  "formDAmendmentDue": "2026-02-01"
+}
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "Reminder sent to 2 admin(s)"
+}
+```
+
+---
+
+## LP Statement Generation
+
+### Get LP Statement
+**GET** `/api/lp/statement`
+
+Generate a capital account statement for the authenticated LP. Returns JSON data or a print-ready HTML page that can be saved as PDF using the browser's "Print to PDF" function.
+
+**Query Parameters:**
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| period | string | Q1, Q2, Q3, Q4, or annual (default: annual) |
+| year | number | Statement year (default: current year) |
+| format | string | json or html (default: json) |
+
+**Response (200 - JSON):**
+```json
+{
+  "investor": {
+    "name": "Smith Family Trust",
+    "entityType": "TRUST",
+    "id": "investor_123",
+    "email": "investor@example.com"
+  },
+  "fund": {
+    "name": "BF Growth Fund I",
+    "status": "RAISING",
+    "targetRaise": 10000000,
+    "currentRaise": 5000000
+  },
+  "period": {
+    "type": "Q1",
+    "year": 2026,
+    "startDate": "2026-01-01T00:00:00Z",
+    "endDate": "2026-03-31T23:59:59Z"
+  },
+  "capitalAccount": {
+    "totalCommitment": 500000,
+    "totalFunded": 250000,
+    "unfundedCommitment": 250000,
+    "netCapitalAccount": 225000,
+    "ownershipPercentage": "5.00"
+  },
+  "periodActivity": {
+    "capitalCalls": 100000,
+    "distributions": 25000,
+    "netActivity": 75000,
+    "transactionCount": 5
+  },
+  "transactions": [...],
+  "bankAccount": {
+    "institution": "Chase",
+    "accountName": "Business Checking",
+    "lastFour": "4567"
+  },
+  "k1Status": {
+    "available": false,
+    "year": 2026,
+    "estimatedDate": "2027-03-15T00:00:00Z"
+  },
+  "generatedAt": "2026-01-25T12:00:00Z",
+  "statementId": "STMT-STOR123-2026-Q1"
+}
+```
+
+**HTML Format:**
+Add `?format=html` to get a print-ready HTML statement.
+
+---
+
+## Waterfall Distribution
+
+### Get Waterfall Data
+**GET** `/api/admin/waterfall`
+
+Get waterfall distribution calculations for funds.
+
+**Query Parameters:**
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| fundId | string | Optional - filter to specific fund |
+
+**Response (200):**
+```json
+{
+  "funds": [
+    {
+      "fundId": "fund_123",
+      "fundName": "BF Growth Fund I",
+      "status": "RAISING",
+      "config": {
+        "preferredReturn": 8,
+        "carriedInterest": 20,
+        "catchUpPercentage": 100,
+        "hurdleRate": 0
+      },
+      "summary": {
+        "totalCapitalContributed": 10000000,
+        "totalProceeds": 15000000,
+        "totalLP": 12500000,
+        "totalGP": 2500000,
+        "lpMultiple": 1.25,
+        "lpSharePercentage": 83.33,
+        "gpSharePercentage": 16.67
+      },
+      "tiers": [
+        {
+          "name": "Return of Capital",
+          "type": "return_of_capital",
+          "lpShare": 100,
+          "gpShare": 0,
+          "amount": 10000000,
+          "lpAmount": 10000000,
+          "gpAmount": 0
+        },
+        {
+          "name": "Preferred Return (8%)",
+          "type": "preferred_return",
+          "lpShare": 100,
+          "gpShare": 0,
+          "amount": 800000,
+          "lpAmount": 800000,
+          "gpAmount": 0
+        },
+        {
+          "name": "GP Catch-Up",
+          "type": "catch_up",
+          "lpShare": 0,
+          "gpShare": 100,
+          "amount": 2700000,
+          "lpAmount": 0,
+          "gpAmount": 2700000
+        },
+        {
+          "name": "Carried Interest (80/20)",
+          "type": "carried_interest",
+          "lpShare": 80,
+          "gpShare": 20,
+          "amount": 1500000,
+          "lpAmount": 1200000,
+          "gpAmount": 300000
+        }
+      ],
+      "investorBreakdown": [
+        {
+          "investorId": "inv_123",
+          "investorName": "Smith Family Trust",
+          "capitalContributed": 500000,
+          "commitment": 500000,
+          "ownershipPercentage": 5.0,
+          "estimatedDistribution": 625000,
+          "returnOfCapital": 500000,
+          "preferredReturn": 40000,
+          "profitShare": 85000,
+          "multiple": 1.25
+        }
+      ]
+    }
+  ],
+  "generatedAt": "2026-01-25T12:00:00Z"
+}
+```
+
+**Waterfall Tiers:**
+| Tier | LP Share | GP Share | Description |
+|------|----------|----------|-------------|
+| Return of Capital | 100% | 0% | LPs receive all capital back first |
+| Preferred Return | 100% | 0% | 8% annual preferred return to LPs |
+| GP Catch-Up | 0% | 100% | GP receives catch-up to target carry |
+| Carried Interest | 80% | 20% | Remaining profits split 80/20 |
+
+---
+
 ## Changelog
 
 | Date | Changes |
 |------|---------|
-| January 2026 | Added KYC post-bank enforcement, AML screening hooks with risk scoring, expanded data portability (18 models), Quick Actions CTAs, bulk action wizard, audit dashboard, PWA support |
+| January 2026 | Phase 1 100% complete: Form D reminders, LP statements, waterfall visualization, KYC post-bank enforcement, AML screening, Quick Actions CTAs, bulk action wizard, audit dashboard, PWA support |
 | December 2025 | Added Plaid transfer APIs, wizard progress tracking, entity fee/tier configuration |
 | November 2025 | Initial e-signature APIs, LP portal endpoints, signature verification |
 
@@ -823,7 +1076,8 @@ if response.status_code == 403:
 
 The API has comprehensive test coverage:
 
-- **1,540+ passing tests** covering all endpoints
+- **1,581+ passing tests** covering all endpoints
+- **Phase 1 Completion Tests**: 41 tests for Form D, LP statements, waterfall
 - **KYC Enforcement Tests**: 6 tests for transaction blocking
 - **AML Screening Tests**: 8 tests for threshold validation
 - **Bulk Action Tests**: 35 tests for wizard functionality

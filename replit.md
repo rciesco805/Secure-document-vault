@@ -34,7 +34,12 @@ A comprehensive 506(c) fund GP/LP management suite designed to streamline invest
 - **PWA Support**: Service worker, manifest, offline page, and install prompt for mobile-first experience
 - **Auto-Update Cache System**: Versioned service worker with automatic cache invalidation - visitors always get latest version without manual cache clearing
 - **GP Notes Reply**: Admin API for replying to investor notes with email notifications
-- **1540+ Passing Tests**: Comprehensive E2E coverage including Transaction KYC enforcement, AML screening, bulk action wizard, audit dashboard, and PWA support tests
+- **1581+ Passing Tests**: Comprehensive E2E coverage including Transaction KYC enforcement, AML screening, bulk action wizard, audit dashboard, PWA support, Form D reminders, LP statements, and waterfall visualization tests
+
+### Phase 1 Completion (January 25, 2026)
+- **Form D Amendment Reminders**: API for tracking SEC Form D deadlines with 30-day advance reminders, urgency levels (OVERDUE, CRITICAL, WARNING, OK), email notifications to admins
+- **LP Statement Generation**: Quarterly/annual capital account statements with JSON/HTML output, transaction history, K-1 status tracking
+- **Waterfall Visualization**: React component and API for distribution waterfall (ROC, preferred return, GP catch-up, carried interest), investor-level breakdown, LP multiples
 
 ### Phase 1 Features
 - **Unified Admin Access Control with Hub Navigation**: /hub landing page for admins, hasFundroomAccess field for permission-based access
@@ -72,7 +77,7 @@ The platform is built on Next.js 14, using a hybrid Pages and App Router archite
 
 ## Phase Status
 
-- **Phase 1 (MVP)**: 95% complete - Core onboarding, NDA gate, accreditation, fundroom, e-signature, dual thresholds
+- **Phase 1 (MVP)**: 100% complete - Core onboarding, NDA gate, accreditation, fundroom, e-signature, dual thresholds, Form D reminders, LP statements, waterfall visualization
 - **Phase 2**: 80% complete - Plaid transfers, AUM reporting, entity fee configs, wizard progress tracking, audit dashboard, PWA support, auto-update cache
 - **Phase 3**: Planned - STARTUP mode (cap table), vesting schedules, equity management, QuickBooks/Wolters Kluwer integrations
 

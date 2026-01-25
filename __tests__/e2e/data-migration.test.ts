@@ -24,7 +24,11 @@ jest.mock("@/lib/prisma", () => ({
     transaction: { findMany: jest.fn(), create: jest.fn() },
     subscription: { findMany: jest.fn(), findFirst: jest.fn(), create: jest.fn() },
     fundAggregate: { findMany: jest.fn(), findFirst: jest.fn(), create: jest.fn() },
-    auditLog: { create: jest.fn() },
+    auditLog: { create: jest.fn(), findMany: jest.fn() },
+    document: { findMany: jest.fn() },
+    viewerAudit: { findMany: jest.fn() },
+    signatureAudit: { findMany: jest.fn() },
+    signatureConsent: { findMany: jest.fn() },
   },
 }));
 
@@ -49,6 +53,11 @@ describe("Data Migration E2E", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     (mockPrisma.auditLog.create as jest.Mock).mockResolvedValue({});
+    (mockPrisma.auditLog.findMany as jest.Mock).mockResolvedValue([]);
+    (mockPrisma.document.findMany as jest.Mock).mockResolvedValue([]);
+    (mockPrisma.viewerAudit.findMany as jest.Mock).mockResolvedValue([]);
+    (mockPrisma.signatureAudit.findMany as jest.Mock).mockResolvedValue([]);
+    (mockPrisma.signatureConsent.findMany as jest.Mock).mockResolvedValue([]);
   });
 
   describe("Export Endpoint", () => {

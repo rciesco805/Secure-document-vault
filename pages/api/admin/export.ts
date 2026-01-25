@@ -25,6 +25,10 @@ const EXPORTABLE_MODELS = [
   "bankLink",
   "transaction",
   "subscription",
+  "viewAudit",
+  "signatureAudit",
+  "auditLog",
+  "signatureConsent",
 ] as const;
 
 type ExportableModel = (typeof EXPORTABLE_MODELS)[number];
@@ -230,6 +234,72 @@ export default async function handler(
       });
       exportData.data.subscriptions = subscriptions;
       exportData.metadata.modelCounts.subscriptions = subscriptions.length;
+    }
+
+    // Get team document IDs for view/signature audits
+    const teamDocuments = await prisma.document.findMany({
+      where: { teamId },
+      select: { id: true },
+    });
+    const documentIds = teamDocuments.map((d) => d.id);
+
+    if (modelsToExport.includes("viewAudit") && documentIds.length > 0) {
+      const viewAudits = await prisma.viewerAudit.findMany({
+        where: { documentId: { in: documentIds } },
+        select: {
+          id: true,
+          documentId: true,
+          viewerEmail: true,
+          viewerName: true,
+          viewType: true,
+          duration: true,
+          ipAddress: true,
+          userAgent: true,
+          country: true,
+          city: true,
+          createdAt: true,
+        },
+      });
+      exportData.data.viewAudits = viewAudits;
+      exportData.metadata.modelCounts.viewAudits = viewAudits.length;
+    }
+
+    if (modelsToExport.includes("signatureAudit") && documentIds.length > 0) {
+      const signatureAudits = await prisma.signatureAudit.findMany({
+        where: { documentId: { in: documentIds } },
+        select: {
+          id: true,
+          documentId: true,
+          recipientEmail: true,
+          recipientName: true,
+          event: true,
+          ipAddress: true,
+          userAgent: true,
+          geoLocation: true,
+          metadata: true,
+          createdAt: true,
+        },
+      });
+      exportData.data.signatureAudits = signatureAudits;
+      exportData.metadata.modelCounts.signatureAudits = signatureAudits.length;
+    }
+
+    if (modelsToExport.includes("auditLog")) {
+      const auditLogs = await prisma.auditLog.findMany({
+        where: { teamId },
+        orderBy: { createdAt: "desc" },
+        take: 10000, // Limit to last 10k logs
+      });
+      exportData.data.auditLogs = auditLogs;
+      exportData.metadata.modelCounts.auditLogs = auditLogs.length;
+    }
+
+    if (modelsToExport.includes("signatureConsent") && documentIds.length > 0) {
+      const consents = await prisma.signatureConsent.findMany({
+        where: { documentId: { in: documentIds } },
+      });
+      exportData.data.signatureConsents = consents;
+      exportData.metadata.modelCounts.signatureConsents = consents.length;
     }
 
     await prisma.auditLog.create({

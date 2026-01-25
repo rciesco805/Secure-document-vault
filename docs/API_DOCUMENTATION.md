@@ -792,8 +792,103 @@ data = response.json()
 
 ---
 
+## Transactions API (with KYC/AML Enforcement)
+
+### Create Transaction
+**POST** `/api/transactions`
+
+Initiate a capital call or distribution transfer. Requires:
+1. GP role authentication
+2. Investor KYC verification (APPROVED/VERIFIED)
+3. AML screening pass
+
+**Request Body:**
+```json
+{
+  "type": "CAPITAL_CALL",
+  "investorId": "inv_456",
+  "fundId": "fund_789",
+  "amount": 50000,
+  "description": "Q1 2026 Capital Call",
+  "bankLinkId": "bank_123"
+}
+```
+
+**Response (201):**
+```json
+{
+  "success": true,
+  "transaction": {
+    "id": "txn_abc123",
+    "type": "CAPITAL_CALL",
+    "amount": "50000",
+    "status": "PENDING"
+  }
+}
+```
+
+**Error Codes:**
+- `400` - Invalid transaction type or missing fields
+- `403` - KYC required (`code: "KYC_REQUIRED"`) or AML blocked (`code: "AML_BLOCKED"`)
+- `404` - Investor not found
+
+### AML Screening Rules
+Transactions are screened for:
+- **Single transaction limit**: $100,000 triggers enhanced review
+- **Daily cumulative limit**: $250,000 daily cumulative
+- **High velocity**: 5+ transactions in 24 hours
+
+All screenings are logged to the audit trail with risk scores and flags.
+
+---
+
+## Data Portability API
+
+### Export All Data
+**GET/POST** `/api/admin/export`
+
+Export comprehensive data for compliance and portability.
+
+**Query Parameters:**
+- `teamId` (required) - Team ID
+- `models` - Comma-separated list of models to export
+- `format` - `json` (default) or `csv`
+
+**Available Models:**
+- `fund`, `fundAggregate`, `investor`, `investment`
+- `capitalCall`, `capitalCallResponse`, `distribution`
+- `fundReport`, `investorNote`, `investorDocument`
+- `accreditationAck`, `bankLink`, `transaction`, `subscription`
+- `viewAudit`, `signatureAudit`, `auditLog`, `signatureConsent`
+
+**Response (200):**
+```json
+{
+  "metadata": {
+    "exportedAt": "2026-01-25T12:00:00Z",
+    "exportedBy": "admin@example.com",
+    "teamId": "team_123",
+    "schemaVersion": "1.0.0",
+    "modelCounts": {
+      "funds": 2,
+      "investors": 45,
+      "auditLogs": 1250
+    }
+  },
+  "data": {
+    "funds": [...],
+    "investors": [...],
+    "viewAudits": [...],
+    "signatureAudits": [...],
+    "auditLogs": [...]
+  }
+}
+```
+
+---
+
 ## Changelog
 
-- **January 2026**: Added signature verification endpoint, AUM reporting, capital tracking, bulk actions
+- **January 2026**: Added KYC enforcement post-bank, AML screening hooks, expanded data portability, Quick Actions CTAs, signature verification endpoint, AUM reporting, capital tracking, bulk actions
 - **December 2025**: Added Plaid transfer APIs, wizard progress tracking
 - **November 2025**: Initial e-signature APIs, LP portal endpoints

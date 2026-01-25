@@ -13,10 +13,14 @@ A comprehensive 506(c) fund GP/LP management suite designed to streamline invest
 ## Recent Changes (January 2026)
 
 ### Phase 2 Additions (Latest)
+- **KYC Post-Bank Enforcement**: Transactions API now requires KYC verification before initiating any capital calls or distributions
+- **AML Screening Hooks**: Built-in AML compliance screening with risk scoring, velocity limits ($100k single, $250k daily, 5+ transactions/day triggers), and audit logging
+- **Expanded Data Portability**: `/api/admin/export` now includes viewAudit, signatureAudit, auditLog, and signatureConsent models
+- **Quick Actions CTAs**: Prominent action buttons on LP dashboard for Invest, Sign NDA, Verify Status, Link Bank, and Sign Documents
 - **ESIGN/UETA Legal Compliance**: Full ESIGN Act and UETA compliance for electronic signatures with consent capture, SHA-256 checksums of actual PDF bytes, and signature verification endpoint
 - **Consent Capture**: Explicit consent requirement before signing with stored consent records (timestamp, version, consent text, IP address)
 - **Signature Verification**: New `/api/sign/verify/[token]` endpoint with rate limiting to verify signature integrity and compliance
-- **Plaid Transfers API**: Full inbound/outbound ACH transfer flow via `/api/transactions` with signature-verified webhook handler at `/api/webhooks/plaid`
+- **Plaid Transfers API**: Full inbound/outbound ACH transfer flow via `/api/transactions` with KYC/AML gating and webhook handler at `/api/webhooks/plaid`
 - **Webhook Security**: Plaid webhook verification (JWT signature, timestamp, body hash) with idempotent event processing to prevent double-counting
 - **Entity Fee/Tier Configuration**: Extended Entity model with `feeConfig` (management fees, carried interest, hurdle rates), `tierConfig` (investor tiers with discounts), and `customSettings` JSON fields
 - **AUM Reporting**: New `/api/admin/reports/aum` endpoint with gross/net AUM, NAV, fee deductions (management, performance, organizational, expenses), and fund ratios
@@ -26,6 +30,8 @@ A comprehensive 506(c) fund GP/LP management suite designed to streamline invest
 - **CRM Timeline UI**: Admin timeline view showing investor activity (views, signatures, documents, notes) with search/filter and CSV export
 - **Capital Tracking Dashboard**: Comprehensive committed capital metrics with charts, investor-level breakdown, and real-time data
 - **Bulk Action Wizard**: 5-step wizard for capital calls and distributions with percentage/fixed allocation modes
+- **Compliance Audit Dashboard**: `/pages/admin/audit.tsx` with event filtering, date range search, pagination, and CSV/HTML export
+- **PWA Support**: Service worker, manifest, offline page, and install prompt for mobile-first experience
 - **GP Notes Reply**: Admin API for replying to investor notes with email notifications
 - **1418+ Passing Tests**: Comprehensive E2E coverage across all phases
 

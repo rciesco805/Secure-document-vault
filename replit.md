@@ -13,7 +13,7 @@ A comprehensive 506(c) fund GP/LP management suite designed to streamline invest
 ## Recent Changes (January 2026)
 
 ### Phase 2 Additions (Latest)
-- **Rollbar Error Monitoring**: Real-time error tracking with client-side RollbarProvider, server-side middleware integration, error.tsx and global-error.tsx components, and /api/test-error verification endpoint
+- **Rollbar Error Monitoring**: Complete error tracking across both App Router and Pages Router with RollbarProvider, ErrorBoundary, error.tsx, global-error.tsx, providers.tsx, and /api/test-error verification endpoint
 - **KYC Post-Bank Enforcement**: Transactions API now requires KYC verification before initiating any capital calls or distributions
 - **AML Screening Hooks**: Built-in AML compliance screening with risk scoring, velocity limits ($100k single, $250k daily, 5+ transactions/day triggers), and audit logging
 - **Expanded Data Portability**: /api/admin/export now includes viewAudit, signatureAudit, auditLog, and signatureConsent models
@@ -35,7 +35,7 @@ A comprehensive 506(c) fund GP/LP management suite designed to streamline invest
 - **PWA Support**: Service worker, manifest, offline page, and install prompt for mobile-first experience
 - **Auto-Update Cache System**: Versioned service worker with automatic cache invalidation - visitors always get latest version without manual cache clearing
 - **GP Notes Reply**: Admin API for replying to investor notes with email notifications
-- **1584+ Passing Tests**: Comprehensive E2E coverage including Transaction KYC enforcement, AML screening, bulk action wizard, audit dashboard, PWA support, Form D reminders, LP statements, waterfall visualization, and Rollbar error monitoring tests
+- **1599+ Passing Tests**: Comprehensive E2E coverage including Transaction KYC enforcement, AML screening, bulk action wizard, audit dashboard, PWA support, Form D reminders, LP statements, waterfall visualization, and Rollbar error monitoring tests (App Router + Pages Router)
 - **Deployment Optimization**: Dynamic route exports to prevent static generation errors on authenticated admin pages
 
 ### Phase 1 Completion (January 25, 2026)
@@ -88,7 +88,7 @@ The platform is built on Next.js 14, using a hybrid Pages and App Router archite
 | Document | Description |
 |----------|-------------|
 | [API Documentation](docs/API_DOCUMENTATION.md) | Comprehensive API reference with all endpoints, request/response examples, authentication, error codes, SDK examples |
-| [Test Report](docs/test-report.md) | Full E2E test report with 1540+ passing tests, coverage breakdown, and execution logs |
+| [Test Report](docs/test-report.md) | Full E2E test report with 1599+ passing tests, coverage breakdown, and execution logs |
 | [ESIGN Compliance](docs/ESIGN_COMPLIANCE.md) | ESIGN Act / UETA compliance documentation, consent capture, checksum verification |
 | [Persona Sanctions](docs/PERSONA_SANCTIONS_SCREENING.md) | KYC/AML integration with Persona, sanctions screening |
 | [Phase 3 Roadmap](docs/PHASE3_ROADMAP.md) | Integration roadmap for QuickBooks, Wolters Kluwer K-1, cap table management |

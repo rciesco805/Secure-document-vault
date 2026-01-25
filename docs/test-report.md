@@ -12,16 +12,16 @@
 
 | Metric | Value |
 |--------|-------|
-| **Total Test Suites** | 26 |
-| **Passed Test Suites** | 26 |
+| **Total Test Suites** | 27 |
+| **Passed Test Suites** | 27 |
 | **Failed Test Suites** | 0 |
-| **Total Tests** | 1584 |
-| **Passed Tests** | 1584 |
+| **Total Tests** | 1599 |
+| **Passed Tests** | 1599 |
 | **Failed Tests** | 0 |
 | **Pass Rate** | 100% |
-| **Execution Time** | ~9s |
+| **Execution Time** | ~11s |
 
-All 1584 end-to-end tests pass successfully across Phase 1 (LP flows), Phase 2 (Admin/GP flows), and Phase 3 (Cross-Side Interactions, Compliance & Edge Cases). The test suite covers the complete investor lifecycle from dataroom access through subscription, capital calls, distributions, KYC/AML enforcement, and compliance reporting. Phase 1 is now 100% complete with Form D reminders, LP statements, and waterfall visualization.
+All 1599 end-to-end tests pass successfully across Phase 1 (LP flows), Phase 2 (Admin/GP flows), and Phase 3 (Cross-Side Interactions, Compliance & Edge Cases). The test suite covers the complete investor lifecycle from dataroom access through subscription, capital calls, distributions, KYC/AML enforcement, and compliance reporting. Phase 1 is now 100% complete with Form D reminders, LP statements, and waterfall visualization. Rollbar error monitoring is now integrated across both App Router and Pages Router.
 
 ---
 
@@ -59,7 +59,7 @@ All 1584 end-to-end tests pass successfully across Phase 1 (LP flows), Phase 2 (
 | **Cross-Side Interactions** | Both | PASS | 32 | GP→LP flows, webhooks, aggregates |
 | **Edge Cases** | Both | PASS | 54 | Expired docs, failed payments, KYC |
 | **Compliance Stress (506c)** | Both | PASS | 40 | 506(c) gates, audit exports |
-| **Rollbar Error Monitoring** | Both | PASS | 3 | Server-side error capture, test endpoint |
+| **Rollbar Error Monitoring** | Both | PASS | 18 | Server-side capture, Pages Router integration, App Router integration |
 | **Test Cleanup Utilities** | Infra | PASS | 29 | Prisma reset, table truncation |
 
 ---

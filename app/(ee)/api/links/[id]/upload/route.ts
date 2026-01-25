@@ -6,6 +6,8 @@ import { DocumentData } from "@/lib/documents/create-document";
 import prisma from "@/lib/prisma";
 import { supportsAdvancedExcelMode } from "@/lib/utils/get-content-type";
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(
   request: NextRequest,
   { params }: { params: { id: string } },

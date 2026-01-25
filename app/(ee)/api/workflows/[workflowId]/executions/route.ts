@@ -5,6 +5,8 @@ import { z } from "zod";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 
+export const dynamic = 'force-dynamic';
+
 // GET /app/(ee)/api/workflows/[workflowId]/executions?teamId=xxx - List workflow executions
 export async function GET(
   req: NextRequest,

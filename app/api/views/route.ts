@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { reportDeniedAccessAttempt } from "@/ee/features/access-notifications";
+
+export const dynamic = 'force-dynamic';
 import { getTeamStorageConfigById } from "@/ee/features/storage/config";
 // Import authOptions directly from the source
 import { authOptions } from "@/pages/api/auth/[...nextauth]";

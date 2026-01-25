@@ -17,6 +17,8 @@ import { ratelimit } from "@/lib/redis";
 import { generateOTP } from "@/lib/utils/generate-otp";
 import { LOCALHOST_IP } from "@/lib/utils/geo";
 
+export const dynamic = 'force-dynamic';
+
 // POST /app/(ee)/api/workflow-entry/domains/[domain]/[slug]/[action]
 // where action is "verify" or "access"
 export async function POST(

@@ -11,6 +11,8 @@ import { z } from "zod";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 
+export const dynamic = 'force-dynamic';
+
 // GET /app/(ee)/api/workflows/[workflowId]?teamId=xxx - Get single workflow with details
 export async function GET(
   req: NextRequest,

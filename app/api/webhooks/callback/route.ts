@@ -10,6 +10,8 @@ import {
   webhookPayloadSchema,
 } from "@/lib/zod/schemas/webhooks";
 
+export const dynamic = 'force-dynamic';
+
 const searchParamsSchema = z.object({
   webhookId: z.string(),
   eventId: z.string(),

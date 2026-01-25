@@ -8,6 +8,8 @@ import { generateOTP } from "@/lib/utils/generate-otp";
 import { validateEmail } from "@/lib/utils/validate-email";
 import { VerifyEmailRequestSchema } from "@/ee/features/workflows/lib/types";
 
+export const dynamic = 'force-dynamic';
+
 // POST /app/(ee)/api/workflow-entry/[entryLinkId]/verify - Send OTP
 export async function POST(
   req: NextRequest,

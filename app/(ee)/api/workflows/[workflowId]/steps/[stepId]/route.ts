@@ -13,6 +13,8 @@ import { z } from "zod";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 
+export const dynamic = 'force-dynamic';
+
 // PATCH /app/(ee)/api/workflows/[workflowId]/steps/[stepId]?teamId=xxx - Update step
 export async function PATCH(
   req: NextRequest,

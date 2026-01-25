@@ -11,6 +11,8 @@ import { getFeatureFlags } from "@/lib/featureFlags";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 
+export const dynamic = 'force-dynamic';
+
 /**
  * POST /api/ai/chat
  * Create a new chat session

@@ -8,6 +8,8 @@ import { getFeatureFlags } from "@/lib/featureFlags";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 
+export const dynamic = 'force-dynamic';
+
 /**
  * GET /api/ai/store/teams/[teamId]
  * Get team vector store information

@@ -11,6 +11,8 @@ import { getFeatureFlags } from "@/lib/featureFlags";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 
+export const dynamic = 'force-dynamic';
+
 /**
  * POST /api/ai/store/teams/[teamId]/documents/[documentId]
  * Index a single document into the team vector store

@@ -11,6 +11,8 @@ import { log } from "@/lib/utils";
 
 import { handleDomainUpdates } from "./utils";
 
+export const dynamic = 'force-dynamic';
+
 /**
  * Cron to check if domains are verified.
  * If a domain is invalid for more than 14 days, we send a reminder email to the owner.

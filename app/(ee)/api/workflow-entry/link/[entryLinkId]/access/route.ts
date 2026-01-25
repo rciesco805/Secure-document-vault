@@ -12,6 +12,8 @@ import prisma from "@/lib/prisma";
 import { ratelimit } from "@/lib/redis";
 import { LOCALHOST_IP } from "@/lib/utils/geo";
 
+export const dynamic = 'force-dynamic';
+
 // POST /app/(ee)/api/workflow-entry/[entryLinkId]/access - Verify OTP and execute workflow
 export async function POST(
   req: NextRequest,

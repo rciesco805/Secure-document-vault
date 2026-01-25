@@ -13,6 +13,8 @@ import {
 } from "@/ee/features/workflows/lib/validation";
 import { ReorderStepsRequest } from "@/ee/features/workflows/lib/types";
 
+export const dynamic = 'force-dynamic';
+
 // GET /app/(ee)/api/workflows/[workflowId]/steps?teamId=xxx - List all steps
 export async function GET(
   req: NextRequest,

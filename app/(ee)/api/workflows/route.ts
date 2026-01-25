@@ -12,6 +12,8 @@ import { getFeatureFlags } from "@/lib/featureFlags";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 
+export const dynamic = 'force-dynamic';
+
 // GET /app/(ee)/api/workflows?teamId=xxx - List all workflows for a team
 export async function GET(req: NextRequest) {
   try {

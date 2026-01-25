@@ -4,6 +4,8 @@ import { receiver } from "@/lib/cron";
 import { log } from "@/lib/utils";
 import { processEmailQueue } from "@/lib/year-in-review/send-emails";
 
+export const dynamic = 'force-dynamic';
+
 // Runs every hour (0 * * * *)
 export const maxDuration = 300; // 5 minutes in seconds
 

@@ -13,6 +13,9 @@ A comprehensive 506(c) fund GP/LP management suite designed to streamline invest
 ## Recent Changes (January 2026)
 
 ### Phase 2 Additions (Latest)
+- **ESIGN/UETA Legal Compliance**: Full ESIGN Act and UETA compliance for electronic signatures with consent capture, SHA-256 checksums of actual PDF bytes, and signature verification endpoint
+- **Consent Capture**: Explicit consent requirement before signing with stored consent records (timestamp, version, consent text, IP address)
+- **Signature Verification**: New `/api/sign/verify/[token]` endpoint with rate limiting to verify signature integrity and compliance
 - **Plaid Transfers API**: Full inbound/outbound ACH transfer flow via `/api/transactions` with signature-verified webhook handler at `/api/webhooks/plaid`
 - **Webhook Security**: Plaid webhook verification (JWT signature, timestamp, body hash) with idempotent event processing to prevent double-counting
 - **Entity Fee/Tier Configuration**: Extended Entity model with `feeConfig` (management fees, carried interest, hurdle rates), `tierConfig` (investor tiers with discounts), and `customSettings` JSON fields
@@ -47,6 +50,8 @@ The platform is built on Next.js 14, using a hybrid Pages and App Router archite
     - Sequential signing with configurable order
     - Bulk sending and reusable templates
     - Detailed audit trails with embedded PDF signatures using pdf-lib
+    - ESIGN Act / UETA compliance with consent capture and SHA-256 checksums
+    - Signature verification API for third-party integrity checks
 *   **LP Fundroom Portal**: Offers personalized investor dashboards including:
     - 3-step onboarding process
     - 2-step accreditation wizard with SEC 506(c) compliance logging

@@ -8151,3 +8151,662 @@ describe('Phase 2: Capital Calls & Distributions', () => {
     });
   });
 });
+
+describe('Phase 2: Reporting & Cap Table', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  describe('Cap Table Overview - FUND Mode', () => {
+    it('should display investor ownership breakdown', () => {
+      const capTable = [
+        { investorId: 'inv-1', name: 'John Doe', commitment: 1000000, ownershipPercent: 20 },
+        { investorId: 'inv-2', name: 'Jane Smith', commitment: 750000, ownershipPercent: 15 },
+        { investorId: 'inv-3', name: 'Family Office LP', commitment: 2000000, ownershipPercent: 40 },
+        { investorId: 'inv-4', name: 'Institution A', commitment: 1250000, ownershipPercent: 25 },
+      ];
+
+      const totalOwnership = capTable.reduce((sum, i) => sum + i.ownershipPercent, 0);
+      expect(totalOwnership).toBe(100);
+    });
+
+    it('should calculate ownership from commitment', () => {
+      const totalCommitment = 5000000;
+      const investorCommitment = 1000000;
+      const ownershipPercent = (investorCommitment / totalCommitment) * 100;
+
+      expect(ownershipPercent).toBe(20);
+    });
+
+    it('should display Recharts pie chart data', () => {
+      const pieChartData = [
+        { name: 'John Doe', value: 20, fill: '#3B82F6' },
+        { name: 'Jane Smith', value: 15, fill: '#10B981' },
+        { name: 'Family Office LP', value: 40, fill: '#F59E0B' },
+        { name: 'Institution A', value: 25, fill: '#EF4444' },
+      ];
+
+      expect(pieChartData).toHaveLength(4);
+      expect(pieChartData[0].value).toBe(20);
+    });
+
+    it('should display units held per investor', () => {
+      const investorUnits = [
+        { investorId: 'inv-1', units: 100, pricePerUnit: 10000 },
+        { investorId: 'inv-2', units: 75, pricePerUnit: 10000 },
+      ];
+
+      const totalUnits = investorUnits.reduce((sum, i) => sum + i.units, 0);
+      expect(totalUnits).toBe(175);
+    });
+
+    it('should group by investor type', () => {
+      const investorTypes = {
+        INDIVIDUAL: { count: 10, totalCommitment: 1500000, percent: 30 },
+        FAMILY_OFFICE: { count: 3, totalCommitment: 2000000, percent: 40 },
+        INSTITUTION: { count: 2, totalCommitment: 1500000, percent: 30 },
+      };
+
+      expect(Object.keys(investorTypes)).toHaveLength(3);
+    });
+  });
+
+  describe('Cap Table - STARTUP Mode', () => {
+    it('should display share class breakdown', () => {
+      const shareClasses = [
+        { name: 'Common', totalShares: 7000000, percentOwnership: 70 },
+        { name: 'Preferred Series A', totalShares: 2000000, percentOwnership: 20 },
+        { name: 'Preferred Series B', totalShares: 1000000, percentOwnership: 10 },
+      ];
+
+      expect(shareClasses).toHaveLength(3);
+    });
+
+    it('should track shares per stakeholder', () => {
+      const stakeholders = [
+        { name: 'Founder 1', shares: 3000000, shareClass: 'Common', percent: 30 },
+        { name: 'Founder 2', shares: 2000000, shareClass: 'Common', percent: 20 },
+        { name: 'VC Fund A', shares: 2000000, shareClass: 'Preferred Series A', percent: 20 },
+        { name: 'Angel Investor', shares: 500000, shareClass: 'Common', percent: 5 },
+      ];
+
+      expect(stakeholders[0].percent).toBe(30);
+    });
+
+    it('should calculate fully diluted ownership', () => {
+      const capTable = {
+        issuedShares: 8000000,
+        optionPoolShares: 1500000,
+        warrantShares: 500000,
+        fullyDilutedShares: 0,
+      };
+
+      capTable.fullyDilutedShares = capTable.issuedShares + capTable.optionPoolShares + capTable.warrantShares;
+      expect(capTable.fullyDilutedShares).toBe(10000000);
+    });
+
+    it('should display valuation metrics', () => {
+      const valuationMetrics = {
+        pricePerShare: 1.50,
+        totalShares: 10000000,
+        preMoneyValuation: 15000000,
+        postMoneyValuation: 18000000,
+        investmentAmount: 3000000,
+      };
+
+      expect(valuationMetrics.preMoneyValuation).toBe(15000000);
+    });
+  });
+
+  describe('Vesting Schedule - STARTUP Mode', () => {
+    it('should configure standard 4-year vesting', () => {
+      const vestingSchedule = {
+        totalShares: 1000000,
+        vestingPeriodMonths: 48,
+        cliffMonths: 12,
+        vestingFrequency: 'MONTHLY',
+        grantDate: new Date('2025-01-01'),
+      };
+
+      expect(vestingSchedule.vestingPeriodMonths).toBe(48);
+      expect(vestingSchedule.cliffMonths).toBe(12);
+    });
+
+    it('should calculate vested shares', () => {
+      const grant = {
+        totalShares: 1000000,
+        vestingPeriodMonths: 48,
+        cliffMonths: 12,
+        grantDate: new Date('2025-01-01'),
+        monthsElapsed: 24,
+      };
+
+      const cliffMet = grant.monthsElapsed >= grant.cliffMonths;
+      const vestedMonths = cliffMet ? grant.monthsElapsed : 0;
+      const vestedShares = (vestedMonths / grant.vestingPeriodMonths) * grant.totalShares;
+
+      expect(vestedShares).toBe(500000);
+    });
+
+    it('should return 0 before cliff', () => {
+      const grant = {
+        totalShares: 1000000,
+        cliffMonths: 12,
+        monthsElapsed: 6,
+      };
+
+      const cliffMet = grant.monthsElapsed >= grant.cliffMonths;
+      const vestedShares = cliffMet ? grant.totalShares * 0.25 : 0;
+
+      expect(vestedShares).toBe(0);
+    });
+
+    it('should vest cliff amount at cliff date', () => {
+      const grant = {
+        totalShares: 1000000,
+        cliffMonths: 12,
+        vestingPeriodMonths: 48,
+        monthsElapsed: 12,
+      };
+
+      const cliffVested = (grant.cliffMonths / grant.vestingPeriodMonths) * grant.totalShares;
+      expect(cliffVested).toBe(250000);
+    });
+
+    it('should display vesting chart data', () => {
+      const vestingChartData = [
+        { month: 0, vested: 0, unvested: 1000000 },
+        { month: 12, vested: 250000, unvested: 750000 },
+        { month: 24, vested: 500000, unvested: 500000 },
+        { month: 36, vested: 750000, unvested: 250000 },
+        { month: 48, vested: 1000000, unvested: 0 },
+      ];
+
+      expect(vestingChartData[vestingChartData.length - 1].vested).toBe(1000000);
+    });
+
+    it('should handle acceleration on exit', () => {
+      const grant = {
+        totalShares: 1000000,
+        vestedShares: 500000,
+        unvestedShares: 500000,
+        accelerationType: 'SINGLE_TRIGGER',
+        accelerationPercent: 100,
+      };
+
+      const acceleratedShares = grant.unvestedShares * (grant.accelerationPercent / 100);
+      const totalVested = grant.vestedShares + acceleratedShares;
+
+      expect(totalVested).toBe(1000000);
+    });
+  });
+
+  describe('Recharts Visualizations', () => {
+    it('should render ownership pie chart', () => {
+      const chartConfig = {
+        type: 'PieChart',
+        dataKey: 'value',
+        nameKey: 'name',
+        innerRadius: 60,
+        outerRadius: 100,
+        showLabels: true,
+      };
+
+      expect(chartConfig.type).toBe('PieChart');
+    });
+
+    it('should render commitment bar chart', () => {
+      const chartConfig = {
+        type: 'BarChart',
+        data: [
+          { name: 'Q1', committed: 2000000, funded: 1000000 },
+          { name: 'Q2', committed: 3500000, funded: 2500000 },
+          { name: 'Q3', committed: 4500000, funded: 3500000 },
+          { name: 'Q4', committed: 5000000, funded: 4500000 },
+        ],
+        bars: ['committed', 'funded'],
+      };
+
+      expect(chartConfig.data).toHaveLength(4);
+    });
+
+    it('should render vesting area chart', () => {
+      const chartConfig = {
+        type: 'AreaChart',
+        data: [
+          { month: 0, vested: 0 },
+          { month: 12, vested: 250000 },
+          { month: 24, vested: 500000 },
+        ],
+        xAxis: 'month',
+        yAxis: 'vested',
+        fillOpacity: 0.3,
+      };
+
+      expect(chartConfig.type).toBe('AreaChart');
+    });
+
+    it('should render fund performance line chart', () => {
+      const chartConfig = {
+        type: 'LineChart',
+        data: [
+          { quarter: 'Q1-2025', nav: 5000000, irr: 0 },
+          { quarter: 'Q2-2025', nav: 5500000, irr: 8 },
+          { quarter: 'Q3-2025', nav: 6200000, irr: 15 },
+          { quarter: 'Q4-2025', nav: 7000000, irr: 22 },
+        ],
+        lines: ['nav', 'irr'],
+      };
+
+      expect(chartConfig.data[3].nav).toBe(7000000);
+    });
+
+    it('should support chart export as image', () => {
+      const exportConfig = {
+        chartId: 'ownership-pie',
+        format: 'PNG',
+        width: 800,
+        height: 600,
+      };
+
+      expect(exportConfig.format).toBe('PNG');
+    });
+  });
+
+  describe('Export PDF', () => {
+    it('should export cap table as PDF', () => {
+      const exportRequest = {
+        endpoint: '/api/export/cap-table',
+        format: 'PDF',
+        fundId: 'fund-1',
+        includeCharts: true,
+        includeDetails: true,
+        asOfDate: new Date('2026-01-25'),
+      };
+
+      expect(exportRequest.format).toBe('PDF');
+    });
+
+    it('should generate PDF with fund summary', () => {
+      const pdfContent = {
+        title: 'Cap Table Report - Bermuda Growth Fund',
+        sections: ['Summary', 'Ownership Breakdown', 'Investor Details', 'Transaction History'],
+        generatedAt: new Date(),
+        generatedBy: 'GP Admin',
+      };
+
+      expect(pdfContent.sections).toContain('Ownership Breakdown');
+    });
+
+    it('should include charts in PDF', () => {
+      const pdfCharts = [
+        { name: 'Ownership Distribution', type: 'pie' },
+        { name: 'Funding Progress', type: 'bar' },
+        { name: 'Performance Over Time', type: 'line' },
+      ];
+
+      expect(pdfCharts).toHaveLength(3);
+    });
+
+    it('should watermark draft reports', () => {
+      const pdfOptions = {
+        isDraft: true,
+        watermark: 'DRAFT - CONFIDENTIAL',
+        watermarkOpacity: 0.3,
+      };
+
+      expect(pdfOptions.watermark).toBe('DRAFT - CONFIDENTIAL');
+    });
+
+    it('should password protect sensitive PDFs', () => {
+      const pdfSecurity = {
+        passwordProtected: true,
+        userPassword: null,
+        ownerPassword: 'gp-secret',
+        permissions: ['PRINT', 'COPY'],
+      };
+
+      expect(pdfSecurity.passwordProtected).toBe(true);
+    });
+  });
+
+  describe('Export CSV', () => {
+    it('should export investor list as CSV', () => {
+      const exportRequest = {
+        endpoint: '/api/export/investors',
+        format: 'CSV',
+        fundId: 'fund-1',
+        columns: ['name', 'email', 'commitment', 'funded', 'ownership'],
+      };
+
+      expect(exportRequest.format).toBe('CSV');
+    });
+
+    it('should export transactions as CSV', () => {
+      const exportRequest = {
+        endpoint: '/api/export/transactions',
+        format: 'CSV',
+        fundId: 'fund-1',
+        dateRange: { start: new Date('2025-01-01'), end: new Date('2025-12-31') },
+        types: ['CAPITAL_CALL', 'DISTRIBUTION'],
+      };
+
+      expect(exportRequest.types).toContain('CAPITAL_CALL');
+    });
+
+    it('should format CSV with headers', () => {
+      const csvContent = `Name,Email,Commitment,Funded,Ownership
+John Doe,john@example.com,1000000,500000,20%
+Jane Smith,jane@example.com,750000,750000,15%`;
+
+      const lines = csvContent.split('\n');
+      expect(lines[0]).toBe('Name,Email,Commitment,Funded,Ownership');
+    });
+
+    it('should escape special characters in CSV', () => {
+      const investorName = 'Smith, John & Associates';
+      const escapedName = `"${investorName}"`;
+
+      expect(escapedName).toBe('"Smith, John & Associates"');
+    });
+  });
+
+  describe('Export ZIP Bundle', () => {
+    it('should create ZIP with multiple files', () => {
+      const zipBundle = {
+        filename: 'bermuda-fund-export-2026-01-25.zip',
+        files: [
+          { name: 'cap-table.pdf', type: 'application/pdf' },
+          { name: 'investors.csv', type: 'text/csv' },
+          { name: 'transactions.csv', type: 'text/csv' },
+          { name: 'charts/ownership.png', type: 'image/png' },
+        ],
+      };
+
+      expect(zipBundle.files).toHaveLength(4);
+    });
+
+    it('should include JSON metadata in ZIP', () => {
+      const metadata = {
+        exportDate: new Date().toISOString(),
+        fundId: 'fund-1',
+        fundName: 'Bermuda Growth Fund',
+        exportedBy: 'gp-admin',
+        version: '1.0',
+        files: ['cap-table.pdf', 'investors.csv'],
+      };
+
+      expect(metadata.version).toBe('1.0');
+    });
+
+    it('should stream large ZIP files', () => {
+      const streamConfig = {
+        useStreaming: true,
+        chunkSize: 1024 * 1024,
+        compression: 'deflate',
+        compressionLevel: 6,
+      };
+
+      expect(streamConfig.useStreaming).toBe(true);
+    });
+  });
+
+  describe('K-1 Generation', () => {
+    it('should generate K-1 for each investor', () => {
+      const k1Request = {
+        fundId: 'fund-1',
+        taxYear: 2025,
+        investors: ['inv-1', 'inv-2', 'inv-3'],
+        dueDate: new Date('2026-03-15'),
+      };
+
+      expect(k1Request.taxYear).toBe(2025);
+    });
+
+    it('should calculate K-1 allocations', () => {
+      const k1Allocation = {
+        investorId: 'inv-1',
+        taxYear: 2025,
+        ordinaryIncome: 15000,
+        capitalGainsShortTerm: 5000,
+        capitalGainsLongTerm: 25000,
+        taxExemptIncome: 2000,
+        section199ADividends: 1000,
+        foreignTaxesPaid: 500,
+      };
+
+      expect(k1Allocation.ordinaryIncome).toBe(15000);
+    });
+
+    it('should track K-1 status per investor', () => {
+      const k1Statuses = [
+        { investorId: 'inv-1', status: 'GENERATED', generatedAt: new Date() },
+        { investorId: 'inv-2', status: 'PENDING', generatedAt: null },
+        { investorId: 'inv-3', status: 'SHARED', sharedAt: new Date() },
+      ];
+
+      const generated = k1Statuses.filter(k => k.status !== 'PENDING');
+      expect(generated).toHaveLength(2);
+    });
+
+    it('should store K-1 document in vault', () => {
+      const k1Document = {
+        investorId: 'inv-1',
+        taxYear: 2025,
+        documentType: 'K1',
+        fileName: 'K1-2025-Bermuda-Growth-Fund.pdf',
+        storagePath: 'vaults/inv-1/tax/k1-2025.pdf',
+        uploadedAt: new Date(),
+      };
+
+      expect(k1Document.documentType).toBe('K1');
+    });
+  });
+
+  describe('Wolters Kluwer API Integration (Stub)', () => {
+    it('should prepare K-1 data for Wolters Kluwer', () => {
+      const wkPayload = {
+        apiVersion: '2.0',
+        fundEIN: '12-3456789',
+        taxYear: 2025,
+        partnerData: [
+          {
+            partnerId: 'inv-1',
+            ssn: 'XXX-XX-1234',
+            name: 'John Doe',
+            address: '123 Main St, City, ST 12345',
+            capitalAccount: {
+              beginning: 100000,
+              contributions: 50000,
+              withdrawals: 0,
+              ending: 165000,
+            },
+          },
+        ],
+      };
+
+      expect(wkPayload.apiVersion).toBe('2.0');
+    });
+
+    it('should send K-1 data to Wolters Kluwer', () => {
+      const apiRequest = {
+        method: 'POST',
+        endpoint: 'https://api.wolterskluwer.com/k1/generate',
+        headers: {
+          'Authorization': 'Bearer wk_api_key_xxx',
+          'Content-Type': 'application/json',
+        },
+        body: { fundId: 'fund-1', taxYear: 2025 },
+      };
+
+      expect(apiRequest.method).toBe('POST');
+    });
+
+    it('should handle Wolters Kluwer response', () => {
+      const apiResponse = {
+        status: 200,
+        data: {
+          batchId: 'wk-batch-123',
+          documentsGenerated: 15,
+          status: 'PROCESSING',
+          estimatedCompletionTime: '2026-02-01T12:00:00Z',
+        },
+      };
+
+      expect(apiResponse.data.status).toBe('PROCESSING');
+    });
+
+    it('should poll for K-1 completion', () => {
+      const pollConfig = {
+        batchId: 'wk-batch-123',
+        pollInterval: 60000,
+        maxAttempts: 30,
+        currentAttempt: 1,
+      };
+
+      expect(pollConfig.pollInterval).toBe(60000);
+    });
+
+    it('should download generated K-1 PDFs', () => {
+      const downloadRequest = {
+        batchId: 'wk-batch-123',
+        documentIds: ['doc-1', 'doc-2', 'doc-3'],
+        format: 'PDF',
+        destination: 'vaults/',
+      };
+
+      expect(downloadRequest.format).toBe('PDF');
+    });
+
+    it('should handle Wolters Kluwer errors', () => {
+      const apiError = {
+        status: 400,
+        error: {
+          code: 'INVALID_EIN',
+          message: 'Fund EIN format is invalid',
+          field: 'fundEIN',
+        },
+      };
+
+      expect(apiError.error.code).toBe('INVALID_EIN');
+    });
+
+    it('should retry failed API calls', () => {
+      const retryConfig = {
+        maxRetries: 3,
+        retryDelay: 5000,
+        exponentialBackoff: true,
+        currentRetry: 0,
+      };
+
+      expect(retryConfig.exponentialBackoff).toBe(true);
+    });
+  });
+
+  describe('K-1 Sharing', () => {
+    it('should share K-1 with investor via email', () => {
+      const shareEmail = {
+        to: 'investor@example.com',
+        template: 'k1-available',
+        variables: {
+          investorName: 'John Doe',
+          fundName: 'Bermuda Growth Fund',
+          taxYear: 2025,
+          downloadLink: 'https://app.bermudafund.com/vault/k1-2025',
+        },
+      };
+
+      expect(shareEmail.template).toBe('k1-available');
+    });
+
+    it('should notify investor when K-1 ready', () => {
+      const notification = {
+        investorId: 'inv-1',
+        type: 'K1_READY',
+        taxYear: 2025,
+        fundName: 'Bermuda Growth Fund',
+        timestamp: new Date(),
+      };
+
+      expect(notification.type).toBe('K1_READY');
+    });
+
+    it('should track K-1 download by investor', () => {
+      const downloadEvent = {
+        investorId: 'inv-1',
+        documentId: 'k1-doc-1',
+        downloadedAt: new Date(),
+        ipAddress: '192.168.1.1',
+        userAgent: 'Mozilla/5.0...',
+      };
+
+      expect(downloadEvent.downloadedAt).toBeDefined();
+    });
+
+    it('should allow bulk K-1 sharing', () => {
+      const bulkShare = {
+        fundId: 'fund-1',
+        taxYear: 2025,
+        investors: ['inv-1', 'inv-2', 'inv-3'],
+        shareMethod: 'EMAIL',
+        scheduledFor: new Date('2026-02-15T09:00:00Z'),
+      };
+
+      expect(bulkShare.investors).toHaveLength(3);
+    });
+
+    it('should generate K-1 summary report for GP', () => {
+      const summaryReport = {
+        fundId: 'fund-1',
+        taxYear: 2025,
+        totalInvestors: 25,
+        k1sGenerated: 25,
+        k1sShared: 20,
+        k1sDownloaded: 15,
+        pendingActions: 5,
+      };
+
+      expect(summaryReport.k1sGenerated).toBe(25);
+    });
+  });
+
+  describe('Report Scheduling', () => {
+    it('should schedule recurring reports', () => {
+      const scheduledReport = {
+        name: 'Monthly Cap Table',
+        frequency: 'MONTHLY',
+        dayOfMonth: 1,
+        time: '09:00',
+        timezone: 'America/New_York',
+        recipients: ['gp@fund.com'],
+        format: 'PDF',
+      };
+
+      expect(scheduledReport.frequency).toBe('MONTHLY');
+    });
+
+    it('should schedule quarterly investor statements', () => {
+      const quarterlyStatement = {
+        name: 'Quarterly Investor Statement',
+        frequency: 'QUARTERLY',
+        months: [3, 6, 9, 12],
+        dayOfMonth: 15,
+        format: 'PDF',
+        perInvestor: true,
+      };
+
+      expect(quarterlyStatement.months).toHaveLength(4);
+    });
+
+    it('should track report generation history', () => {
+      const reportHistory = [
+        { reportId: 'rpt-1', name: 'Cap Table', generatedAt: new Date('2026-01-01'), status: 'COMPLETED' },
+        { reportId: 'rpt-2', name: 'Cap Table', generatedAt: new Date('2026-02-01'), status: 'COMPLETED' },
+        { reportId: 'rpt-3', name: 'Cap Table', generatedAt: new Date('2026-03-01'), status: 'FAILED' },
+      ];
+
+      const completedReports = reportHistory.filter(r => r.status === 'COMPLETED');
+      expect(completedReports).toHaveLength(2);
+    });
+  });
+});

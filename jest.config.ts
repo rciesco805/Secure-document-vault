@@ -1,11 +1,12 @@
-const nextJest = require('next/jest');
+import type { Config } from 'jest';
+import nextJest from 'next/jest.js';
 
 const createJestConfig = nextJest({
   dir: './',
 });
 
-const customJestConfig = {
-  setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
+const customJestConfig: Config = {
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
   testEnvironment: 'node',
   testMatch: ['**/__tests__/**/*.test.ts', '**/__tests__/**/*.test.tsx'],
   moduleNameMapper: {
@@ -18,11 +19,13 @@ const customJestConfig = {
   collectCoverageFrom: [
     'pages/api/**/*.ts',
     'lib/**/*.ts',
+    'components/**/*.tsx',
     '!**/*.d.ts',
     '!**/node_modules/**',
   ],
   coverageReporters: ['text', 'lcov', 'html'],
   testTimeout: 30000,
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
 };
 
-module.exports = createJestConfig(customJestConfig);
+export default createJestConfig(customJestConfig);

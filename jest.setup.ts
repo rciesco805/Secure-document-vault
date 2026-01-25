@@ -1,8 +1,8 @@
-require('@testing-library/jest-dom');
+import '@testing-library/jest-dom';
 
 jest.mock('@sindresorhus/slugify', () => ({
   __esModule: true,
-  default: (str) => str.toLowerCase().replace(/\s+/g, '-'),
+  default: (str: string) => str.toLowerCase().replace(/\s+/g, '-'),
 }));
 
 jest.mock('@/lib/prisma', () => ({
@@ -35,6 +35,10 @@ jest.mock('@/lib/prisma', () => ({
       findFirst: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),
+    },
+    userTeam: {
+      findMany: jest.fn(),
+      findFirst: jest.fn(),
     },
     team: {
       findUnique: jest.fn(),
@@ -78,6 +82,16 @@ jest.mock('@/lib/prisma', () => ({
     viewer: {
       findUnique: jest.fn(),
       create: jest.fn(),
+    },
+    capitalCall: {
+      findMany: jest.fn(),
+      create: jest.fn(),
+      count: jest.fn(),
+    },
+    distribution: {
+      findMany: jest.fn(),
+      create: jest.fn(),
+      count: jest.fn(),
     },
     $transaction: jest.fn((callback) => callback({
       signatureDocument: {

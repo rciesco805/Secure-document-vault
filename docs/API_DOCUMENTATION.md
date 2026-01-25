@@ -1062,11 +1062,52 @@ Get waterfall distribution calculations for funds.
 
 ---
 
+## Error Monitoring
+
+### Test Error Endpoint
+**GET** `/api/test-error`
+
+Trigger a test error to verify Rollbar integration is working correctly.
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "Test error sent to Rollbar",
+  "timestamp": "2026-01-25T12:00:00Z"
+}
+```
+
+**Notes:**
+- Requires `ROLLBAR_SERVER_TOKEN` environment variable to be configured
+- Use this endpoint to verify error monitoring is properly connected
+- Test errors appear in your Rollbar dashboard under "test-error-route" source
+
+### Error Capture Configuration
+
+The platform captures errors at multiple levels:
+
+| Level | Component | Description |
+|-------|-----------|-------------|
+| **Client-side** | `app/providers.tsx` | Captures browser errors via Rollbar client |
+| **Route-level** | `app/error.tsx` | Catches and reports route-specific errors |
+| **Global** | `app/global-error.tsx` | Catches unhandled application errors |
+| **Server-side** | `middleware.ts` | Captures middleware/API errors with context |
+
+### Environment Variables
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `NEXT_PUBLIC_ROLLBAR_CLIENT_TOKEN` | Yes | Client-side error tracking token |
+| `ROLLBAR_SERVER_TOKEN` | Yes | Server-side error tracking token |
+
+---
+
 ## Changelog
 
 | Date | Changes |
 |------|---------|
-| January 2026 | Phase 1 100% complete: Form D reminders, LP statements, waterfall visualization, KYC post-bank enforcement, AML screening, Quick Actions CTAs, bulk action wizard, audit dashboard, PWA support |
+| January 2026 | Phase 1 100% complete: Form D reminders, LP statements, waterfall visualization, KYC post-bank enforcement, AML screening, Quick Actions CTAs, bulk action wizard, audit dashboard, PWA support, Rollbar error monitoring |
 | December 2025 | Added Plaid transfer APIs, wizard progress tracking, entity fee/tier configuration |
 | November 2025 | Initial e-signature APIs, LP portal endpoints, signature verification |
 
@@ -1076,7 +1117,7 @@ Get waterfall distribution calculations for funds.
 
 The API has comprehensive test coverage:
 
-- **1,581+ passing tests** covering all endpoints
+- **1,584+ passing tests** covering all endpoints
 - **Phase 1 Completion Tests**: 41 tests for Form D, LP statements, waterfall
 - **KYC Enforcement Tests**: 6 tests for transaction blocking
 - **AML Screening Tests**: 8 tests for threshold validation

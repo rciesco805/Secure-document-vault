@@ -61,6 +61,7 @@ The BF Fund Investor Dataroom is a **self-hosted, enterprise-grade investor port
 | **NDA/Accreditation Gate** | ✅ Complete | Optional per-fund investor gate with 506(c) compliance logging and accreditation wizard |
 | **KYC/AML Verification** | ✅ Complete | Post-subscription identity verification using Persona API with embedded popup flow |
 | **Bank Connect (Plaid)** | ✅ Complete | One-click bank account linking for ACH capital calls and distributions |
+| **Error Monitoring** | ✅ Complete | Real-time error tracking with Rollbar for client and server-side errors |
 | **Capital Calls** | 🔄 Next Phase | GP-initiated ACH debits from investor bank accounts |
 | **Distributions** | 🔄 Next Phase | Bulk ACH credits to investor bank accounts |
 | **K-1 Management** | 📋 Planned | Tax document generation and distribution |

@@ -140,7 +140,7 @@ npm test -- --testPathPattern="phase1"
 ```
 
 ### Test Coverage
-- **1205 passing tests** across all phases
+- **1235+ passing tests** across all phases
 - Phase 1: LP/Visitor dataroom access, onboarding, subscriptions
 - Phase 2: Admin/GP dashboard, bulk actions, fund management
 - Phase 3: Cross-side interactions, edge cases, compliance stress tests
@@ -155,6 +155,85 @@ The Prisma schema is organized into multiple files in `prisma/schema/`:
 - `dataroom.prisma` - Dataroom access and sharing
 - `signature.prisma` - E-signature workflows
 - `entity.prisma` - Entity mode configuration (FUND/STARTUP)
+
+## Roadmap
+
+### Phase 1 (MVP) - ~90% Complete
+- Core LP onboarding with NDA gate
+- Accredited investor self-certification wizard
+- Fundroom dashboard with investment tracking
+- Self-hosted e-signature (BF Fund Sign)
+- Dual threshold system (Initial Closing vs Full Authorized)
+- Form D compliance tracking
+
+### Phase 2 - In Progress
+- Plaid-powered ACH transfers with webhook-driven compliance logging
+- Bulk capital call and distribution wizards
+- Advanced analytics and AUM reporting with fee deductions
+- Entity fee/tier configuration (management fees, carried interest, hurdle rates)
+- Real-time wizard progress tracking
+- Mobile viewport optimization
+
+### Phase 3 - Planned
+- STARTUP mode (cap table management)
+- Vesting schedules and equity grants
+- Share class management
+- Secondary transfer tracking
+
+## Deployment
+
+### Replit (Recommended)
+This project is optimized for Replit deployment with built-in database, secrets management, and object storage.
+
+### Vercel
+```bash
+# Deploy to Vercel
+vercel deploy
+
+# Set environment variables in Vercel dashboard
+```
+
+### Docker
+```bash
+# Build image
+docker build -t bf-fund-dataroom .
+
+# Run container
+docker run -p 3000:3000 --env-file .env bf-fund-dataroom
+```
+
+## Architecture
+
+```
+├── pages/                    # Next.js Pages Router
+│   ├── api/                  # API routes
+│   │   ├── admin/           # GP/Admin endpoints
+│   │   ├── lp/              # LP Portal endpoints
+│   │   ├── webhooks/        # Plaid webhooks
+│   │   └── auth/            # NextAuth configuration
+│   ├── admin/               # Admin UI pages
+│   ├── dataroom/            # Dataroom viewer
+│   └── lp/                  # LP Portal pages
+├── app/                      # Next.js App Router (auth, admin)
+├── components/               # React components
+│   ├── ui/                  # shadcn/ui components
+│   ├── lp/                  # LP-specific components
+│   └── signature/           # E-signature components
+├── lib/                      # Shared utilities
+│   ├── auth/                # Auth helpers
+│   ├── audit/               # Compliance logging
+│   └── prisma.ts            # Database client
+├── prisma/schema/            # Multi-file Prisma schema
+└── __tests__/               # E2E and unit tests
+```
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
 ## License
 

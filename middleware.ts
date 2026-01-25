@@ -8,6 +8,7 @@ import IncomingWebhookMiddleware, {
   isWebhookPath,
 } from "./lib/middleware/incoming-webhooks";
 import PostHogMiddleware from "./lib/middleware/posthog";
+import { serverInstance } from "./lib/rollbar";
 
 function isAnalyticsPath(path: string): boolean {
   const pattern = /^\/ingest\/.*/;
@@ -139,6 +140,11 @@ export default async function middleware(req: NextRequest, ev: NextFetchEvent) {
 
     return NextResponse.next();
   } catch (error) {
+    serverInstance.error(error as Error, {
+      path: req.nextUrl.pathname,
+      method: req.method,
+      host: req.headers.get("host"),
+    });
     console.error("[Middleware Error]", error instanceof Error ? error.message : "Unknown error");
     
     return createErrorResponse("Internal server error", 500);

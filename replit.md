@@ -13,6 +13,7 @@ A comprehensive 506(c) fund GP/LP management suite designed to streamline invest
 ## Recent Changes (January 2026)
 
 ### Phase 2 Additions (Latest)
+- **Rollbar Error Monitoring**: Real-time error tracking with client-side RollbarProvider, server-side middleware integration, error.tsx and global-error.tsx components, and /api/test-error verification endpoint
 - **KYC Post-Bank Enforcement**: Transactions API now requires KYC verification before initiating any capital calls or distributions
 - **AML Screening Hooks**: Built-in AML compliance screening with risk scoring, velocity limits ($100k single, $250k daily, 5+ transactions/day triggers), and audit logging
 - **Expanded Data Portability**: /api/admin/export now includes viewAudit, signatureAudit, auditLog, and signatureConsent models
@@ -117,6 +118,7 @@ The platform is built on Next.js 14, using a hybrid Pages and App Router archite
 | Tinybird | Complete | Real-time analytics, audit logging |
 | Stripe | Complete | Platform billing |
 | Object Storage | Complete | Replit Object Storage (documents) |
+| Rollbar | Complete | Error monitoring (client + server), error boundaries |
 | QuickBooks | Phase 3 | Accounting sync for K-1s |
 | Wolters Kluwer | Phase 3 | Tax document automation |
 
@@ -169,3 +171,4 @@ This ensures all visitors get fresh content without 404 errors from stale cached
 - OpenAI: Optional AI features
 - Stripe: Platform billing/subscriptions (NOT capital movements)
 - Replit Object Storage: Primary storage solution for documents and files
+- Rollbar: Real-time error monitoring and tracking (requires NEXT_PUBLIC_ROLLBAR_CLIENT_TOKEN, ROLLBAR_SERVER_TOKEN)

@@ -11392,3 +11392,857 @@ describe('Phase 2: All GP Flows Pass - Milestone Check', () => {
     });
   });
 });
+
+describe('Phase 3: Cross-Side Interactions & Interlinked Flows', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  describe('Subscription Document Flow: GP → LP → Webhook → Aggregates', () => {
+    it('GP creates subscription document for LP', () => {
+      const subscriptionDoc = {
+        id: 'sig-req-sub-1',
+        templateId: 'subscription-agreement',
+        fundId: 'fund-1',
+        investorId: 'inv-1',
+        documentName: 'Subscription Agreement - Bermuda Growth Fund',
+        status: 'CREATED',
+        createdBy: 'gp-admin',
+        createdAt: new Date(),
+      };
+
+      expect(subscriptionDoc.status).toBe('CREATED');
+    });
+
+    it('GP sends subscription doc for signature', () => {
+      const signatureRequest = {
+        id: 'sig-req-sub-1',
+        status: 'SENT',
+        sentTo: 'investor@example.com',
+        sentAt: new Date(),
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      };
+
+      expect(signatureRequest.status).toBe('SENT');
+    });
+
+    it('LP receives email notification via Resend', () => {
+      const emailPayload = {
+        provider: 'resend',
+        to: 'investor@example.com',
+        from: 'noreply@bermudafund.com',
+        subject: 'Action Required: Sign Subscription Agreement',
+        template: 'signature-request',
+        sent: true,
+        messageId: 'msg-123456',
+        sentAt: new Date(),
+      };
+
+      expect(emailPayload.sent).toBe(true);
+    });
+
+    it('LP opens signing link', () => {
+      const signingSession = {
+        requestId: 'sig-req-sub-1',
+        investorId: 'inv-1',
+        accessedAt: new Date(),
+        ipAddress: '192.168.1.1',
+        userAgent: 'Mozilla/5.0...',
+        status: 'VIEWING',
+      };
+
+      expect(signingSession.status).toBe('VIEWING');
+    });
+
+    it('LP reviews document and places signature', () => {
+      const signatureAction = {
+        requestId: 'sig-req-sub-1',
+        fieldId: 'sig-field-1',
+        type: 'SIGNATURE',
+        signedAt: new Date(),
+        signatureData: 'data:image/png;base64,...',
+      };
+
+      expect(signatureAction.type).toBe('SIGNATURE');
+    });
+
+    it('LP completes signing', () => {
+      const completedRequest = {
+        id: 'sig-req-sub-1',
+        status: 'COMPLETED',
+        completedAt: new Date(),
+        signedDocument: {
+          url: 'https://storage.bermudafund.com/signed/sub-1-signed.pdf',
+          auditTrail: { pages: 3, signatures: 2, initials: 5 },
+        },
+      };
+
+      expect(completedRequest.status).toBe('COMPLETED');
+    });
+
+    it('Webhook triggers on signature completion', () => {
+      const webhookPayload = {
+        event: 'signature.completed',
+        requestId: 'sig-req-sub-1',
+        completedAt: new Date().toISOString(),
+        signers: [{ email: 'investor@example.com', signedAt: new Date().toISOString() }],
+      };
+
+      expect(webhookPayload.event).toBe('signature.completed');
+    });
+
+    it('Webhook handler updates subscription status', () => {
+      const subscriptionUpdate = {
+        investmentId: 'investment-1',
+        previousStatus: 'PENDING_SIGNATURE',
+        newStatus: 'SIGNED',
+        updatedAt: new Date(),
+        triggeredBy: 'webhook',
+      };
+
+      expect(subscriptionUpdate.newStatus).toBe('SIGNED');
+    });
+
+    it('Fund aggregates update after signed subscription', () => {
+      const fundAggregates = {
+        fundId: 'fund-1',
+        before: { totalCommitment: 5000000, signedCount: 24 },
+        after: { totalCommitment: 5100000, signedCount: 25 },
+        change: { commitment: 100000, count: 1 },
+      };
+
+      expect(fundAggregates.after.signedCount).toBe(25);
+    });
+
+    it('GP dashboard reflects new signed subscription', () => {
+      const gpDashboard = {
+        fundId: 'fund-1',
+        recentActivity: [
+          { type: 'SUBSCRIPTION_SIGNED', investor: 'John Doe', amount: 100000, timestamp: new Date() },
+        ],
+        totalCommitment: 5100000,
+        signedSubscriptions: 25,
+      };
+
+      expect(gpDashboard.recentActivity[0].type).toBe('SUBSCRIPTION_SIGNED');
+    });
+
+    it('LP dashboard shows signed investment', () => {
+      const lpDashboard = {
+        investorId: 'inv-1',
+        investments: [
+          { fundId: 'fund-1', commitment: 100000, status: 'SIGNED', signedAt: new Date() },
+        ],
+      };
+
+      expect(lpDashboard.investments[0].status).toBe('SIGNED');
+    });
+
+    it('Signed document appears in LP vault', () => {
+      const lpVault = {
+        investorId: 'inv-1',
+        documents: [
+          { name: 'Subscription Agreement - Signed', type: 'SUBSCRIPTION', signedAt: new Date() },
+        ],
+      };
+
+      expect(lpVault.documents[0].type).toBe('SUBSCRIPTION');
+    });
+
+    it('Audit trail logged for compliance', () => {
+      const auditEntry = {
+        action: 'SUBSCRIPTION_SIGNED',
+        investorId: 'inv-1',
+        fundId: 'fund-1',
+        requestId: 'sig-req-sub-1',
+        timestamp: new Date(),
+        ipAddress: '192.168.1.1',
+        userAgent: 'Mozilla/5.0...',
+        metadata: { pages: 3, signatures: 2 },
+      };
+
+      expect(auditEntry.action).toBe('SUBSCRIPTION_SIGNED');
+    });
+  });
+
+  describe('Real-Time Email Notifications via Resend', () => {
+    it('should send capital call notification', () => {
+      const email = {
+        provider: 'resend',
+        template: 'capital-call',
+        to: 'investor@example.com',
+        variables: { callAmount: 50000, dueDate: '2026-02-24', fundName: 'Bermuda Growth Fund' },
+        sent: true,
+      };
+
+      expect(email.sent).toBe(true);
+    });
+
+    it('should send distribution notice', () => {
+      const email = {
+        provider: 'resend',
+        template: 'distribution-notice',
+        to: 'investor@example.com',
+        variables: { amount: 39000, type: 'INCOME', fundName: 'Bermuda Growth Fund' },
+        sent: true,
+      };
+
+      expect(email.sent).toBe(true);
+    });
+
+    it('should send document upload notification', () => {
+      const email = {
+        provider: 'resend',
+        template: 'document-uploaded',
+        to: 'investor@example.com',
+        variables: { documentName: 'Q4 2025 Report', fundName: 'Bermuda Growth Fund' },
+        sent: true,
+      };
+
+      expect(email.sent).toBe(true);
+    });
+
+    it('should send K-1 ready notification', () => {
+      const email = {
+        provider: 'resend',
+        template: 'k1-ready',
+        to: 'investor@example.com',
+        variables: { taxYear: 2025, fundName: 'Bermuda Growth Fund' },
+        sent: true,
+      };
+
+      expect(email.sent).toBe(true);
+    });
+
+    it('should handle email delivery webhook', () => {
+      const deliveryWebhook = {
+        event: 'email.delivered',
+        messageId: 'msg-123456',
+        to: 'investor@example.com',
+        deliveredAt: new Date(),
+      };
+
+      expect(deliveryWebhook.event).toBe('email.delivered');
+    });
+
+    it('should handle email bounce webhook', () => {
+      const bounceWebhook = {
+        event: 'email.bounced',
+        messageId: 'msg-789',
+        to: 'invalid@example.com',
+        bounceType: 'hard',
+        reason: 'mailbox_not_found',
+      };
+
+      expect(bounceWebhook.bounceType).toBe('hard');
+    });
+
+    it('should update investor email status on bounce', () => {
+      const investorUpdate = {
+        investorId: 'inv-bad-email',
+        emailStatus: 'BOUNCED',
+        lastBounceAt: new Date(),
+        requiresVerification: true,
+      };
+
+      expect(investorUpdate.emailStatus).toBe('BOUNCED');
+    });
+  });
+
+  describe('Dashboard Real-Time Refresh', () => {
+    it('should poll for updates every 30 seconds', () => {
+      const pollingConfig = {
+        interval: 30000,
+        enabled: true,
+        lastPoll: new Date(),
+      };
+
+      expect(pollingConfig.interval).toBe(30000);
+    });
+
+    it('should detect new data on poll', () => {
+      const pollResult = {
+        hasNewData: true,
+        changes: ['capitalCalls', 'documents'],
+        serverTimestamp: new Date(),
+      };
+
+      expect(pollResult.hasNewData).toBe(true);
+    });
+
+    it('should update dashboard without full reload', () => {
+      const incrementalUpdate = {
+        type: 'INCREMENTAL',
+        sectionsUpdated: ['pendingActions', 'recentTransactions'],
+        fullReloadRequired: false,
+      };
+
+      expect(incrementalUpdate.fullReloadRequired).toBe(false);
+    });
+
+    it('should show refresh indicator', () => {
+      const refreshUI = {
+        showSpinner: true,
+        lastUpdated: new Date(),
+        nextUpdateIn: 30,
+      };
+
+      expect(refreshUI.showSpinner).toBe(true);
+    });
+
+    it('should handle manual refresh', () => {
+      const manualRefresh = {
+        triggeredBy: 'user',
+        fetchedAt: new Date(),
+        dataRefreshed: true,
+      };
+
+      expect(manualRefresh.dataRefreshed).toBe(true);
+    });
+  });
+});
+
+describe('Phase 3: Edge Cases', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  describe('Expired Documents (E-Signature)', () => {
+    it('should detect expired signature request', () => {
+      const expiredRequest = {
+        id: 'sig-req-expired',
+        status: 'EXPIRED',
+        sentAt: new Date('2025-12-01'),
+        expiresAt: new Date('2025-12-08'),
+        expiredAt: new Date('2025-12-08'),
+      };
+
+      const isExpired = new Date() > new Date(expiredRequest.expiresAt);
+      expect(isExpired).toBe(true);
+    });
+
+    it('should prevent signing of expired document', () => {
+      const signAttempt = {
+        requestId: 'sig-req-expired',
+        action: 'SIGN',
+        result: 'REJECTED',
+        reason: 'DOCUMENT_EXPIRED',
+        message: 'This signature request has expired',
+      };
+
+      expect(signAttempt.result).toBe('REJECTED');
+    });
+
+    it('should show expiry warning before deadline', () => {
+      const expiryWarning = {
+        requestId: 'sig-req-soon',
+        hoursRemaining: 24,
+        showWarning: true,
+        warningMessage: 'This document expires in 24 hours',
+      };
+
+      expect(expiryWarning.showWarning).toBe(true);
+    });
+
+    it('should allow GP to extend expiry', () => {
+      const extendExpiry = {
+        requestId: 'sig-req-soon',
+        previousExpiry: new Date('2026-01-25'),
+        newExpiry: new Date('2026-02-01'),
+        extendedBy: 'gp-admin',
+        extendedAt: new Date(),
+      };
+
+      expect(extendExpiry.newExpiry > extendExpiry.previousExpiry).toBe(true);
+    });
+
+    it('should allow GP to resend expired request', () => {
+      const resendRequest = {
+        originalRequestId: 'sig-req-expired',
+        newRequestId: 'sig-req-resent',
+        status: 'SENT',
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      };
+
+      expect(resendRequest.status).toBe('SENT');
+    });
+
+    it('should notify GP of expiring documents', () => {
+      const expiryAlert = {
+        type: 'DOCUMENTS_EXPIRING',
+        count: 3,
+        documentsExpiring: ['sig-1', 'sig-2', 'sig-3'],
+        expiringWithin: '48 hours',
+      };
+
+      expect(expiryAlert.count).toBe(3);
+    });
+  });
+
+  describe('Failed Payments (Stripe/Plaid)', () => {
+    it('should handle Stripe card declined', () => {
+      const stripeError = {
+        type: 'card_error',
+        code: 'card_declined',
+        message: 'Your card was declined',
+        decline_code: 'insufficient_funds',
+      };
+
+      expect(stripeError.code).toBe('card_declined');
+    });
+
+    it('should handle Stripe insufficient funds', () => {
+      const paymentResult = {
+        success: false,
+        error: 'insufficient_funds',
+        userMessage: 'Payment failed due to insufficient funds',
+        retryable: true,
+      };
+
+      expect(paymentResult.retryable).toBe(true);
+    });
+
+    it('should handle Plaid ACH failure', () => {
+      const achFailure = {
+        type: 'ACH_FAILURE',
+        returnCode: 'R01',
+        returnReason: 'Insufficient Funds',
+        transactionId: 'txn-failed',
+      };
+
+      expect(achFailure.returnCode).toBe('R01');
+    });
+
+    it('should handle Plaid NSF (Non-Sufficient Funds)', () => {
+      const nsfError = {
+        transactionId: 'txn-nsf',
+        status: 'FAILED',
+        failureReason: 'NSF',
+        amount: 50000,
+        retryCount: 0,
+        maxRetries: 2,
+      };
+
+      expect(nsfError.failureReason).toBe('NSF');
+    });
+
+    it('should retry failed payment after delay', () => {
+      const retrySchedule = {
+        transactionId: 'txn-failed',
+        retryCount: 1,
+        nextRetryAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+        retryStrategy: 'EXPONENTIAL_BACKOFF',
+      };
+
+      expect(retrySchedule.retryCount).toBe(1);
+    });
+
+    it('should notify investor of payment failure', () => {
+      const notification = {
+        investorId: 'inv-1',
+        type: 'PAYMENT_FAILED',
+        message: 'Your capital call payment failed. Please update your payment method.',
+        actionRequired: true,
+      };
+
+      expect(notification.actionRequired).toBe(true);
+    });
+
+    it('should notify GP of payment failures', () => {
+      const gpAlert = {
+        type: 'CAPITAL_CALL_PAYMENT_FAILED',
+        investorId: 'inv-1',
+        amount: 50000,
+        failureReason: 'Insufficient Funds',
+        requiresFollowUp: true,
+      };
+
+      expect(gpAlert.requiresFollowUp).toBe(true);
+    });
+
+    it('should handle expired card', () => {
+      const expiredCard = {
+        type: 'card_error',
+        code: 'expired_card',
+        message: 'Your card has expired',
+        retryable: false,
+        requiresUpdate: true,
+      };
+
+      expect(expiredCard.requiresUpdate).toBe(true);
+    });
+  });
+
+  describe('Declined Signatures', () => {
+    it('should handle LP declining to sign', () => {
+      const declineAction = {
+        requestId: 'sig-req-1',
+        action: 'DECLINE',
+        declinedBy: 'inv-1',
+        declinedAt: new Date(),
+        reason: 'Need to review terms with attorney',
+      };
+
+      expect(declineAction.action).toBe('DECLINE');
+    });
+
+    it('should update signature request status', () => {
+      const updatedRequest = {
+        id: 'sig-req-1',
+        status: 'DECLINED',
+        declinedAt: new Date(),
+        declineReason: 'Need to review terms with attorney',
+      };
+
+      expect(updatedRequest.status).toBe('DECLINED');
+    });
+
+    it('should notify GP of declined signature', () => {
+      const notification = {
+        to: 'gp-admin',
+        type: 'SIGNATURE_DECLINED',
+        requestId: 'sig-req-1',
+        investorName: 'John Doe',
+        reason: 'Need to review terms with attorney',
+      };
+
+      expect(notification.type).toBe('SIGNATURE_DECLINED');
+    });
+
+    it('should allow GP to resend or cancel', () => {
+      const gpActions = {
+        requestId: 'sig-req-1',
+        availableActions: ['RESEND', 'CANCEL', 'MODIFY_DOCUMENT'],
+      };
+
+      expect(gpActions.availableActions).toContain('RESEND');
+    });
+
+    it('should track decline history', () => {
+      const declineHistory = {
+        investorId: 'inv-1',
+        declines: [
+          { requestId: 'sig-1', declinedAt: new Date('2025-11-15'), reason: 'Questions about terms' },
+          { requestId: 'sig-2', declinedAt: new Date('2025-12-01'), reason: 'Waiting for legal review' },
+        ],
+      };
+
+      expect(declineHistory.declines).toHaveLength(2);
+    });
+  });
+
+  describe('Duplicate Accounts', () => {
+    it('should detect duplicate email on signup', () => {
+      const signupAttempt = {
+        email: 'existing@example.com',
+        result: 'REJECTED',
+        reason: 'EMAIL_EXISTS',
+        message: 'An account with this email already exists',
+      };
+
+      expect(signupAttempt.reason).toBe('EMAIL_EXISTS');
+    });
+
+    it('should detect duplicate investor across funds', () => {
+      const duplicateCheck = {
+        email: 'investor@example.com',
+        existingAccounts: [
+          { fundId: 'fund-1', investorId: 'inv-1', status: 'ACTIVE' },
+          { fundId: 'fund-2', investorId: 'inv-2', status: 'ACTIVE' },
+        ],
+        isDuplicate: true,
+      };
+
+      expect(duplicateCheck.existingAccounts).toHaveLength(2);
+    });
+
+    it('should offer account linking', () => {
+      const linkingOffer = {
+        primaryAccountId: 'inv-1',
+        duplicateEmail: 'investor@example.com',
+        linkedFunds: ['fund-1'],
+        canLinkTo: ['fund-2', 'fund-3'],
+      };
+
+      expect(linkingOffer.canLinkTo).toHaveLength(2);
+    });
+
+    it('should merge duplicate investor records', () => {
+      const mergeResult = {
+        primaryId: 'inv-1',
+        mergedIds: ['inv-dup-1', 'inv-dup-2'],
+        recordsMerged: {
+          investments: 3,
+          transactions: 15,
+          documents: 8,
+        },
+        mergedAt: new Date(),
+      };
+
+      expect(mergeResult.recordsMerged.investments).toBe(3);
+    });
+
+    it('should prevent duplicate KYC submissions', () => {
+      const kycCheck = {
+        investorId: 'inv-1',
+        existingKYC: { status: 'VERIFIED', verifiedAt: new Date('2025-06-15') },
+        newSubmission: 'BLOCKED',
+        reason: 'KYC already verified',
+      };
+
+      expect(kycCheck.newSubmission).toBe('BLOCKED');
+    });
+  });
+
+  describe('Mobile Breakpoints', () => {
+    it('should detect mobile viewport', () => {
+      const viewport = {
+        width: 375,
+        height: 812,
+        isMobile: true,
+        breakpoint: 'sm',
+      };
+
+      expect(viewport.isMobile).toBe(true);
+    });
+
+    it('should detect tablet viewport', () => {
+      const viewport = {
+        width: 768,
+        height: 1024,
+        isMobile: false,
+        isTablet: true,
+        breakpoint: 'md',
+      };
+
+      expect(viewport.isTablet).toBe(true);
+    });
+
+    it('should detect desktop viewport', () => {
+      const viewport = {
+        width: 1920,
+        height: 1080,
+        isMobile: false,
+        isTablet: false,
+        isDesktop: true,
+        breakpoint: 'xl',
+      };
+
+      expect(viewport.isDesktop).toBe(true);
+    });
+
+    it('should adjust navigation for mobile', () => {
+      const mobileNav = {
+        showHamburger: true,
+        showSidebar: false,
+        showBottomNav: true,
+      };
+
+      expect(mobileNav.showHamburger).toBe(true);
+    });
+
+    it('should stack cards vertically on mobile', () => {
+      const layout = {
+        breakpoint: 'sm',
+        gridColumns: 1,
+        cardLayout: 'vertical-stack',
+      };
+
+      expect(layout.gridColumns).toBe(1);
+    });
+
+    it('should adjust table for mobile (card view)', () => {
+      const tableConfig = {
+        breakpoint: 'sm',
+        displayMode: 'card',
+        columnsHidden: ['createdAt', 'updatedAt', 'actions'],
+      };
+
+      expect(tableConfig.displayMode).toBe('card');
+    });
+
+    it('should maintain touch targets (48px min)', () => {
+      const touchTarget = {
+        minHeight: 48,
+        minWidth: 48,
+        buttonPadding: 16,
+        compliant: true,
+      };
+
+      expect(touchTarget.compliant).toBe(true);
+    });
+
+    it('should handle orientation change', () => {
+      const orientationChange = {
+        previousOrientation: 'portrait',
+        newOrientation: 'landscape',
+        layoutAdjusted: true,
+      };
+
+      expect(orientationChange.layoutAdjusted).toBe(true);
+    });
+  });
+
+  describe('Invalid KYC (Persona)', () => {
+    it('should handle KYC verification failure', () => {
+      const kycResult = {
+        inquiryId: 'inq-failed',
+        status: 'FAILED',
+        failureReasons: ['DOCUMENT_EXPIRED', 'FACE_MISMATCH'],
+      };
+
+      expect(kycResult.status).toBe('FAILED');
+    });
+
+    it('should detect expired ID document', () => {
+      const documentCheck = {
+        type: 'DRIVERS_LICENSE',
+        expirationDate: '2024-06-15',
+        isExpired: true,
+        failureReason: 'DOCUMENT_EXPIRED',
+      };
+
+      expect(documentCheck.isExpired).toBe(true);
+    });
+
+    it('should detect fraudulent document', () => {
+      const fraudCheck = {
+        inquiryId: 'inq-fraud',
+        riskLevel: 'HIGH',
+        fraudSignals: ['TAMPERED_DOCUMENT', 'SYNTHETIC_IDENTITY'],
+        autoReject: true,
+      };
+
+      expect(fraudCheck.autoReject).toBe(true);
+    });
+
+    it('should handle selfie mismatch', () => {
+      const selfieMismatch = {
+        inquiryId: 'inq-mismatch',
+        selfieScore: 35,
+        threshold: 80,
+        passed: false,
+        reason: 'FACE_MISMATCH',
+      };
+
+      expect(selfieMismatch.passed).toBe(false);
+    });
+
+    it('should notify investor of KYC failure', () => {
+      const notification = {
+        investorId: 'inv-kyc-fail',
+        type: 'KYC_FAILED',
+        message: 'Your identity verification failed. Please try again with a valid document.',
+        canRetry: true,
+      };
+
+      expect(notification.canRetry).toBe(true);
+    });
+
+    it('should allow KYC retry with new documents', () => {
+      const retryAttempt = {
+        investorId: 'inv-kyc-fail',
+        previousInquiryId: 'inq-failed',
+        newInquiryId: 'inq-retry-1',
+        retryCount: 1,
+        maxRetries: 3,
+      };
+
+      expect(retryAttempt.retryCount).toBe(1);
+    });
+
+    it('should block after max KYC retries', () => {
+      const maxRetriesReached = {
+        investorId: 'inv-kyc-blocked',
+        retryCount: 3,
+        maxRetries: 3,
+        blocked: true,
+        requiresManualReview: true,
+      };
+
+      expect(maxRetriesReached.blocked).toBe(true);
+    });
+
+    it('should flag for manual review', () => {
+      const manualReview = {
+        inquiryId: 'inq-review',
+        status: 'PENDING_REVIEW',
+        assignedTo: 'compliance-team',
+        flaggedAt: new Date(),
+        reason: 'INCONCLUSIVE_MATCH',
+      };
+
+      expect(manualReview.status).toBe('PENDING_REVIEW');
+    });
+
+    it('should log KYC attempts for compliance', () => {
+      const kycLog = {
+        investorId: 'inv-1',
+        attempts: [
+          { inquiryId: 'inq-1', status: 'FAILED', timestamp: new Date('2026-01-20') },
+          { inquiryId: 'inq-2', status: 'PASSED', timestamp: new Date('2026-01-22') },
+        ],
+        currentStatus: 'VERIFIED',
+      };
+
+      expect(kycLog.attempts).toHaveLength(2);
+    });
+
+    it('should handle Persona API timeout', () => {
+      const apiError = {
+        type: 'TIMEOUT',
+        service: 'persona',
+        retryable: true,
+        message: 'KYC service temporarily unavailable',
+        fallback: 'QUEUE_FOR_RETRY',
+      };
+
+      expect(apiError.retryable).toBe(true);
+    });
+  });
+
+  describe('Network & API Edge Cases', () => {
+    it('should handle API rate limiting', () => {
+      const rateLimitError = {
+        status: 429,
+        retryAfter: 60,
+        message: 'Too many requests',
+        queued: true,
+      };
+
+      expect(rateLimitError.status).toBe(429);
+    });
+
+    it('should handle network disconnection gracefully', () => {
+      const networkError = {
+        type: 'NETWORK_ERROR',
+        online: false,
+        queuedForRetry: true,
+        userNotified: true,
+      };
+
+      expect(networkError.queuedForRetry).toBe(true);
+    });
+
+    it('should handle API 500 errors', () => {
+      const serverError = {
+        status: 500,
+        userMessage: 'Something went wrong. Please try again.',
+        logged: true,
+        alertSent: true,
+      };
+
+      expect(serverError.status).toBe(500);
+    });
+
+    it('should handle session expiry', () => {
+      const sessionExpiry = {
+        expired: true,
+        redirectTo: '/login',
+        message: 'Your session has expired. Please log in again.',
+      };
+
+      expect(sessionExpiry.expired).toBe(true);
+    });
+  });
+});

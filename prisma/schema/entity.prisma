@@ -11,6 +11,12 @@ model Entity {
   fundConfig        Json?
   startupConfig     Json?
   
+  feeConfig         Json?
+  
+  tierConfig        Json?
+  
+  customSettings    Json?
+  
   investors         EntityInvestor[]
   
   createdAt         DateTime     @default(now())

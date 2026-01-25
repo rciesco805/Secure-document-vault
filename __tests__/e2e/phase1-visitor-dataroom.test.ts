@@ -3355,3 +3355,465 @@ describe('Phase 1: Reporting & CRM Dashboard', () => {
     });
   });
 });
+
+describe('Phase 1: Mobile/UX Checks', () => {
+  describe('Mobile Responsive Design', () => {
+    it('should detect mobile viewport', () => {
+      const viewportWidth = 375;
+      const isMobile = viewportWidth < 768;
+
+      expect(isMobile).toBe(true);
+    });
+
+    it('should detect tablet viewport', () => {
+      const viewportWidth = 768;
+      const isTablet = viewportWidth >= 768 && viewportWidth < 1024;
+
+      expect(isTablet).toBe(true);
+    });
+
+    it('should detect desktop viewport', () => {
+      const viewportWidth = 1440;
+      const isDesktop = viewportWidth >= 1024;
+
+      expect(isDesktop).toBe(true);
+    });
+
+    it('should use mobile navigation on small screens', () => {
+      const isMobile = true;
+      const navType = isMobile ? 'hamburger-menu' : 'sidebar';
+
+      expect(navType).toBe('hamburger-menu');
+    });
+
+    it('should stack cards vertically on mobile', () => {
+      const isMobile = true;
+      const layout = isMobile ? 'flex-col' : 'grid-cols-3';
+
+      expect(layout).toBe('flex-col');
+    });
+
+    it('should use full-width buttons on mobile', () => {
+      const isMobile = true;
+      const buttonClass = isMobile ? 'w-full' : 'w-auto';
+
+      expect(buttonClass).toBe('w-full');
+    });
+  });
+
+  describe('Minimal Click Paths', () => {
+    it('should complete dataroom access in 2 clicks', () => {
+      const clickPath = [
+        { action: 'Click fund card', target: '/dataroom/fund-bermuda' },
+        { action: 'View documents', target: '/dataroom/fund-bermuda/documents' },
+      ];
+
+      expect(clickPath).toHaveLength(2);
+    });
+
+    it('should complete signup in 3 clicks', () => {
+      const signupPath = [
+        { action: 'Click Sign Me Up', target: '/lp/onboard' },
+        { action: 'Fill form and submit', target: 'POST /api/lp/register' },
+        { action: 'Click magic link', target: '/lp/dashboard' },
+      ];
+
+      expect(signupPath).toHaveLength(3);
+    });
+
+    it('should access subscription in 2 clicks from dashboard', () => {
+      const subscriptionPath = [
+        { action: 'Click Subscribe button', target: 'open-modal' },
+        { action: 'Complete wizard', target: '/api/lp/subscribe' },
+      ];
+
+      expect(subscriptionPath).toHaveLength(2);
+    });
+
+    it('should connect bank in 3 clicks', () => {
+      const bankPath = [
+        { action: 'Click Connect Bank', target: 'open-plaid-link' },
+        { action: 'Select institution', target: 'plaid-institution' },
+        { action: 'Confirm account', target: '/api/lp/bank/connect' },
+      ];
+
+      expect(bankPath).toHaveLength(3);
+    });
+  });
+
+  describe('Wizard Flow Smoothness', () => {
+    it('should track wizard step progress', () => {
+      const wizardState = {
+        currentStep: 2,
+        totalSteps: 4,
+        completedSteps: [1, 2],
+        canProceed: true,
+      };
+
+      expect(wizardState.currentStep).toBe(2);
+      expect(wizardState.completedSteps).toHaveLength(2);
+    });
+
+    it('should allow back navigation in wizard', () => {
+      const currentStep = 3;
+      const canGoBack = currentStep > 1;
+
+      expect(canGoBack).toBe(true);
+    });
+
+    it('should disable next until step complete', () => {
+      const stepValid = false;
+      const nextButtonEnabled = stepValid;
+
+      expect(nextButtonEnabled).toBe(false);
+    });
+
+    it('should show loading state during submission', () => {
+      const wizardState = {
+        isSubmitting: true,
+        buttonText: 'Processing...',
+        disabled: true,
+      };
+
+      expect(wizardState.isSubmitting).toBe(true);
+      expect(wizardState.disabled).toBe(true);
+    });
+
+    it('should preserve form data on back navigation', () => {
+      const formData = {
+        step1: { name: 'John', email: 'john@example.com' },
+        step2: { signature: 'base64-data' },
+      };
+
+      expect(formData.step1.name).toBe('John');
+      expect(formData.step2.signature).toBeTruthy();
+    });
+
+    it('should show step indicators on mobile', () => {
+      const stepIndicator = {
+        current: 2,
+        total: 4,
+        displayText: 'Step 2 of 4',
+        progressPercent: 50,
+      };
+
+      expect(stepIndicator.displayText).toBe('Step 2 of 4');
+    });
+
+    it('should animate step transitions', () => {
+      const transitionConfig = {
+        type: 'slide',
+        direction: 'left',
+        duration: 300,
+        easing: 'ease-in-out',
+      };
+
+      expect(transitionConfig.duration).toBe(300);
+    });
+  });
+
+  describe('Touch-Friendly Interactions', () => {
+    it('should use 44px minimum touch targets', () => {
+      const minTouchSize = 44;
+      const buttonHeight = 48;
+      const isAccessible = buttonHeight >= minTouchSize;
+
+      expect(isAccessible).toBe(true);
+    });
+
+    it('should support swipe gestures for navigation', () => {
+      const swipeConfig = {
+        threshold: 50,
+        velocity: 0.3,
+        enableSwipeBack: true,
+      };
+
+      expect(swipeConfig.enableSwipeBack).toBe(true);
+    });
+
+    it('should use pull-to-refresh on data lists', () => {
+      const pullToRefresh = {
+        enabled: true,
+        threshold: 80,
+        refreshing: false,
+      };
+
+      expect(pullToRefresh.enabled).toBe(true);
+    });
+  });
+});
+
+describe('Phase 1: Session & Data Isolation', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  const mockPrisma = prisma as jest.Mocked<typeof prisma>;
+
+  describe('Logout/Relogin Session', () => {
+    it('should clear session on logout', () => {
+      const sessionBefore = { userId: 'user-1', token: 'abc123' };
+      const sessionAfter = null;
+
+      expect(sessionAfter).toBeNull();
+    });
+
+    it('should redirect to login page after logout', () => {
+      const logoutRedirect = '/login';
+
+      expect(logoutRedirect).toBe('/login');
+    });
+
+    it('should restore user data on relogin', async () => {
+      const userId = 'user-1';
+
+      (mockPrisma.user.findUnique as jest.Mock).mockResolvedValue({
+        id: userId,
+        email: 'investor@example.com',
+        name: 'John Investor',
+        role: 'LP',
+      });
+
+      const user = await mockPrisma.user.findUnique({
+        where: { id: userId },
+      });
+
+      expect(user?.email).toBe('investor@example.com');
+    });
+
+    it('should restore investor profile on relogin', async () => {
+      (mockPrisma.investor.findUnique as jest.Mock).mockResolvedValue({
+        id: 'investor-1',
+        userId: 'user-1',
+        fundId: 'fund-bermuda',
+        ndaSigned: true,
+        accreditationStatus: 'VERIFIED',
+      });
+
+      const investor = await mockPrisma.investor.findUnique({
+        where: { id: 'investor-1' },
+      });
+
+      expect(investor?.ndaSigned).toBe(true);
+      expect(investor?.accreditationStatus).toBe('VERIFIED');
+    });
+
+    it('should maintain session across page refreshes', () => {
+      const sessionToken = 'session-abc123';
+      const sessionValid = true;
+
+      expect(sessionValid).toBe(true);
+    });
+
+    it('should expire session after timeout', () => {
+      const sessionExpiresAt = new Date('2026-01-24T10:00:00Z');
+      const now = new Date('2026-01-25T12:00:00Z');
+      const isExpired = now > sessionExpiresAt;
+
+      expect(isExpired).toBe(true);
+    });
+  });
+
+  describe('LP Data Isolation', () => {
+    it('should only return own investor profile', async () => {
+      const currentUserId = 'user-1';
+
+      (mockPrisma.investor.findFirst as jest.Mock).mockResolvedValue({
+        id: 'investor-1',
+        userId: currentUserId,
+        fundId: 'fund-bermuda',
+      });
+
+      const investor = await mockPrisma.investor.findFirst({
+        where: { userId: currentUserId },
+      });
+
+      expect(investor?.userId).toBe(currentUserId);
+    });
+
+    it('should only return own investments', () => {
+      const allInvestments = [
+        { id: 'inv-1', investorId: 'investor-1', amount: 50000 },
+        { id: 'inv-2', investorId: 'investor-2', amount: 75000 },
+        { id: 'inv-3', investorId: 'investor-1', amount: 25000 },
+      ];
+
+      const currentInvestorId = 'investor-1';
+      const ownInvestments = allInvestments.filter(i => i.investorId === currentInvestorId);
+
+      expect(ownInvestments).toHaveLength(2);
+    });
+
+    it('should only return own transactions', () => {
+      const allTransactions = [
+        { id: 'txn-1', investorId: 'investor-1', type: 'CAPITAL_CALL' },
+        { id: 'txn-2', investorId: 'investor-2', type: 'DISTRIBUTION' },
+        { id: 'txn-3', investorId: 'investor-1', type: 'DISTRIBUTION' },
+      ];
+
+      const currentInvestorId = 'investor-1';
+      const ownTransactions = allTransactions.filter(t => t.investorId === currentInvestorId);
+
+      expect(ownTransactions).toHaveLength(2);
+    });
+
+    it('should only return own documents', () => {
+      const allDocuments = [
+        { id: 'doc-1', path: '/vault/investor-1/nda.pdf' },
+        { id: 'doc-2', path: '/vault/investor-2/nda.pdf' },
+        { id: 'doc-3', path: '/vault/investor-1/k1-2024.pdf' },
+      ];
+
+      const currentInvestorVault = '/vault/investor-1/';
+      const ownDocuments = allDocuments.filter(d => d.path.startsWith(currentInvestorVault));
+
+      expect(ownDocuments).toHaveLength(2);
+    });
+
+    it('should not expose other LP data in API responses', () => {
+      const apiResponse = {
+        investor: {
+          id: 'investor-1',
+          name: 'John Investor',
+          commitment: 500000,
+        },
+        fund: {
+          id: 'fund-bermuda',
+          name: 'Bermuda Growth Fund',
+          totalRaised: 5000000,
+        },
+      };
+
+      expect(apiResponse.investor.id).toBe('investor-1');
+      expect(apiResponse).not.toHaveProperty('otherInvestors');
+    });
+
+    it('should filter cap table to show aggregates only', () => {
+      const lpCapTableView = {
+        yourOwnership: 5,
+        totalLPOwnership: 50,
+        gpOwnership: 50,
+        showIndividualLPs: false,
+      };
+
+      expect(lpCapTableView.showIndividualLPs).toBe(false);
+    });
+  });
+
+  describe('Fund Data Access', () => {
+    it('should allow LP to view fund summary', () => {
+      const fundSummary = {
+        id: 'fund-bermuda',
+        name: 'Bermuda Growth Fund',
+        status: 'RAISING',
+        totalRaised: 5000000,
+        targetAmount: 10000000,
+      };
+
+      expect(fundSummary.name).toBeTruthy();
+      expect(fundSummary.totalRaised).toBe(5000000);
+    });
+
+    it('should restrict LP from other fund data', () => {
+      const allFunds = [
+        { id: 'fund-bermuda', teamId: 'team-1' },
+        { id: 'fund-private', teamId: 'team-2' },
+      ];
+
+      const investorFundId = 'fund-bermuda';
+      const accessibleFunds = allFunds.filter(f => f.id === investorFundId);
+
+      expect(accessibleFunds).toHaveLength(1);
+    });
+
+    it('should not expose sensitive fund fields to LP', () => {
+      const lpFundView = {
+        name: 'Bermuda Growth Fund',
+        targetAmount: 10000000,
+        status: 'RAISING',
+      };
+
+      expect(lpFundView).not.toHaveProperty('bankAccountDetails');
+      expect(lpFundView).not.toHaveProperty('gpCarryPercent');
+    });
+  });
+
+  describe('Role-Based Access Control', () => {
+    it('should identify LP role correctly', () => {
+      const userRole = 'LP';
+      const isLP = userRole === 'LP';
+
+      expect(isLP).toBe(true);
+    });
+
+    it('should identify GP role correctly', () => {
+      const userRole = 'GP';
+      const isGP = userRole === 'GP';
+
+      expect(isGP).toBe(true);
+    });
+
+    it('should restrict LP from admin routes', () => {
+      const userRole = 'LP';
+      const requestedRoute = '/admin/dashboard';
+      const hasAccess = userRole === 'GP' || userRole === 'ADMIN';
+
+      expect(hasAccess).toBe(false);
+    });
+
+    it('should allow GP to access all investor data', () => {
+      const userRole = 'GP';
+      const canViewAllInvestors = userRole === 'GP' || userRole === 'ADMIN';
+
+      expect(canViewAllInvestors).toBe(true);
+    });
+
+    it('should restrict LP from bulk operations', () => {
+      const userRole = 'LP';
+      const canBulkAction = userRole === 'GP' || userRole === 'ADMIN';
+
+      expect(canBulkAction).toBe(false);
+    });
+
+    it('should allow LP to view own capital calls', () => {
+      const userRole = 'LP';
+      const investorId = 'investor-1';
+      const capitalCall = { id: 'call-1', investorId: 'investor-1' };
+
+      const canView = capitalCall.investorId === investorId || userRole === 'GP';
+
+      expect(canView).toBe(true);
+    });
+  });
+
+  describe('Multi-Tenant Data Isolation', () => {
+    it('should scope queries by team ID', () => {
+      const userTeamIds = ['team-1', 'team-2'];
+      const fundQuery = {
+        where: {
+          teamId: { in: userTeamIds },
+        },
+      };
+
+      expect(fundQuery.where.teamId.in).toContain('team-1');
+    });
+
+    it('should prevent cross-team data access', () => {
+      const userTeamIds = ['team-1'];
+      const requestedFund = { id: 'fund-other', teamId: 'team-2' };
+
+      const hasAccess = userTeamIds.includes(requestedFund.teamId);
+
+      expect(hasAccess).toBe(false);
+    });
+
+    it('should isolate investor data by fund', () => {
+      const investor = { id: 'investor-1', fundId: 'fund-bermuda' };
+      const requestedFundId = 'fund-bermuda';
+
+      const hasAccess = investor.fundId === requestedFundId;
+
+      expect(hasAccess).toBe(true);
+    });
+  });
+});

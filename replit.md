@@ -12,25 +12,27 @@ A comprehensive 506(c) fund GP/LP management suite designed to streamline invest
 
 ## Recent Changes (January 2026)
 
-- **Unified Admin Access Control with Hub Navigation**: Added `/hub` landing page for admins to choose between Dataroom and Fundroom. Login redirects to `/hub` for team members. Added `hasFundroomAccess` field to UserTeam model - super admins (ADMIN role) always have both access, managers/members need explicit fundroom access toggle. Team Settings page now shows fundroom access toggle per member.
-- **LP/Dataroom Cross-Navigation**: LP investors can now navigate between their Fundroom dashboard and the Dataroom. Added "View Dataroom" link in LP dashboard header, and "My Fundroom" button in dataroom nav for authenticated investors. Same login portal for all users - LPs auto-redirect to LP dashboard, viewers to dataroom, admins to hub.
-- **Subscription Modal with Multi-Tier Pricing**: Post-NDA subscription modal with unit-based pricing tiers, blended pricing for multi-tier subscriptions, server-side amount validation, Review→Sign flow, sticky banner for pending subscriptions
-- **FundPricingTier Model**: New Prisma model for tiered pricing (tranche, unitsAvailable, pricePerUnit) with first-come tier deduction, multi-tier allocation, and tierBreakdown JSON storage
-- **Admin Units by Tier Card**: Real-time pricing tier management with flat mode toggle, add/delete tiers, subscription counts
-- **Server-Side Subscription Security**: Accreditation verification, fund eligibility checks, NaN/invalid input validation, amount mismatch protection
-- **LP Portal UI Polish**: Added skeleton loading states, welcome banner with onboarding progress, tooltips for financial terms (commitment, funded, distributions, capital calls), empty state component, smooth card animations with staggered fade-in effects, hover lift states, and animated progress bars with prefers-reduced-motion support
-- **Real-time Dashboard Updates**: 30-second auto-refresh polling on LP and admin dashboards with manual refresh buttons
-- **View Audit Extension**: Extended View model with comprehensive audit fields (ipAddress, userAgent, geo location, device/browser/OS info, sessionId, referrer, auditMetadata) for 506(c) compliance tracking
-- **Form D Reminder**: Added Form D filing reminder display in accreditation wizard showing filing date and annual amendment due date
-- **View Audit Helper**: Created lib/audit/view-audit.ts utility for extracting audit data from requests
-- **Entity Model Added**: Standalone Entity model with FUND/STARTUP mode toggle, JSON configs, and EntityInvestor junction table for investor linkage
-- **Admin Entity Management**: New /admin/entities page with mode toggle switch, create/delete functionality, and investor count display
-- **OpenSign Removed**: E-signature is now fully self-hosted with custom React drag-drop field placement (no external API dependencies)
-- **Form D Compliance**: Added SEC Form D filing date tracking, amendment reminders, and state notice fields to Fund model
-- **Dual Threshold System**: Initial Closing Threshold (gates capital calls) vs Full Authorized Amount (progress tracking only) with color-coded UI
-- **EntityMode Enum**: FUND (LP/GP with units, capital calls) vs STARTUP (cap table with shares, vesting) for Phase 3 expansion
-- **208 Passing Tests**: Comprehensive E2E coverage for threshold gating, export/import, multi-fund scenarios, and full dataroom→dashboard flow
-- **GitHub Actions CI**: Added .github/workflows/test.yml for automated testing on push/PR
+### Phase 2 Additions (Latest)
+- **Plaid Transfers API**: Full inbound/outbound ACH transfer flow via `/api/transactions` with signature-verified webhook handler at `/api/webhooks/plaid`
+- **Webhook Security**: Plaid webhook verification (JWT signature, timestamp, body hash) with idempotent event processing to prevent double-counting
+- **Entity Fee/Tier Configuration**: Extended Entity model with `feeConfig` (management fees, carried interest, hurdle rates), `tierConfig` (investor tiers with discounts), and `customSettings` JSON fields
+- **AUM Reporting**: New `/api/admin/reports/aum` endpoint with gross/net AUM, NAV, fee deductions (management, performance, organizational, expenses), and fund ratios
+- **Real-time Wizard Progress**: `/api/lp/wizard-progress` tracks 7 onboarding steps with prerequisites validation (NDA → Accreditation → KYC required before completion)
+- **Mobile Viewport Tests**: 30 additional tests for device detection, responsive UI, touch interactions
+- **1235+ Passing Tests**: Comprehensive E2E coverage across all phases
+
+### Phase 1 Features
+- **Unified Admin Access Control with Hub Navigation**: `/hub` landing page for admins, `hasFundroomAccess` field for permission-based access
+- **LP/Dataroom Cross-Navigation**: Seamless navigation between Fundroom and Dataroom
+- **Subscription Modal with Multi-Tier Pricing**: Unit-based pricing, blended pricing, Review→Sign flow
+- **FundPricingTier Model**: Tiered pricing with first-come tier deduction
+- **LP Portal UI Polish**: Skeleton loading, tooltips, animations, progress bars
+- **Real-time Dashboard Updates**: 30-second auto-refresh polling
+- **View Audit Extension**: Comprehensive audit fields for 506(c) compliance
+- **Self-hosted E-Signature**: Custom React drag-drop field placement (OpenSign removed)
+- **Form D Compliance**: Filing date tracking, amendment reminders
+- **Dual Threshold System**: Initial Closing vs Full Authorized Amount
+- **EntityMode Enum**: FUND vs STARTUP modes for Phase 3 expansion
 
 ## System Architecture
 
@@ -131,6 +133,35 @@ git remote set-url bitget https://${GITHUB_PERSONAL_ACCESS_TOKEN}@github.com/rci
 
 ## Phase Status
 
-- **Phase 1 (MVP)**: ~90% complete - Core onboarding, NDA gate, accreditation, fundroom, e-signature, dual thresholds
-- **Phase 2**: Pending - Bulk operations, advanced analytics, full Persona/Plaid integration
-- **Phase 3**: Planned - STARTUP mode (cap table), vesting schedules, equity management
+- **Phase 1 (MVP)**: ~95% complete - Core onboarding, NDA gate, accreditation, fundroom, e-signature, dual thresholds
+- **Phase 2**: ~60% complete - Plaid transfers, AUM reporting, entity fee configs, wizard progress tracking
+- **Phase 3**: Planned - STARTUP mode (cap table), vesting schedules, equity management, QuickBooks/Wolters Kluwer integrations
+
+## Directory Structure
+
+```
+├── pages/                    # Next.js Pages Router (main app, API routes)
+│   ├── api/admin/           # GP dashboard endpoints
+│   ├── api/lp/              # LP portal endpoints (bank, notes, transactions, wizard)
+│   ├── api/transactions/    # Plaid transfer processing
+│   ├── api/webhooks/        # Plaid webhook handler
+│   └── api/sign/            # E-signature endpoints
+├── app/                      # Next.js App Router (auth, admin sections)
+├── components/               # React components (UI, LP, signatures)
+├── lib/                      # Shared utilities (auth, audit, Prisma)
+├── prisma/schema/            # Multi-file Prisma schema
+└── __tests__/               # Jest E2E tests (1235+ passing)
+```
+
+## Integrations Status
+
+| Integration | Status | Implementation |
+|-------------|--------|----------------|
+| **Plaid** | ✅ Complete | Bank connect, ACH transfers, webhook handler |
+| **Persona** | ✅ Complete | KYC/AML iframe embed post-NDA |
+| **Resend** | ✅ Complete | Email notifications, magic links |
+| **Tinybird** | ✅ Complete | Real-time analytics, audit logging |
+| **Stripe** | ✅ Complete | Platform billing |
+| **Object Storage** | ✅ Complete | Replit Object Storage (documents) |
+| **QuickBooks** | ⏳ Phase 3 | Accounting sync for K-1s |
+| **Wolters Kluwer** | ⏳ Phase 3 | Tax document automation |

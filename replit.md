@@ -155,23 +155,30 @@ git remote set-url bitget https://${GITHUB_PERSONAL_ACCESS_TOKEN}@github.com/rci
 
 ## Documentation
 
-- **[API Documentation](docs/API_DOCUMENTATION.md)**: Comprehensive API reference with endpoints, request/response examples, authentication, and error codes
-- **[Phase 3 Roadmap](docs/PHASE3_ROADMAP.md)**: Integration roadmap for QuickBooks, Wolters Kluwer K-1, cap table management, and vesting schedules
+| Document | Description |
+|----------|-------------|
+| **[API Documentation](docs/API_DOCUMENTATION.md)** | Comprehensive API reference with all endpoints, request/response examples, authentication, error codes, SDK examples |
+| **[Test Report](docs/test-report.md)** | Full E2E test report with 1540+ passing tests, coverage breakdown, and execution logs |
+| **[ESIGN Compliance](docs/ESIGN_COMPLIANCE.md)** | ESIGN Act / UETA compliance documentation, consent capture, checksum verification |
+| **[Persona Sanctions](docs/PERSONA_SANCTIONS_SCREENING.md)** | KYC/AML integration with Persona, sanctions screening |
+| **[Phase 3 Roadmap](docs/PHASE3_ROADMAP.md)** | Integration roadmap for QuickBooks, Wolters Kluwer K-1, cap table management |
+| **[Main Documentation](DOCUMENTATION.md)** | Complete platform documentation with features, user journeys, tech stack |
 
 ## Directory Structure
 
 ```
 ├── pages/                    # Next.js Pages Router (main app, API routes)
-│   ├── api/admin/           # GP dashboard endpoints
+│   ├── api/admin/           # GP dashboard endpoints (export, reports, bulk-action)
 │   ├── api/lp/              # LP portal endpoints (bank, notes, transactions, wizard)
-│   ├── api/transactions/    # Plaid transfer processing
-│   ├── api/webhooks/        # Plaid webhook handler
-│   └── api/sign/            # E-signature endpoints
+│   ├── api/transactions/    # Plaid transfer processing with KYC/AML enforcement
+│   ├── api/webhooks/        # Plaid/Persona webhook handlers
+│   └── api/sign/            # E-signature endpoints (sign, verify)
 ├── app/                      # Next.js App Router (auth, admin sections)
 ├── components/               # React components (UI, LP, signatures)
 ├── lib/                      # Shared utilities (auth, audit, Prisma)
 ├── prisma/schema/            # Multi-file Prisma schema
-└── __tests__/               # Jest E2E tests (1235+ passing)
+├── docs/                     # Platform documentation
+└── __tests__/               # Jest E2E tests (1540+ passing)
 ```
 
 ## Integrations Status

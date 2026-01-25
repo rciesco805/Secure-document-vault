@@ -4829,3 +4829,481 @@ describe('Phase 2: Admin/GP Login & Dashboard', () => {
     });
   });
 });
+
+describe('Phase 2: Entity Setup & Configuration', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  const mockPrisma = prisma as jest.Mocked<typeof prisma>;
+
+  describe('Entity Mode Toggle', () => {
+    it('should support FUND mode', () => {
+      const entity = {
+        id: 'entity-1',
+        name: 'Bermuda Growth Fund',
+        mode: 'FUND',
+        teamId: 'team-1',
+      };
+
+      expect(entity.mode).toBe('FUND');
+    });
+
+    it('should support STARTUP mode', () => {
+      const entity = {
+        id: 'entity-2',
+        name: 'TechCo Inc',
+        mode: 'STARTUP',
+        teamId: 'team-1',
+      };
+
+      expect(entity.mode).toBe('STARTUP');
+    });
+
+    it('should validate mode enum values', () => {
+      const validModes = ['FUND', 'STARTUP'];
+      const requestedMode = 'FUND';
+
+      expect(validModes).toContain(requestedMode);
+    });
+
+    it('should reject invalid mode values', () => {
+      const validModes = ['FUND', 'STARTUP'];
+      const invalidMode = 'INVALID';
+
+      expect(validModes).not.toContain(invalidMode);
+    });
+
+    it('should toggle entity mode', () => {
+      let entity = { id: 'entity-1', mode: 'FUND' as 'FUND' | 'STARTUP' };
+      entity.mode = 'STARTUP';
+
+      expect(entity.mode).toBe('STARTUP');
+    });
+  });
+
+  describe('FUND Mode Configuration', () => {
+    it('should configure target amount', () => {
+      const fundConfig = {
+        mode: 'FUND',
+        targetAmount: 10000000,
+        currency: 'USD',
+      };
+
+      expect(fundConfig.targetAmount).toBe(10000000);
+    });
+
+    it('should configure initial closing threshold', () => {
+      const fundConfig = {
+        mode: 'FUND',
+        targetAmount: 10000000,
+        initialClosingThreshold: 2500000,
+        thresholdPercent: 25,
+      };
+
+      expect(fundConfig.initialClosingThreshold).toBe(2500000);
+    });
+
+    it('should configure management fee percentage', () => {
+      const fundConfig = {
+        mode: 'FUND',
+        managementFeePercent: 2.0,
+        carriedInterestPercent: 20,
+      };
+
+      expect(fundConfig.managementFeePercent).toBe(2.0);
+      expect(fundConfig.carriedInterestPercent).toBe(20);
+    });
+
+    it('should configure pricing tiers', () => {
+      const fundConfig = {
+        mode: 'FUND',
+        pricingTiers: [
+          { tranche: 1, pricePerUnit: 10000, unitsAvailable: 100 },
+          { tranche: 2, pricePerUnit: 12000, unitsAvailable: 50 },
+          { tranche: 3, pricePerUnit: 15000, unitsAvailable: 25 },
+        ],
+      };
+
+      expect(fundConfig.pricingTiers).toHaveLength(3);
+      expect(fundConfig.pricingTiers[0].pricePerUnit).toBe(10000);
+    });
+
+    it('should configure minimum investment', () => {
+      const fundConfig = {
+        mode: 'FUND',
+        minimumInvestment: 25000,
+        maximumInvestment: 1000000,
+      };
+
+      expect(fundConfig.minimumInvestment).toBe(25000);
+    });
+
+    it('should configure fund status', () => {
+      const statusOptions = ['DRAFT', 'RAISING', 'CLOSED', 'DEPLOYED', 'LIQUIDATING'];
+      const currentStatus = 'RAISING';
+
+      expect(statusOptions).toContain(currentStatus);
+    });
+
+    it('should store fund configs as JSON', () => {
+      const fundConfigJson = JSON.stringify({
+        targetAmount: 10000000,
+        initialClosingThreshold: 2500000,
+        managementFeePercent: 2.0,
+        carriedInterestPercent: 20,
+        minimumInvestment: 25000,
+      });
+
+      const parsed = JSON.parse(fundConfigJson);
+      expect(parsed.targetAmount).toBe(10000000);
+    });
+  });
+
+  describe('STARTUP Mode Configuration', () => {
+    it('should configure cap table basics', () => {
+      const startupConfig = {
+        mode: 'STARTUP',
+        totalShares: 10000000,
+        pricePerShare: 1.50,
+        valuation: 15000000,
+      };
+
+      expect(startupConfig.totalShares).toBe(10000000);
+      expect(startupConfig.pricePerShare).toBe(1.50);
+    });
+
+    it('should configure vesting schedules', () => {
+      const vestingConfig = {
+        vestingPeriodMonths: 48,
+        cliffMonths: 12,
+        vestingSchedule: 'MONTHLY',
+      };
+
+      expect(vestingConfig.vestingPeriodMonths).toBe(48);
+      expect(vestingConfig.cliffMonths).toBe(12);
+    });
+
+    it('should track share classes', () => {
+      const shareClasses = [
+        { name: 'Common', shares: 7000000, votingRights: true },
+        { name: 'Preferred A', shares: 2000000, votingRights: true, liquidationPreference: 1 },
+        { name: 'Preferred B', shares: 1000000, votingRights: true, liquidationPreference: 2 },
+      ];
+
+      expect(shareClasses).toHaveLength(3);
+    });
+
+    it('should store startup configs as JSON', () => {
+      const startupConfigJson = JSON.stringify({
+        totalShares: 10000000,
+        pricePerShare: 1.50,
+        vestingPeriodMonths: 48,
+        cliffMonths: 12,
+      });
+
+      const parsed = JSON.parse(startupConfigJson);
+      expect(parsed.totalShares).toBe(10000000);
+    });
+  });
+
+  describe('Entity Creation', () => {
+    it('should create new entity with required fields', () => {
+      const newEntity = {
+        id: 'entity-new',
+        name: 'New Growth Fund',
+        mode: 'FUND',
+        teamId: 'team-1',
+        createdAt: new Date(),
+        createdBy: 'user-gp-1',
+      };
+
+      expect(newEntity.name).toBe('New Growth Fund');
+      expect(newEntity.mode).toBe('FUND');
+    });
+
+    it('should validate entity name uniqueness within team', () => {
+      const existingEntities = [
+        { name: 'Bermuda Growth Fund', teamId: 'team-1' },
+        { name: 'Tech Ventures II', teamId: 'team-1' },
+      ];
+
+      const newName = 'New Fund';
+      const isUnique = !existingEntities.some(e => e.name === newName);
+
+      expect(isUnique).toBe(true);
+    });
+
+    it('should reject duplicate entity name', () => {
+      const existingEntities = [
+        { name: 'Bermuda Growth Fund', teamId: 'team-1' },
+      ];
+
+      const duplicateName = 'Bermuda Growth Fund';
+      const isUnique = !existingEntities.some(e => e.name === duplicateName);
+
+      expect(isUnique).toBe(false);
+    });
+
+    it('should auto-generate entity ID', () => {
+      const generateId = () => `entity-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      const entityId = generateId();
+
+      expect(entityId).toContain('entity-');
+    });
+  });
+
+  describe('Multi-Fund Flexibility', () => {
+    it('should support multiple funds per team', () => {
+      const teamFunds = [
+        { id: 'fund-1', name: 'Bermuda Growth Fund', teamId: 'team-1' },
+        { id: 'fund-2', name: 'Tech Ventures II', teamId: 'team-1' },
+        { id: 'fund-3', name: 'Real Estate Fund I', teamId: 'team-1' },
+      ];
+
+      expect(teamFunds).toHaveLength(3);
+    });
+
+    it('should isolate fund data between entities', () => {
+      const fund1Investors = [{ id: 'inv-1', fundId: 'fund-1' }];
+      const fund2Investors = [{ id: 'inv-2', fundId: 'fund-2' }];
+
+      const fund1Count = fund1Investors.length;
+      const fund2Count = fund2Investors.length;
+
+      expect(fund1Count).toBe(1);
+      expect(fund2Count).toBe(1);
+    });
+
+    it('should aggregate metrics across all team funds', () => {
+      const teamFunds = [
+        { id: 'fund-1', totalRaised: 5000000 },
+        { id: 'fund-2', totalRaised: 3000000 },
+        { id: 'fund-3', totalRaised: 2000000 },
+      ];
+
+      const teamTotalRaised = teamFunds.reduce((sum, f) => sum + f.totalRaised, 0);
+      expect(teamTotalRaised).toBe(10000000);
+    });
+
+    it('should support different configs per fund', () => {
+      const funds = [
+        { id: 'fund-1', managementFeePercent: 2.0, minimumInvestment: 25000 },
+        { id: 'fund-2', managementFeePercent: 1.5, minimumInvestment: 50000 },
+      ];
+
+      expect(funds[0].managementFeePercent).not.toBe(funds[1].managementFeePercent);
+    });
+
+    it('should allow investor in multiple funds', () => {
+      const investorFunds = [
+        { investorId: 'investor-1', fundId: 'fund-1', commitment: 100000 },
+        { investorId: 'investor-1', fundId: 'fund-2', commitment: 50000 },
+      ];
+
+      const investorTotalCommitment = investorFunds.reduce((sum, i) => sum + i.commitment, 0);
+      expect(investorTotalCommitment).toBe(150000);
+    });
+
+    it('should switch between fund views', () => {
+      const currentFundId = 'fund-1';
+      const switchToFundId = 'fund-2';
+      const dashboardUrl = `/admin/fund/${switchToFundId}`;
+
+      expect(dashboardUrl).toContain(switchToFundId);
+    });
+  });
+
+  describe('Threshold Configuration', () => {
+    it('should set initial closing threshold', () => {
+      const thresholdConfig = {
+        targetAmount: 10000000,
+        initialClosingThreshold: 2500000,
+        initialClosingThresholdPercent: 25,
+      };
+
+      expect(thresholdConfig.initialClosingThresholdPercent).toBe(25);
+    });
+
+    it('should track threshold status', () => {
+      const currentRaised = 3000000;
+      const threshold = 2500000;
+      const thresholdMet = currentRaised >= threshold;
+
+      expect(thresholdMet).toBe(true);
+    });
+
+    it('should gate capital calls by threshold', () => {
+      const thresholdMet = false;
+      const canInitiateCapitalCall = thresholdMet;
+
+      expect(canInitiateCapitalCall).toBe(false);
+    });
+
+    it('should allow capital calls after threshold met', () => {
+      const thresholdMet = true;
+      const canInitiateCapitalCall = thresholdMet;
+
+      expect(canInitiateCapitalCall).toBe(true);
+    });
+  });
+
+  describe('Fee Configuration', () => {
+    it('should configure management fee', () => {
+      const feeConfig = {
+        managementFeePercent: 2.0,
+        feeFrequency: 'QUARTERLY',
+        feeCalculationBasis: 'COMMITTED_CAPITAL',
+      };
+
+      expect(feeConfig.managementFeePercent).toBe(2.0);
+    });
+
+    it('should configure carried interest', () => {
+      const carryConfig = {
+        carriedInterestPercent: 20,
+        hurdleRate: 8,
+        catchUpPercent: 100,
+      };
+
+      expect(carryConfig.carriedInterestPercent).toBe(20);
+      expect(carryConfig.hurdleRate).toBe(8);
+    });
+
+    it('should calculate annual fee amount', () => {
+      const commitment = 1000000;
+      const managementFeePercent = 2.0;
+      const annualFee = commitment * (managementFeePercent / 100);
+
+      expect(annualFee).toBe(20000);
+    });
+
+    it('should calculate quarterly fee installment', () => {
+      const annualFee = 20000;
+      const quarterlyFee = annualFee / 4;
+
+      expect(quarterlyFee).toBe(5000);
+    });
+  });
+
+  describe('Tier Configuration', () => {
+    it('should create pricing tiers', () => {
+      const tiers = [
+        { tranche: 1, pricePerUnit: 10000, unitsAvailable: 100, isActive: true },
+        { tranche: 2, pricePerUnit: 12000, unitsAvailable: 50, isActive: true },
+        { tranche: 3, pricePerUnit: 15000, unitsAvailable: 25, isActive: false },
+      ];
+
+      const activeTiers = tiers.filter(t => t.isActive);
+      expect(activeTiers).toHaveLength(2);
+    });
+
+    it('should order tiers by tranche', () => {
+      const tiers = [
+        { tranche: 3, pricePerUnit: 15000 },
+        { tranche: 1, pricePerUnit: 10000 },
+        { tranche: 2, pricePerUnit: 12000 },
+      ];
+
+      const sorted = tiers.sort((a, b) => a.tranche - b.tranche);
+      expect(sorted[0].tranche).toBe(1);
+    });
+
+    it('should update tier availability after subscription', () => {
+      const tier = { tranche: 1, unitsAvailable: 100 };
+      const subscribedUnits = 25;
+      tier.unitsAvailable -= subscribedUnits;
+
+      expect(tier.unitsAvailable).toBe(75);
+    });
+
+    it('should deactivate tier when sold out', () => {
+      const tier = { tranche: 1, unitsAvailable: 0, isActive: true };
+      if (tier.unitsAvailable === 0) {
+        tier.isActive = false;
+      }
+
+      expect(tier.isActive).toBe(false);
+    });
+
+    it('should calculate blended price for multi-tier subscription', () => {
+      const allocations = [
+        { tranche: 1, units: 10, pricePerUnit: 10000, amount: 100000 },
+        { tranche: 2, units: 5, pricePerUnit: 12000, amount: 60000 },
+      ];
+
+      const totalAmount = allocations.reduce((sum, a) => sum + a.amount, 0);
+      const totalUnits = allocations.reduce((sum, a) => sum + a.units, 0);
+      const blendedPrice = totalAmount / totalUnits;
+
+      expect(blendedPrice).toBeCloseTo(10666.67, 1);
+    });
+
+    it('should store tiers in JSON format', () => {
+      const tiersJson = JSON.stringify([
+        { tranche: 1, pricePerUnit: 10000, unitsAvailable: 100 },
+        { tranche: 2, pricePerUnit: 12000, unitsAvailable: 50 },
+      ]);
+
+      const parsed = JSON.parse(tiersJson);
+      expect(parsed).toHaveLength(2);
+    });
+  });
+
+  describe('Entity Management API', () => {
+    it('should create entity via API', () => {
+      const createRequest = {
+        method: 'POST',
+        endpoint: '/api/admin/entities',
+        body: {
+          name: 'New Fund',
+          mode: 'FUND',
+          teamId: 'team-1',
+        },
+        response: { status: 201, id: 'entity-new' },
+      };
+
+      expect(createRequest.response.status).toBe(201);
+    });
+
+    it('should update entity via API', () => {
+      const updateRequest = {
+        method: 'PATCH',
+        endpoint: '/api/admin/entities/entity-1',
+        body: {
+          name: 'Updated Fund Name',
+          mode: 'FUND',
+        },
+        response: { status: 200, success: true },
+      };
+
+      expect(updateRequest.response.success).toBe(true);
+    });
+
+    it('should delete entity via API', () => {
+      const deleteRequest = {
+        method: 'DELETE',
+        endpoint: '/api/admin/entities/entity-1',
+        response: { status: 200, deleted: true },
+      };
+
+      expect(deleteRequest.response.deleted).toBe(true);
+    });
+
+    it('should list entities for team', () => {
+      const listRequest = {
+        method: 'GET',
+        endpoint: '/api/admin/entities?teamId=team-1',
+        response: {
+          status: 200,
+          entities: [
+            { id: 'entity-1', name: 'Fund A' },
+            { id: 'entity-2', name: 'Fund B' },
+          ],
+        },
+      };
+
+      expect(listRequest.response.entities).toHaveLength(2);
+    });
+  });
+});

@@ -211,6 +211,20 @@ const nextConfig = {
       "/api/mupdf/*": ["./node_modules/mupdf/dist/*.wasm"],
     },
     missingSuspenseWithCSRBailout: false,
+    serverComponentsExternalPackages: ["nodemailer"],
+  },
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        dns: false,
+        tls: false,
+        child_process: false,
+      };
+    }
+    return config;
   },
   eslint: {
     ignoreDuringBuilds: true,

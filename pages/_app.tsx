@@ -13,6 +13,7 @@ import { PostHogCustomProvider } from "@/components/providers/posthog-provider";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { PWAInstallPrompt } from "@/components/pwa-install";
 
 import "@/styles/globals.css";
 
@@ -85,6 +86,7 @@ export default function App({
                     </TeamProvider>
                   )}
                 </TooltipProvider>
+                <PWAInstallPrompt />
               </main>
             </NuqsAdapter>
           </ThemeProvider>

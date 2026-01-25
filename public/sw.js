@@ -1,0 +1,202 @@
+const CACHE_NAME = 'bf-fund-v1';
+const STATIC_CACHE_NAME = 'bf-fund-static-v1';
+const DYNAMIC_CACHE_NAME = 'bf-fund-dynamic-v1';
+
+const STATIC_ASSETS = [
+  '/',
+  '/offline',
+  '/manifest.json',
+  '/favicon.ico',
+];
+
+const API_CACHE_DURATION = 5 * 60 * 1000;
+
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(STATIC_CACHE_NAME).then((cache) => {
+      return cache.addAll(STATIC_ASSETS).catch((error) => {
+        console.warn('Failed to cache some static assets:', error);
+      });
+    })
+  );
+  self.skipWaiting();
+});
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames
+          .filter((name) => {
+            return name.startsWith('bf-fund-') && 
+                   name !== STATIC_CACHE_NAME && 
+                   name !== DYNAMIC_CACHE_NAME;
+          })
+          .map((name) => caches.delete(name))
+      );
+    })
+  );
+  self.clients.claim();
+});
+
+self.addEventListener('fetch', (event) => {
+  const { request } = event;
+  const url = new URL(request.url);
+
+  if (request.method !== 'GET') {
+    return;
+  }
+
+  if (url.pathname.startsWith('/api/')) {
+    if (request.headers.get('Authorization') || 
+        url.pathname.includes('/sign/') ||
+        url.pathname.includes('/transactions')) {
+      return;
+    }
+
+    event.respondWith(
+      caches.open(DYNAMIC_CACHE_NAME).then(async (cache) => {
+        try {
+          const networkResponse = await fetch(request);
+          if (networkResponse.ok) {
+            cache.put(request, networkResponse.clone());
+          }
+          return networkResponse;
+        } catch (error) {
+          const cachedResponse = await cache.match(request);
+          if (cachedResponse) {
+            return cachedResponse;
+          }
+          return new Response(
+            JSON.stringify({ error: 'Offline', message: 'This data is not available offline' }),
+            { status: 503, headers: { 'Content-Type': 'application/json' } }
+          );
+        }
+      })
+    );
+    return;
+  }
+
+  if (url.pathname.match(/\.(js|css|png|jpg|jpeg|gif|svg|woff|woff2|ttf|eot)$/)) {
+    event.respondWith(
+      caches.open(STATIC_CACHE_NAME).then(async (cache) => {
+        const cachedResponse = await cache.match(request);
+        if (cachedResponse) {
+          fetch(request).then((response) => {
+            if (response.ok) {
+              cache.put(request, response);
+            }
+          }).catch(() => {});
+          return cachedResponse;
+        }
+        
+        try {
+          const networkResponse = await fetch(request);
+          if (networkResponse.ok) {
+            cache.put(request, networkResponse.clone());
+          }
+          return networkResponse;
+        } catch (error) {
+          return new Response('', { status: 404 });
+        }
+      })
+    );
+    return;
+  }
+
+  event.respondWith(
+    fetch(request).catch(async () => {
+      const cachedResponse = await caches.match(request);
+      if (cachedResponse) {
+        return cachedResponse;
+      }
+      
+      if (request.headers.get('Accept')?.includes('text/html')) {
+        const offlinePage = await caches.match('/offline');
+        if (offlinePage) {
+          return offlinePage;
+        }
+        return new Response(
+          `<!DOCTYPE html>
+          <html>
+            <head>
+              <title>Offline - BF Fund</title>
+              <meta name="viewport" content="width=device-width, initial-scale=1">
+              <style>
+                body { font-family: system-ui, sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; background: #0f172a; color: white; }
+                .container { text-align: center; padding: 2rem; }
+                h1 { color: #059669; }
+                p { color: #94a3b8; }
+                button { background: #059669; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 16px; margin-top: 16px; }
+                button:hover { background: #047857; }
+              </style>
+            </head>
+            <body>
+              <div class="container">
+                <h1>You're Offline</h1>
+                <p>Please check your internet connection and try again.</p>
+                <button onclick="location.reload()">Retry</button>
+              </div>
+            </body>
+          </html>`,
+          { headers: { 'Content-Type': 'text/html' } }
+        );
+      }
+      
+      return new Response('Offline', { status: 503 });
+    })
+  );
+});
+
+self.addEventListener('push', (event) => {
+  if (!event.data) return;
+
+  try {
+    const data = event.data.json();
+    const options = {
+      body: data.body || 'You have a new notification',
+      icon: '/_icons/icon-192x192.png',
+      badge: '/_icons/icon-72x72.png',
+      vibrate: [100, 50, 100],
+      data: {
+        url: data.url || '/',
+      },
+      actions: data.actions || [],
+    };
+
+    event.waitUntil(
+      self.registration.showNotification(data.title || 'BF Fund', options)
+    );
+  } catch (error) {
+    console.error('Push notification error:', error);
+  }
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  
+  const url = event.notification.data?.url || '/';
+  
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      for (const client of clientList) {
+        if (client.url === url && 'focus' in client) {
+          return client.focus();
+        }
+      }
+      if (clients.openWindow) {
+        return clients.openWindow(url);
+      }
+    })
+  );
+});
+
+self.addEventListener('sync', (event) => {
+  if (event.tag === 'sync-pending-actions') {
+    event.waitUntil(syncPendingActions());
+  }
+});
+
+async function syncPendingActions() {
+  console.log('Background sync triggered');
+}

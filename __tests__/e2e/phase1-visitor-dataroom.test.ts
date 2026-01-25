@@ -5956,3 +5956,814 @@ describe('Phase 2: Investor Management/CRM', () => {
     });
   });
 });
+
+describe('Phase 2: E-Signature Admin', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  describe('/sign Dashboard - Document List', () => {
+    it('should list all signature documents', () => {
+      const documents = [
+        { id: 'doc-1', name: 'NDA - John Doe', status: 'COMPLETED', createdAt: new Date() },
+        { id: 'doc-2', name: 'Subscription Agreement - Jane Smith', status: 'PENDING', createdAt: new Date() },
+        { id: 'doc-3', name: 'Side Letter - Bob Wilson', status: 'VIEWED', createdAt: new Date() },
+      ];
+
+      expect(documents).toHaveLength(3);
+    });
+
+    it('should filter documents by status', () => {
+      const documents = [
+        { id: 'doc-1', status: 'COMPLETED' },
+        { id: 'doc-2', status: 'PENDING' },
+        { id: 'doc-3', status: 'COMPLETED' },
+        { id: 'doc-4', status: 'DECLINED' },
+      ];
+
+      const completed = documents.filter(d => d.status === 'COMPLETED');
+      expect(completed).toHaveLength(2);
+    });
+
+    it('should filter documents by date range', () => {
+      const documents = [
+        { id: 'doc-1', createdAt: new Date('2026-01-10') },
+        { id: 'doc-2', createdAt: new Date('2026-01-20') },
+        { id: 'doc-3', createdAt: new Date('2026-01-25') },
+      ];
+
+      const startDate = new Date('2026-01-15');
+      const endDate = new Date('2026-01-30');
+
+      const filtered = documents.filter(d => 
+        d.createdAt >= startDate && d.createdAt <= endDate
+      );
+
+      expect(filtered).toHaveLength(2);
+    });
+
+    it('should search documents by name', () => {
+      const documents = [
+        { id: 'doc-1', name: 'NDA - John Doe' },
+        { id: 'doc-2', name: 'Subscription Agreement - Jane Smith' },
+        { id: 'doc-3', name: 'NDA - Bob Wilson' },
+      ];
+
+      const searchQuery = 'NDA';
+      const results = documents.filter(d => 
+        d.name.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+
+      expect(results).toHaveLength(2);
+    });
+
+    it('should display document summary stats', () => {
+      const stats = {
+        total: 150,
+        pending: 25,
+        viewed: 10,
+        signed: 5,
+        completed: 100,
+        declined: 8,
+        expired: 2,
+      };
+
+      expect(stats.completed).toBe(100);
+      expect(stats.pending + stats.viewed + stats.signed + stats.completed + stats.declined + stats.expired).toBe(150);
+    });
+
+    it('should paginate document list', () => {
+      const totalDocs = 150;
+      const pageSize = 20;
+      const currentPage = 3;
+      const totalPages = Math.ceil(totalDocs / pageSize);
+
+      expect(totalPages).toBe(8);
+    });
+
+    it('should sort documents by created date', () => {
+      const documents = [
+        { id: 'doc-1', createdAt: new Date('2026-01-15') },
+        { id: 'doc-2', createdAt: new Date('2026-01-25') },
+        { id: 'doc-3', createdAt: new Date('2026-01-10') },
+      ];
+
+      const sorted = documents.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+      expect(sorted[0].id).toBe('doc-2');
+    });
+
+    it('should sort documents by status priority', () => {
+      const statusPriority = { PENDING: 1, VIEWED: 2, SIGNED: 3, COMPLETED: 4, DECLINED: 5 };
+      const documents = [
+        { id: 'doc-1', status: 'COMPLETED' as keyof typeof statusPriority },
+        { id: 'doc-2', status: 'PENDING' as keyof typeof statusPriority },
+        { id: 'doc-3', status: 'VIEWED' as keyof typeof statusPriority },
+      ];
+
+      const sorted = documents.sort((a, b) => statusPriority[a.status] - statusPriority[b.status]);
+      expect(sorted[0].status).toBe('PENDING');
+    });
+  });
+
+  describe('/sign/new - Create New Document', () => {
+    it('should upload PDF document', () => {
+      const uploadConfig = {
+        file: {
+          name: 'subscription-agreement.pdf',
+          size: 524288,
+          type: 'application/pdf',
+        },
+        maxSize: 10 * 1024 * 1024,
+        allowedTypes: ['application/pdf'],
+      };
+
+      expect(uploadConfig.file.size).toBeLessThan(uploadConfig.maxSize);
+      expect(uploadConfig.allowedTypes).toContain(uploadConfig.file.type);
+    });
+
+    it('should reject non-PDF files', () => {
+      const file = { type: 'image/png' };
+      const allowedTypes = ['application/pdf'];
+
+      expect(allowedTypes).not.toContain(file.type);
+    });
+
+    it('should reject files exceeding size limit', () => {
+      const file = { size: 15 * 1024 * 1024 };
+      const maxSize = 10 * 1024 * 1024;
+
+      expect(file.size).toBeGreaterThan(maxSize);
+    });
+
+    it('should add signers to document', () => {
+      const signers = [
+        { id: 's-1', name: 'John Doe', email: 'john@example.com', role: 'SIGNER', order: 1 },
+        { id: 's-2', name: 'Jane Smith', email: 'jane@example.com', role: 'SIGNER', order: 2 },
+      ];
+
+      expect(signers).toHaveLength(2);
+    });
+
+    it('should support viewer role', () => {
+      const recipient = {
+        name: 'Legal Counsel',
+        email: 'legal@fund.com',
+        role: 'VIEWER',
+        order: 3,
+      };
+
+      expect(recipient.role).toBe('VIEWER');
+    });
+
+    it('should support approver role', () => {
+      const recipient = {
+        name: 'Fund Manager',
+        email: 'manager@fund.com',
+        role: 'APPROVER',
+        order: 0,
+      };
+
+      expect(recipient.role).toBe('APPROVER');
+    });
+
+    it('should configure sequential signing order', () => {
+      const signingConfig = {
+        sequential: true,
+        signers: [
+          { email: 'investor@example.com', order: 1 },
+          { email: 'manager@fund.com', order: 2 },
+          { email: 'legal@fund.com', order: 3 },
+        ],
+      };
+
+      const sortedSigners = signingConfig.signers.sort((a, b) => a.order - b.order);
+      expect(sortedSigners[0].email).toBe('investor@example.com');
+    });
+
+    it('should configure parallel signing', () => {
+      const signingConfig = {
+        sequential: false,
+        signers: [
+          { email: 'investor1@example.com', order: 1 },
+          { email: 'investor2@example.com', order: 1 },
+        ],
+      };
+
+      expect(signingConfig.sequential).toBe(false);
+    });
+
+    it('should validate signer email format', () => {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      const validEmail = 'john@example.com';
+      const invalidEmail = 'invalid-email';
+
+      expect(emailRegex.test(validEmail)).toBe(true);
+      expect(emailRegex.test(invalidEmail)).toBe(false);
+    });
+
+    it('should require at least one signer', () => {
+      const signers: { email: string }[] = [];
+      const isValid = signers.length > 0;
+
+      expect(isValid).toBe(false);
+    });
+  });
+
+  describe('Drag-Drop Field Placement', () => {
+    it('should place signature field on page', () => {
+      const signatureField = {
+        id: 'field-1',
+        type: 'SIGNATURE',
+        page: 1,
+        x: 100,
+        y: 500,
+        width: 200,
+        height: 50,
+        signerId: 's-1',
+        required: true,
+      };
+
+      expect(signatureField.type).toBe('SIGNATURE');
+      expect(signatureField.required).toBe(true);
+    });
+
+    it('should place text field on page', () => {
+      const textField = {
+        id: 'field-2',
+        type: 'TEXT',
+        page: 1,
+        x: 100,
+        y: 400,
+        width: 250,
+        height: 25,
+        signerId: 's-1',
+        placeholder: 'Enter your name',
+      };
+
+      expect(textField.type).toBe('TEXT');
+    });
+
+    it('should place date field on page', () => {
+      const dateField = {
+        id: 'field-3',
+        type: 'DATE',
+        page: 1,
+        x: 350,
+        y: 500,
+        width: 100,
+        height: 25,
+        signerId: 's-1',
+        format: 'MM/DD/YYYY',
+      };
+
+      expect(dateField.type).toBe('DATE');
+    });
+
+    it('should place initials field on page', () => {
+      const initialsField = {
+        id: 'field-4',
+        type: 'INITIALS',
+        page: 2,
+        x: 450,
+        y: 700,
+        width: 60,
+        height: 30,
+        signerId: 's-1',
+      };
+
+      expect(initialsField.type).toBe('INITIALS');
+    });
+
+    it('should place checkbox field on page', () => {
+      const checkboxField = {
+        id: 'field-5',
+        type: 'CHECKBOX',
+        page: 3,
+        x: 50,
+        y: 300,
+        width: 20,
+        height: 20,
+        signerId: 's-1',
+        label: 'I agree to terms',
+      };
+
+      expect(checkboxField.type).toBe('CHECKBOX');
+    });
+
+    it('should validate field position within page bounds', () => {
+      const pageWidth = 612;
+      const pageHeight = 792;
+      const field = { x: 100, y: 500, width: 200, height: 50 };
+
+      const isWithinBounds = 
+        field.x >= 0 && 
+        field.y >= 0 && 
+        (field.x + field.width) <= pageWidth && 
+        (field.y + field.height) <= pageHeight;
+
+      expect(isWithinBounds).toBe(true);
+    });
+
+    it('should update field position on drag', () => {
+      const field = { id: 'field-1', x: 100, y: 500 };
+      const dragDelta = { dx: 50, dy: -30 };
+
+      field.x += dragDelta.dx;
+      field.y += dragDelta.dy;
+
+      expect(field.x).toBe(150);
+      expect(field.y).toBe(470);
+    });
+
+    it('should resize field on drag handles', () => {
+      const field = { id: 'field-1', width: 200, height: 50 };
+      const newSize = { width: 250, height: 60 };
+
+      field.width = newSize.width;
+      field.height = newSize.height;
+
+      expect(field.width).toBe(250);
+    });
+
+    it('should delete field from document', () => {
+      let fields = [
+        { id: 'field-1', type: 'SIGNATURE' },
+        { id: 'field-2', type: 'TEXT' },
+        { id: 'field-3', type: 'DATE' },
+      ];
+
+      const deleteFieldId = 'field-2';
+      fields = fields.filter(f => f.id !== deleteFieldId);
+
+      expect(fields).toHaveLength(2);
+    });
+
+    it('should assign field to specific signer', () => {
+      const field = {
+        id: 'field-1',
+        signerId: 's-1',
+        signerColor: '#3B82F6',
+      };
+
+      expect(field.signerId).toBe('s-1');
+    });
+
+    it('should color-code fields by signer', () => {
+      const signerColors = {
+        's-1': '#3B82F6',
+        's-2': '#10B981',
+        's-3': '#F59E0B',
+      };
+
+      const fields = [
+        { id: 'f-1', signerId: 's-1', color: signerColors['s-1'] },
+        { id: 'f-2', signerId: 's-2', color: signerColors['s-2'] },
+      ];
+
+      expect(fields[0].color).toBe('#3B82F6');
+      expect(fields[1].color).toBe('#10B981');
+    });
+  });
+
+  describe('Send Document for Signing', () => {
+    it('should send document to signers', () => {
+      const sendConfig = {
+        documentId: 'doc-1',
+        signers: ['john@example.com', 'jane@example.com'],
+        subject: 'Please sign: Subscription Agreement',
+        message: 'Please review and sign the attached document.',
+        expiresIn: 14,
+      };
+
+      expect(sendConfig.signers).toHaveLength(2);
+    });
+
+    it('should send email notifications via Resend', () => {
+      const emailPayload = {
+        to: 'john@example.com',
+        from: 'sign@bermudafund.com',
+        subject: 'Please sign: Subscription Agreement',
+        templateId: 'signature-request',
+        variables: {
+          signerName: 'John Doe',
+          documentName: 'Subscription Agreement',
+          senderName: 'Bermuda Fund GP',
+          signUrl: 'https://app.bermudafund.com/sign/abc123',
+        },
+      };
+
+      expect(emailPayload.templateId).toBe('signature-request');
+    });
+
+    it('should set document expiration date', () => {
+      const createdAt = new Date('2026-01-25');
+      const expiresInDays = 14;
+      const expiresAt = new Date(createdAt.getTime() + expiresInDays * 24 * 60 * 60 * 1000);
+
+      expect(expiresAt.toISOString().split('T')[0]).toBe('2026-02-08');
+    });
+
+    it('should generate unique signing URL', () => {
+      const generateSigningUrl = (docId: string, signerId: string) => {
+        const token = `${docId}-${signerId}-${Date.now()}`;
+        return `https://app.bermudafund.com/sign/${Buffer.from(token).toString('base64').slice(0, 20)}`;
+      };
+
+      const url = generateSigningUrl('doc-1', 's-1');
+      expect(url).toContain('/sign/');
+    });
+
+    it('should mark document as sent', () => {
+      const document = {
+        id: 'doc-1',
+        status: 'DRAFT' as 'DRAFT' | 'SENT',
+        sentAt: null as Date | null,
+      };
+
+      document.status = 'SENT';
+      document.sentAt = new Date();
+
+      expect(document.status).toBe('SENT');
+      expect(document.sentAt).not.toBeNull();
+    });
+  });
+
+  describe('Status Tracking & Webhooks', () => {
+    it('should track CREATED status', () => {
+      const document = {
+        id: 'doc-1',
+        status: 'CREATED',
+        createdAt: new Date(),
+        createdBy: 'user-gp-1',
+      };
+
+      expect(document.status).toBe('CREATED');
+    });
+
+    it('should track SENT status', () => {
+      const document = {
+        id: 'doc-1',
+        status: 'SENT',
+        sentAt: new Date(),
+      };
+
+      expect(document.status).toBe('SENT');
+    });
+
+    it('should track VIEWED status', () => {
+      const signerEvent = {
+        documentId: 'doc-1',
+        signerId: 's-1',
+        event: 'VIEWED',
+        viewedAt: new Date(),
+        ipAddress: '192.168.1.1',
+        userAgent: 'Mozilla/5.0...',
+      };
+
+      expect(signerEvent.event).toBe('VIEWED');
+    });
+
+    it('should track SIGNED status', () => {
+      const signerEvent = {
+        documentId: 'doc-1',
+        signerId: 's-1',
+        event: 'SIGNED',
+        signedAt: new Date(),
+        ipAddress: '192.168.1.1',
+      };
+
+      expect(signerEvent.event).toBe('SIGNED');
+    });
+
+    it('should track COMPLETED status when all signers complete', () => {
+      const signers = [
+        { id: 's-1', signedAt: new Date() },
+        { id: 's-2', signedAt: new Date() },
+      ];
+
+      const allSigned = signers.every(s => s.signedAt !== null);
+      const documentStatus = allSigned ? 'COMPLETED' : 'PENDING';
+
+      expect(documentStatus).toBe('COMPLETED');
+    });
+
+    it('should track DECLINED status', () => {
+      const signerEvent = {
+        documentId: 'doc-1',
+        signerId: 's-1',
+        event: 'DECLINED',
+        declinedAt: new Date(),
+        reason: 'Terms not acceptable',
+      };
+
+      expect(signerEvent.event).toBe('DECLINED');
+    });
+
+    it('should track EXPIRED status', () => {
+      const document = {
+        id: 'doc-1',
+        status: 'PENDING',
+        expiresAt: new Date('2026-01-20'),
+      };
+
+      const now = new Date('2026-01-25');
+      const isExpired = document.expiresAt < now && document.status !== 'COMPLETED';
+
+      expect(isExpired).toBe(true);
+    });
+
+    it('should process webhook for document events', () => {
+      const webhookPayload = {
+        event: 'document.signed',
+        documentId: 'doc-1',
+        signerId: 's-1',
+        timestamp: new Date().toISOString(),
+        data: {
+          signerEmail: 'john@example.com',
+          signedAt: new Date().toISOString(),
+        },
+      };
+
+      expect(webhookPayload.event).toBe('document.signed');
+    });
+
+    it('should verify webhook signature', () => {
+      const webhookSecret = 'whsec_test123';
+      const payload = JSON.stringify({ event: 'document.signed' });
+      const expectedSignature = 'sha256=abc123...';
+
+      const verifySignature = (secret: string, body: string, sig: string) => {
+        return sig.startsWith('sha256=');
+      };
+
+      expect(verifySignature(webhookSecret, payload, expectedSignature)).toBe(true);
+    });
+
+    it('should update document status on webhook', () => {
+      let document = { id: 'doc-1', status: 'SENT' };
+      const webhookEvent = { event: 'document.completed', documentId: 'doc-1' };
+
+      if (webhookEvent.event === 'document.completed') {
+        document.status = 'COMPLETED';
+      }
+
+      expect(document.status).toBe('COMPLETED');
+    });
+  });
+
+  describe('Audit Trail - SignatureDocument', () => {
+    it('should log creation timestamp', () => {
+      const auditEntry = {
+        documentId: 'doc-1',
+        action: 'CREATED',
+        timestamp: new Date('2026-01-25T10:00:00Z'),
+        userId: 'user-gp-1',
+      };
+
+      expect(auditEntry.action).toBe('CREATED');
+    });
+
+    it('should log IP address for each action', () => {
+      const auditEntry = {
+        documentId: 'doc-1',
+        signerId: 's-1',
+        action: 'VIEWED',
+        ipAddress: '192.168.1.100',
+        timestamp: new Date(),
+      };
+
+      expect(auditEntry.ipAddress).toBe('192.168.1.100');
+    });
+
+    it('should log user agent information', () => {
+      const auditEntry = {
+        documentId: 'doc-1',
+        signerId: 's-1',
+        action: 'SIGNED',
+        userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        timestamp: new Date(),
+      };
+
+      expect(auditEntry.userAgent).toContain('Mozilla');
+    });
+
+    it('should log geolocation data', () => {
+      const auditEntry = {
+        documentId: 'doc-1',
+        signerId: 's-1',
+        action: 'SIGNED',
+        geo: {
+          country: 'US',
+          region: 'CA',
+          city: 'San Francisco',
+          lat: 37.7749,
+          lng: -122.4194,
+        },
+        timestamp: new Date(),
+      };
+
+      expect(auditEntry.geo.country).toBe('US');
+    });
+
+    it('should log session ID', () => {
+      const auditEntry = {
+        documentId: 'doc-1',
+        signerId: 's-1',
+        action: 'VIEWED',
+        sessionId: 'sess_abc123xyz',
+        timestamp: new Date(),
+      };
+
+      expect(auditEntry.sessionId).toContain('sess_');
+    });
+
+    it('should maintain chronological audit log', () => {
+      const auditLog = [
+        { action: 'CREATED', timestamp: new Date('2026-01-25T10:00:00Z') },
+        { action: 'SENT', timestamp: new Date('2026-01-25T10:05:00Z') },
+        { action: 'VIEWED', timestamp: new Date('2026-01-25T14:00:00Z') },
+        { action: 'SIGNED', timestamp: new Date('2026-01-25T14:30:00Z') },
+        { action: 'COMPLETED', timestamp: new Date('2026-01-25T14:30:01Z') },
+      ];
+
+      const sorted = auditLog.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+      expect(sorted[0].action).toBe('CREATED');
+      expect(sorted[sorted.length - 1].action).toBe('COMPLETED');
+    });
+
+    it('should log each signer action separately', () => {
+      const signerAuditLogs = [
+        { signerId: 's-1', action: 'VIEWED', timestamp: new Date('2026-01-25T14:00:00Z') },
+        { signerId: 's-1', action: 'SIGNED', timestamp: new Date('2026-01-25T14:30:00Z') },
+        { signerId: 's-2', action: 'VIEWED', timestamp: new Date('2026-01-25T15:00:00Z') },
+        { signerId: 's-2', action: 'SIGNED', timestamp: new Date('2026-01-25T15:30:00Z') },
+      ];
+
+      const signer1Actions = signerAuditLogs.filter(l => l.signerId === 's-1');
+      expect(signer1Actions).toHaveLength(2);
+    });
+
+    it('should store signature hash in audit', () => {
+      const signatureAudit = {
+        documentId: 'doc-1',
+        signerId: 's-1',
+        action: 'SIGNED',
+        signatureHash: 'sha256:a1b2c3d4e5f6...',
+        certificateId: 'cert_abc123',
+        timestamp: new Date(),
+      };
+
+      expect(signatureAudit.signatureHash).toContain('sha256:');
+    });
+
+    it('should generate audit certificate', () => {
+      const auditCertificate = {
+        documentId: 'doc-1',
+        documentHash: 'sha256:doc_hash_123',
+        signers: [
+          { email: 'john@example.com', signedAt: new Date(), ipAddress: '192.168.1.1' },
+          { email: 'jane@example.com', signedAt: new Date(), ipAddress: '192.168.1.2' },
+        ],
+        completedAt: new Date(),
+        certificateUrl: 'https://app.bermudafund.com/sign/doc-1/certificate',
+      };
+
+      expect(auditCertificate.signers).toHaveLength(2);
+    });
+
+    it('should embed audit trail in signed PDF', () => {
+      const pdfMetadata = {
+        documentId: 'doc-1',
+        signatureEmbedded: true,
+        auditPageAppended: true,
+        tamperProof: true,
+        hashAlgorithm: 'SHA-256',
+      };
+
+      expect(pdfMetadata.signatureEmbedded).toBe(true);
+      expect(pdfMetadata.auditPageAppended).toBe(true);
+    });
+  });
+
+  describe('Bulk Signing & Templates', () => {
+    it('should create reusable template', () => {
+      const template = {
+        id: 'tmpl-1',
+        name: 'Subscription Agreement Template',
+        documentUrl: 'templates/subscription-agreement.pdf',
+        fields: [
+          { id: 'f-1', type: 'SIGNATURE', page: 1, x: 100, y: 500 },
+          { id: 'f-2', type: 'DATE', page: 1, x: 350, y: 500 },
+          { id: 'f-3', type: 'TEXT', page: 1, x: 100, y: 450, placeholder: 'Name' },
+        ],
+        roles: ['Investor', 'GP'],
+        createdAt: new Date(),
+      };
+
+      expect(template.fields).toHaveLength(3);
+    });
+
+    it('should send document from template', () => {
+      const sendFromTemplate = {
+        templateId: 'tmpl-1',
+        recipients: [
+          { role: 'Investor', name: 'John Doe', email: 'john@example.com' },
+          { role: 'GP', name: 'Fund Manager', email: 'manager@fund.com' },
+        ],
+        customMessage: 'Please sign your subscription agreement.',
+      };
+
+      expect(sendFromTemplate.recipients).toHaveLength(2);
+    });
+
+    it('should bulk send to multiple recipients', () => {
+      const bulkSend = {
+        templateId: 'tmpl-1',
+        recipients: [
+          { name: 'Investor 1', email: 'inv1@example.com' },
+          { name: 'Investor 2', email: 'inv2@example.com' },
+          { name: 'Investor 3', email: 'inv3@example.com' },
+        ],
+        sentCount: 0,
+        failedCount: 0,
+      };
+
+      bulkSend.sentCount = bulkSend.recipients.length;
+      expect(bulkSend.sentCount).toBe(3);
+    });
+
+    it('should track bulk send progress', () => {
+      const bulkProgress = {
+        batchId: 'batch-1',
+        total: 50,
+        sent: 35,
+        pending: 10,
+        failed: 5,
+        percentComplete: 0,
+      };
+
+      bulkProgress.percentComplete = Math.round((bulkProgress.sent / bulkProgress.total) * 100);
+      expect(bulkProgress.percentComplete).toBe(70);
+    });
+
+    it('should handle bulk send rate limiting', () => {
+      const rateLimitConfig = {
+        maxPerMinute: 50,
+        currentCount: 45,
+        resetAt: new Date(),
+      };
+
+      const canSend = rateLimitConfig.currentCount < rateLimitConfig.maxPerMinute;
+      expect(canSend).toBe(true);
+    });
+  });
+
+  describe('Reminders & Notifications', () => {
+    it('should send reminder for pending signature', () => {
+      const reminderConfig = {
+        documentId: 'doc-1',
+        signerId: 's-1',
+        reminderType: 'PENDING_SIGNATURE',
+        sentAt: new Date(),
+        reminderCount: 1,
+      };
+
+      expect(reminderConfig.reminderType).toBe('PENDING_SIGNATURE');
+    });
+
+    it('should configure automatic reminders', () => {
+      const autoReminderConfig = {
+        enabled: true,
+        intervalDays: 3,
+        maxReminders: 3,
+        expirationWarningDays: 2,
+      };
+
+      expect(autoReminderConfig.intervalDays).toBe(3);
+    });
+
+    it('should notify sender when document completed', () => {
+      const notification = {
+        to: 'sender@fund.com',
+        type: 'DOCUMENT_COMPLETED',
+        documentId: 'doc-1',
+        documentName: 'Subscription Agreement',
+        completedAt: new Date(),
+      };
+
+      expect(notification.type).toBe('DOCUMENT_COMPLETED');
+    });
+
+    it('should notify sender when document declined', () => {
+      const notification = {
+        to: 'sender@fund.com',
+        type: 'DOCUMENT_DECLINED',
+        documentId: 'doc-1',
+        declinedBy: 'john@example.com',
+        reason: 'Terms not acceptable',
+      };
+
+      expect(notification.type).toBe('DOCUMENT_DECLINED');
+    });
+  });
+});

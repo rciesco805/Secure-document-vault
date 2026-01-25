@@ -147,6 +147,11 @@ git remote set-url bitget https://${GITHUB_PERSONAL_ACCESS_TOKEN}@github.com/rci
 - **Phase 2**: ~60% complete - Plaid transfers, AUM reporting, entity fee configs, wizard progress tracking
 - **Phase 3**: Planned - STARTUP mode (cap table), vesting schedules, equity management, QuickBooks/Wolters Kluwer integrations
 
+## Documentation
+
+- **[API Documentation](docs/API_DOCUMENTATION.md)**: Comprehensive API reference with endpoints, request/response examples, authentication, and error codes
+- **[Phase 3 Roadmap](docs/PHASE3_ROADMAP.md)**: Integration roadmap for QuickBooks, Wolters Kluwer K-1, cap table management, and vesting schedules
+
 ## Directory Structure
 
 ```

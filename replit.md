@@ -23,6 +23,10 @@ A comprehensive 506(c) fund GP/LP management suite designed to streamline invest
 - **Real-time Wizard Progress**: `/api/lp/wizard-progress` tracks 7 onboarding steps with prerequisites validation (NDA → Accreditation → KYC required before completion)
 - **Mobile Viewport Tests**: 30 additional tests for device detection, responsive UI, touch interactions
 - **API Error Path Tests**: 110 tests for transaction/subscription validation, auth utilities, and audit utilities
+- **CRM Timeline UI**: Admin timeline view showing investor activity (views, signatures, documents, notes) with search/filter and CSV export
+- **Capital Tracking Dashboard**: Comprehensive committed capital metrics with charts, investor-level breakdown, and real-time data
+- **Bulk Action Wizard**: 5-step wizard for capital calls and distributions with percentage/fixed allocation modes
+- **GP Notes Reply**: Admin API for replying to investor notes with email notifications
 - **1418+ Passing Tests**: Comprehensive E2E coverage across all phases
 
 ### Phase 1 Features

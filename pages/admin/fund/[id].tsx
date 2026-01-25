@@ -45,6 +45,10 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { UnitsByTierCard } from "@/components/admin/units-by-tier-card";
+import { InvestorTimeline } from "@/components/admin/investor-timeline";
+import { CapitalTrackingDashboard } from "@/components/admin/capital-tracking-dashboard";
+import { BulkActionWizard } from "@/components/admin/bulk-action-wizard";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const POLL_INTERVAL = 30000; // 30 seconds for real-time updates
 
@@ -130,6 +134,8 @@ export default function FundDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [showBulkWizard, setShowBulkWizard] = useState(false);
+  const [activeTab, setActiveTab] = useState("overview");
 
   const fetchFundDetails = useCallback(async (silent = false) => {
     try {
@@ -281,6 +287,10 @@ export default function FundDetailPage() {
               </div>
             </div>
             <div className="flex gap-2">
+              <Button onClick={() => setShowBulkWizard(true)}>
+                <ArrowDownToLine className="h-4 w-4 mr-2" />
+                Bulk Action
+              </Button>
               <Button
                 variant="outline"
                 onClick={() => fetchFundDetails()}
@@ -298,6 +308,22 @@ export default function FundDetailPage() {
             </div>
           </div>
 
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
+            <TabsList>
+              <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="capital">Capital Tracking</TabsTrigger>
+              <TabsTrigger value="timeline">CRM Timeline</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="capital" className="mt-6">
+              <CapitalTrackingDashboard fundId={fund.id} />
+            </TabsContent>
+
+            <TabsContent value="timeline" className="mt-6">
+              <InvestorTimeline teamId={fund.teamId} showNotes showReply />
+            </TabsContent>
+
+            <TabsContent value="overview" className="mt-0">
           {(initialThresholdEnabled || fullAuthorizedAmount) && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
               {initialThresholdEnabled && initialThresholdAmount && (
@@ -669,8 +695,20 @@ export default function FundDetailPage() {
               )}
             </CardContent>
           </Card>
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
+
+      <BulkActionWizard
+        fundId={fund.id}
+        isOpen={showBulkWizard}
+        onClose={() => setShowBulkWizard(false)}
+        onComplete={() => {
+          setShowBulkWizard(false);
+          fetchFundDetails();
+        }}
+      />
     </>
   );
 }

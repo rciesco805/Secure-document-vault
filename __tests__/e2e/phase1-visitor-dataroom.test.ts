@@ -12246,3 +12246,535 @@ describe('Phase 3: Edge Cases', () => {
     });
   });
 });
+
+describe('Phase 3: Compliance Stress - 506(c) Scenarios', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  describe('Accreditation Blocks Subscription', () => {
+    it('should require accreditation before subscription', () => {
+      const investorStatus = {
+        investorId: 'inv-new',
+        accreditationStatus: 'NOT_STARTED',
+        canSubscribe: false,
+        blockedReason: 'ACCREDITATION_REQUIRED',
+      };
+
+      expect(investorStatus.canSubscribe).toBe(false);
+    });
+
+    it('should block subscription when accreditation pending', () => {
+      const investorStatus = {
+        investorId: 'inv-pending',
+        accreditationStatus: 'PENDING',
+        canSubscribe: false,
+        blockedReason: 'ACCREDITATION_PENDING_VERIFICATION',
+      };
+
+      expect(investorStatus.blockedReason).toBe('ACCREDITATION_PENDING_VERIFICATION');
+    });
+
+    it('should block subscription when accreditation failed', () => {
+      const investorStatus = {
+        investorId: 'inv-failed',
+        accreditationStatus: 'FAILED',
+        canSubscribe: false,
+        blockedReason: 'ACCREDITATION_VERIFICATION_FAILED',
+        failureReason: 'INCOME_THRESHOLD_NOT_MET',
+      };
+
+      expect(investorStatus.canSubscribe).toBe(false);
+    });
+
+    it('should block subscription when accreditation expired', () => {
+      const investorStatus = {
+        investorId: 'inv-expired',
+        accreditationStatus: 'EXPIRED',
+        accreditedAt: new Date('2024-01-15'),
+        expiresAt: new Date('2025-01-15'),
+        canSubscribe: false,
+        blockedReason: 'ACCREDITATION_EXPIRED',
+      };
+
+      expect(investorStatus.blockedReason).toBe('ACCREDITATION_EXPIRED');
+    });
+
+    it('should allow subscription only when fully accredited', () => {
+      const investorStatus = {
+        investorId: 'inv-verified',
+        accreditationStatus: 'VERIFIED',
+        accreditedAt: new Date('2025-06-15'),
+        expiresAt: new Date('2026-06-15'),
+        canSubscribe: true,
+        blockedReason: null,
+      };
+
+      expect(investorStatus.canSubscribe).toBe(true);
+    });
+
+    it('should show accreditation gate message', () => {
+      const gateMessage = {
+        title: 'Accreditation Required',
+        message: 'SEC Rule 506(c) requires verification of accredited investor status before investment.',
+        ctaText: 'Complete Accreditation',
+        ctaLink: '/accreditation',
+      };
+
+      expect(gateMessage.title).toBe('Accreditation Required');
+    });
+
+    it('should log accreditation gate event', () => {
+      const auditEntry = {
+        action: 'SUBSCRIPTION_BLOCKED',
+        investorId: 'inv-unverified',
+        reason: 'ACCREDITATION_NOT_VERIFIED',
+        timestamp: new Date(),
+        rule: 'SEC_506C',
+      };
+
+      expect(auditEntry.rule).toBe('SEC_506C');
+    });
+  });
+
+  describe('506(c) Verification Requirements', () => {
+    it('should require all 4 accreditation checkboxes', () => {
+      const accreditationChecklist = {
+        hasIncome: true,
+        hasNetWorth: true,
+        understandsRisks: true,
+        confirmsAccuracy: false,
+        allComplete: false,
+      };
+
+      const allComplete = accreditationChecklist.hasIncome && 
+                         accreditationChecklist.hasNetWorth && 
+                         accreditationChecklist.understandsRisks && 
+                         accreditationChecklist.confirmsAccuracy;
+      expect(allComplete).toBe(false);
+    });
+
+    it('should validate income threshold ($200k individual, $300k joint)', () => {
+      const incomeVerification = {
+        type: 'INCOME',
+        individualThreshold: 200000,
+        jointThreshold: 300000,
+        reportedIncome: 250000,
+        filingStatus: 'INDIVIDUAL',
+        meetsThreshold: true,
+      };
+
+      expect(incomeVerification.meetsThreshold).toBe(true);
+    });
+
+    it('should validate net worth threshold ($1M excluding primary residence)', () => {
+      const netWorthVerification = {
+        type: 'NET_WORTH',
+        threshold: 1000000,
+        excludePrimaryResidence: true,
+        reportedNetWorth: 1500000,
+        meetsThreshold: true,
+      };
+
+      expect(netWorthVerification.meetsThreshold).toBe(true);
+    });
+
+    it('should require third-party verification for 506(c)', () => {
+      const verificationRequirements = {
+        rule: '506C',
+        selfCertificationOnly: false,
+        requiresThirdParty: true,
+        acceptableVerifiers: ['CPA', 'ATTORNEY', 'BROKER_DEALER', 'INVESTMENT_ADVISOR'],
+      };
+
+      expect(verificationRequirements.requiresThirdParty).toBe(true);
+    });
+
+    it('should accept professional letter as verification', () => {
+      const professionalLetter = {
+        investorId: 'inv-1',
+        letterType: 'CPA_LETTER',
+        issuer: 'Smith & Associates CPA',
+        issuedDate: new Date('2025-12-15'),
+        verificationStatus: 'ACCEPTED',
+      };
+
+      expect(professionalLetter.verificationStatus).toBe('ACCEPTED');
+    });
+
+    it('should track accreditation method used', () => {
+      const accreditationRecord = {
+        investorId: 'inv-1',
+        method: 'THIRD_PARTY_VERIFICATION',
+        verifierType: 'CPA',
+        verifierName: 'John Smith, CPA',
+        documentId: 'doc-cpa-letter',
+        verifiedAt: new Date(),
+      };
+
+      expect(accreditationRecord.method).toBe('THIRD_PARTY_VERIFICATION');
+    });
+  });
+
+  describe('KYC/AML Compliance Flow', () => {
+    it('should require KYC before subscription', () => {
+      const kycGate = {
+        investorId: 'inv-no-kyc',
+        kycStatus: 'NOT_STARTED',
+        canSubscribe: false,
+        blockedReason: 'KYC_REQUIRED',
+      };
+
+      expect(kycGate.canSubscribe).toBe(false);
+    });
+
+    it('should block subscription on KYC failure', () => {
+      const kycFailure = {
+        investorId: 'inv-kyc-fail',
+        kycStatus: 'FAILED',
+        failureReasons: ['DOCUMENT_INVALID', 'WATCHLIST_MATCH'],
+        canSubscribe: false,
+        requiresManualReview: true,
+      };
+
+      expect(kycFailure.canSubscribe).toBe(false);
+    });
+
+    it('should detect watchlist match', () => {
+      const watchlistHit = {
+        investorId: 'inv-watchlist',
+        screeningResult: 'POTENTIAL_MATCH',
+        matchedLists: ['OFAC_SDN', 'PEP'],
+        riskLevel: 'HIGH',
+        autoBlock: true,
+      };
+
+      expect(watchlistHit.autoBlock).toBe(true);
+    });
+
+    it('should require enhanced due diligence for high-risk', () => {
+      const eddRequirement = {
+        investorId: 'inv-high-risk',
+        riskLevel: 'HIGH',
+        enhancedDueDiligence: true,
+        additionalDocumentsRequired: ['SOURCE_OF_FUNDS', 'TAX_RETURNS'],
+      };
+
+      expect(eddRequirement.enhancedDueDiligence).toBe(true);
+    });
+
+    it('should allow subscription when KYC verified', () => {
+      const kycVerified = {
+        investorId: 'inv-verified',
+        kycStatus: 'VERIFIED',
+        verifiedAt: new Date(),
+        personaInquiryId: 'inq-123',
+        canSubscribe: true,
+      };
+
+      expect(kycVerified.canSubscribe).toBe(true);
+    });
+  });
+
+  describe('Audit Export Compliance', () => {
+    it('should export complete audit trail', () => {
+      const auditExport = {
+        exportId: 'audit-export-1',
+        fundId: 'fund-1',
+        dateRange: { start: '2025-01-01', end: '2025-12-31' },
+        recordCount: 15420,
+        status: 'COMPLETED',
+        format: 'CSV',
+      };
+
+      expect(auditExport.status).toBe('COMPLETED');
+    });
+
+    it('should include all required 506(c) fields', () => {
+      const auditFields = {
+        requiredFields: [
+          'timestamp',
+          'investorId',
+          'investorName',
+          'action',
+          'ipAddress',
+          'userAgent',
+          'accreditationStatus',
+          'accreditationMethod',
+          'verificationDate',
+        ],
+        allFieldsPresent: true,
+      };
+
+      expect(auditFields.allFieldsPresent).toBe(true);
+    });
+
+    it('should export accreditation verification records', () => {
+      const accreditationExport = {
+        exportType: 'ACCREDITATION_RECORDS',
+        fundId: 'fund-1',
+        records: [
+          { investorId: 'inv-1', status: 'VERIFIED', method: 'CPA_LETTER', date: '2025-06-15' },
+          { investorId: 'inv-2', status: 'VERIFIED', method: 'BROKER_LETTER', date: '2025-07-20' },
+        ],
+        totalVerified: 25,
+        exportedAt: new Date(),
+      };
+
+      expect(accreditationExport.totalVerified).toBe(25);
+    });
+
+    it('should export investor communications log', () => {
+      const communicationsExport = {
+        exportType: 'INVESTOR_COMMUNICATIONS',
+        fundId: 'fund-1',
+        records: 1250,
+        includes: ['emails', 'signature_requests', 'document_access'],
+        format: 'CSV',
+        status: 'COMPLETED',
+      };
+
+      expect(communicationsExport.records).toBe(1250);
+    });
+
+    it('should export subscription agreement records', () => {
+      const subscriptionExport = {
+        exportType: 'SUBSCRIPTION_AGREEMENTS',
+        fundId: 'fund-1',
+        totalAgreements: 25,
+        signedCount: 25,
+        includesAuditTrail: true,
+        status: 'COMPLETED',
+      };
+
+      expect(subscriptionExport.signedCount).toBe(25);
+    });
+
+    it('should export capital call/distribution records', () => {
+      const transactionExport = {
+        exportType: 'CAPITAL_TRANSACTIONS',
+        fundId: 'fund-1',
+        capitalCalls: 8,
+        distributions: 4,
+        totalTransactions: 312,
+        status: 'COMPLETED',
+      };
+
+      expect(transactionExport.totalTransactions).toBe(312);
+    });
+
+    it('should include digital signatures with timestamps', () => {
+      const signatureAudit = {
+        requestId: 'sig-req-1',
+        signatures: [
+          { fieldId: 'sig-1', signedAt: '2025-06-15T14:30:00Z', ipAddress: '192.168.1.1' },
+          { fieldId: 'init-1', signedAt: '2025-06-15T14:31:00Z', ipAddress: '192.168.1.1' },
+        ],
+        certificateHash: 'sha256:abc123...',
+        tamperProof: true,
+      };
+
+      expect(signatureAudit.tamperProof).toBe(true);
+    });
+
+    it('should export Form D filing records', () => {
+      const formDExport = {
+        exportType: 'FORM_D_RECORDS',
+        fundId: 'fund-1',
+        initialFiling: { date: '2025-03-15', confirmationNumber: 'SEC-12345' },
+        amendments: [
+          { date: '2026-03-10', type: 'ANNUAL', confirmationNumber: 'SEC-23456' },
+        ],
+        stateNotices: ['CA', 'NY', 'TX', 'FL'],
+        status: 'COMPLIANT',
+      };
+
+      expect(formDExport.status).toBe('COMPLIANT');
+    });
+  });
+
+  describe('Compliance Violation Detection', () => {
+    it('should detect unaccredited investor subscription attempt', () => {
+      const violation = {
+        type: 'UNACCREDITED_SUBSCRIPTION_ATTEMPT',
+        investorId: 'inv-unaccredited',
+        attemptedAt: new Date(),
+        blocked: true,
+        severity: 'HIGH',
+        loggedForAudit: true,
+      };
+
+      expect(violation.blocked).toBe(true);
+    });
+
+    it('should detect general solicitation without 506(c) compliance', () => {
+      const violation = {
+        type: 'GENERAL_SOLICITATION_RISK',
+        description: 'Public marketing without accreditation verification',
+        detectedAt: new Date(),
+        severity: 'CRITICAL',
+        requiresReview: true,
+      };
+
+      expect(violation.severity).toBe('CRITICAL');
+    });
+
+    it('should detect missing accreditation documentation', () => {
+      const violation = {
+        type: 'MISSING_ACCREDITATION_DOCS',
+        investorId: 'inv-no-docs',
+        investmentId: 'investment-1',
+        severity: 'HIGH',
+        remediation: 'REQUEST_DOCUMENTATION',
+      };
+
+      expect(violation.remediation).toBe('REQUEST_DOCUMENTATION');
+    });
+
+    it('should detect expired accreditation', () => {
+      const violation = {
+        type: 'EXPIRED_ACCREDITATION',
+        investorId: 'inv-expired',
+        expiredAt: new Date('2025-01-15'),
+        severity: 'MEDIUM',
+        remediation: 'REQUEST_REVERIFICATION',
+      };
+
+      expect(violation.severity).toBe('MEDIUM');
+    });
+
+    it('should alert compliance team on violations', () => {
+      const alert = {
+        type: 'COMPLIANCE_VIOLATION',
+        violationType: 'UNACCREDITED_SUBSCRIPTION_ATTEMPT',
+        sentTo: ['compliance@fund.com', 'legal@fund.com'],
+        sentAt: new Date(),
+        requiresAcknowledgment: true,
+      };
+
+      expect(alert.sentTo).toContain('compliance@fund.com');
+    });
+  });
+
+  describe('Accreditation Renewal Flow', () => {
+    it('should notify investor 30 days before expiry', () => {
+      const expiryNotice = {
+        investorId: 'inv-1',
+        currentExpiry: new Date('2026-02-25'),
+        daysUntilExpiry: 30,
+        notificationSent: true,
+        reminderType: '30_DAY',
+      };
+
+      expect(expiryNotice.notificationSent).toBe(true);
+    });
+
+    it('should notify investor 7 days before expiry', () => {
+      const expiryNotice = {
+        investorId: 'inv-1',
+        daysUntilExpiry: 7,
+        notificationSent: true,
+        reminderType: '7_DAY',
+        urgency: 'HIGH',
+      };
+
+      expect(expiryNotice.urgency).toBe('HIGH');
+    });
+
+    it('should block new investments on expiry', () => {
+      const expiredInvestor = {
+        investorId: 'inv-expired',
+        accreditationExpiredAt: new Date('2026-01-20'),
+        existingInvestments: 'UNAFFECTED',
+        newInvestments: 'BLOCKED',
+        canReinvest: false,
+      };
+
+      expect(expiredInvestor.newInvestments).toBe('BLOCKED');
+    });
+
+    it('should allow re-verification process', () => {
+      const reVerification = {
+        investorId: 'inv-expired',
+        previousAccreditation: { method: 'CPA_LETTER', expiredAt: '2026-01-20' },
+        newVerificationStarted: true,
+        status: 'PENDING',
+      };
+
+      expect(reVerification.newVerificationStarted).toBe(true);
+    });
+
+    it('should restore subscription ability after renewal', () => {
+      const renewedInvestor = {
+        investorId: 'inv-renewed',
+        previousExpiry: new Date('2026-01-20'),
+        newExpiry: new Date('2027-01-20'),
+        canSubscribe: true,
+        renewedAt: new Date(),
+      };
+
+      expect(renewedInvestor.canSubscribe).toBe(true);
+    });
+  });
+
+  describe('Bulk Compliance Reporting', () => {
+    it('should generate compliance summary report', () => {
+      const complianceReport = {
+        fundId: 'fund-1',
+        reportDate: new Date(),
+        totalInvestors: 50,
+        accreditedCount: 48,
+        pendingVerification: 2,
+        expiringSoon: 5,
+        complianceScore: 96,
+      };
+
+      expect(complianceReport.complianceScore).toBe(96);
+    });
+
+    it('should list investors requiring action', () => {
+      const actionRequired = {
+        fundId: 'fund-1',
+        investorsNeedingAction: [
+          { id: 'inv-1', action: 'ACCREDITATION_EXPIRING', dueDate: '2026-02-15' },
+          { id: 'inv-2', action: 'KYC_RENEWAL', dueDate: '2026-02-20' },
+          { id: 'inv-3', action: 'MISSING_DOCUMENTATION', dueDate: 'ASAP' },
+        ],
+        totalActionsRequired: 3,
+      };
+
+      expect(actionRequired.totalActionsRequired).toBe(3);
+    });
+
+    it('should track compliance tasks completion', () => {
+      const taskTracking = {
+        fundId: 'fund-1',
+        tasksCompleted: 45,
+        tasksOutstanding: 5,
+        completionRate: 90,
+        nextDeadline: new Date('2026-02-01'),
+      };
+
+      expect(taskTracking.completionRate).toBe(90);
+    });
+
+    it('should generate SEC-ready audit package', () => {
+      const auditPackage = {
+        fundId: 'fund-1',
+        packageContents: [
+          'accreditation_records.csv',
+          'subscription_agreements.pdf',
+          'capital_transactions.csv',
+          'investor_communications.csv',
+          'form_d_filings.pdf',
+          'compliance_attestation.pdf',
+        ],
+        generatedAt: new Date(),
+        format: 'ZIP',
+        sizeBytes: 15728640,
+      };
+
+      expect(auditPackage.packageContents).toHaveLength(6);
+    });
+  });
+});

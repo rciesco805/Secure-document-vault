@@ -33,7 +33,7 @@ A comprehensive 506(c) fund GP/LP management suite designed to streamline invest
 - **Compliance Audit Dashboard**: `/pages/admin/audit.tsx` with event filtering, date range search, pagination, and CSV/HTML export
 - **PWA Support**: Service worker, manifest, offline page, and install prompt for mobile-first experience
 - **GP Notes Reply**: Admin API for replying to investor notes with email notifications
-- **1434+ Passing Tests**: Comprehensive E2E coverage including Transaction KYC enforcement, AML screening thresholds, and audit logging tests
+- **1540+ Passing Tests**: Comprehensive E2E coverage including Transaction KYC enforcement, AML screening, bulk action wizard, audit dashboard, and PWA support tests
 
 ### Phase 1 Features
 - **Unified Admin Access Control with Hub Navigation**: `/hub` landing page for admins, `hasFundroomAccess` field for permission-based access

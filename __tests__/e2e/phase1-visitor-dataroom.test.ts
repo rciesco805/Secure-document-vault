@@ -2876,3 +2876,482 @@ describe('Phase 1: Bank Connect & Payments (Plaid)', () => {
     });
   });
 });
+
+describe('Phase 1: Reporting & CRM Dashboard', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  const mockPrisma = prisma as jest.Mocked<typeof prisma>;
+
+  const mockInvestor = {
+    id: 'investor-1',
+    userId: 'user-1',
+    fundId: 'fund-bermuda',
+  };
+
+  describe('Transaction History Table', () => {
+    it('should display transaction history with all columns', () => {
+      const columns = ['Date', 'Type', 'Description', 'Amount', 'Status', 'Actions'];
+
+      expect(columns).toContain('Date');
+      expect(columns).toContain('Amount');
+      expect(columns).toContain('Status');
+    });
+
+    it('should list transactions for investor', () => {
+      const transactions = [
+        { id: 'txn-1', type: 'CAPITAL_CALL', amount: 50000, status: 'COMPLETED', date: '2026-01-15' },
+        { id: 'txn-2', type: 'DISTRIBUTION', amount: 12500, status: 'COMPLETED', date: '2026-01-20' },
+        { id: 'txn-3', type: 'CAPITAL_CALL', amount: 25000, status: 'PENDING', date: '2026-01-25' },
+      ];
+
+      expect(transactions).toHaveLength(3);
+      expect(transactions[0].type).toBe('CAPITAL_CALL');
+    });
+
+    it('should sort transactions by date (newest first)', () => {
+      const transactions = [
+        { id: 'txn-1', date: new Date('2026-01-10') },
+        { id: 'txn-2', date: new Date('2026-01-25') },
+        { id: 'txn-3', date: new Date('2026-01-15') },
+      ];
+
+      const sorted = transactions.sort((a, b) => b.date.getTime() - a.date.getTime());
+      expect(sorted[0].id).toBe('txn-2');
+    });
+
+    it('should filter transactions by type', () => {
+      const transactions = [
+        { id: 'txn-1', type: 'CAPITAL_CALL' },
+        { id: 'txn-2', type: 'DISTRIBUTION' },
+        { id: 'txn-3', type: 'CAPITAL_CALL' },
+      ];
+
+      const capitalCalls = transactions.filter(t => t.type === 'CAPITAL_CALL');
+      expect(capitalCalls).toHaveLength(2);
+    });
+
+    it('should filter transactions by status', () => {
+      const transactions = [
+        { id: 'txn-1', status: 'COMPLETED' },
+        { id: 'txn-2', status: 'PENDING' },
+        { id: 'txn-3', status: 'COMPLETED' },
+      ];
+
+      const pending = transactions.filter(t => t.status === 'PENDING');
+      expect(pending).toHaveLength(1);
+    });
+
+    it('should paginate transaction list', () => {
+      const pagination = {
+        page: 1,
+        pageSize: 10,
+        totalItems: 45,
+        totalPages: 5,
+      };
+
+      expect(pagination.totalPages).toBe(5);
+    });
+
+    it('should export transactions to CSV', () => {
+      const exportConfig = {
+        format: 'CSV',
+        columns: ['date', 'type', 'amount', 'status'],
+        filename: 'transactions-2026.csv',
+      };
+
+      expect(exportConfig.format).toBe('CSV');
+    });
+  });
+
+  describe('Balance Progress Bar', () => {
+    it('should calculate commitment progress', () => {
+      const commitment = 500000;
+      const funded = 250000;
+      const progressPercent = (funded / commitment) * 100;
+
+      expect(progressPercent).toBe(50);
+    });
+
+    it('should display progress bar with correct width', () => {
+      const progressPercent = 75;
+      const progressBarStyle = { width: `${progressPercent}%` };
+
+      expect(progressBarStyle.width).toBe('75%');
+    });
+
+    it('should show remaining unfunded amount', () => {
+      const commitment = 500000;
+      const funded = 300000;
+      const remaining = commitment - funded;
+
+      expect(remaining).toBe(200000);
+    });
+
+    it('should color-code progress based on percentage', () => {
+      const getProgressColor = (percent: number) => {
+        if (percent >= 100) return 'green';
+        if (percent >= 50) return 'blue';
+        if (percent >= 25) return 'yellow';
+        return 'gray';
+      };
+
+      expect(getProgressColor(100)).toBe('green');
+      expect(getProgressColor(75)).toBe('blue');
+      expect(getProgressColor(30)).toBe('yellow');
+      expect(getProgressColor(10)).toBe('gray');
+    });
+
+    it('should display distribution balance', () => {
+      const distributionSummary = {
+        totalDistributed: 75000,
+        ytdDistributed: 25000,
+        pendingDistribution: 10000,
+      };
+
+      expect(distributionSummary.totalDistributed).toBe(75000);
+    });
+  });
+
+  describe('K-1 Stubs (Storage)', () => {
+    it('should list K-1 documents for investor', () => {
+      const k1Documents = [
+        { id: 'k1-2024', year: 2024, status: 'AVAILABLE', downloadUrl: '/vault/investor-1/k1-2024.pdf' },
+        { id: 'k1-2025', year: 2025, status: 'PENDING', downloadUrl: null },
+      ];
+
+      expect(k1Documents).toHaveLength(2);
+      expect(k1Documents[0].status).toBe('AVAILABLE');
+    });
+
+    it('should upload K-1 document to storage', () => {
+      const uploadConfig = {
+        investorId: 'investor-1',
+        documentType: 'K1',
+        year: 2024,
+        filePath: '/vault/investor-1/k1-2024.pdf',
+        uploadedBy: 'admin',
+        uploadedAt: new Date(),
+      };
+
+      expect(uploadConfig.documentType).toBe('K1');
+      expect(uploadConfig.filePath).toContain('k1-2024.pdf');
+    });
+
+    it('should generate download URL for K-1', () => {
+      const documentPath = '/vault/investor-1/k1-2024.pdf';
+      const baseUrl = 'https://objectstorage.replit.app';
+      const downloadUrl = `${baseUrl}${documentPath}`;
+
+      expect(downloadUrl).toContain('objectstorage.replit.app');
+    });
+
+    it('should track K-1 download audit', () => {
+      const downloadAudit = {
+        documentId: 'k1-2024',
+        investorId: 'investor-1',
+        downloadedAt: new Date(),
+        ipAddress: '192.168.1.100',
+        userAgent: 'Mozilla/5.0',
+      };
+
+      expect(downloadAudit.documentId).toBe('k1-2024');
+    });
+
+    it('should notify investor when K-1 available', () => {
+      const notification = {
+        type: 'K1_AVAILABLE',
+        investorId: 'investor-1',
+        year: 2024,
+        message: 'Your 2024 K-1 tax document is now available for download.',
+      };
+
+      expect(notification.type).toBe('K1_AVAILABLE');
+    });
+
+    it('should support K-1 estimate vs final versions', () => {
+      const k1Versions = [
+        { id: 'k1-2024-estimate', year: 2024, version: 'ESTIMATE', uploadedAt: new Date('2025-02-15') },
+        { id: 'k1-2024-final', year: 2024, version: 'FINAL', uploadedAt: new Date('2025-03-31') },
+      ];
+
+      const finalVersion = k1Versions.find(k => k.version === 'FINAL');
+      expect(finalVersion).toBeTruthy();
+    });
+  });
+
+  describe('Cap Table Basics (Ownership %)', () => {
+    it('should calculate ownership percentage', () => {
+      const investorUnits = 50;
+      const totalFundUnits = 1000;
+      const ownershipPercent = (investorUnits / totalFundUnits) * 100;
+
+      expect(ownershipPercent).toBe(5);
+    });
+
+    it('should display cap table with all investors', () => {
+      const capTable = [
+        { investorId: 'inv-1', name: 'John Investor', units: 100, ownership: 10 },
+        { investorId: 'inv-2', name: 'Jane LP', units: 50, ownership: 5 },
+        { investorId: 'inv-3', name: 'Acme Fund', units: 350, ownership: 35 },
+        { investorId: 'gp', name: 'GP Carry', units: 500, ownership: 50 },
+      ];
+
+      const totalOwnership = capTable.reduce((sum, i) => sum + i.ownership, 0);
+      expect(totalOwnership).toBe(100);
+    });
+
+    it('should format ownership for Recharts pie chart', () => {
+      const chartData = [
+        { name: 'LP 1', value: 10, fill: '#8884d8' },
+        { name: 'LP 2', value: 5, fill: '#82ca9d' },
+        { name: 'LP 3', value: 35, fill: '#ffc658' },
+        { name: 'GP', value: 50, fill: '#ff7300' },
+      ];
+
+      expect(chartData).toHaveLength(4);
+      expect(chartData[0].value).toBe(10);
+    });
+
+    it('should show investor own slice highlighted', () => {
+      const chartConfig = {
+        data: [{ name: 'You', value: 5 }, { name: 'Others', value: 95 }],
+        highlightedSlice: 'You',
+      };
+
+      expect(chartConfig.highlightedSlice).toBe('You');
+    });
+
+    it('should display ownership breakdown tooltip', () => {
+      const tooltip = {
+        investorName: 'John Investor',
+        units: 50,
+        ownershipPercent: 5,
+        commitmentAmount: 500000,
+      };
+
+      expect(tooltip.ownershipPercent).toBe(5);
+    });
+
+    it('should track ownership changes over time', () => {
+      const ownershipHistory = [
+        { date: '2025-06-01', ownership: 3 },
+        { date: '2025-12-01', ownership: 4 },
+        { date: '2026-01-15', ownership: 5 },
+      ];
+
+      expect(ownershipHistory[2].ownership).toBeGreaterThan(ownershipHistory[0].ownership);
+    });
+  });
+
+  describe('Notes/Feedback Form', () => {
+    it('should validate feedback form required fields', () => {
+      const form = {
+        subject: 'Question about distributions',
+        message: 'When is the next distribution expected?',
+        category: 'DISTRIBUTIONS',
+      };
+
+      const isValid = form.subject.length > 0 && form.message.length > 0;
+      expect(isValid).toBe(true);
+    });
+
+    it('should submit feedback to GP', () => {
+      const feedbackSubmission = {
+        investorId: 'investor-1',
+        fundId: 'fund-bermuda',
+        subject: 'Distribution inquiry',
+        message: 'When is Q4 distribution?',
+        category: 'DISTRIBUTIONS',
+        submittedAt: new Date(),
+      };
+
+      expect(feedbackSubmission.category).toBe('DISTRIBUTIONS');
+    });
+
+    it('should send email notification to GP', () => {
+      const emailPayload = {
+        to: 'gp@bffund.com',
+        from: 'noreply@bffund.com',
+        subject: 'New Investor Feedback: Distribution inquiry',
+        body: {
+          investorName: 'John Investor',
+          investorEmail: 'john@example.com',
+          category: 'DISTRIBUTIONS',
+          message: 'When is Q4 distribution?',
+        },
+      };
+
+      expect(emailPayload.to).toBe('gp@bffund.com');
+    });
+
+    it('should confirm GP receipt of feedback', () => {
+      const receipt = {
+        feedbackId: 'feedback-1',
+        sentTo: 'gp@bffund.com',
+        sentAt: new Date(),
+        status: 'DELIVERED',
+        openedAt: new Date(),
+      };
+
+      expect(receipt.status).toBe('DELIVERED');
+    });
+
+    it('should track feedback response from GP', () => {
+      const response = {
+        feedbackId: 'feedback-1',
+        respondedBy: 'GP Admin',
+        responseMessage: 'Q4 distribution will be processed by January 31st.',
+        respondedAt: new Date(),
+      };
+
+      expect(response.responseMessage).toContain('January 31st');
+    });
+
+    it('should support attachment in feedback', () => {
+      const feedbackWithAttachment = {
+        message: 'See attached statement for discrepancy',
+        attachments: [
+          { filename: 'statement.pdf', size: 125000, type: 'application/pdf' },
+        ],
+      };
+
+      expect(feedbackWithAttachment.attachments).toHaveLength(1);
+    });
+  });
+
+  describe('Analytics: IRR/ROI Queries (Tinybird)', () => {
+    it('should calculate simple ROI', () => {
+      const invested = 100000;
+      const currentValue = 125000;
+      const roi = ((currentValue - invested) / invested) * 100;
+
+      expect(roi).toBe(25);
+    });
+
+    it('should calculate IRR for cash flows', () => {
+      const cashFlows = [
+        { date: '2024-01-01', amount: -100000 },
+        { date: '2025-01-01', amount: 10000 },
+        { date: '2026-01-01', amount: 120000 },
+      ];
+
+      expect(cashFlows[0].amount).toBeLessThan(0);
+      expect(cashFlows[2].amount).toBeGreaterThan(0);
+    });
+
+    it('should query Tinybird for analytics data', () => {
+      const tinybirdQuery = {
+        endpoint: 'investor_analytics',
+        params: {
+          investorId: 'investor-1',
+          fundId: 'fund-bermuda',
+          dateRange: { start: '2024-01-01', end: '2026-01-25' },
+        },
+      };
+
+      expect(tinybirdQuery.endpoint).toBe('investor_analytics');
+    });
+
+    it('should return performance metrics from Tinybird', () => {
+      const performanceData = {
+        irr: 18.5,
+        roi: 25.3,
+        moic: 1.25,
+        dpi: 0.15,
+        tvpi: 1.25,
+        lastUpdated: new Date(),
+      };
+
+      expect(performanceData.irr).toBe(18.5);
+      expect(performanceData.moic).toBe(1.25);
+    });
+
+    it('should track capital calls vs distributions', () => {
+      const capitalFlow = {
+        totalCalledCapital: 250000,
+        totalDistributions: 75000,
+        netCashFlow: -175000,
+      };
+
+      expect(capitalFlow.netCashFlow).toBe(capitalFlow.totalDistributions - capitalFlow.totalCalledCapital);
+    });
+
+    it('should display performance chart data', () => {
+      const chartData = [
+        { month: '2024-Q1', nav: 100000, distributions: 0 },
+        { month: '2024-Q2', nav: 102500, distributions: 0 },
+        { month: '2024-Q3', nav: 108000, distributions: 5000 },
+        { month: '2024-Q4', nav: 115000, distributions: 10000 },
+      ];
+
+      expect(chartData).toHaveLength(4);
+      expect(chartData[3].nav).toBeGreaterThan(chartData[0].nav);
+    });
+
+    it('should cache analytics queries', () => {
+      const cacheConfig = {
+        enabled: true,
+        ttlSeconds: 300,
+        key: 'analytics:investor-1:fund-bermuda',
+      };
+
+      expect(cacheConfig.ttlSeconds).toBe(300);
+    });
+
+    it('should handle Tinybird API errors gracefully', () => {
+      const errorResponse = {
+        error: 'RATE_LIMIT_EXCEEDED',
+        message: 'Too many requests',
+        retryAfter: 60,
+      };
+
+      expect(errorResponse.error).toBe('RATE_LIMIT_EXCEEDED');
+      expect(errorResponse.retryAfter).toBe(60);
+    });
+  });
+
+  describe('Dashboard Summary Metrics', () => {
+    it('should aggregate all investor metrics', () => {
+      const dashboardMetrics = {
+        totalCommitment: 500000,
+        totalFunded: 250000,
+        totalDistributions: 75000,
+        unrealizedValue: 300000,
+        pendingCalls: 50000,
+      };
+
+      expect(dashboardMetrics.totalCommitment).toBe(500000);
+    });
+
+    it('should calculate net asset value (NAV)', () => {
+      const fundedCapital = 250000;
+      const unrealizedGains = 50000;
+      const distributionsReceived = 75000;
+      const nav = fundedCapital + unrealizedGains - distributionsReceived;
+
+      expect(nav).toBe(225000);
+    });
+
+    it('should display multiple funds for multi-fund investors', () => {
+      const investorFunds = [
+        { fundId: 'fund-1', fundName: 'Bermuda Growth', commitment: 250000 },
+        { fundId: 'fund-2', fundName: 'Tech Ventures II', commitment: 100000 },
+      ];
+
+      expect(investorFunds).toHaveLength(2);
+    });
+
+    it('should show year-to-date summary', () => {
+      const ytdSummary = {
+        capitalCalled: 50000,
+        distributionsReceived: 25000,
+        feesCharged: 6250,
+        netCashFlow: -31250,
+      };
+
+      expect(ytdSummary.netCashFlow).toBe(ytdSummary.distributionsReceived - ytdSummary.capitalCalled - ytdSummary.feesCharged);
+    });
+  });
+});

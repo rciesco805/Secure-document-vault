@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, createContext, useContext } from "react";
+import { useEffect, useState, createContext, useContext, useRef } from "react";
 import Rollbar from "rollbar";
 import { clientConfig } from "@/lib/rollbar";
 
@@ -12,22 +12,23 @@ export function useRollbar(): Rollbar | null {
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = useState(false);
+  const rollbarRef = useRef<Rollbar | null>(null);
 
   useEffect(() => {
     setMounted(true);
-    if (typeof window !== "undefined" && clientConfig.accessToken) {
+    if (typeof window !== "undefined" && clientConfig.accessToken && !rollbarRef.current) {
       try {
-        const rollbar = new Rollbar(clientConfig);
-        (window as unknown as { Rollbar: Rollbar }).Rollbar = rollbar;
+        rollbarRef.current = new Rollbar(clientConfig);
+        (window as unknown as { Rollbar: Rollbar }).Rollbar = rollbarRef.current;
       } catch (error) {
         console.error("Failed to initialize Rollbar:", error);
       }
     }
   }, []);
 
-  if (!mounted) {
-    return <>{children}</>;
-  }
-
-  return <>{children}</>;
+  return (
+    <RollbarContext.Provider value={rollbarRef.current}>
+      {children}
+    </RollbarContext.Provider>
+  );
 }

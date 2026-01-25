@@ -17,8 +17,8 @@ export default function GlobalError({
   }, [error]);
 
   return (
-    <html lang="en">
-      <body>
+    <html lang="en" suppressHydrationWarning>
+      <body suppressHydrationWarning>
         <div style={{
           display: "flex",
           minHeight: "100vh",

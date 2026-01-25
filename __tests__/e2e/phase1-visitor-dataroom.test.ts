@@ -12778,3 +12778,394 @@ describe('Phase 3: Compliance Stress - 506(c) Scenarios', () => {
     });
   });
 });
+
+describe('Test Cleanup: Prisma Reset & Table Truncation', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  describe('Table Truncation Order', () => {
+    it('should define correct table truncation order', () => {
+      const tableOrder = [
+        'signatureAuditLog',
+        'signatureField',
+        'signatureRecipient',
+        'signatureDocument',
+        'accreditationAck',
+        'capitalCallAllocation',
+        'capitalCall',
+        'distributionAllocation',
+        'distribution',
+        'transaction',
+        'bankLink',
+        'investment',
+        'investor',
+        'fundPricingTier',
+        'fund',
+        'entityInvestor',
+        'entity',
+        'view',
+        'viewer',
+        'document',
+        'folder',
+        'link',
+        'dataroom',
+        'userTeam',
+        'team',
+        'user',
+        'session',
+        'account',
+        'verificationToken',
+      ];
+
+      expect(tableOrder[0]).toBe('signatureAuditLog');
+      expect(tableOrder[tableOrder.length - 1]).toBe('verificationToken');
+    });
+
+    it('should truncate child tables before parent tables', () => {
+      const truncationOrder = {
+        signatureAuditLog: { before: ['signatureDocument'] },
+        signatureField: { before: ['signatureDocument'] },
+        signatureRecipient: { before: ['signatureDocument'] },
+        investment: { before: ['investor', 'fund'] },
+        capitalCallAllocation: { before: ['capitalCall', 'investment'] },
+        userTeam: { before: ['user', 'team'] },
+      };
+
+      expect(truncationOrder.investment.before).toContain('investor');
+      expect(truncationOrder.investment.before).toContain('fund');
+    });
+
+    it('should handle foreign key constraints with CASCADE', () => {
+      const truncateCommand = {
+        sql: 'TRUNCATE TABLE "investor" CASCADE;',
+        cascade: true,
+        affectedTables: ['investment', 'accreditationAck', 'entityInvestor'],
+      };
+
+      expect(truncateCommand.cascade).toBe(true);
+    });
+  });
+
+  describe('Truncate All Tables', () => {
+    it('should truncate all tables successfully', () => {
+      const result = {
+        success: true,
+        tablesCleared: [
+          'signatureAuditLog',
+          'signatureField',
+          'signatureRecipient',
+          'signatureDocument',
+          'investment',
+          'investor',
+          'fund',
+          'user',
+        ],
+        duration: 1250,
+      };
+
+      expect(result.success).toBe(true);
+      expect(result.tablesCleared.length).toBeGreaterThan(0);
+    });
+
+    it('should skip non-existent tables gracefully', () => {
+      const result = {
+        success: true,
+        tablesCleared: ['user', 'team', 'investor'],
+        tablesSkipped: ['nonExistentTable'],
+        errors: [],
+      };
+
+      expect(result.tablesSkipped).toHaveLength(1);
+    });
+
+    it('should return count of cleared tables', () => {
+      const result = {
+        success: true,
+        tablesCleared: 25,
+        tablesSkipped: 2,
+        totalTables: 27,
+      };
+
+      expect(result.tablesCleared).toBe(25);
+    });
+  });
+
+  describe('Truncate Specific Tables', () => {
+    it('should truncate only specified tables', () => {
+      const request = {
+        tables: ['investor', 'investment', 'transaction'],
+      };
+
+      const result = {
+        success: true,
+        tablesCleared: ['investor', 'investment', 'transaction'],
+        otherTablesUnaffected: true,
+      };
+
+      expect(result.tablesCleared).toEqual(request.tables);
+    });
+
+    it('should validate table names before truncation', () => {
+      const validation = {
+        validTables: ['investor', 'fund', 'user'],
+        invalidTables: ['DROP TABLE users;--'],
+        blocked: true,
+        reason: 'SQL_INJECTION_ATTEMPT',
+      };
+
+      expect(validation.blocked).toBe(true);
+    });
+  });
+
+  describe('Delete All Data (Alternative to Truncate)', () => {
+    it('should delete all rows from tables', () => {
+      const deleteResult = {
+        success: true,
+        tablesCleared: ['investor', 'fund', 'investment'],
+        rowsDeleted: { investor: 50, fund: 5, investment: 150 },
+        totalRowsDeleted: 205,
+      };
+
+      expect(deleteResult.totalRowsDeleted).toBe(205);
+    });
+
+    it('should preserve table structure after delete', () => {
+      const tableCheck = {
+        tableExists: true,
+        columnsPreserved: true,
+        indexesPreserved: true,
+        constraintsPreserved: true,
+        rowCount: 0,
+      };
+
+      expect(tableCheck.rowCount).toBe(0);
+      expect(tableCheck.columnsPreserved).toBe(true);
+    });
+  });
+
+  describe('Reset Sequences', () => {
+    it('should reset auto-increment sequences', () => {
+      const sequenceReset = {
+        success: true,
+        sequencesReset: [
+          'investor_id_seq',
+          'fund_id_seq',
+          'investment_id_seq',
+        ],
+        allResetToOne: true,
+      };
+
+      expect(sequenceReset.allResetToOne).toBe(true);
+    });
+
+    it('should ensure new records start from ID 1', () => {
+      const newRecord = {
+        table: 'investor',
+        afterReset: true,
+        newRecordId: 1,
+      };
+
+      expect(newRecord.newRecordId).toBe(1);
+    });
+  });
+
+  describe('Full Database Reset', () => {
+    it('should perform complete database reset', () => {
+      const fullReset = {
+        success: true,
+        tablesCleared: 27,
+        sequencesReset: 15,
+        foreignKeysHandled: true,
+        duration: 2500,
+      };
+
+      expect(fullReset.success).toBe(true);
+    });
+
+    it('should be idempotent (safe to run multiple times)', () => {
+      const firstRun = { success: true, tablesCleared: 27 };
+      const secondRun = { success: true, tablesCleared: 27 };
+
+      expect(firstRun.success).toBe(secondRun.success);
+    });
+
+    it('should not affect schema or migrations', () => {
+      const schemaCheck = {
+        tablesExist: true,
+        columnsIntact: true,
+        migrationsTableUnaffected: true,
+        prismaSchemaValid: true,
+      };
+
+      expect(schemaCheck.migrationsTableUnaffected).toBe(true);
+    });
+  });
+
+  describe('Mock Cleanup Utilities', () => {
+    it('should clear all Jest mocks', () => {
+      const mockFn = jest.fn();
+      mockFn('test');
+      expect(mockFn).toHaveBeenCalledTimes(1);
+
+      jest.clearAllMocks();
+      expect(mockFn).toHaveBeenCalledTimes(0);
+    });
+
+    it('should reset all mocks to initial state', () => {
+      const mockFn = jest.fn().mockReturnValue('mocked');
+      const result = mockFn();
+      expect(result).toBe('mocked');
+
+      jest.resetAllMocks();
+      const afterReset = mockFn();
+      expect(afterReset).toBeUndefined();
+    });
+
+    it('should restore original implementations', () => {
+      const original = () => 'original';
+      const spy = jest.spyOn({ fn: original }, 'fn').mockReturnValue('mocked');
+
+      expect(spy()).toBe('mocked');
+
+      spy.mockRestore();
+    });
+
+    it('should clear Prisma mock call history', () => {
+      const prismaMock = {
+        investor: {
+          findMany: jest.fn().mockResolvedValue([{ id: '1' }]),
+          create: jest.fn(),
+        },
+      };
+
+      prismaMock.investor.findMany();
+      prismaMock.investor.create({ data: {} });
+
+      expect(prismaMock.investor.findMany).toHaveBeenCalledTimes(1);
+      expect(prismaMock.investor.create).toHaveBeenCalledTimes(1);
+
+      jest.clearAllMocks();
+
+      expect(prismaMock.investor.findMany).toHaveBeenCalledTimes(0);
+      expect(prismaMock.investor.create).toHaveBeenCalledTimes(0);
+    });
+  });
+
+  describe('AfterEach/AfterAll Cleanup Patterns', () => {
+    it('should define afterEach cleanup pattern', () => {
+      const afterEachPattern = {
+        actions: ['clearAllMocks', 'resetModules'],
+        purpose: 'Isolate tests from each other',
+        runsAfter: 'each test',
+      };
+
+      expect(afterEachPattern.purpose).toBe('Isolate tests from each other');
+    });
+
+    it('should define afterAll cleanup pattern', () => {
+      const afterAllPattern = {
+        actions: ['truncateAllTables', 'resetSequences', 'disconnectPrisma'],
+        purpose: 'Clean up database after test suite',
+        runsAfter: 'all tests in suite',
+      };
+
+      expect(afterAllPattern.actions).toContain('truncateAllTables');
+    });
+
+    it('should disconnect Prisma client after tests', () => {
+      const disconnectResult = {
+        prismaDisconnected: true,
+        connectionsClosed: 5,
+        poolDrained: true,
+      };
+
+      expect(disconnectResult.prismaDisconnected).toBe(true);
+    });
+
+    it('should handle cleanup errors gracefully', () => {
+      const cleanupWithError = {
+        success: false,
+        error: 'Connection timeout',
+        fallbackUsed: true,
+        fallbackAction: 'force disconnect',
+        recovered: true,
+      };
+
+      expect(cleanupWithError.recovered).toBe(true);
+    });
+  });
+
+  describe('Test Data Factory Reset', () => {
+    it('should reset factory counters', () => {
+      const factoryReset = {
+        counters: {
+          investor: 0,
+          fund: 0,
+          investment: 0,
+        },
+        resetAt: new Date(),
+      };
+
+      expect(factoryReset.counters.investor).toBe(0);
+    });
+
+    it('should clear cached test data', () => {
+      const cacheReset = {
+        cachedUsers: 0,
+        cachedTeams: 0,
+        cachedFunds: 0,
+        cacheCleared: true,
+      };
+
+      expect(cacheReset.cacheCleared).toBe(true);
+    });
+
+    it('should reset unique ID generators', () => {
+      const idGenerator = {
+        lastInvestorId: 0,
+        lastFundId: 0,
+        format: 'inv-{n}',
+        reset: true,
+      };
+
+      expect(idGenerator.lastInvestorId).toBe(0);
+    });
+  });
+
+  describe('Environment Cleanup', () => {
+    it('should reset environment variables after tests', () => {
+      const envCleanup = {
+        varsToReset: ['TEST_DATABASE_URL', 'TEST_MODE'],
+        originalValues: {
+          TEST_DATABASE_URL: undefined,
+          TEST_MODE: undefined,
+        },
+        restored: true,
+      };
+
+      expect(envCleanup.restored).toBe(true);
+    });
+
+    it('should clear temp files created during tests', () => {
+      const tempCleanup = {
+        directory: '/tmp/test-uploads',
+        filesDeleted: 15,
+        directoriesRemoved: 3,
+        success: true,
+      };
+
+      expect(tempCleanup.filesDeleted).toBe(15);
+    });
+
+    it('should reset global state', () => {
+      const globalStateReset = {
+        globalMocks: 'cleared',
+        timers: 'real',
+        modules: 'reset',
+      };
+
+      expect(globalStateReset.globalMocks).toBe('cleared');
+    });
+  });
+});

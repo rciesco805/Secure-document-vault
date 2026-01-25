@@ -13,6 +13,12 @@ export const verifyQstashSignature = async ({
     return;
   }
 
+  // Skip if receiver is not configured
+  if (!receiver) {
+    console.warn("QStash receiver not configured - skipping signature verification");
+    return;
+  }
+
   const signature = req.headers.get("Upstash-Signature");
 
   if (!signature) {

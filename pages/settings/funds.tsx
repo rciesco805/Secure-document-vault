@@ -172,4 +172,6 @@ function FundsSettings() {
   );
 }
 
-export default withAdminGuard(FundsSettings);
+export default FundsSettings;
+
+export const getServerSideProps = withAdminGuard();

@@ -37,6 +37,12 @@ const publishWebhookEventToQStash = async ({
   webhook: Pick<Webhook, "pId" | "url" | "secret">;
   payload: WebhookPayload;
 }) => {
+  // Skip if QStash is not configured
+  if (!qstash) {
+    console.warn("QStash client not configured - skipping webhook publish");
+    return { messageId: null };
+  }
+
   // TODO: add proper domain like app.papermark.dev in dev
   const callbackUrl = new URL(
     `${process.env.NEXT_PUBLIC_BASE_URL}/api/webhooks/callback`,

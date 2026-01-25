@@ -9,11 +9,17 @@ export const limiter = new Bottleneck({
 });
 
 // we're using Upstash's Receiver to verify the request signature
-export const receiver = new Receiver({
-  currentSigningKey: process.env.QSTASH_CURRENT_SIGNING_KEY || "",
-  nextSigningKey: process.env.QSTASH_NEXT_SIGNING_KEY || "",
-});
+// Only initialize if the signing keys are available
+export const receiver = process.env.QSTASH_CURRENT_SIGNING_KEY
+  ? new Receiver({
+      currentSigningKey: process.env.QSTASH_CURRENT_SIGNING_KEY,
+      nextSigningKey: process.env.QSTASH_NEXT_SIGNING_KEY || "",
+    })
+  : null;
 
-export const qstash = new Client({
-  token: process.env.QSTASH_TOKEN || "",
-});
+// Only initialize QStash client if token is available
+export const qstash = process.env.QSTASH_TOKEN
+  ? new Client({
+      token: process.env.QSTASH_TOKEN,
+    })
+  : null;

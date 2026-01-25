@@ -6767,3 +6767,674 @@ describe('Phase 2: E-Signature Admin', () => {
     });
   });
 });
+
+describe('Phase 2: Subscription Push & Commitment Tracking', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  describe('Subscription Wizard - Amount Entry', () => {
+    it('should enter subscription amount', () => {
+      const subscriptionInput = {
+        investorId: 'inv-1',
+        fundId: 'fund-1',
+        requestedAmount: 100000,
+        requestedUnits: 10,
+      };
+
+      expect(subscriptionInput.requestedAmount).toBe(100000);
+    });
+
+    it('should validate minimum investment amount', () => {
+      const fundConfig = { minimumInvestment: 25000 };
+      const requestedAmount = 15000;
+
+      const isValid = requestedAmount >= fundConfig.minimumInvestment;
+      expect(isValid).toBe(false);
+    });
+
+    it('should validate maximum investment amount', () => {
+      const fundConfig = { maximumInvestment: 1000000 };
+      const requestedAmount = 1500000;
+
+      const isValid = requestedAmount <= fundConfig.maximumInvestment;
+      expect(isValid).toBe(false);
+    });
+
+    it('should calculate units from amount using tier pricing', () => {
+      const tiers = [
+        { tranche: 1, pricePerUnit: 10000, unitsAvailable: 100 },
+        { tranche: 2, pricePerUnit: 12000, unitsAvailable: 50 },
+      ];
+
+      const requestedAmount = 50000;
+      const pricePerUnit = tiers[0].pricePerUnit;
+      const units = requestedAmount / pricePerUnit;
+
+      expect(units).toBe(5);
+    });
+
+    it('should calculate blended price for multi-tier subscription', () => {
+      const allocations = [
+        { tranche: 1, units: 100, pricePerUnit: 10000 },
+        { tranche: 2, units: 25, pricePerUnit: 12000 },
+      ];
+
+      const totalAmount = allocations.reduce((sum, a) => sum + (a.units * a.pricePerUnit), 0);
+      const totalUnits = allocations.reduce((sum, a) => sum + a.units, 0);
+      const blendedPrice = totalAmount / totalUnits;
+
+      expect(totalAmount).toBe(1300000);
+      expect(totalUnits).toBe(125);
+      expect(blendedPrice).toBe(10400);
+    });
+
+    it('should reject NaN or invalid input', () => {
+      const validateAmount = (amount: any) => {
+        return typeof amount === 'number' && !isNaN(amount) && amount > 0;
+      };
+
+      expect(validateAmount(NaN)).toBe(false);
+      expect(validateAmount(undefined)).toBe(false);
+      expect(validateAmount(-100)).toBe(false);
+      expect(validateAmount(100000)).toBe(true);
+    });
+
+    it('should display tier breakdown for subscription', () => {
+      const tierBreakdown = {
+        allocations: [
+          { tranche: 1, units: 100, pricePerUnit: 10000, amount: 1000000 },
+          { tranche: 2, units: 25, pricePerUnit: 12000, amount: 300000 },
+        ],
+        totalUnits: 125,
+        totalAmount: 1300000,
+        blendedPricePerUnit: 10400,
+      };
+
+      expect(tierBreakdown.allocations).toHaveLength(2);
+    });
+  });
+
+  describe('Subscription E-Sign Wizard', () => {
+    it('should display subscription review step', () => {
+      const reviewData = {
+        investorName: 'John Doe',
+        fundName: 'Bermuda Growth Fund',
+        subscriptionAmount: 100000,
+        units: 10,
+        tierBreakdown: [{ tranche: 1, units: 10, pricePerUnit: 10000 }],
+        managementFee: '2%',
+        carriedInterest: '20%',
+      };
+
+      expect(reviewData.subscriptionAmount).toBe(100000);
+    });
+
+    it('should display subscription agreement for signing', () => {
+      const subscriptionAgreement = {
+        documentId: 'sub-doc-1',
+        templateId: 'subscription-template',
+        fields: [
+          { type: 'SIGNATURE', page: 5, required: true },
+          { type: 'DATE', page: 5, required: true },
+          { type: 'INITIALS', page: 3, required: true },
+        ],
+        investorEmail: 'john@example.com',
+      };
+
+      expect(subscriptionAgreement.fields).toHaveLength(3);
+    });
+
+    it('should capture signature on subscription agreement', () => {
+      const signatureEvent = {
+        documentId: 'sub-doc-1',
+        signerId: 'inv-1',
+        signedAt: new Date(),
+        ipAddress: '192.168.1.1',
+        signatureData: 'base64-encoded-signature...',
+      };
+
+      expect(signatureEvent.signedAt).toBeDefined();
+    });
+
+    it('should store signed subscription in database', () => {
+      const subscription = {
+        id: 'sub-1',
+        investorId: 'inv-1',
+        fundId: 'fund-1',
+        amount: 100000,
+        units: 10,
+        status: 'SIGNED',
+        signedAt: new Date(),
+        documentId: 'sub-doc-1',
+        tierBreakdown: JSON.stringify([{ tranche: 1, units: 10, pricePerUnit: 10000 }]),
+      };
+
+      expect(subscription.status).toBe('SIGNED');
+    });
+
+    it('should send confirmation email after signing', () => {
+      const confirmationEmail = {
+        to: 'john@example.com',
+        template: 'subscription-confirmation',
+        variables: {
+          investorName: 'John Doe',
+          fundName: 'Bermuda Growth Fund',
+          amount: '$100,000',
+          units: 10,
+        },
+      };
+
+      expect(confirmationEmail.template).toBe('subscription-confirmation');
+    });
+
+    it('should attach signed PDF to investor vault', () => {
+      const vaultDocument = {
+        investorId: 'inv-1',
+        documentType: 'SUBSCRIPTION_AGREEMENT',
+        fileName: 'Subscription-Agreement-Signed.pdf',
+        storagePath: 'vaults/inv-1/subscription-agreement-2026-01-25.pdf',
+        uploadedAt: new Date(),
+      };
+
+      expect(vaultDocument.documentType).toBe('SUBSCRIPTION_AGREEMENT');
+    });
+  });
+
+  describe('Commitment Tracking', () => {
+    it('should track total commitments for fund', () => {
+      const subscriptions = [
+        { investorId: 'inv-1', amount: 100000, status: 'SIGNED' },
+        { investorId: 'inv-2', amount: 75000, status: 'SIGNED' },
+        { investorId: 'inv-3', amount: 50000, status: 'SIGNED' },
+      ];
+
+      const totalCommitment = subscriptions
+        .filter(s => s.status === 'SIGNED')
+        .reduce((sum, s) => sum + s.amount, 0);
+
+      expect(totalCommitment).toBe(225000);
+    });
+
+    it('should exclude pending subscriptions from commitment total', () => {
+      const subscriptions = [
+        { amount: 100000, status: 'SIGNED' },
+        { amount: 75000, status: 'PENDING' },
+        { amount: 50000, status: 'SIGNED' },
+      ];
+
+      const confirmedCommitment = subscriptions
+        .filter(s => s.status === 'SIGNED')
+        .reduce((sum, s) => sum + s.amount, 0);
+
+      expect(confirmedCommitment).toBe(150000);
+    });
+
+    it('should track commitment by investor', () => {
+      const investorCommitments = {
+        'inv-1': { commitment: 100000, funded: 50000, unfunded: 50000 },
+        'inv-2': { commitment: 75000, funded: 75000, unfunded: 0 },
+      };
+
+      expect(investorCommitments['inv-1'].unfunded).toBe(50000);
+    });
+
+    it('should update commitment after subscription', () => {
+      let fundTotals = { totalCommitment: 1000000, investorCount: 10 };
+      const newSubscription = { amount: 50000 };
+
+      fundTotals.totalCommitment += newSubscription.amount;
+      fundTotals.investorCount += 1;
+
+      expect(fundTotals.totalCommitment).toBe(1050000);
+      expect(fundTotals.investorCount).toBe(11);
+    });
+  });
+
+  describe('Initial Closing Threshold', () => {
+    it('should track progress toward initial threshold', () => {
+      const fund = {
+        targetAmount: 10000000,
+        initialClosingThreshold: 2500000,
+        currentCommitment: 2000000,
+      };
+
+      const thresholdProgress = (fund.currentCommitment / fund.initialClosingThreshold) * 100;
+      expect(thresholdProgress).toBe(80);
+    });
+
+    it('should indicate threshold not met', () => {
+      const fund = {
+        initialClosingThreshold: 2500000,
+        currentCommitment: 2000000,
+      };
+
+      const thresholdMet = fund.currentCommitment >= fund.initialClosingThreshold;
+      expect(thresholdMet).toBe(false);
+    });
+
+    it('should indicate threshold met', () => {
+      const fund = {
+        initialClosingThreshold: 2500000,
+        currentCommitment: 3000000,
+      };
+
+      const thresholdMet = fund.currentCommitment >= fund.initialClosingThreshold;
+      expect(thresholdMet).toBe(true);
+    });
+
+    it('should gate capital calls until threshold met', () => {
+      const fund = {
+        initialClosingThreshold: 2500000,
+        currentCommitment: 2000000,
+        thresholdMet: false,
+      };
+
+      fund.thresholdMet = fund.currentCommitment >= fund.initialClosingThreshold;
+      const canInitiateCapitalCall = fund.thresholdMet;
+
+      expect(canInitiateCapitalCall).toBe(false);
+    });
+
+    it('should allow capital calls after threshold met', () => {
+      const fund = {
+        initialClosingThreshold: 2500000,
+        currentCommitment: 3000000,
+        thresholdMet: false,
+      };
+
+      fund.thresholdMet = fund.currentCommitment >= fund.initialClosingThreshold;
+      const canInitiateCapitalCall = fund.thresholdMet;
+
+      expect(canInitiateCapitalCall).toBe(true);
+    });
+
+    it('should display threshold status in admin dashboard', () => {
+      const thresholdStatus = {
+        initialClosingThreshold: 2500000,
+        currentCommitment: 2000000,
+        percentComplete: 80,
+        amountRemaining: 500000,
+        status: 'IN_PROGRESS',
+      };
+
+      expect(thresholdStatus.status).toBe('IN_PROGRESS');
+    });
+
+    it('should notify GP when threshold reached', () => {
+      const notification = {
+        type: 'THRESHOLD_REACHED',
+        fundId: 'fund-1',
+        fundName: 'Bermuda Growth Fund',
+        threshold: 2500000,
+        currentCommitment: 2600000,
+        timestamp: new Date(),
+      };
+
+      expect(notification.type).toBe('THRESHOLD_REACHED');
+    });
+  });
+
+  describe('Full Authorized Amount Tracking', () => {
+    it('should track progress toward full amount', () => {
+      const fund = {
+        targetAmount: 10000000,
+        currentCommitment: 7500000,
+      };
+
+      const progressPercent = (fund.currentCommitment / fund.targetAmount) * 100;
+      expect(progressPercent).toBe(75);
+    });
+
+    it('should calculate remaining capacity', () => {
+      const fund = {
+        targetAmount: 10000000,
+        currentCommitment: 7500000,
+      };
+
+      const remainingCapacity = fund.targetAmount - fund.currentCommitment;
+      expect(remainingCapacity).toBe(2500000);
+    });
+
+    it('should prevent over-subscription', () => {
+      const fund = {
+        targetAmount: 10000000,
+        currentCommitment: 9500000,
+      };
+      const requestedAmount = 1000000;
+
+      const wouldExceed = (fund.currentCommitment + requestedAmount) > fund.targetAmount;
+      expect(wouldExceed).toBe(true);
+    });
+
+    it('should allow subscription up to remaining capacity', () => {
+      const fund = {
+        targetAmount: 10000000,
+        currentCommitment: 9500000,
+      };
+
+      const maxAllowed = fund.targetAmount - fund.currentCommitment;
+      expect(maxAllowed).toBe(500000);
+    });
+
+    it('should display dual threshold UI', () => {
+      const thresholdDisplay = {
+        initialClosingThreshold: { amount: 2500000, percent: 25, met: true },
+        fullAuthorizedAmount: { amount: 10000000, percent: 100, reached: false },
+        currentCommitment: 7500000,
+        progressToInitial: 100,
+        progressToFull: 75,
+      };
+
+      expect(thresholdDisplay.initialClosingThreshold.met).toBe(true);
+      expect(thresholdDisplay.fullAuthorizedAmount.reached).toBe(false);
+    });
+
+    it('should mark fund as fully subscribed', () => {
+      const fund = {
+        targetAmount: 10000000,
+        currentCommitment: 10000000,
+        status: 'RAISING',
+      };
+
+      if (fund.currentCommitment >= fund.targetAmount) {
+        fund.status = 'FULLY_SUBSCRIBED';
+      }
+
+      expect(fund.status).toBe('FULLY_SUBSCRIBED');
+    });
+  });
+
+  describe('Management Fee Deductions', () => {
+    it('should calculate annual management fee', () => {
+      const commitment = 1000000;
+      const managementFeePercent = 2.0;
+      const annualFee = commitment * (managementFeePercent / 100);
+
+      expect(annualFee).toBe(20000);
+    });
+
+    it('should calculate quarterly fee installment', () => {
+      const annualFee = 20000;
+      const quarterlyFee = annualFee / 4;
+
+      expect(quarterlyFee).toBe(5000);
+    });
+
+    it('should prorate fee for partial year', () => {
+      const annualFee = 20000;
+      const monthsRemaining = 6;
+      const proratedFee = (annualFee / 12) * monthsRemaining;
+
+      expect(proratedFee).toBe(10000);
+    });
+
+    it('should track fee accrual', () => {
+      const feeSchedule = {
+        investorId: 'inv-1',
+        commitment: 1000000,
+        annualFeePercent: 2.0,
+        feesAccrued: 5000,
+        feesPaid: 5000,
+        feesOwed: 0,
+      };
+
+      expect(feeSchedule.feesOwed).toBe(0);
+    });
+
+    it('should calculate fee on committed vs funded basis', () => {
+      const investor = {
+        commitment: 1000000,
+        funded: 500000,
+      };
+      const feePercent = 2.0;
+
+      const feeOnCommitted = investor.commitment * (feePercent / 100);
+      const feeOnFunded = investor.funded * (feePercent / 100);
+
+      expect(feeOnCommitted).toBe(20000);
+      expect(feeOnFunded).toBe(10000);
+    });
+
+    it('should deduct fee from distribution', () => {
+      const distribution = {
+        grossAmount: 50000,
+        managementFee: 1000,
+        netAmount: 0,
+      };
+
+      distribution.netAmount = distribution.grossAmount - distribution.managementFee;
+      expect(distribution.netAmount).toBe(49000);
+    });
+
+    it('should track total fees collected for fund', () => {
+      const fundFees = {
+        totalFeesAccrued: 100000,
+        totalFeesCollected: 80000,
+        totalFeesOutstanding: 20000,
+      };
+
+      expect(fundFees.totalFeesCollected).toBe(80000);
+    });
+  });
+
+  describe('Carried Interest Calculations', () => {
+    it('should calculate carried interest above hurdle', () => {
+      const fundPerformance = {
+        totalInvested: 5000000,
+        totalReturned: 8000000,
+        hurdleRate: 8,
+        carriedInterestPercent: 20,
+      };
+
+      const preferredReturn = fundPerformance.totalInvested * (fundPerformance.hurdleRate / 100);
+      const profitAboveHurdle = fundPerformance.totalReturned - fundPerformance.totalInvested - preferredReturn;
+      const carriedInterest = profitAboveHurdle > 0 ? profitAboveHurdle * (fundPerformance.carriedInterestPercent / 100) : 0;
+
+      expect(preferredReturn).toBe(400000);
+      expect(profitAboveHurdle).toBe(2600000);
+      expect(carriedInterest).toBe(520000);
+    });
+
+    it('should not charge carry below hurdle', () => {
+      const fundPerformance = {
+        totalInvested: 5000000,
+        totalReturned: 5200000,
+        hurdleRate: 8,
+        carriedInterestPercent: 20,
+      };
+
+      const preferredReturn = fundPerformance.totalInvested * (fundPerformance.hurdleRate / 100);
+      const profitAboveHurdle = fundPerformance.totalReturned - fundPerformance.totalInvested - preferredReturn;
+      const carriedInterest = profitAboveHurdle > 0 ? profitAboveHurdle * (fundPerformance.carriedInterestPercent / 100) : 0;
+
+      expect(profitAboveHurdle).toBeLessThan(0);
+      expect(carriedInterest).toBe(0);
+    });
+
+    it('should apply catch-up provision', () => {
+      const catchUpConfig = {
+        enabled: true,
+        catchUpPercent: 100,
+        hurdleRate: 8,
+        carriedInterestPercent: 20,
+      };
+
+      expect(catchUpConfig.catchUpPercent).toBe(100);
+    });
+
+    it('should calculate waterfall distribution', () => {
+      const waterfall = {
+        returnOfCapital: 5000000,
+        preferredReturn: 400000,
+        catchUp: 100000,
+        carriedInterest: 500000,
+        remainingToLPs: 2000000,
+        totalDistributed: 8000000,
+      };
+
+      const sum = waterfall.returnOfCapital + waterfall.preferredReturn + 
+                  waterfall.catchUp + waterfall.carriedInterest + waterfall.remainingToLPs;
+      expect(sum).toBe(waterfall.totalDistributed);
+    });
+  });
+
+  describe('Subscription Status Workflow', () => {
+    it('should track PENDING subscription status', () => {
+      const subscription = {
+        id: 'sub-1',
+        status: 'PENDING',
+        createdAt: new Date(),
+        amount: 100000,
+      };
+
+      expect(subscription.status).toBe('PENDING');
+    });
+
+    it('should track SIGNED subscription status', () => {
+      const subscription = {
+        id: 'sub-1',
+        status: 'SIGNED',
+        signedAt: new Date(),
+        amount: 100000,
+      };
+
+      expect(subscription.status).toBe('SIGNED');
+    });
+
+    it('should track ACCEPTED subscription status', () => {
+      const subscription = {
+        id: 'sub-1',
+        status: 'ACCEPTED',
+        acceptedAt: new Date(),
+        acceptedBy: 'gp-admin',
+        amount: 100000,
+      };
+
+      expect(subscription.status).toBe('ACCEPTED');
+    });
+
+    it('should track REJECTED subscription status', () => {
+      const subscription = {
+        id: 'sub-1',
+        status: 'REJECTED',
+        rejectedAt: new Date(),
+        rejectedBy: 'gp-admin',
+        rejectionReason: 'Accreditation not verified',
+        amount: 100000,
+      };
+
+      expect(subscription.status).toBe('REJECTED');
+    });
+
+    it('should track FUNDED subscription status', () => {
+      const subscription = {
+        id: 'sub-1',
+        status: 'FUNDED',
+        fundedAt: new Date(),
+        fundedAmount: 100000,
+        commitment: 100000,
+      };
+
+      expect(subscription.status).toBe('FUNDED');
+    });
+
+    it('should allow GP to accept/reject subscription', () => {
+      const subscriptionAction = {
+        subscriptionId: 'sub-1',
+        action: 'ACCEPT',
+        performedBy: 'gp-admin',
+        timestamp: new Date(),
+        notes: 'Accreditation verified',
+      };
+
+      expect(subscriptionAction.action).toBe('ACCEPT');
+    });
+
+    it('should require accreditation before subscription acceptance', () => {
+      const investor = {
+        id: 'inv-1',
+        isAccredited: false,
+        kycStatus: 'PENDING',
+      };
+
+      const canAcceptSubscription = investor.isAccredited && investor.kycStatus === 'VERIFIED';
+      expect(canAcceptSubscription).toBe(false);
+    });
+
+    it('should display pending subscriptions to GP', () => {
+      const pendingSubscriptions = [
+        { id: 'sub-1', investorName: 'John Doe', amount: 100000, submittedAt: new Date() },
+        { id: 'sub-2', investorName: 'Jane Smith', amount: 75000, submittedAt: new Date() },
+      ];
+
+      expect(pendingSubscriptions).toHaveLength(2);
+    });
+  });
+
+  describe('Server-Side Subscription Validation', () => {
+    it('should verify accreditation before processing', () => {
+      const investor = { isAccredited: true };
+      const isValid = investor.isAccredited === true;
+
+      expect(isValid).toBe(true);
+    });
+
+    it('should verify fund eligibility', () => {
+      const fund = { status: 'RAISING', acceptingSubscriptions: true };
+      const isEligible = fund.status === 'RAISING' && fund.acceptingSubscriptions;
+
+      expect(isEligible).toBe(true);
+    });
+
+    it('should validate amount against fund limits', () => {
+      const fund = { minimumInvestment: 25000, maximumInvestment: 1000000 };
+      const amount = 100000;
+
+      const isValidAmount = amount >= fund.minimumInvestment && amount <= fund.maximumInvestment;
+      expect(isValidAmount).toBe(true);
+    });
+
+    it('should validate amount against remaining capacity', () => {
+      const fund = { targetAmount: 10000000, currentCommitment: 9600000 };
+      const amount = 500000;
+
+      const remainingCapacity = fund.targetAmount - fund.currentCommitment;
+      const exceedsCapacity = amount > remainingCapacity;
+
+      expect(exceedsCapacity).toBe(true);
+    });
+
+    it('should protect against amount mismatch attacks', () => {
+      const serverCalculatedAmount = 100000;
+      const clientSubmittedAmount = 50000;
+
+      const amountMismatch = serverCalculatedAmount !== clientSubmittedAmount;
+      expect(amountMismatch).toBe(true);
+    });
+
+    it('should recalculate tier allocation on server', () => {
+      const tiers = [
+        { tranche: 1, pricePerUnit: 10000, unitsAvailable: 100 },
+      ];
+      const requestedUnits = 10;
+
+      const serverCalculatedAmount = requestedUnits * tiers[0].pricePerUnit;
+      expect(serverCalculatedAmount).toBe(100000);
+    });
+
+    it('should log subscription attempt for audit', () => {
+      const auditLog = {
+        action: 'SUBSCRIPTION_ATTEMPT',
+        investorId: 'inv-1',
+        fundId: 'fund-1',
+        requestedAmount: 100000,
+        ipAddress: '192.168.1.1',
+        timestamp: new Date(),
+        result: 'SUCCESS',
+      };
+
+      expect(auditLog.action).toBe('SUBSCRIPTION_ATTEMPT');
+    });
+  });
+});

@@ -351,6 +351,8 @@ model Subscription {
   @@index([signatureDocumentId])
   @@index([status])
   @@index([pricingTierId])
+  @@index([fundId, status])  // Composite index for capital tracking aggregates
+  @@index([fundId, status, amount])  // Composite index for AUM calculations
 }
 
 model FundPricingTier {
@@ -476,4 +478,7 @@ model Transaction {
   @@index([status])
   @@index([type])
   @@index([plaidTransferId])
+  @@index([fundId, status, type])  // Composite index for AUM calculations by fund
+  @@index([fundId, type, completedAt])  // Composite index for time-based AUM reporting
+  @@index([investorId, type, status])  // Composite index for investor transaction summaries
 }

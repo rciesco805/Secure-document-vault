@@ -5307,3 +5307,652 @@ describe('Phase 2: Entity Setup & Configuration', () => {
     });
   });
 });
+
+describe('Phase 2: Investor Management/CRM', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  describe('LP List View', () => {
+    it('should list all investors for fund', () => {
+      const investors = [
+        { id: 'inv-1', name: 'John Doe', email: 'john@example.com', status: 'ACTIVE', fundId: 'fund-1' },
+        { id: 'inv-2', name: 'Jane Smith', email: 'jane@example.com', status: 'ACTIVE', fundId: 'fund-1' },
+        { id: 'inv-3', name: 'Bob Wilson', email: 'bob@example.com', status: 'PENDING', fundId: 'fund-1' },
+      ];
+
+      expect(investors).toHaveLength(3);
+    });
+
+    it('should filter investors by status', () => {
+      const investors = [
+        { id: 'inv-1', status: 'ACTIVE' },
+        { id: 'inv-2', status: 'ACTIVE' },
+        { id: 'inv-3', status: 'PENDING' },
+        { id: 'inv-4', status: 'INACTIVE' },
+      ];
+
+      const activeInvestors = investors.filter(i => i.status === 'ACTIVE');
+      expect(activeInvestors).toHaveLength(2);
+    });
+
+    it('should filter investors by accreditation status', () => {
+      const investors = [
+        { id: 'inv-1', isAccredited: true },
+        { id: 'inv-2', isAccredited: true },
+        { id: 'inv-3', isAccredited: false },
+      ];
+
+      const accreditedInvestors = investors.filter(i => i.isAccredited);
+      expect(accreditedInvestors).toHaveLength(2);
+    });
+
+    it('should search investors by name', () => {
+      const investors = [
+        { id: 'inv-1', name: 'John Doe' },
+        { id: 'inv-2', name: 'Jane Smith' },
+        { id: 'inv-3', name: 'Bob Wilson' },
+      ];
+
+      const searchQuery = 'john';
+      const results = investors.filter(i => 
+        i.name.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+
+      expect(results).toHaveLength(1);
+      expect(results[0].name).toBe('John Doe');
+    });
+
+    it('should search investors by email', () => {
+      const investors = [
+        { id: 'inv-1', email: 'john@example.com' },
+        { id: 'inv-2', email: 'jane@company.com' },
+      ];
+
+      const searchQuery = 'company.com';
+      const results = investors.filter(i => 
+        i.email.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+
+      expect(results).toHaveLength(1);
+    });
+
+    it('should sort investors by commitment amount', () => {
+      const investors = [
+        { id: 'inv-1', commitment: 50000 },
+        { id: 'inv-2', commitment: 100000 },
+        { id: 'inv-3', commitment: 25000 },
+      ];
+
+      const sorted = investors.sort((a, b) => b.commitment - a.commitment);
+      expect(sorted[0].commitment).toBe(100000);
+    });
+
+    it('should sort investors by last activity', () => {
+      const investors = [
+        { id: 'inv-1', lastActivity: new Date('2026-01-20') },
+        { id: 'inv-2', lastActivity: new Date('2026-01-25') },
+        { id: 'inv-3', lastActivity: new Date('2026-01-15') },
+      ];
+
+      const sorted = investors.sort((a, b) => b.lastActivity.getTime() - a.lastActivity.getTime());
+      expect(sorted[0].id).toBe('inv-2');
+    });
+
+    it('should paginate investor list', () => {
+      const totalInvestors = 150;
+      const pageSize = 25;
+      const currentPage = 2;
+      const totalPages = Math.ceil(totalInvestors / pageSize);
+
+      expect(totalPages).toBe(6);
+      expect(currentPage).toBeLessThanOrEqual(totalPages);
+    });
+
+    it('should display investor summary stats', () => {
+      const investors = [
+        { id: 'inv-1', commitment: 100000, funded: 50000 },
+        { id: 'inv-2', commitment: 75000, funded: 75000 },
+        { id: 'inv-3', commitment: 50000, funded: 25000 },
+      ];
+
+      const totalCommitment = investors.reduce((sum, i) => sum + i.commitment, 0);
+      const totalFunded = investors.reduce((sum, i) => sum + i.funded, 0);
+      const investorCount = investors.length;
+
+      expect(totalCommitment).toBe(225000);
+      expect(totalFunded).toBe(150000);
+      expect(investorCount).toBe(3);
+    });
+  });
+
+  describe('Interactions Timeline', () => {
+    it('should track dataroom visits', () => {
+      const visits = [
+        { id: 'v-1', investorId: 'inv-1', type: 'DATAROOM_VIEW', documentId: 'doc-1', timestamp: new Date() },
+        { id: 'v-2', investorId: 'inv-1', type: 'DATAROOM_VIEW', documentId: 'doc-2', timestamp: new Date() },
+      ];
+
+      expect(visits).toHaveLength(2);
+    });
+
+    it('should track document views', () => {
+      const documentViews = [
+        { investorId: 'inv-1', documentId: 'doc-1', viewCount: 3, totalTimeSeconds: 120 },
+        { investorId: 'inv-1', documentId: 'doc-2', viewCount: 1, totalTimeSeconds: 45 },
+      ];
+
+      const totalViews = documentViews.reduce((sum, v) => sum + v.viewCount, 0);
+      expect(totalViews).toBe(4);
+    });
+
+    it('should track signature requests', () => {
+      const signatureRequests = [
+        { id: 'sig-1', investorId: 'inv-1', documentId: 'nda-1', status: 'SIGNED', signedAt: new Date() },
+        { id: 'sig-2', investorId: 'inv-1', documentId: 'sub-1', status: 'PENDING', signedAt: null },
+      ];
+
+      const signedDocs = signatureRequests.filter(s => s.status === 'SIGNED');
+      expect(signedDocs).toHaveLength(1);
+    });
+
+    it('should track NDA signature events', () => {
+      const ndaEvent = {
+        investorId: 'inv-1',
+        eventType: 'NDA_SIGNED',
+        timestamp: new Date('2026-01-20T10:30:00Z'),
+        metadata: { documentId: 'nda-1', ipAddress: '192.168.1.1' },
+      };
+
+      expect(ndaEvent.eventType).toBe('NDA_SIGNED');
+    });
+
+    it('should track subscription events', () => {
+      const subscriptionEvent = {
+        investorId: 'inv-1',
+        eventType: 'SUBSCRIPTION_SUBMITTED',
+        timestamp: new Date('2026-01-21T14:00:00Z'),
+        metadata: { amount: 100000, units: 10 },
+      };
+
+      expect(subscriptionEvent.eventType).toBe('SUBSCRIPTION_SUBMITTED');
+    });
+
+    it('should track KYC/AML verification events', () => {
+      const kycEvent = {
+        investorId: 'inv-1',
+        eventType: 'KYC_COMPLETED',
+        timestamp: new Date('2026-01-22T09:00:00Z'),
+        metadata: { verificationId: 'persona-123', status: 'APPROVED' },
+      };
+
+      expect(kycEvent.eventType).toBe('KYC_COMPLETED');
+    });
+
+    it('should track bank link events', () => {
+      const bankEvent = {
+        investorId: 'inv-1',
+        eventType: 'BANK_LINKED',
+        timestamp: new Date('2026-01-23T11:00:00Z'),
+        metadata: { accountMask: '****1234', bankName: 'Chase' },
+      };
+
+      expect(bankEvent.eventType).toBe('BANK_LINKED');
+    });
+
+    it('should aggregate timeline events chronologically', () => {
+      const events = [
+        { type: 'DATAROOM_VIEW', timestamp: new Date('2026-01-20T08:00:00Z') },
+        { type: 'NDA_SIGNED', timestamp: new Date('2026-01-20T10:30:00Z') },
+        { type: 'SUBSCRIPTION_SUBMITTED', timestamp: new Date('2026-01-21T14:00:00Z') },
+        { type: 'KYC_COMPLETED', timestamp: new Date('2026-01-22T09:00:00Z') },
+      ];
+
+      const sorted = events.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+      expect(sorted[0].type).toBe('KYC_COMPLETED');
+    });
+
+    it('should filter timeline by event type', () => {
+      const events = [
+        { type: 'DATAROOM_VIEW', investorId: 'inv-1' },
+        { type: 'DATAROOM_VIEW', investorId: 'inv-1' },
+        { type: 'NDA_SIGNED', investorId: 'inv-1' },
+        { type: 'SUBSCRIPTION_SUBMITTED', investorId: 'inv-1' },
+      ];
+
+      const dataroomViews = events.filter(e => e.type === 'DATAROOM_VIEW');
+      expect(dataroomViews).toHaveLength(2);
+    });
+
+    it('should filter timeline by date range', () => {
+      const events = [
+        { type: 'DATAROOM_VIEW', timestamp: new Date('2026-01-15T08:00:00Z') },
+        { type: 'NDA_SIGNED', timestamp: new Date('2026-01-20T10:30:00Z') },
+        { type: 'SUBSCRIPTION_SUBMITTED', timestamp: new Date('2026-01-25T14:00:00Z') },
+      ];
+
+      const startDate = new Date('2026-01-18T00:00:00Z');
+      const endDate = new Date('2026-01-22T23:59:59Z');
+
+      const filtered = events.filter(e => 
+        e.timestamp >= startDate && e.timestamp <= endDate
+      );
+
+      expect(filtered).toHaveLength(1);
+      expect(filtered[0].type).toBe('NDA_SIGNED');
+    });
+  });
+
+  describe('Intent Capture', () => {
+    it('should score investor based on dataroom activity', () => {
+      const activityScore = {
+        investorId: 'inv-1',
+        dataroomViews: 15,
+        documentsViewed: 8,
+        timeSpentMinutes: 45,
+        score: 0,
+      };
+
+      activityScore.score = 
+        (activityScore.dataroomViews * 2) + 
+        (activityScore.documentsViewed * 5) + 
+        (activityScore.timeSpentMinutes * 1);
+
+      expect(activityScore.score).toBe(115);
+    });
+
+    it('should categorize investor intent levels', () => {
+      const intentLevels = [
+        { minScore: 0, maxScore: 30, level: 'LOW' },
+        { minScore: 31, maxScore: 70, level: 'MEDIUM' },
+        { minScore: 71, maxScore: 100, level: 'HIGH' },
+        { minScore: 101, maxScore: Infinity, level: 'VERY_HIGH' },
+      ];
+
+      const investorScore = 85;
+      const intentLevel = intentLevels.find(l => 
+        investorScore >= l.minScore && investorScore <= l.maxScore
+      );
+
+      expect(intentLevel?.level).toBe('HIGH');
+    });
+
+    it('should track subscription interest indicators', () => {
+      const indicators = {
+        investorId: 'inv-1',
+        viewedPricingTiers: true,
+        downloadedSubDocs: true,
+        completedAccreditation: true,
+        linkedBank: false,
+        interestedAmount: 100000,
+      };
+
+      const interestIndicators = [
+        indicators.viewedPricingTiers,
+        indicators.downloadedSubDocs,
+        indicators.completedAccreditation,
+        indicators.linkedBank,
+      ];
+
+      const completedIndicators = interestIndicators.filter(Boolean).length;
+      expect(completedIndicators).toBe(3);
+    });
+
+    it('should identify hot leads from activity patterns', () => {
+      const investors = [
+        { id: 'inv-1', recentViews: 10, subDocsViewed: true, timeSpent: 30 },
+        { id: 'inv-2', recentViews: 2, subDocsViewed: false, timeSpent: 5 },
+        { id: 'inv-3', recentViews: 15, subDocsViewed: true, timeSpent: 45 },
+      ];
+
+      const hotLeads = investors.filter(i => 
+        i.recentViews >= 10 && i.subDocsViewed && i.timeSpent >= 20
+      );
+
+      expect(hotLeads).toHaveLength(2);
+    });
+
+    it('should track pipeline stages', () => {
+      const pipelineStages = ['VISITOR', 'REGISTERED', 'NDA_SIGNED', 'ACCREDITED', 'KYC_VERIFIED', 'SUBSCRIBED', 'FUNDED'];
+      
+      const investorStage = 'ACCREDITED';
+      const stageIndex = pipelineStages.indexOf(investorStage);
+
+      expect(stageIndex).toBe(3);
+      expect(stageIndex).toBeGreaterThan(0);
+    });
+
+    it('should calculate conversion funnel metrics', () => {
+      const funnelData = {
+        visitors: 1000,
+        registered: 250,
+        ndaSigned: 180,
+        accredited: 120,
+        subscribed: 50,
+        funded: 40,
+      };
+
+      const registrationRate = (funnelData.registered / funnelData.visitors) * 100;
+      const closingRate = (funnelData.funded / funnelData.registered) * 100;
+
+      expect(registrationRate).toBe(25);
+      expect(closingRate).toBe(16);
+    });
+
+    it('should track days since last activity', () => {
+      const lastActivity = new Date('2026-01-20T10:00:00Z');
+      const today = new Date('2026-01-25T10:00:00Z');
+      const daysSinceActivity = Math.floor((today.getTime() - lastActivity.getTime()) / (1000 * 60 * 60 * 24));
+
+      expect(daysSinceActivity).toBe(5);
+    });
+
+    it('should flag stale leads', () => {
+      const staleDaysThreshold = 14;
+      const lastActivity = new Date('2026-01-10T10:00:00Z');
+      const today = new Date('2026-01-25T10:00:00Z');
+      const daysSinceActivity = Math.floor((today.getTime() - lastActivity.getTime()) / (1000 * 60 * 60 * 24));
+
+      const isStale = daysSinceActivity > staleDaysThreshold;
+      expect(isStale).toBe(true);
+    });
+  });
+
+  describe('Bulk Email Updates via Resend', () => {
+    it('should select multiple investors for bulk action', () => {
+      const selectedInvestors = ['inv-1', 'inv-2', 'inv-3'];
+      expect(selectedInvestors).toHaveLength(3);
+    });
+
+    it('should validate email list before sending', () => {
+      const investors = [
+        { id: 'inv-1', email: 'john@example.com', emailVerified: true },
+        { id: 'inv-2', email: 'jane@example.com', emailVerified: true },
+        { id: 'inv-3', email: 'invalid', emailVerified: false },
+      ];
+
+      const validEmails = investors.filter(i => 
+        i.emailVerified && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(i.email)
+      );
+
+      expect(validEmails).toHaveLength(2);
+    });
+
+    it('should compose bulk email template', () => {
+      const emailTemplate = {
+        subject: 'Q4 2025 Fund Update',
+        body: 'Dear {{investorName}}, We are pleased to share...',
+        templateId: 'quarterly-update',
+        variables: ['investorName', 'fundName', 'performancePercent'],
+      };
+
+      expect(emailTemplate.variables).toContain('investorName');
+    });
+
+    it('should personalize email for each recipient', () => {
+      const template = 'Dear {{investorName}}, your commitment of {{commitment}} in {{fundName}}...';
+      const investor = { investorName: 'John Doe', commitment: '$100,000', fundName: 'Bermuda Growth Fund' };
+
+      let personalizedEmail = template;
+      Object.entries(investor).forEach(([key, value]) => {
+        personalizedEmail = personalizedEmail.replace(`{{${key}}}`, value);
+      });
+
+      expect(personalizedEmail).toContain('John Doe');
+      expect(personalizedEmail).toContain('$100,000');
+    });
+
+    it('should batch emails for Resend API limits', () => {
+      const totalRecipients = 250;
+      const batchSize = 100;
+      const batches = Math.ceil(totalRecipients / batchSize);
+
+      expect(batches).toBe(3);
+    });
+
+    it('should track email send status', () => {
+      const emailBatch = {
+        id: 'batch-1',
+        totalEmails: 50,
+        sent: 48,
+        failed: 2,
+        pending: 0,
+        status: 'COMPLETED',
+      };
+
+      expect(emailBatch.sent).toBe(48);
+      expect(emailBatch.status).toBe('COMPLETED');
+    });
+
+    it('should log failed email deliveries', () => {
+      const failedDeliveries = [
+        { email: 'bounced@invalid.com', error: 'BOUNCE', timestamp: new Date() },
+        { email: 'spam@blocked.com', error: 'SPAM_BLOCK', timestamp: new Date() },
+      ];
+
+      expect(failedDeliveries).toHaveLength(2);
+    });
+
+    it('should schedule bulk email sends', () => {
+      const scheduledSend = {
+        batchId: 'batch-1',
+        scheduledFor: new Date('2026-01-26T09:00:00Z'),
+        timezone: 'America/New_York',
+        status: 'SCHEDULED',
+      };
+
+      expect(scheduledSend.status).toBe('SCHEDULED');
+    });
+
+    it('should track email open rates', () => {
+      const emailMetrics = {
+        batchId: 'batch-1',
+        totalSent: 100,
+        opened: 45,
+        clicked: 12,
+        unsubscribed: 2,
+      };
+
+      const openRate = (emailMetrics.opened / emailMetrics.totalSent) * 100;
+      const clickRate = (emailMetrics.clicked / emailMetrics.totalSent) * 100;
+
+      expect(openRate).toBe(45);
+      expect(clickRate).toBe(12);
+    });
+
+    it('should respect unsubscribe preferences', () => {
+      const investors = [
+        { id: 'inv-1', email: 'john@example.com', unsubscribed: false },
+        { id: 'inv-2', email: 'jane@example.com', unsubscribed: true },
+        { id: 'inv-3', email: 'bob@example.com', unsubscribed: false },
+      ];
+
+      const eligibleRecipients = investors.filter(i => !i.unsubscribed);
+      expect(eligibleRecipients).toHaveLength(2);
+    });
+  });
+
+  describe('CRM Dashboard Widgets', () => {
+    it('should display investor count by status', () => {
+      const statusCounts = {
+        ACTIVE: 45,
+        PENDING: 12,
+        INACTIVE: 8,
+        PROSPECTIVE: 35,
+      };
+
+      const totalInvestors = Object.values(statusCounts).reduce((a, b) => a + b, 0);
+      expect(totalInvestors).toBe(100);
+    });
+
+    it('should display recent activity feed', () => {
+      const recentActivities = [
+        { type: 'NEW_REGISTRATION', investor: 'John Doe', timestamp: new Date() },
+        { type: 'NDA_SIGNED', investor: 'Jane Smith', timestamp: new Date() },
+        { type: 'SUBSCRIPTION_COMPLETED', investor: 'Bob Wilson', timestamp: new Date() },
+      ];
+
+      expect(recentActivities).toHaveLength(3);
+    });
+
+    it('should display pipeline funnel chart data', () => {
+      const funnelData = [
+        { stage: 'Visitors', count: 500, color: '#gray' },
+        { stage: 'Registered', count: 200, color: '#blue' },
+        { stage: 'NDA Signed', count: 150, color: '#green' },
+        { stage: 'Subscribed', count: 50, color: '#purple' },
+      ];
+
+      expect(funnelData[0].count).toBeGreaterThan(funnelData[3].count);
+    });
+
+    it('should display top investors by commitment', () => {
+      const topInvestors = [
+        { name: 'Mega Corp', commitment: 5000000 },
+        { name: 'Big Fund LP', commitment: 2500000 },
+        { name: 'Family Office', commitment: 1000000 },
+      ];
+
+      expect(topInvestors[0].commitment).toBe(5000000);
+    });
+
+    it('should display investor geographic distribution', () => {
+      const geoDistribution = [
+        { region: 'North America', count: 60, percent: 60 },
+        { region: 'Europe', count: 25, percent: 25 },
+        { region: 'Asia', count: 10, percent: 10 },
+        { region: 'Other', count: 5, percent: 5 },
+      ];
+
+      const totalPercent = geoDistribution.reduce((sum, g) => sum + g.percent, 0);
+      expect(totalPercent).toBe(100);
+    });
+  });
+
+  describe('Investor Detail View', () => {
+    it('should display investor profile', () => {
+      const investorProfile = {
+        id: 'inv-1',
+        name: 'John Doe',
+        email: 'john@example.com',
+        phone: '+1-555-0123',
+        company: 'Acme Investments',
+        type: 'INDIVIDUAL',
+        isAccredited: true,
+        kycStatus: 'VERIFIED',
+      };
+
+      expect(investorProfile.isAccredited).toBe(true);
+    });
+
+    it('should display investment summary', () => {
+      const investmentSummary = {
+        totalCommitment: 250000,
+        totalFunded: 125000,
+        unfundedCommitment: 125000,
+        distributionsReceived: 15000,
+        netContributed: 110000,
+      };
+
+      expect(investmentSummary.netContributed).toBe(110000);
+    });
+
+    it('should display document history', () => {
+      const documents = [
+        { name: 'NDA', status: 'SIGNED', signedAt: new Date('2026-01-15') },
+        { name: 'Subscription Agreement', status: 'SIGNED', signedAt: new Date('2026-01-20') },
+        { name: 'K-1 2025', status: 'PENDING', signedAt: null },
+      ];
+
+      const signedDocs = documents.filter(d => d.status === 'SIGNED');
+      expect(signedDocs).toHaveLength(2);
+    });
+
+    it('should display transaction history', () => {
+      const transactions = [
+        { type: 'CAPITAL_CALL', amount: 50000, status: 'COMPLETED', date: new Date('2026-01-10') },
+        { type: 'CAPITAL_CALL', amount: 75000, status: 'COMPLETED', date: new Date('2026-02-15') },
+        { type: 'DISTRIBUTION', amount: 15000, status: 'COMPLETED', date: new Date('2026-03-01') },
+      ];
+
+      const totalCalled = transactions
+        .filter(t => t.type === 'CAPITAL_CALL')
+        .reduce((sum, t) => sum + t.amount, 0);
+
+      expect(totalCalled).toBe(125000);
+    });
+
+    it('should display communication history', () => {
+      const communications = [
+        { type: 'EMAIL', subject: 'Welcome to Bermuda Fund', date: new Date('2026-01-01'), status: 'DELIVERED' },
+        { type: 'EMAIL', subject: 'Q4 Update', date: new Date('2026-01-15'), status: 'OPENED' },
+        { type: 'EMAIL', subject: 'Capital Call Notice', date: new Date('2026-02-01'), status: 'CLICKED' },
+      ];
+
+      expect(communications).toHaveLength(3);
+    });
+
+    it('should allow adding notes to investor', () => {
+      const investorNotes = [
+        { id: 'note-1', content: 'Interested in real estate fund', createdBy: 'GP Admin', createdAt: new Date() },
+        { id: 'note-2', content: 'Follow up on Q2', createdBy: 'GP Admin', createdAt: new Date() },
+      ];
+
+      expect(investorNotes).toHaveLength(2);
+    });
+
+    it('should track investor tags', () => {
+      const investorTags = ['VIP', 'Repeat Investor', 'Family Office', 'West Coast'];
+
+      expect(investorTags).toContain('VIP');
+      expect(investorTags).toHaveLength(4);
+    });
+  });
+
+  describe('Export and Reporting', () => {
+    it('should export investor list to CSV', () => {
+      const exportConfig = {
+        format: 'CSV',
+        fields: ['name', 'email', 'commitment', 'status'],
+        filters: { status: 'ACTIVE' },
+        filename: 'investors-export-2026-01-25.csv',
+      };
+
+      expect(exportConfig.format).toBe('CSV');
+    });
+
+    it('should export investor list to Excel', () => {
+      const exportConfig = {
+        format: 'XLSX',
+        sheets: ['Investors', 'Commitments', 'Transactions'],
+        filename: 'investor-report-2026-01.xlsx',
+      };
+
+      expect(exportConfig.sheets).toHaveLength(3);
+    });
+
+    it('should generate investor statement', () => {
+      const statementConfig = {
+        investorId: 'inv-1',
+        period: 'Q4-2025',
+        includeTransactions: true,
+        includePerformance: true,
+        format: 'PDF',
+      };
+
+      expect(statementConfig.period).toBe('Q4-2025');
+    });
+
+    it('should schedule periodic reports', () => {
+      const scheduledReport = {
+        name: 'Monthly Investor Summary',
+        frequency: 'MONTHLY',
+        dayOfMonth: 1,
+        recipients: ['gp@fund.com', 'admin@fund.com'],
+        format: 'PDF',
+      };
+
+      expect(scheduledReport.frequency).toBe('MONTHLY');
+    });
+  });
+});

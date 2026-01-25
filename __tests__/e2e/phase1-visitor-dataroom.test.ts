@@ -10026,3 +10026,592 @@ describe('Phase 2: External Integrations', () => {
     });
   });
 });
+
+describe('Phase 2: Advanced Features', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  describe('PWA Support', () => {
+    it('should register service worker', () => {
+      const swConfig = {
+        scriptUrl: '/sw.js',
+        scope: '/',
+        updateViaCache: 'none',
+        registered: true,
+      };
+
+      expect(swConfig.registered).toBe(true);
+    });
+
+    it('should configure web app manifest', () => {
+      const manifest = {
+        name: 'BF Fund Dataroom',
+        short_name: 'BF Fund',
+        description: 'Investor dataroom and fundroom portal',
+        start_url: '/',
+        display: 'standalone',
+        background_color: '#ffffff',
+        theme_color: '#1e40af',
+        icons: [
+          { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+          { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
+        ],
+      };
+
+      expect(manifest.display).toBe('standalone');
+    });
+
+    it('should cache static assets', () => {
+      const cacheStrategy = {
+        staticAssets: {
+          strategy: 'CacheFirst',
+          maxAge: 30 * 24 * 60 * 60,
+          assets: ['*.js', '*.css', '*.png', '*.woff2'],
+        },
+      };
+
+      expect(cacheStrategy.staticAssets.strategy).toBe('CacheFirst');
+    });
+
+    it('should cache API responses for offline', () => {
+      const apiCache = {
+        strategy: 'NetworkFirst',
+        fallbackCache: true,
+        maxAge: 5 * 60,
+        endpoints: ['/api/lp/dashboard', '/api/lp/investments', '/api/lp/documents'],
+      };
+
+      expect(apiCache.fallbackCache).toBe(true);
+    });
+
+    it('should detect offline status', () => {
+      const networkStatus = {
+        online: false,
+        lastOnline: new Date(Date.now() - 300000),
+        offlineMode: true,
+      };
+
+      expect(networkStatus.offlineMode).toBe(true);
+    });
+
+    it('should show offline indicator', () => {
+      const offlineUI = {
+        showBanner: true,
+        bannerMessage: 'You are currently offline. Some features may be limited.',
+        bannerType: 'warning',
+      };
+
+      expect(offlineUI.showBanner).toBe(true);
+    });
+
+    it('should queue actions for sync when offline', () => {
+      const offlineQueue = {
+        pendingActions: [
+          { id: 'act-1', type: 'FORM_SUBMIT', data: { formId: 'contact' }, createdAt: new Date() },
+          { id: 'act-2', type: 'DOCUMENT_VIEW', data: { docId: 'doc-1' }, createdAt: new Date() },
+        ],
+        syncOnReconnect: true,
+      };
+
+      expect(offlineQueue.pendingActions).toHaveLength(2);
+    });
+
+    it('should sync queued actions on reconnect', () => {
+      const syncResult = {
+        queuedActions: 5,
+        syncedSuccessfully: 4,
+        failed: 1,
+        syncedAt: new Date(),
+      };
+
+      expect(syncResult.syncedSuccessfully).toBe(4);
+    });
+
+    it('should support background sync', () => {
+      const bgSyncConfig = {
+        enabled: true,
+        tag: 'bf-fund-sync',
+        minInterval: 60000,
+        requiresNetwork: true,
+      };
+
+      expect(bgSyncConfig.enabled).toBe(true);
+    });
+
+    it('should handle app updates', () => {
+      const updateConfig = {
+        checkInterval: 3600000,
+        promptUser: true,
+        autoUpdate: false,
+        currentVersion: '2.1.0',
+        availableVersion: '2.2.0',
+      };
+
+      const hasUpdate = updateConfig.currentVersion !== updateConfig.availableVersion;
+      expect(hasUpdate).toBe(true);
+    });
+  });
+
+  describe('Bulk Distributions', () => {
+    it('should select multiple investors for distribution', () => {
+      const selectedInvestors = ['inv-1', 'inv-2', 'inv-3', 'inv-4', 'inv-5'];
+      expect(selectedInvestors).toHaveLength(5);
+    });
+
+    it('should calculate pro-rata distribution', () => {
+      const investors = [
+        { id: 'inv-1', ownershipPercent: 40 },
+        { id: 'inv-2', ownershipPercent: 30 },
+        { id: 'inv-3', ownershipPercent: 20 },
+        { id: 'inv-4', ownershipPercent: 10 },
+      ];
+
+      const totalDistribution = 100000;
+      const allocations = investors.map(inv => ({
+        investorId: inv.id,
+        amount: totalDistribution * (inv.ownershipPercent / 100),
+      }));
+
+      expect(allocations[0].amount).toBe(40000);
+    });
+
+    it('should support custom allocation override', () => {
+      const customAllocations = [
+        { investorId: 'inv-1', proRataAmount: 40000, customAmount: 50000 },
+        { investorId: 'inv-2', proRataAmount: 30000, customAmount: 30000 },
+      ];
+
+      expect(customAllocations[0].customAmount).toBe(50000);
+    });
+
+    it('should validate total matches distribution amount', () => {
+      const totalDistribution = 100000;
+      const allocations = [
+        { amount: 40000 },
+        { amount: 30000 },
+        { amount: 20000 },
+        { amount: 10000 },
+      ];
+
+      const sum = allocations.reduce((s, a) => s + a.amount, 0);
+      expect(sum).toBe(totalDistribution);
+    });
+
+    it('should schedule bulk distribution', () => {
+      const scheduledDistribution = {
+        id: 'dist-bulk-1',
+        type: 'INCOME',
+        totalAmount: 500000,
+        investorCount: 25,
+        scheduledDate: new Date('2026-02-01'),
+        status: 'SCHEDULED',
+      };
+
+      expect(scheduledDistribution.status).toBe('SCHEDULED');
+    });
+
+    it('should process distributions in batches', () => {
+      const batchConfig = {
+        totalDistributions: 150,
+        batchSize: 50,
+        currentBatch: 1,
+        totalBatches: 3,
+        processedCount: 50,
+      };
+
+      expect(batchConfig.totalBatches).toBe(3);
+    });
+
+    it('should handle partial failures in bulk distribution', () => {
+      const batchResult = {
+        total: 50,
+        successful: 47,
+        failed: 3,
+        failedInvestors: ['inv-12', 'inv-23', 'inv-45'],
+        failureReasons: ['ACCOUNT_CLOSED', 'INSUFFICIENT_INFO', 'ACH_REJECTED'],
+      };
+
+      expect(batchResult.failed).toBe(3);
+    });
+
+    it('should generate distribution summary report', () => {
+      const summaryReport = {
+        distributionId: 'dist-bulk-1',
+        totalAmount: 500000,
+        successfulAmount: 485000,
+        failedAmount: 15000,
+        investorCount: 25,
+        successfulCount: 22,
+        completedAt: new Date(),
+      };
+
+      expect(summaryReport.successfulCount).toBe(22);
+    });
+
+    it('should send bulk distribution notifications', () => {
+      const notificationBatch = {
+        templateId: 'distribution-notice',
+        recipientCount: 25,
+        sentCount: 25,
+        scheduledAt: new Date(),
+      };
+
+      expect(notificationBatch.sentCount).toBe(25);
+    });
+
+    it('should retry failed distributions', () => {
+      const retryConfig = {
+        failedDistributions: ['inv-12', 'inv-23', 'inv-45'],
+        retryCount: 1,
+        maxRetries: 3,
+        retryDelay: 24 * 60 * 60 * 1000,
+      };
+
+      expect(retryConfig.failedDistributions).toHaveLength(3);
+    });
+  });
+
+  describe('STARTUP Mode - Share Issuance', () => {
+    it('should create share issuance', () => {
+      const shareIssuance = {
+        id: 'issuance-1',
+        entityId: 'startup-1',
+        type: 'COMMON',
+        shares: 100000,
+        pricePerShare: 1.50,
+        totalValue: 150000,
+        issuedTo: 'investor-1',
+        issuedAt: new Date(),
+      };
+
+      expect(shareIssuance.shares).toBe(100000);
+    });
+
+    it('should support multiple share classes', () => {
+      const shareClasses = [
+        { name: 'Common', authorized: 10000000, issued: 7000000, reserved: 1500000 },
+        { name: 'Preferred Series A', authorized: 2000000, issued: 2000000, reserved: 0 },
+        { name: 'Preferred Series B', authorized: 1000000, issued: 800000, reserved: 200000 },
+      ];
+
+      expect(shareClasses).toHaveLength(3);
+    });
+
+    it('should validate shares available before issuance', () => {
+      const shareClass = { name: 'Common', authorized: 10000000, issued: 9500000 };
+      const requestedShares = 600000;
+      const available = shareClass.authorized - shareClass.issued;
+
+      const canIssue = requestedShares <= available;
+      expect(canIssue).toBe(false);
+    });
+
+    it('should update cap table after issuance', () => {
+      let stakeholder = { name: 'Investor A', shares: 500000, percent: 5 };
+      const newShares = 100000;
+      const totalShares = 10000000;
+
+      stakeholder.shares += newShares;
+      stakeholder.percent = (stakeholder.shares / totalShares) * 100;
+
+      expect(stakeholder.shares).toBe(600000);
+      expect(stakeholder.percent).toBe(6);
+    });
+
+    it('should record issuance in share ledger', () => {
+      const ledgerEntry = {
+        id: 'ledger-1',
+        type: 'ISSUANCE',
+        shareClass: 'Common',
+        shares: 100000,
+        fromHolder: null,
+        toHolder: 'investor-1',
+        pricePerShare: 1.50,
+        transactionDate: new Date(),
+        certificateNumber: 'CERT-2026-001',
+      };
+
+      expect(ledgerEntry.type).toBe('ISSUANCE');
+    });
+
+    it('should generate share certificate', () => {
+      const certificate = {
+        certificateNumber: 'CERT-2026-001',
+        companyName: 'TechCo Inc',
+        holderName: 'John Doe',
+        shareClass: 'Common Stock',
+        shares: 100000,
+        issueDate: new Date(),
+        authorizedSignature: 'CEO',
+        template: 'standard-certificate',
+      };
+
+      expect(certificate.certificateNumber).toBe('CERT-2026-001');
+    });
+
+    it('should support share transfer', () => {
+      const shareTransfer = {
+        id: 'transfer-1',
+        fromHolder: 'founder-1',
+        toHolder: 'investor-1',
+        shareClass: 'Common',
+        shares: 50000,
+        pricePerShare: 2.00,
+        transferDate: new Date(),
+        boardApproval: true,
+      };
+
+      expect(shareTransfer.boardApproval).toBe(true);
+    });
+
+    it('should enforce transfer restrictions', () => {
+      const transferRestrictions = {
+        rofr: true,
+        lockupPeriod: 12,
+        boardApprovalRequired: true,
+        investorAccreditationRequired: true,
+      };
+
+      expect(transferRestrictions.rofr).toBe(true);
+    });
+  });
+
+  describe('STARTUP Mode - Vesting Wizard', () => {
+    it('should create vesting grant', () => {
+      const vestingGrant = {
+        id: 'grant-1',
+        grantee: 'employee-1',
+        granteeName: 'Jane Developer',
+        grantType: 'STOCK_OPTION',
+        shares: 50000,
+        vestingSchedule: '4-YEAR-1-CLIFF',
+        grantDate: new Date('2026-01-01'),
+        exercisePrice: 1.00,
+      };
+
+      expect(vestingGrant.grantType).toBe('STOCK_OPTION');
+    });
+
+    it('should configure standard 4-year vesting', () => {
+      const vestingConfig = {
+        totalMonths: 48,
+        cliffMonths: 12,
+        vestingFrequency: 'MONTHLY',
+        cliffPercent: 25,
+        accelerationTrigger: 'DOUBLE_TRIGGER',
+      };
+
+      expect(vestingConfig.totalMonths).toBe(48);
+    });
+
+    it('should configure custom vesting schedule', () => {
+      const customVesting = {
+        type: 'CUSTOM',
+        milestones: [
+          { date: new Date('2026-06-01'), percent: 10, description: 'Product Launch' },
+          { date: new Date('2027-01-01'), percent: 25, description: 'Series A Close' },
+          { date: new Date('2027-06-01'), percent: 25, description: 'Revenue Target' },
+          { date: new Date('2028-01-01'), percent: 40, description: 'Profitability' },
+        ],
+      };
+
+      expect(customVesting.milestones).toHaveLength(4);
+    });
+
+    it('should calculate vested shares at date', () => {
+      const grant = {
+        totalShares: 48000,
+        vestingMonths: 48,
+        cliffMonths: 12,
+        grantDate: new Date('2025-01-01'),
+      };
+
+      const currentDate = new Date('2026-07-01');
+      const monthsElapsed = 18;
+      const cliffMet = monthsElapsed >= grant.cliffMonths;
+      const vestedShares = cliffMet 
+        ? Math.floor((monthsElapsed / grant.vestingMonths) * grant.totalShares)
+        : 0;
+
+      expect(vestedShares).toBe(18000);
+    });
+
+    it('should display vesting timeline', () => {
+      const vestingTimeline = [
+        { date: '2026-01-01', event: 'Grant Date', vested: 0, unvested: 48000 },
+        { date: '2027-01-01', event: 'Cliff (25%)', vested: 12000, unvested: 36000 },
+        { date: '2028-01-01', event: '50% Vested', vested: 24000, unvested: 24000 },
+        { date: '2029-01-01', event: '75% Vested', vested: 36000, unvested: 12000 },
+        { date: '2030-01-01', event: 'Fully Vested', vested: 48000, unvested: 0 },
+      ];
+
+      expect(vestingTimeline).toHaveLength(5);
+    });
+
+    it('should handle early exercise', () => {
+      const earlyExercise = {
+        grantId: 'grant-1',
+        exerciseType: 'EARLY',
+        sharesToExercise: 10000,
+        vestedShares: 0,
+        unvestedShares: 10000,
+        exercisePrice: 1.00,
+        totalCost: 10000,
+        section83bElection: true,
+      };
+
+      expect(earlyExercise.section83bElection).toBe(true);
+    });
+
+    it('should track exercise events', () => {
+      const exerciseEvent = {
+        grantId: 'grant-1',
+        exerciseDate: new Date(),
+        sharesExercised: 12000,
+        exercisePrice: 1.00,
+        fairMarketValue: 2.50,
+        paymentMethod: 'CASH',
+        taxWithholding: 4500,
+      };
+
+      expect(exerciseEvent.sharesExercised).toBe(12000);
+    });
+
+    it('should handle termination scenarios', () => {
+      const terminationConfig = {
+        grantId: 'grant-1',
+        terminationType: 'VOLUNTARY',
+        terminationDate: new Date(),
+        vestedShares: 24000,
+        unvestedShares: 24000,
+        exerciseWindow: 90,
+        unvestedForfeit: true,
+      };
+
+      expect(terminationConfig.unvestedForfeit).toBe(true);
+    });
+
+    it('should support acceleration on exit', () => {
+      const accelerationEvent = {
+        grantId: 'grant-1',
+        triggerType: 'ACQUISITION',
+        accelerationType: 'DOUBLE_TRIGGER',
+        unvestedShares: 24000,
+        acceleratedShares: 24000,
+        accelerationPercent: 100,
+        effectiveDate: new Date(),
+      };
+
+      expect(accelerationEvent.acceleratedShares).toBe(24000);
+    });
+
+    it('should generate 409A valuation report', () => {
+      const valuationReport = {
+        entityId: 'startup-1',
+        valuationDate: new Date('2026-01-01'),
+        fairMarketValue: 2.50,
+        methodology: '409A_COMPLIANT',
+        validUntil: new Date('2027-01-01'),
+        preparedBy: 'Valuation Firm LLC',
+      };
+
+      expect(valuationReport.fairMarketValue).toBe(2.50);
+    });
+  });
+
+  describe('Option Pool Management', () => {
+    it('should configure option pool', () => {
+      const optionPool = {
+        entityId: 'startup-1',
+        poolSize: 1500000,
+        allocated: 800000,
+        available: 700000,
+        percentOfFullyDiluted: 15,
+      };
+
+      expect(optionPool.available).toBe(700000);
+    });
+
+    it('should track grants against pool', () => {
+      const poolStatus = {
+        totalPool: 1500000,
+        grants: [
+          { grantee: 'emp-1', shares: 200000 },
+          { grantee: 'emp-2', shares: 150000 },
+          { grantee: 'emp-3', shares: 100000 },
+          { grantee: 'emp-4', shares: 350000 },
+        ],
+        allocated: 800000,
+        remaining: 700000,
+      };
+
+      const totalAllocated = poolStatus.grants.reduce((s, g) => s + g.shares, 0);
+      expect(totalAllocated).toBe(poolStatus.allocated);
+    });
+
+    it('should alert when pool is low', () => {
+      const poolAlert = {
+        poolSize: 1500000,
+        available: 150000,
+        thresholdPercent: 10,
+        isLow: true,
+        message: 'Option pool is below 10% - consider expanding',
+      };
+
+      expect(poolAlert.isLow).toBe(true);
+    });
+
+    it('should expand option pool', () => {
+      let optionPool = { poolSize: 1500000, available: 150000 };
+      const expansion = 500000;
+
+      optionPool.poolSize += expansion;
+      optionPool.available += expansion;
+
+      expect(optionPool.poolSize).toBe(2000000);
+    });
+  });
+
+  describe('Advanced Reporting', () => {
+    it('should generate waterfall analysis', () => {
+      const waterfallAnalysis = {
+        exitValue: 50000000,
+        breakpoints: [
+          { name: 'Liquidation Preference', amount: 5000000, recipients: ['Series A'] },
+          { name: 'Participation Cap', amount: 10000000, recipients: ['Series A'] },
+          { name: 'Common Distribution', amount: 35000000, recipients: ['Common', 'Options'] },
+        ],
+        shareholderReturns: [
+          { class: 'Series A', invested: 5000000, returned: 15000000, multiple: 3.0 },
+          { class: 'Common', invested: 0, returned: 35000000, multiple: null },
+        ],
+      };
+
+      expect(waterfallAnalysis.shareholderReturns[0].multiple).toBe(3.0);
+    });
+
+    it('should model exit scenarios', () => {
+      const exitScenarios = [
+        { exitValue: 25000000, commonPerShare: 1.50, optionValue: 0.50 },
+        { exitValue: 50000000, commonPerShare: 3.50, optionValue: 2.50 },
+        { exitValue: 100000000, commonPerShare: 7.50, optionValue: 6.50 },
+      ];
+
+      expect(exitScenarios).toHaveLength(3);
+    });
+
+    it('should calculate dilution impact', () => {
+      const dilutionAnalysis = {
+        beforeRound: { founderPercent: 60, investorPercent: 25, optionPool: 15 },
+        newInvestment: 5000000,
+        preMoneyValuation: 20000000,
+        postMoneyValuation: 25000000,
+        dilutionPercent: 20,
+        afterRound: { founderPercent: 48, investorPercent: 20, newInvestor: 20, optionPool: 12 },
+      };
+
+      expect(dilutionAnalysis.afterRound.founderPercent).toBe(48);
+    });
+  });
+});

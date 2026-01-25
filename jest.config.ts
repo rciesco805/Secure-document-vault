@@ -14,7 +14,7 @@ const customJestConfig: Config = {
   },
   testPathIgnorePatterns: ['<rootDir>/node_modules/', '<rootDir>/.next/'],
   transformIgnorePatterns: [
-    '/node_modules/(?!(@sindresorhus/slugify|escape-string-regexp)/)',
+    '/node_modules/(?!(@sindresorhus/slugify|escape-string-regexp|@teamhanko/passkeys-next-auth-provider|jose)/)',
   ],
   collectCoverageFrom: [
     'pages/api/**/*.ts',

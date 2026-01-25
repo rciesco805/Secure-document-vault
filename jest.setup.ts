@@ -5,6 +5,20 @@ jest.mock('@sindresorhus/slugify', () => ({
   default: (str: string) => str.toLowerCase().replace(/\s+/g, '-'),
 }));
 
+jest.mock('@/lib/hanko', () => ({
+  __esModule: true,
+  default: null,
+}));
+
+jest.mock('@teamhanko/passkeys-next-auth-provider', () => ({
+  __esModule: true,
+  PasskeyProvider: jest.fn(() => ({
+    id: 'passkeys',
+    name: 'Passkeys',
+    type: 'credentials',
+  })),
+}));
+
 jest.mock('@/lib/prisma', () => ({
   __esModule: true,
   default: {

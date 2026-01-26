@@ -29,6 +29,7 @@ export default function Welcome() {
   const router = useRouter();
   const [showSkipButtons, setShowSkipButtons] = useState(false);
   const [isCheckingAdmin, setIsCheckingAdmin] = useState(true);
+  const [sessionTimeout, setSessionTimeout] = useState(false);
   const { data: session, status } = useSession();
   const signupEventSent = useRef(false);
   const adminCheckDone = useRef(false);
@@ -41,6 +42,19 @@ export default function Welcome() {
     return () => clearTimeout(timer);
   }, []);
 
+  // Timeout fallback to prevent infinite loading if session check hangs
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (status === "loading") {
+        console.warn("[WELCOME] Session loading timeout - redirecting to login");
+        setSessionTimeout(true);
+        router.replace("/login");
+      }
+    }, 8000); // 8 second timeout
+    
+    return () => clearTimeout(timeout);
+  }, [status, router]);
+
   useEffect(() => {
     async function checkAdminStatus() {
       if (status !== "authenticated" || !session?.user || adminCheckDone.current) {
@@ -50,7 +64,12 @@ export default function Welcome() {
       adminCheckDone.current = true;
       
       try {
-        const res = await fetch("/api/teams");
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout for API
+        
+        const res = await fetch("/api/teams", { signal: controller.signal });
+        clearTimeout(timeoutId);
+        
         const data = await res.json();
         
         if (!data || data.length === 0) {
@@ -60,6 +79,7 @@ export default function Welcome() {
         
         setIsCheckingAdmin(false);
       } catch (error) {
+        console.error("[WELCOME] Admin check failed:", error);
         router.replace("/viewer-portal");
       }
     }

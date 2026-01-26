@@ -310,6 +310,19 @@ export default function ViewPage({
   const [magicLinkVerified, setMagicLinkVerified] = useState<boolean>(false);
   const [isVerifyingMagicLink, setIsVerifyingMagicLink] = useState<boolean>(false);
   const [autoVerifyAttempted, setAutoVerifyAttempted] = useState<boolean>(false);
+  const [sessionTimeout, setSessionTimeout] = useState<boolean>(false);
+
+  // Timeout fallback to prevent infinite loading if session check hangs
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (status === "loading") {
+        console.warn("[VIEW] Session loading timeout - forcing render");
+        setSessionTimeout(true);
+      }
+    }, 5000); // 5 second timeout
+    
+    return () => clearTimeout(timeout);
+  }, [status]);
 
   useEffect(() => {
     // Retrieve token from cookie on component mount
@@ -470,7 +483,9 @@ export default function ViewPage({
   if (linkType === "DOCUMENT_LINK") {
     const { link, brand } = linkData as DocumentLinkData;
 
-    if (!linkData || status === "loading" || router.isFallback) {
+    // Use sessionTimeout to prevent infinite loading
+    const isDocSessionLoading = status === "loading" && !sessionTimeout;
+    if (!linkData || isDocSessionLoading || router.isFallback) {
       return (
         <>
           <CustomMetaTag
@@ -556,9 +571,11 @@ export default function ViewPage({
 
     // Wait for session to load and auto-verification to complete before rendering dataroom
     // Also wait if session is authenticated but auto-verify hasn't been attempted yet
+    // Use sessionTimeout to prevent infinite loading if session check hangs
     const needsAutoVerify = status === "authenticated" && !storedToken && !magicLinkVerified && !autoVerifyAttempted;
     const isAutoVerifying = status === "authenticated" && !storedToken && !magicLinkVerified && isVerifyingMagicLink;
-    const shouldShowLoading = !link || status === "loading" || router.isFallback || needsAutoVerify || isAutoVerifying;
+    const isSessionLoading = status === "loading" && !sessionTimeout;
+    const shouldShowLoading = !link || isSessionLoading || router.isFallback || needsAutoVerify || isAutoVerifying;
     
     if (shouldShowLoading) {
       return (

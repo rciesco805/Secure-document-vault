@@ -13,6 +13,9 @@ A comprehensive 506(c) fund GP/LP management suite designed to streamline invest
 ## Recent Changes (January 2026)
 
 ### Phase 2 Additions (Latest)
+- **LP/GP Role-Based Access Control**: Full role enforcement in NextAuth callbacks and middleware - LP users access LP routes, GP users access all routes, LP blocked from admin routes
+- **Role Injection in Sessions**: JWT and session callbacks now include user role from database, accessible client-side via session.user.role
+- **Rollbar Admin Endpoint**: New /api/admin/rollbar-errors endpoint for fetching error reports programmatically
 - **Rollbar Token Safeguards**: Added `enabled` flag to Rollbar config to prevent crashes when tokens are missing or invalid
 - **Visitor Portal Login Flow Fixes**: Enhanced /verify page with full origin validation (protocol + hostname + port) and NextAuth callback path validation for security
 - **Email Sequence Fix**: Pre-approved users (quick-add or allowList) no longer receive redundant "Access granted" email when first logging in - they already received an invite email

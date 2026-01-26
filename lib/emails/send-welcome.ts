@@ -40,63 +40,58 @@ export const sendWelcomeEmail = async (params: CreateUserEmailProps) => {
     return;
   }
   
+  // Check if user was already pre-approved (has a Viewer record with group membership)
+  // If so, they already received an invite email when added - don't send duplicate "Access granted"
   const viewer = await prisma.viewer.findFirst({
     where: {
       email: { equals: emailLower, mode: "insensitive" },
     },
     include: {
       groups: {
-        include: {
-          group: {
-            include: {
-              dataroom: {
-                select: {
-                  id: true,
-                  name: true,
-                  links: {
-                    where: { deletedAt: null, isArchived: false },
-                    select: { id: true },
-                    take: 1,
-                  },
-                },
-              },
-            },
-          },
-        },
+        select: { id: true },
+        take: 1,
       },
     },
   });
   
-  let dataroomName: string | undefined;
-  let accessLink = `${process.env.NEXT_PUBLIC_BASE_URL}/viewer-portal`;
-  
+  // If user already has a Viewer record with group membership, they were pre-approved
+  // and already received an invite email - skip sending duplicate "Access granted" email
   if (viewer && viewer.groups.length > 0) {
-    const firstGroup = viewer.groups[0];
-    const dataroom = firstGroup?.group?.dataroom;
-    dataroomName = dataroom?.name;
-    const linkId = dataroom?.links?.[0]?.id;
-    
-    if (linkId) {
-      accessLink = `${process.env.NEXT_PUBLIC_BASE_URL}/view/${linkId}`;
-    }
+    console.log("[WELCOME_EMAIL] Skipping - user was pre-approved:", emailLower);
+    return;
   }
   
+  // Also check if user is in any link's allowList (another form of pre-approval)
+  const linkWithEmail = await prisma.link.findFirst({
+    where: {
+      allowList: { has: emailLower },
+      deletedAt: null,
+      isArchived: false,
+    },
+    select: { id: true },
+  });
+  
+  if (linkWithEmail) {
+    console.log("[WELCOME_EMAIL] Skipping - user was in allowList:", emailLower);
+    return;
+  }
+  
+  // User is new and was not pre-approved - send welcome email
   const emailTemplate = ViewerWelcomeEmail({ 
     name, 
-    dataroomName,
-    accessLink,
+    dataroomName: undefined,
+    accessLink: `${process.env.NEXT_PUBLIC_BASE_URL}/viewer-portal`,
   });
   
   try {
     await sendEmail({
       to: email as string,
       from: "BF Fund <dataroom@investors.bermudafranchisegroup.com>",
-      subject: dataroomName 
-        ? `Access granted: ${dataroomName}`
-        : "Welcome to BF Fund Investor Portal",
+      subject: "Welcome to BF Fund Investor Portal",
       react: emailTemplate,
       test: process.env.NODE_ENV === "development",
     });
+    console.log("[WELCOME_EMAIL] Sent to new user:", emailLower);
   } catch (e) {
     console.error(e);
   }

@@ -39,29 +39,33 @@ export const metadata: Metadata = {
   },
 };
 
-function normalizeHostname(urlString: string): string {
+function normalizeOrigin(urlString: string): string {
   try {
     const url = new URL(urlString);
-    return url.hostname.toLowerCase();
+    return `${url.protocol}//${url.hostname}${url.port ? ':' + url.port : ''}`.toLowerCase();
   } catch {
     return '';
   }
 }
 
-function getAllowedHostnames(): string[] {
-  const hostnames: string[] = [];
+function getAllowedOrigins(): string[] {
+  const origins: string[] = [];
   
   const nextAuthUrl = process.env.NEXTAUTH_URL;
   const verificationBaseUrl = process.env.VERIFICATION_EMAIL_BASE_URL;
   const publicBaseUrl = process.env.NEXT_PUBLIC_BASE_URL;
   
-  if (nextAuthUrl) hostnames.push(normalizeHostname(nextAuthUrl));
-  if (verificationBaseUrl) hostnames.push(normalizeHostname(verificationBaseUrl));
-  if (publicBaseUrl) hostnames.push(normalizeHostname(publicBaseUrl));
+  if (nextAuthUrl) origins.push(normalizeOrigin(nextAuthUrl));
+  if (verificationBaseUrl) origins.push(normalizeOrigin(verificationBaseUrl));
+  if (publicBaseUrl) origins.push(normalizeOrigin(publicBaseUrl));
   
-  hostnames.push('dataroom.bermudafranchisegroup.com');
+  origins.push('https://dataroom.bermudafranchisegroup.com');
   
-  return [...new Set(hostnames.filter(h => h))];
+  return [...new Set(origins.filter(o => o))];
+}
+
+function isValidNextAuthCallbackPath(pathname: string): boolean {
+  return pathname.startsWith('/api/auth/callback/');
 }
 
 export default function VerifyPage({
@@ -83,17 +87,23 @@ export default function VerifyPage({
 
   const isValidVerificationUrl = (url: string, providedChecksum: string): boolean => {
     try {
-      const urlHostname = normalizeHostname(url);
-      const allowedHostnames = getAllowedHostnames();
+      const urlObj = new URL(url);
+      const urlOrigin = normalizeOrigin(url);
+      const allowedOrigins = getAllowedOrigins();
       
-      console.log("[VERIFY] Hostname check:", { 
-        urlHostname, 
-        allowedHostnames,
-        isAllowed: allowedHostnames.includes(urlHostname)
+      console.log("[VERIFY] Origin check:", { 
+        urlOrigin, 
+        allowedOrigins,
+        isAllowed: allowedOrigins.includes(urlOrigin)
       });
       
-      if (!allowedHostnames.includes(urlHostname)) {
-        console.log("[VERIFY] Hostname not in allowed list");
+      if (!allowedOrigins.includes(urlOrigin)) {
+        console.log("[VERIFY] Origin not in allowed list");
+        return false;
+      }
+      
+      if (!isValidNextAuthCallbackPath(urlObj.pathname)) {
+        console.log("[VERIFY] Invalid callback path:", urlObj.pathname);
         return false;
       }
       

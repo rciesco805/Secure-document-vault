@@ -402,9 +402,9 @@ export default function ViewPage({
     }
   }, [router.isReady, router.query.linkId, status, session, storedToken, magicLinkVerified, isVerifyingMagicLink, autoVerifyAttempted]);
 
-  // Handle magic link - just store email locally, let DataroomView verify via backend
+  // Handle magic link verification via backend
   useEffect(() => {
-    const prepareMagicLink = () => {
+    const verifyMagicLink = async () => {
       const linkId = router.query.linkId as string;
       const token = router.query.token as string | undefined;
       const email = router.query.email as string | undefined;
@@ -413,17 +413,55 @@ export default function ViewPage({
         return;
       }
 
-      // Store email for the dataroom view to use
-      window.localStorage.setItem("papermark.email", email.toLowerCase());
-      setStoredEmail(email.toLowerCase());
-      
-      console.log("[MAGIC_LINK] Prepared magic link for backend verification:", email);
+      if (magicLinkVerified || isVerifyingMagicLink) {
+        return;
+      }
+
+      setIsVerifyingMagicLink(true);
+      console.log("[MAGIC_LINK] Verifying magic link for:", email);
+
+      try {
+        const response = await fetch("/api/view/verify-magic-link", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token, email, linkId }),
+        });
+
+        const data = await response.json();
+
+        if (data.verified) {
+          console.log("[MAGIC_LINK] Verification successful for:", data.email);
+          window.localStorage.setItem("papermark.email", data.email.toLowerCase());
+          setStoredEmail(data.email.toLowerCase());
+          setMagicLinkVerified(true);
+          setStoredToken("verified");
+          
+          const oneHour = 1 / 24;
+          Cookies.set(`pm_drs_flag_${linkId}`, "verified", {
+            path: `/view/${linkId}`,
+            expires: oneHour,
+            sameSite: "strict",
+            secure: window.location.protocol === "https:",
+          });
+
+          const cleanUrl = new URL(window.location.href);
+          cleanUrl.searchParams.delete("token");
+          cleanUrl.searchParams.delete("email");
+          window.history.replaceState({}, "", cleanUrl.toString());
+        } else {
+          console.error("[MAGIC_LINK] Verification failed:", data.message);
+        }
+      } catch (error) {
+        console.error("[MAGIC_LINK] Verification error:", error);
+      } finally {
+        setIsVerifyingMagicLink(false);
+      }
     };
 
     if (router.isReady) {
-      prepareMagicLink();
+      verifyMagicLink();
     }
-  }, [router.isReady, router.query.linkId, router.query.token, router.query.email]);
+  }, [router.isReady, router.query.linkId, router.query.token, router.query.email, magicLinkVerified, isVerifyingMagicLink]);
 
   if (router.isFallback) {
     return (

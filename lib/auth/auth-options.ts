@@ -149,13 +149,11 @@ export const authOptions: NextAuthOptions = {
         return session;
       }
 
-      (session.user as CustomUser) = {
-        id: dbUser.id,
-        name: dbUser.name,
-        email: dbUser.email,
-        image: dbUser.image,
-        role: dbUser.role || "LP",
-      };
+      (session.user as CustomUser).id = dbUser.id;
+      (session.user as CustomUser).name = dbUser.name;
+      (session.user as CustomUser).email = dbUser.email;
+      (session.user as CustomUser).image = dbUser.image;
+      (session.user as CustomUser).role = dbUser.role || "LP";
       return session;
     },
   },

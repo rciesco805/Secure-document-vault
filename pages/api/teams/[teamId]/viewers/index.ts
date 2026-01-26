@@ -19,12 +19,13 @@ export default async function handle(
       return res.status(401).end("Unauthorized");
     }
 
-    const { query, page, pageSize, sortBy, sortOrder } = req.query as {
+    const { query, page, pageSize, sortBy, sortOrder, includeRevoked } = req.query as {
       query?: string;
       page?: string;
       pageSize?: string;
       sortBy?: string;
       sortOrder?: string;
+      includeRevoked?: string; // "true" to include revoked viewers
     };
 
     const { teamId } = req.query as { teamId: string };
@@ -60,6 +61,12 @@ export default async function handle(
       const searchCondition = query
         ? Prisma.sql`AND LOWER(v.email) LIKE LOWER(${`${query}%`})`
         : Prisma.empty;
+
+      // SEC COMPLIANCE: By default, filter out revoked viewers (soft-deleted)
+      // Set includeRevoked=true to see revoked viewers for audit purposes
+      const revokedCondition = includeRevoked === "true"
+        ? Prisma.empty
+        : Prisma.sql`AND v."accessRevokedAt" IS NULL`;
 
       let orderByClause: Prisma.Sql;
       if (sort === 'totalVisits') {
@@ -106,6 +113,7 @@ export default async function handle(
           ) vs ON v.id = vs."viewerId"
           WHERE v."teamId" = ${teamId}
             ${searchCondition}
+            ${revokedCondition}
         )
         SELECT * FROM viewer_stats
         ORDER BY ${orderByClause}
@@ -126,6 +134,7 @@ export default async function handle(
         FROM "Viewer" v
         WHERE v."teamId" = ${teamId}
           ${searchCondition}
+          ${revokedCondition}
       ` as Array<{ count: number }>;
 
       const totalCount = totalCountResult[0]?.count || 0;

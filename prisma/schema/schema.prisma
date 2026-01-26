@@ -243,6 +243,11 @@ model Viewer {
   invitedAt               DateTime? // This is the time the viewer was invited
   notificationPreferences Json? // Format: { dataroom: {"dr_123": { "enabled": false }, "dr_456": { "enabled": true } } } }
 
+  // SEC Compliance: Soft-delete for access revocation (preserves audit trail)
+  accessRevokedAt     DateTime? // When access was revoked (null = active)
+  accessRevokedBy     String?   // User ID who revoked access
+  accessRevokedReason String?   // Reason for revocation (audit trail)
+
   dataroomId String?
   dataroom   Dataroom? @relation(fields: [dataroomId], references: [id], onDelete: SetNull)
   teamId     String
@@ -268,6 +273,7 @@ model Viewer {
   @@unique([teamId, email])
   @@index([teamId])
   @@index([dataroomId])
+  @@index([accessRevokedAt]) // For filtering active vs revoked viewers
 }
 
 model Reaction {

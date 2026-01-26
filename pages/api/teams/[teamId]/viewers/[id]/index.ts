@@ -305,6 +305,8 @@ export default async function handle(
     }
   } else if (req.method === "DELETE") {
     // DELETE /api/teams/:teamId/viewers/:id
+    // SEC COMPLIANCE: This is a SOFT DELETE - viewer record and all activity logs are preserved
+    // Only access is revoked, documentation remains for audit purposes
     const session = await getServerSession(req, res, authOptions);
     if (!session) {
       return res.status(401).end("Unauthorized");
@@ -314,6 +316,8 @@ export default async function handle(
       teamId: string;
       id: string;
     };
+    
+    const { reason, forceHardDelete } = req.body || {};
 
     const userId = (session.user as CustomUser).id;
 
@@ -335,42 +339,79 @@ export default async function handle(
         return res.status(404).json({ message: "Team not found" });
       }
 
-      // Check if viewer exists
+      // Check if viewer exists and get current access status
       const viewer = await prisma.viewer.findUnique({
         where: { id, teamId },
-        select: { id: true, email: true },
+        select: { 
+          id: true, 
+          email: true, 
+          accessRevokedAt: true,
+          _count: { select: { views: true } },
+        },
       });
 
       if (!viewer) {
         return res.status(404).json({ message: "Viewer not found" });
       }
 
-      // Delete all views associated with this viewer first
-      await prisma.view.deleteMany({
-        where: { viewerId: id },
+      // Check if already revoked
+      if (viewer.accessRevokedAt) {
+        return res.status(400).json({ 
+          message: "Access already revoked",
+          revokedAt: viewer.accessRevokedAt,
+        });
+      }
+
+      // SEC COMPLIANCE: Soft delete - preserve all records, just revoke access
+      // This maintains the complete audit trail as required by 506(c) regulations
+      const revokedViewer = await prisma.viewer.update({
+        where: { id },
+        data: {
+          accessRevokedAt: new Date(),
+          accessRevokedBy: userId,
+          accessRevokedReason: reason || "Access revoked by administrator",
+        },
+        select: {
+          id: true,
+          email: true,
+          accessRevokedAt: true,
+          accessRevokedReason: true,
+          _count: { select: { views: true } },
+        },
       });
 
-      // Delete the viewer
-      await prisma.viewer.delete({
-        where: { id },
+      // Also remove from all viewer groups to prevent future access
+      await prisma.viewerGroupMembership.deleteMany({
+        where: { viewerId: id },
       });
 
       // Clear any cached data for this viewer
       if (redis) {
-        const cachePattern = `viewer-details:${teamId}:${id}:*`;
-        const durationPattern = `durations:${teamId}:${id}:*`;
         try {
-          // Note: Simple deletion since we don't have scan pattern support
           await redis.del(`viewer-details:${teamId}:${id}`);
         } catch (cacheError) {
           console.error("Error clearing cache:", cacheError);
-          // Don't fail the request if cache clearing fails
         }
       }
 
-      return res.status(200).json({ message: "Visitor deleted successfully" });
+      console.log(`[SEC AUDIT] Access revoked for viewer ${viewer.email} (${id}) by user ${userId}. Views preserved: ${viewer._count.views}`);
+
+      return res.status(200).json({ 
+        message: "Access revoked successfully",
+        viewer: {
+          id: revokedViewer.id,
+          email: revokedViewer.email,
+          accessRevokedAt: revokedViewer.accessRevokedAt,
+          reason: revokedViewer.accessRevokedReason,
+        },
+        auditInfo: {
+          viewsPreserved: revokedViewer._count.views,
+          documentsAccessedHistoryPreserved: true,
+          secComplianceNote: "All activity records retained for SEC 506(c) compliance",
+        },
+      });
     } catch (error) {
-      console.error("Error deleting viewer:", error);
+      console.error("Error revoking viewer access:", error);
       errorhandler(error, res);
     }
   } else {

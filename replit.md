@@ -14,7 +14,8 @@ A comprehensive 506(c) fund GP/LP management suite designed to streamline invest
 
 ### Phase 2 Additions (Latest)
 - **Rollbar Token Safeguards**: Added `enabled` flag to Rollbar config to prevent crashes when tokens are missing or invalid
-- **Visitor Portal Login Flow Fixes**: Improved /verify page hostname validation to accept multiple allowed origins (NEXTAUTH_URL, VERIFICATION_EMAIL_BASE_URL, NEXT_PUBLIC_BASE_URL) preventing login link failures
+- **Visitor Portal Login Flow Fixes**: Enhanced /verify page with full origin validation (protocol + hostname + port) and NextAuth callback path validation for security
+- **Email Sequence Fix**: Pre-approved users (quick-add or allowList) no longer receive redundant "Access granted" email when first logging in - they already received an invite email
 - **Authentication Flow Logging**: Added comprehensive logging to verify page, viewer-redirect, and createUser event for debugging visitor access issues
 - **Rollbar Error Monitoring**: Complete error tracking across both App Router and Pages Router with RollbarProvider, ErrorBoundary, error.tsx, global-error.tsx, providers.tsx, and /api/test-error verification endpoint
 - **KYC Post-Bank Enforcement**: Transactions API now requires KYC verification before initiating any capital calls or distributions

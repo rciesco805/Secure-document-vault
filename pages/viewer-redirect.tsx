@@ -41,36 +41,59 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
 
   const user = session.user as CustomUser;
   const userEmail = user.email!.toLowerCase();
+  const userRole = user.role || "LP";
   
-  console.log("[VIEWER_REDIRECT] Processing redirect for:", userEmail);
+  console.log("[VIEWER_REDIRECT] Processing redirect for:", userEmail, "role:", userRole);
 
   // Check if visitor mode is requested (admins testing the visitor experience)
   const visitorMode = context.query.mode === "visitor";
 
-  // Only redirect to admin dashboard if NOT in visitor mode
+  // Role-based routing (unless visitor mode is requested)
   if (!visitorMode) {
+    // GP users go to admin hub
+    if (userRole === "GP") {
+      const userTeam = await prisma.userTeam.findFirst({
+        where: { userId: user.id },
+      });
+
+      if (userTeam) {
+        console.log("[VIEWER_REDIRECT] GP user with team, redirecting to hub");
+        return {
+          redirect: {
+            destination: "/hub",
+            permanent: false,
+          },
+        };
+      }
+    }
+    
+    // LP users go to LP dashboard if they have an investor profile
+    if (userRole === "LP") {
+      const investor = await prisma.investor.findUnique({
+        where: { userId: user.id },
+      });
+
+      if (investor) {
+        console.log("[VIEWER_REDIRECT] LP user with investor profile, redirecting to LP dashboard");
+        return {
+          redirect: {
+            destination: "/lp/dashboard",
+            permanent: false,
+          },
+        };
+      }
+    }
+    
+    // Check team membership for any user (admins without GP role set yet)
     const userTeam = await prisma.userTeam.findFirst({
       where: { userId: user.id },
     });
 
     if (userTeam) {
+      console.log("[VIEWER_REDIRECT] User with team membership, redirecting to hub");
       return {
         redirect: {
           destination: "/hub",
-          permanent: false,
-        },
-      };
-    }
-    
-    // Check if user is an LP investor
-    const investor = await prisma.investor.findUnique({
-      where: { userId: user.id },
-    });
-
-    if (investor) {
-      return {
-        redirect: {
-          destination: "/lp/dashboard",
           permanent: false,
         },
       };

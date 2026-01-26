@@ -1,28 +1,79 @@
 # Authentication Flow
 
+## Overview
+
+The platform uses a unified login portal with role-based routing. Both admins (GP) and investors (LP) login through the same page, and the system routes them to the appropriate dashboard based on their role and access.
+
+## Authentication Architecture
+
+### Database Sessions
+- Using `@auth/prisma-adapter` for database-backed sessions
+- Sessions stored in `Session` table with `sessionToken` and `userId`
+- Enables instant role revocation without requiring re-login
+- 30-day session expiry with 24-hour refresh interval
+
+### Session Cookies
+| Environment | Cookie Name |
+|-------------|-------------|
+| HTTPS (Production) | `__Secure-next-auth.session-token` |
+| HTTP (Development) | `next-auth.session-token` |
+
 ## Admin Authentication (Magic Link)
 
 ### Flow
 ```
 1. User enters email on /login
 2. System sends magic link via Resend
-3. Link valid for 1 hour
-4. Click link → auto-redirect to dashboard
-5. Session managed by NextAuth.js
+3. Link valid for 20 minutes (EmailProvider) or 1 hour (admin magic link)
+4. Click link → server verifies → creates database session → redirects
+5. Session managed by NextAuth.js with database adapter
+```
+
+### Admin Magic Link (Direct)
+For admin-specific actions (e.g., quick-add from email):
+```
+1. System generates link: /api/auth/admin-magic-verify?token=...&email=...
+2. Admin clicks link
+3. Server verifies token against VerificationToken table
+4. Server creates Session record in database
+5. Server sets session cookie
+6. Redirects to specified path (e.g., /admin/quick-add?email=...)
 ```
 
 ### Key Files
-- `app/(auth)/login/page-client.tsx` - Login form (email-only, no Google OAuth button)
-- `app/(auth)/verify/page.tsx` - Token verification (auto-redirects)
-- `pages/api/auth/[...nextauth].ts` - NextAuth configuration
+- `lib/auth/auth-options.ts` - NextAuth configuration with database sessions
+- `lib/auth/admin-magic-link.ts` - Admin magic link creation/verification
+- `pages/api/auth/admin-magic-verify.ts` - Server-side verification endpoint
 - `lib/emails/send-verification-request.ts` - Email sending
 
-### Admin Allowlist
-Only these emails can access admin:
-1. investors@bermudafranchisegroup.com
-2. rciesco@gmail.com
+## Visitor Authentication (Document Access)
 
-## Viewer Authentication (Document Access)
+### Magic Link Flow (Primary)
+```
+1. Visitor receives invitation email with magic link
+2. Link format: /view/{linkId}?token=...&email=...
+3. Page loads and detects token/email in URL
+4. Client calls POST /api/view/verify-magic-link with {token, email, linkId}
+5. Server verifies token against VerificationToken table
+6. Server sets cookies: pm_vft_{linkId}, pm_email_{linkId}, pm_drs_flag_{linkId}
+7. Client stores verified email and sets local state
+8. URL is cleaned (token/email removed for security)
+9. Access granted to dataroom content
+```
+
+### Key Files
+- `lib/auth/create-visitor-magic-link.ts` - Visitor magic link creation
+- `pages/api/view/verify-magic-link.ts` - Visitor magic link verification
+- `pages/view/[linkId]/index.tsx` - View page with client-side verification
+
+### Auto-Verify for Authenticated Users
+If a user is already logged in with NextAuth session:
+```
+1. Page detects authenticated session via useSession()
+2. Calls POST /api/view/auto-verify-session with {email, linkId}
+3. Server checks viewer access (group membership, allowList, etc.)
+4. If access verified → sets cookies → bypasses manual verification
+```
 
 ### One-Click Access Flow (Authenticated Users)
 ```
@@ -49,13 +100,48 @@ Only these emails can access admin:
 5. Access granted for browser session
 ```
 
-### Email Verification Toggle (emailAuthenticated)
+## Role-Based Routing (/viewer-redirect)
+
+After any successful login, users are routed through `/viewer-redirect`:
+
+### Routing Priority
+1. **GP Role + Team Membership** → `/hub` (admin dashboard)
+2. **LP Role + Investor Profile** → `/lp/dashboard` (investor portal)
+3. **Any Team Membership** → `/hub` (fallback for admins)
+4. **Viewer Access** → `/view/{linkId}` (direct to dataroom)
+5. **No Access Found** → `/viewer-portal` (access request page)
+
+### Visitor Mode
+Admins can test the visitor experience by adding `?mode=visitor` to skip admin routing.
+
+### Key Logic
+```typescript
+const userRole = user.role || "LP";
+
+// GP users with team → admin hub
+if (userRole === "GP" && hasTeamMembership) → /hub
+
+// LP users with investor profile → LP dashboard
+if (userRole === "LP" && hasInvestorProfile) → /lp/dashboard
+
+// Fallback team check → admin hub
+if (hasTeamMembership) → /hub
+
+// Check viewer access → dataroom
+if (hasViewerAccess) → /view/{linkId}
+
+// No access → portal
+→ /viewer-portal
+```
+
+## Email Verification Settings
+
 | Setting | Authenticated Session | No Session |
 |---------|----------------------|------------|
 | OFF (default) | One-click access | Email collected, no OTP |
 | ON | One-click access (session = verified) | OTP required |
 
-**Note:** Authenticated session users ALWAYS get one-click access regardless of the toggle, since the magic link authentication already verified their identity.
+**Note:** Authenticated session users ALWAYS get one-click access regardless of the toggle.
 
 ### Key Settings
 | Setting | Value | Effect |
@@ -64,20 +150,6 @@ Only these emails can access admin:
 | `emailAuthenticated` | `false` | Default: one-click for authenticated, email-only for others |
 | `emailAuthenticated` | `true` | OTP required for non-authenticated users only |
 | `allowList` | `string[]` | Only these emails can access |
-
-### Session-Based Bypass Logic
-The `/api/views-dataroom` endpoint implements session-based authentication bypass:
-
-```typescript
-// Check if user is authenticated via NextAuth and has access
-const session = await getServerSession(authOptions);
-if (session?.user?.email) {
-  // Check group membership, allowList, or team viewer status
-  // If access verified → isEmailVerified = true → skip OTP
-}
-```
-
-This is platform-wide and applies dynamically to ALL datarooms without hardcoded IDs.
 
 ## Quick Add Authentication
 
@@ -118,20 +190,38 @@ Quick Add uses session-based auth with these settings:
 
 ## Session Management
 
-### Admin Sessions
-- Managed by NextAuth.js
-- Stored in database via Prisma adapter
-- Session check on every protected route
+### Database Sessions (Admin)
+- Stored in `Session` table via Prisma adapter
+- Contains: `id`, `sessionToken`, `userId`, `expires`
+- Role fetched fresh from database on each session access
+- Enables instant role revocation
 
-### Viewer Sessions
+### Visitor Sessions (Cookie-Based)
 - Cookie-based session per browser
 - Keyed by linkId + email
-- Persists until browser closed or cookie expires
+- Cookies: `pm_vft_{linkId}`, `pm_email_{linkId}`, `pm_drs_flag_{linkId}`
+- Persists for 1 hour or until browser closed
 
 ## Security Considerations
 
-- Magic links expire after 1 hour
+- Magic links expire after 20-60 minutes (configurable)
 - No password authentication
 - HTTPS required in production
 - Session cookies are HttpOnly
 - CSRF protection via NextAuth
+- Tokens are hashed before database storage
+- URL tokens are cleaned after verification
+- Database sessions enable instant revocation
+
+## Middleware Protection
+
+Route protection in `lib/middleware/app.ts`:
+
+| Route Pattern | Auth Required | Role Check |
+|---------------|---------------|------------|
+| `/lp/onboard`, `/lp/login` | No | - |
+| `/lp/*` | Yes | LP or GP |
+| `/dashboard`, `/datarooms`, `/admin` | Yes | GP (or team member) |
+| `/viewer-portal` | Yes | Any authenticated |
+
+LP users attempting to access GP routes are redirected to `/viewer-portal`.

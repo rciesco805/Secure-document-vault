@@ -12,7 +12,7 @@ The BF Fund Investor Dataroom is a 506(c) compliant GP/LP management suite desig
 
 ## System Architecture
 
-The platform is built on Next.js 14, utilizing a hybrid Pages and App Router architecture with TypeScript. Styling is managed with Tailwind CSS and shadcn/ui, prioritizing a UX-first approach with mobile-responsiveness, minimal clicks, clear CTAs, and guided wizards. PostgreSQL with Prisma ORM serves as the database, and NextAuth.js handles authentication.
+The platform is built on Next.js 14, utilizing a hybrid Pages and App Router architecture with TypeScript. Styling is managed with Tailwind CSS and shadcn/ui, prioritizing a UX-first approach with mobile-responsiveness, minimal clicks, clear CTAs, and guided wizards. PostgreSQL with Prisma ORM serves as the database, and NextAuth.js handles authentication with database-backed sessions.
 
 Key features include:
 - **506(c) Compliance**: Accreditation self-certification, comprehensive audit logs, integrated KYC/AML hooks, single-email-per-signin protection, and cross-log access verification.
@@ -25,10 +25,70 @@ Key features include:
 
 The core flow for investors involves: Dataroom access (optional NDA), account creation, NDA signature (if enabled), accreditation self-certification, Persona KYC/AML verification, and finally, Fundroom dashboard access and subscription/investment.
 
+## Authentication System
+
+### Unified Login Portal
+Both admins (GP) and investors (LP) use the same login page (`/login`). The system routes users based on their role after authentication:
+
+| User Role | Destination | Condition |
+|-----------|-------------|-----------|
+| GP (Admin) | `/hub` | Has team membership |
+| LP (Investor) | `/lp/dashboard` | Has investor profile |
+| Viewer | `/view/{linkId}` | Has viewer/group access |
+| New User | `/viewer-portal` | No specific access found |
+
+### Magic Link Flows
+
+**Admin Magic Links** (server-side verification):
+1. Created via `lib/auth/admin-magic-link.ts`
+2. Link format: `/api/auth/admin-magic-verify?token=...&email=...`
+3. Server verifies token → creates database session → sets cookie → redirects to dashboard
+
+**Visitor Magic Links** (client-side verification):
+1. Created via `lib/auth/create-visitor-magic-link.ts`
+2. Link format: `/view/{linkId}?token=...&email=...`
+3. Page loads → client calls `/api/view/verify-magic-link` → sets cookies → grants access
+
+### Database Sessions
+- Using `@auth/prisma-adapter` for database-backed sessions
+- Sessions stored in `Session` table with `sessionToken` and `userId`
+- Enables instant role revocation without requiring re-login
+- Session cookie: `next-auth.session-token` (or `__Secure-next-auth.session-token` for HTTPS)
+
+### Role-Based Routing (`/viewer-redirect`)
+After login, users are automatically routed based on:
+1. **User role** (GP/LP) from database
+2. **Team membership** (UserTeam table)
+3. **Investor profile** (Investor table)
+4. **Viewer access** (Viewer/ViewerGroup tables)
+
+Admins can test visitor experience by appending `?mode=visitor` to bypass admin routing.
+
+## Database Audit Protection
+
+### onDelete: Restrict Constraints (SEC Compliance)
+The following foreign keys use `RESTRICT` to prevent deletion of audit records:
+
+| Table | Foreign Key | Protects |
+|-------|-------------|----------|
+| `View` | `linkId`, `documentId`, `dataroomId`, `viewerId` | Access audit trail |
+| `Transaction` | `investorId` | Financial transaction history |
+| `SignatureRecipient` | `documentId` | Signature audit trail |
+| `SignatureField` | `documentId`, `recipientId` | Field-level signature data |
+
+**Effect**: Cannot delete Links, Documents, Datarooms, Viewers, Investors, or SignatureDocuments if audit records exist. Must explicitly archive/handle audit records first.
+
+### Cross-Log Access Verification
+Access verification covers all 4 paths:
+1. `ViewerInvitations` - Direct email invitations
+2. `ViewerGroup` → `links` - Group-based link access
+3. `Viewer.dataroom` - Direct dataroom assignment
+4. `ViewerGroup` → `dataroom` - Group-based dataroom access
+
 ## External Dependencies
 
 - **Resend**: Transactional email services for notifications and magic links.
-- **Persona**: KYC/AML verification, integrated via an iframe.
+- **Persona**: KYC/AML verification, integrated via an iframe. Requires: `PERSONA_TEMPLATE_ID`, `PERSONA_ENVIRONMENT_ID`, `PERSONA_WEBHOOK_SECRET`
 - **Plaid**: Bank connectivity for ACH capital calls and distributions.
 - **Tinybird**: Real-time analytics and audit logging.
 - **Stripe**: Platform billing and subscription management.
@@ -36,3 +96,29 @@ The core flow for investors involves: Dataroom access (optional NDA), account cr
 - **Rollbar**: Real-time error monitoring and tracking for client and server errors.
 - **Google OAuth**: Authentication for admin users.
 - **OpenAI**: Optional AI features.
+
+## Key Files
+
+### Authentication
+- `lib/auth/auth-options.ts` - NextAuth configuration with database sessions
+- `lib/auth/admin-magic-link.ts` - Admin magic link creation/verification
+- `lib/auth/create-visitor-magic-link.ts` - Visitor magic link creation
+- `pages/api/auth/admin-magic-verify.ts` - Admin magic link verification endpoint
+- `pages/api/view/verify-magic-link.ts` - Visitor magic link verification endpoint
+- `pages/viewer-redirect.tsx` - Role-based post-login routing
+
+### Database Schema
+- `prisma/schema/schema.prisma` - Core models
+- `prisma/schema/investor.prisma` - Investor/LP models
+- `prisma/schema/signature.prisma` - E-signature models
+
+### Access Control
+- `lib/access/cross-log-verification.ts` - Cross-log access verification
+- `lib/middleware/app.ts` - Route protection middleware
+
+## Recent Changes (January 2026)
+
+- **Database Sessions**: Migrated from JWT to database sessions using `@auth/prisma-adapter`
+- **Audit Protection**: Added `onDelete: Restrict` constraints for SEC compliance
+- **Magic Link Fix**: Fixed visitor magic link verification to properly call backend API
+- **Role-Based Routing**: Improved `/viewer-redirect` to use user role as primary routing indicator

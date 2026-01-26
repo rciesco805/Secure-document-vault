@@ -10,6 +10,16 @@ A comprehensive 506(c) fund GP/LP management suite designed to streamline invest
 - Technical level: Non-technical explanations preferred
 - Focus: Security and ease of use for investors
 
+## Core Principles
+
+- **UX-First**: Mobile-responsive, minimal clicks, clear CTAs, guided wizards
+- **Linear Flows**: Dataroom → Sign Up → Account → NDA gate → Dashboard unlock
+- **Build on Existing**: Leverage Next.js, Prisma, self-hosted e-sign, Resend emails
+- **506(c) Compliance**: Accreditation self-ack, audit logs, KYC/AML hooks
+- **Tech Stack**: Next.js, TypeScript, Prisma/PostgreSQL, NextAuth, Tinybird, Stripe
+
+For detailed project instructions, architecture, and troubleshooting guides, see **[docs/project-instructions.md](docs/project-instructions.md)**.
+
 ## Recent Changes (January 2026)
 
 ### Phase 2 Additions (Latest)
@@ -97,6 +107,7 @@ The platform is built on Next.js 14, using a hybrid Pages and App Router archite
 
 | Document | Description |
 |----------|-------------|
+| [Project Instructions](docs/project-instructions.md) | Consolidated project overview, core principles, architecture, repo status, and troubleshooting guides |
 | [API Documentation](docs/API_DOCUMENTATION.md) | Comprehensive API reference with all endpoints, request/response examples, authentication, error codes, SDK examples |
 | [Test Report](docs/test-report.md) | Full E2E test report with 1599+ passing tests, coverage breakdown, and execution logs |
 | [ESIGN Compliance](docs/ESIGN_COMPLIANCE.md) | ESIGN Act / UETA compliance documentation, consent capture, checksum verification |

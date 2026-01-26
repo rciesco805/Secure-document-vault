@@ -206,6 +206,7 @@ const nextConfig = {
       },
     ];
   },
+  allowedDevOrigins: ["*.replit.dev", "*.spock.replit.dev", "*.repl.co"],
   experimental: {
     outputFileTracingIncludes: {
       "/api/mupdf/*": ["./node_modules/mupdf/dist/*.wasm"],

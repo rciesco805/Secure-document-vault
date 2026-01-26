@@ -121,7 +121,7 @@ export const authOptions: NextAuthOptions = {
       },
     },
   },
-  debug: true,
+  debug: process.env.NODE_ENV === 'development' && process.env.AUTH_DEBUG === 'true',
   callbacks: {
     redirect: async ({ url, baseUrl }) => {
       if (url === baseUrl || url === `${baseUrl}/` || url.includes('/login')) {

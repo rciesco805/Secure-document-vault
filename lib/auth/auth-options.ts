@@ -1,6 +1,7 @@
-import { PrismaAdapter } from "@next-auth/prisma-adapter";
+import { PrismaAdapter } from "@auth/prisma-adapter";
 import PasskeyProvider from "@teamhanko/passkeys-next-auth-provider";
 import { type NextAuthOptions } from "next-auth";
+import { type Adapter } from "next-auth/adapters";
 import { Provider } from "next-auth/providers/index";
 import EmailProvider from "next-auth/providers/email";
 import GoogleProvider from "next-auth/providers/google";
@@ -90,8 +91,12 @@ export const authOptions: NextAuthOptions = {
     error: "/login",
   },
   providers,
-  adapter: PrismaAdapter(prisma),
-  session: { strategy: "jwt" },
+  adapter: PrismaAdapter(prisma) as Adapter,
+  session: { 
+    strategy: "database",
+    maxAge: 30 * 24 * 60 * 60, // 30 days
+    updateAge: 24 * 60 * 60, // Update session every 24 hours
+  },
   cookies: {
     sessionToken: {
       name: `next-auth.session-token`,
@@ -131,48 +136,25 @@ export const authOptions: NextAuthOptions = {
       if (new URL(url).origin === baseUrl) return url;
       return `${baseUrl}/viewer-redirect`;
     },
-    jwt: async (params) => {
-      const { token, user, trigger } = params;
-      if (!token.email) {
-        return {};
+    session: async ({ session, user }) => {
+      // With database sessions, user comes directly from the database
+      // Fetch the latest role from the database for each session access
+      const dbUser = await prisma.user.findUnique({
+        where: { id: user.id },
+        select: { id: true, name: true, email: true, image: true, role: true },
+      });
+      
+      if (!dbUser) {
+        // User no longer exists, session should be invalidated
+        return session;
       }
-      if (user) {
-        token.user = user;
-        // Fetch role from database on initial sign in
-        const dbUser = await prisma.user.findUnique({
-          where: { id: user.id },
-          select: { role: true },
-        });
-        token.role = dbUser?.role || "LP";
-      }
-      if (trigger === "update") {
-        const user = token?.user as CustomUser;
-        const refreshedUser = await prisma.user.findUnique({
-          where: { id: user.id },
-        });
-        if (refreshedUser) {
-          token.user = refreshedUser;
-          token.role = refreshedUser.role || "LP";
-        } else {
-          return {};
-        }
 
-        if (refreshedUser?.email !== user.email) {
-          if (user.id && refreshedUser.email) {
-            await prisma.account.deleteMany({
-              where: { userId: user.id },
-            });
-          }
-        }
-      }
-      return token;
-    },
-    session: async ({ session, token }) => {
       (session.user as CustomUser) = {
-        id: token.sub,
-        // @ts-ignore
-        ...(token || session).user,
-        role: token.role as string,
+        id: dbUser.id,
+        name: dbUser.name,
+        email: dbUser.email,
+        image: dbUser.image,
+        role: dbUser.role || "LP",
       };
       return session;
     },

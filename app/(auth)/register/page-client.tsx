@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 
 import { signIn } from "next-auth/react";
 import { toast } from "sonner";
@@ -17,6 +17,8 @@ export default function Register() {
   const { next } = useParams as { next?: string };
 
   const [email, setEmail] = useState<string>("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const isSubmittingRef = useRef(false);
 
   return (
     <div className="flex h-screen w-full justify-center">
@@ -50,6 +52,15 @@ export default function Register() {
           className="flex flex-col gap-4 p-4 pt-8 sm:px-16"
           onSubmit={(e) => {
             e.preventDefault();
+            
+            // Prevent double submission
+            if (isSubmittingRef.current || isSubmitting) {
+              return;
+            }
+            
+            isSubmittingRef.current = true;
+            setIsSubmitting(true);
+            
             signIn("email", {
               email: email,
               redirect: false,
@@ -60,7 +71,9 @@ export default function Register() {
                 toast.success("Email sent - check your inbox!");
               } else {
                 toast.error("Error sending email - try again?");
+                isSubmittingRef.current = false;
               }
+              setIsSubmitting(false);
             });
           }}
         >
@@ -70,7 +83,9 @@ export default function Register() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
-          <Button type="submit">Continue with Email</Button>
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? "Sending..." : "Continue with Email"}
+          </Button>
         </form>
         <p className="text-center">or</p>
         <div className="flex flex-col space-y-2 px-4 py-8 sm:px-16">

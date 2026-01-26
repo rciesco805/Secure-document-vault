@@ -1,5 +1,5 @@
 import { useRouter } from "next/router";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { signIn } from "next-auth/react";
 import Head from "next/head";
 import Link from "next/link";
@@ -26,10 +26,18 @@ export default function LPOnboard() {
     entityName: "",
   });
   const [error, setError] = useState("");
+  const isSubmittingRef = useRef(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Prevent double submission
+    if (isSubmittingRef.current || isLoading) {
+      return;
+    }
+    
     setError("");
+    isSubmittingRef.current = true;
     setIsLoading(true);
 
     try {
@@ -57,6 +65,7 @@ export default function LPOnboard() {
       setStep(3);
     } catch (err: any) {
       setError(err.message || "Something went wrong. Please try again.");
+      isSubmittingRef.current = false;
     } finally {
       setIsLoading(false);
     }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
 import { toast } from "sonner";
@@ -27,6 +27,7 @@ export function LPSignIn({ callbackUrl = "/lp/dashboard", showOnboardLink = true
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
+  const isSubmittingRef = useRef(false);
 
   const emailSchema = z
     .string()
@@ -39,11 +40,17 @@ export function LPSignIn({ callbackUrl = "/lp/dashboard", showOnboardLink = true
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Prevent double submission
+    if (isSubmittingRef.current || isLoading) {
+      return;
+    }
+    
     if (!emailValidation.success) {
       toast.error(emailValidation.error.errors[0].message);
       return;
     }
 
+    isSubmittingRef.current = true;
     setIsLoading(true);
 
     try {
@@ -58,9 +65,11 @@ export function LPSignIn({ callbackUrl = "/lp/dashboard", showOnboardLink = true
         toast.success("Check your email for the login link!");
       } else {
         toast.error("Unable to send login email. Please try again.");
+        isSubmittingRef.current = false;
       }
     } catch (error) {
       toast.error("An error occurred. Please try again.");
+      isSubmittingRef.current = false;
     } finally {
       setIsLoading(false);
     }
@@ -88,6 +97,7 @@ export function LPSignIn({ callbackUrl = "/lp/dashboard", showOnboardLink = true
             onClick={() => {
               setEmailSent(false);
               setEmail("");
+              isSubmittingRef.current = false;
             }}
           >
             Use a different email

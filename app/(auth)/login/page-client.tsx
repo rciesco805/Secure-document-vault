@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 
 import { signIn, useSession } from "next-auth/react";
 import { toast } from "sonner";
@@ -57,6 +57,7 @@ export default function Login() {
     "Continue with Email",
   );
   const [showAccessNotice, setShowAccessNotice] = useState(false);
+  const isSubmittingRef = useRef(false);
 
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
   const [inviteForm, setInviteForm] = useState({
@@ -221,11 +222,18 @@ export default function Login() {
             className="flex flex-col gap-4 px-4 sm:px-12"
             onSubmit={(e) => {
               e.preventDefault();
+              
+              // Prevent double submission
+              if (isSubmittingRef.current || clickedMethod === "email") {
+                return;
+              }
+              
               if (!emailValidation.success) {
                 toast.error(emailValidation.error.errors[0].message);
                 return;
               }
 
+              isSubmittingRef.current = true;
               setClickedMethod("email");
               // Pass mode=visitor so admins testing from this page get visitor experience
               const callbackUrl = next || "/viewer-redirect?mode=visitor";
@@ -243,6 +251,7 @@ export default function Login() {
                 } else {
                   setEmailButtonText("Continue with Email");
                   setShowAccessNotice(true);
+                  isSubmittingRef.current = false;
                 }
                 setClickedMethod(undefined);
               });

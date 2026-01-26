@@ -62,7 +62,7 @@ enum SignatureDocumentStatus {
 model SignatureRecipient {
   id                String                    @id @default(cuid())
   documentId        String
-  document          SignatureDocument         @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  document          SignatureDocument         @relation(fields: [documentId], references: [id], onDelete: Restrict)
   
   name              String
   email             String
@@ -118,9 +118,9 @@ enum SignatureRecipientStatus {
 model SignatureField {
   id                String                 @id @default(cuid())
   documentId        String
-  document          SignatureDocument      @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  document          SignatureDocument      @relation(fields: [documentId], references: [id], onDelete: Restrict)
   recipientId       String?
-  recipient         SignatureRecipient?    @relation(fields: [recipientId], references: [id], onDelete: Cascade)
+  recipient         SignatureRecipient?    @relation(fields: [recipientId], references: [id], onDelete: Restrict)
   
   type              SignatureFieldType
   

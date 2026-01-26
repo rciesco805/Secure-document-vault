@@ -116,11 +116,11 @@ model Domain {
 
 model View {
   id                  String               @id @default(cuid())
-  link                Link                 @relation(fields: [linkId], references: [id], onDelete: Cascade)
+  link                Link                 @relation(fields: [linkId], references: [id], onDelete: Restrict)
   linkId              String
-  document            Document?            @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  document            Document?            @relation(fields: [documentId], references: [id], onDelete: Restrict)
   documentId          String?
-  dataroom            Dataroom?            @relation(fields: [dataroomId], references: [id], onDelete: Cascade)
+  dataroom            Dataroom?            @relation(fields: [dataroomId], references: [id], onDelete: Restrict)
   dataroomId          String?
   dataroomViewId      String? // This is the view ID from the dataroom
   viewerEmail         String? // Email of the viewer if known
@@ -133,7 +133,7 @@ model View {
   reactions           Reaction[]
   viewType            ViewType             @default(DOCUMENT_VIEW)
   viewerId            String? // This is the viewer ID from the dataroom
-  viewer              Viewer?              @relation(fields: [viewerId], references: [id], onDelete: Cascade)
+  viewer              Viewer?              @relation(fields: [viewerId], references: [id], onDelete: Restrict)
   groupId             String? // This is the group ID from the dataroom
   group               ViewerGroup?         @relation(fields: [groupId], references: [id], onDelete: SetNull)
   feedbackResponse    FeedbackResponse?

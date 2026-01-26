@@ -435,7 +435,7 @@ model BankLink {
 model Transaction {
   id                String   @id @default(cuid())
   investorId        String
-  investor          Investor @relation(fields: [investorId], references: [id], onDelete: Cascade)
+  investor          Investor @relation(fields: [investorId], references: [id], onDelete: Restrict)
   bankLinkId        String?
   bankLink          BankLink? @relation(fields: [bankLinkId], references: [id], onDelete: SetNull)
   

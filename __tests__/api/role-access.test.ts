@@ -148,7 +148,7 @@ describe("Role-Based Access Control", () => {
         investorId: "investor-123",
       };
 
-      const where = { status: "COMPLETED" };
+      const where = { status: "COMPLETED" } as any;
       const filtered = filterByInvestorIfLP(lpUser, where);
 
       expect(filtered).toEqual({
@@ -165,7 +165,7 @@ describe("Role-Based Access Control", () => {
         teamIds: ["team-1"],
       };
 
-      const where = { status: "PENDING" };
+      const where = { status: "PENDING" } as any;
       const filtered = filterByInvestorIfLP(gpUser, where);
 
       expect(filtered).toEqual({ status: "PENDING" });
@@ -186,7 +186,7 @@ describe("Transactions API Role Filtering", () => {
       investorId: "investor-1",
     };
 
-    const where = filterByInvestorIfLP(lpUser, {});
+    const where = filterByInvestorIfLP(lpUser, {}) as any;
     expect(where.investorId).toBe("investor-1");
   });
 
@@ -198,7 +198,7 @@ describe("Transactions API Role Filtering", () => {
       teamIds: ["team-1"],
     };
 
-    const where = filterByInvestorIfLP(gpUser, {});
+    const where = filterByInvestorIfLP(gpUser, {}) as any;
     expect(where.investorId).toBeUndefined();
   });
 

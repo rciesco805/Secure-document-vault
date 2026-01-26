@@ -1,5 +1,23 @@
 import { createMocks } from 'node-mocks-http';
 import type { NextApiRequest, NextApiResponse } from 'next';
+
+jest.mock('@/lib/prisma', () => ({
+  __esModule: true,
+  default: {
+    user: {
+      findUnique: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+    },
+    investor: {
+      findFirst: jest.fn(),
+      findUnique: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+    },
+  },
+}));
+
 import prisma from '@/lib/prisma';
 
 const mockPrisma = prisma as jest.Mocked<typeof prisma>;
@@ -9,65 +27,81 @@ describe('LP Onboarding Flow E2E', () => {
     jest.clearAllMocks();
   });
 
-  describe('Step 1: Investor Registration', () => {
-    it('should create new investor with name and email', async () => {
-      const investorData = {
+  describe('Step 1: User Registration with LP Role', () => {
+    it('should create new user with LP role and investor profile', async () => {
+      const userData = {
         name: 'John Doe',
         email: 'john@example.com',
-        entityType: 'INDIVIDUAL',
+        role: 'LP',
       };
 
-      (mockPrisma.investor.findFirst as jest.Mock).mockResolvedValue(null);
-      (mockPrisma.investor.create as jest.Mock).mockResolvedValue({
-        id: 'investor-1',
-        ...investorData,
+      (mockPrisma.user.findUnique as jest.Mock).mockResolvedValue(null);
+      (mockPrisma.user.create as jest.Mock).mockResolvedValue({
+        id: 'user-1',
+        ...userData,
         createdAt: new Date(),
+        investorProfile: {
+          id: 'investor-1',
+          userId: 'user-1',
+          entityType: 'INDIVIDUAL',
+        },
       });
 
-      const createdInvestor = await mockPrisma.investor.create({
-        data: investorData,
+      const createdUser = await mockPrisma.user.create({
+        data: userData as any,
+        include: { investorProfile: true },
       });
 
-      expect(createdInvestor.email).toBe('john@example.com');
-      expect(createdInvestor.name).toBe('John Doe');
+      expect(createdUser.email).toBe('john@example.com');
+      expect(createdUser.name).toBe('John Doe');
+      expect((createdUser as any).role).toBe('LP');
+      expect((createdUser as any).investorProfile).toBeDefined();
     });
 
-    it('should return existing investor if email already registered', async () => {
-      const existingInvestor = {
-        id: 'investor-1',
+    it('should return existing user if email already registered', async () => {
+      const existingUser = {
+        id: 'user-1',
         name: 'John Doe',
         email: 'john@example.com',
-        entityType: 'INDIVIDUAL',
+        role: 'LP',
         createdAt: new Date(),
+        investorProfile: { id: 'investor-1' },
       };
 
-      (mockPrisma.investor.findFirst as jest.Mock).mockResolvedValue(existingInvestor);
+      (mockPrisma.user.findUnique as jest.Mock).mockResolvedValue(existingUser);
 
-      const found = await mockPrisma.investor.findFirst({
+      const found = await mockPrisma.user.findUnique({
         where: { email: 'john@example.com' },
+        include: { investorProfile: true },
       });
 
-      expect(found?.id).toBe('investor-1');
+      expect(found?.id).toBe('user-1');
+      expect(found?.investorProfile).toBeDefined();
     });
   });
 
   describe('Step 2: Entity Type Selection', () => {
-    it('should update investor with entity type', async () => {
+    it('should update investor with entity information', async () => {
       (mockPrisma.investor.update as jest.Mock).mockResolvedValue({
         id: 'investor-1',
-        entityType: 'LLC',
+        entityType: 'ENTITY',
+        entityName: 'Smith Family Trust',
       });
 
       const updated = await mockPrisma.investor.update({
         where: { id: 'investor-1' },
-        data: { entityType: 'LLC' },
+        data: { 
+          entityType: 'ENTITY',
+          entityName: 'Smith Family Trust',
+        },
       });
 
-      expect(updated.entityType).toBe('LLC');
+      expect(updated.entityType).toBe('ENTITY');
+      expect(updated.entityName).toBe('Smith Family Trust');
     });
 
-    it('should support all entity types', async () => {
-      const entityTypes = ['INDIVIDUAL', 'LLC', 'CORPORATION', 'TRUST', 'PARTNERSHIP', 'IRA'];
+    it('should support individual and entity types', async () => {
+      const entityTypes = ['INDIVIDUAL', 'ENTITY'];
 
       for (const type of entityTypes) {
         (mockPrisma.investor.update as jest.Mock).mockResolvedValue({
@@ -85,99 +119,120 @@ describe('LP Onboarding Flow E2E', () => {
     });
   });
 
-  describe('Step 3: Magic Link Verification', () => {
-    it('should generate and store verification token', async () => {
-      const token = 'verification-token-123';
-      const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+  describe('Step 3: NDA Gate Completion', () => {
+    it('should update investor with NDA signed status and IP', async () => {
+      const ndaData = {
+        ndaSigned: true,
+        ndaSignedAt: new Date(),
+      };
 
       (mockPrisma.investor.update as jest.Mock).mockResolvedValue({
         id: 'investor-1',
-        verificationToken: token,
-        verificationTokenExpiresAt: expiresAt,
+        ...ndaData,
       });
 
       const updated = await mockPrisma.investor.update({
         where: { id: 'investor-1' },
-        data: {
-          verificationToken: token,
-          verificationTokenExpiresAt: expiresAt,
-        },
+        data: ndaData,
       });
 
-      expect(updated.verificationToken).toBe(token);
+      expect(updated.ndaSigned).toBe(true);
+      expect(updated.ndaSignedAt).toBeDefined();
     });
 
-    it('should validate and consume verification token', async () => {
-      const validToken = 'valid-token-123';
-
-      (mockPrisma.investor.findFirst as jest.Mock).mockResolvedValue({
-        id: 'investor-1',
-        verificationToken: validToken,
-        verificationTokenExpiresAt: new Date(Date.now() + 3600000),
-        emailVerifiedAt: null,
-      });
-
-      const investor = await mockPrisma.investor.findFirst({
-        where: { verificationToken: validToken },
-      });
-
-      expect(investor).not.toBeNull();
+    it('should store accreditation acknowledgment with audit trail', async () => {
+      const accreditationData = {
+        accreditationStatus: 'SELF_CERTIFIED',
+        accreditationType: 'INCOME',
+      };
 
       (mockPrisma.investor.update as jest.Mock).mockResolvedValue({
         id: 'investor-1',
-        emailVerifiedAt: new Date(),
-        verificationToken: null,
+        ...accreditationData,
       });
 
-      const verified = await mockPrisma.investor.update({
+      const updated = await mockPrisma.investor.update({
         where: { id: 'investor-1' },
-        data: {
-          emailVerifiedAt: new Date(),
-          verificationToken: null,
-        },
+        data: accreditationData,
       });
 
-      expect(verified.emailVerifiedAt).not.toBeNull();
-      expect(verified.verificationToken).toBeNull();
+      expect(updated.accreditationStatus).toBe('SELF_CERTIFIED');
+      expect(updated.accreditationType).toBe('INCOME');
+    });
+  });
+
+  describe('Step 4: Dashboard Access', () => {
+    it('should allow dashboard access after NDA and accreditation', async () => {
+      const completedInvestor = {
+        id: 'investor-1',
+        userId: 'user-1',
+        ndaSigned: true,
+        accreditationStatus: 'SELF_CERTIFIED',
+        onboardingStep: 3,
+        onboardingCompletedAt: new Date(),
+      };
+
+      (mockPrisma.investor.findUnique as jest.Mock).mockResolvedValue(completedInvestor);
+
+      const investor = await mockPrisma.investor.findUnique({
+        where: { id: 'investor-1' },
+      });
+
+      const canAccessDashboard = investor?.ndaSigned && investor?.accreditationStatus !== 'PENDING';
+      expect(canAccessDashboard).toBe(true);
     });
 
-    it('should reject expired verification token', async () => {
-      const expiredToken = 'expired-token-123';
-
-      (mockPrisma.investor.findFirst as jest.Mock).mockResolvedValue({
+    it('should block dashboard access if NDA not signed', async () => {
+      const incompleteInvestor = {
         id: 'investor-1',
-        verificationToken: expiredToken,
-        verificationTokenExpiresAt: new Date(Date.now() - 3600000),
+        userId: 'user-1',
+        ndaSigned: false,
+        accreditationStatus: 'PENDING',
+      };
+
+      (mockPrisma.investor.findUnique as jest.Mock).mockResolvedValue(incompleteInvestor);
+
+      const investor = await mockPrisma.investor.findUnique({
+        where: { id: 'investor-1' },
       });
 
-      const investor = await mockPrisma.investor.findFirst({
-        where: { verificationToken: expiredToken },
-      });
-
-      const isExpired = investor && investor.verificationTokenExpiresAt < new Date();
-      expect(isExpired).toBe(true);
+      const canAccessDashboard = investor?.ndaSigned && investor?.accreditationStatus !== 'PENDING';
+      expect(canAccessDashboard).toBe(false);
     });
   });
 
   describe('Complete Onboarding Flow', () => {
-    it('should complete full onboarding: register → entity → verify → dashboard access', async () => {
-      (mockPrisma.investor.findFirst as jest.Mock).mockResolvedValue(null);
-      (mockPrisma.investor.create as jest.Mock).mockResolvedValue({
-        id: 'investor-1',
+    it('should complete full onboarding: register → entity → NDA → accreditation → dashboard', async () => {
+      (mockPrisma.user.findUnique as jest.Mock).mockResolvedValue(null);
+      (mockPrisma.user.create as jest.Mock).mockResolvedValue({
+        id: 'user-1',
         name: 'Jane Doe',
         email: 'jane@example.com',
-        entityType: null,
-        emailVerifiedAt: null,
+        role: 'LP',
+        investorProfile: {
+          id: 'investor-1',
+          entityType: 'INDIVIDUAL',
+          ndaSigned: false,
+          accreditationStatus: 'PENDING',
+        },
       });
 
-      const newInvestor = await mockPrisma.investor.create({
-        data: { name: 'Jane Doe', email: 'jane@example.com' },
+      const newUser = await mockPrisma.user.create({
+        data: {
+          name: 'Jane Doe',
+          email: 'jane@example.com',
+          role: 'LP',
+          investorProfile: { create: { entityType: 'INDIVIDUAL' } },
+        },
+        include: { investorProfile: true },
       });
-      expect(newInvestor.id).toBe('investor-1');
+      expect(newUser.id).toBe('user-1');
+      expect(newUser.role).toBe('LP');
 
       (mockPrisma.investor.update as jest.Mock).mockResolvedValueOnce({
-        ...newInvestor,
+        id: 'investor-1',
         entityType: 'INDIVIDUAL',
+        entityName: null,
       });
 
       const withEntity = await mockPrisma.investor.update({
@@ -187,18 +242,80 @@ describe('LP Onboarding Flow E2E', () => {
       expect(withEntity.entityType).toBe('INDIVIDUAL');
 
       (mockPrisma.investor.update as jest.Mock).mockResolvedValueOnce({
-        ...withEntity,
-        emailVerifiedAt: new Date(),
+        id: 'investor-1',
+        ndaSigned: true,
+        ndaSignedAt: new Date(),
       });
 
-      const verified = await mockPrisma.investor.update({
+      const withNda = await mockPrisma.investor.update({
         where: { id: 'investor-1' },
-        data: { emailVerifiedAt: new Date() },
+        data: { ndaSigned: true, ndaSignedAt: new Date() },
       });
-      expect(verified.emailVerifiedAt).not.toBeNull();
+      expect(withNda.ndaSigned).toBe(true);
 
-      const canAccessDashboard = verified.emailVerifiedAt !== null;
+      (mockPrisma.investor.update as jest.Mock).mockResolvedValueOnce({
+        id: 'investor-1',
+        ndaSigned: true,
+        accreditationStatus: 'SELF_CERTIFIED',
+        onboardingCompletedAt: new Date(),
+      });
+
+      const completed = await mockPrisma.investor.update({
+        where: { id: 'investor-1' },
+        data: { 
+          accreditationStatus: 'SELF_CERTIFIED',
+          onboardingCompletedAt: new Date(),
+        },
+      });
+      expect(completed.accreditationStatus).toBe('SELF_CERTIFIED');
+
+      const canAccessDashboard = completed.ndaSigned && completed.accreditationStatus !== 'PENDING';
       expect(canAccessDashboard).toBe(true);
+    });
+  });
+
+  describe('Role-Based Access', () => {
+    it('should assign LP role by default during registration', async () => {
+      (mockPrisma.user.create as jest.Mock).mockResolvedValue({
+        id: 'user-1',
+        email: 'investor@example.com',
+        role: 'LP',
+      });
+
+      const user = await mockPrisma.user.create({
+        data: {
+          email: 'investor@example.com',
+          role: 'LP',
+        },
+      });
+
+      expect(user.role).toBe('LP');
+    });
+
+    it('should update existing user to LP role if registering as investor', async () => {
+      (mockPrisma.user.findUnique as jest.Mock).mockResolvedValue({
+        id: 'user-1',
+        email: 'user@example.com',
+        role: 'GP',
+      });
+
+      (mockPrisma.user.update as jest.Mock).mockResolvedValue({
+        id: 'user-1',
+        email: 'user@example.com',
+        role: 'LP',
+      });
+
+      const existingUser = await mockPrisma.user.findUnique({
+        where: { email: 'user@example.com' },
+      });
+
+      if (existingUser && existingUser.role !== 'LP') {
+        const updated = await mockPrisma.user.update({
+          where: { id: existingUser.id },
+          data: { role: 'LP' },
+        });
+        expect(updated.role).toBe('LP');
+      }
     });
   });
 });

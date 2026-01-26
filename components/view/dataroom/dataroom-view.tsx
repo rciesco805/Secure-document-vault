@@ -400,14 +400,12 @@ export default function DataroomView({
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button
-                variant="default"
-                size="lg"
-                className="fixed top-3 right-3 z-50 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-lg transition-all duration-200 hover:scale-105 sm:top-4 sm:right-4 text-sm sm:text-base px-3 sm:px-4 py-2 sm:py-2.5"
-                asChild
+              <Link
+                href="/lp/onboard"
+                className="fixed top-3 right-3 z-50 inline-flex items-center justify-center rounded-md bg-primary px-3 sm:px-4 py-2 sm:py-2.5 text-sm sm:text-base font-semibold text-primary-foreground shadow-lg transition-all duration-200 hover:bg-primary/90 hover:scale-105 sm:top-4 sm:right-4"
               >
-                <Link href="/lp/onboard">Sign Me Up</Link>
-              </Button>
+                Sign Me Up
+              </Link>
             </TooltipTrigger>
             <TooltipContent side="bottom" className="max-w-xs text-center">
               <p>Become an investor - complete your onboarding to access the fund</p>

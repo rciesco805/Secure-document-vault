@@ -19,21 +19,22 @@ export default async function AppMiddleware(req: NextRequest) {
     };
   };
 
-  // LP onboard is publicly accessible (investor signup)
-  if (path === "/lp/onboard") {
+  // LP public pages (onboard and login are accessible without auth)
+  if (path === "/lp/onboard" || path === "/lp/login") {
     return NextResponse.next();
   }
 
-  // LP authenticated routes (require login and LP role)
-  const lpAuthRoutes = ["/lp/dashboard", "/lp/docs", "/lp/transactions", "/lp/statements"];
-  if (lpAuthRoutes.some((r) => path.startsWith(r))) {
+  // LP authenticated routes (require login and LP/GP role)
+  // Match any /lp/* path that isn't public
+  if (path.startsWith("/lp/")) {
     if (!token?.email) {
       // Not authenticated - redirect to LP login
-      const loginUrl = new URL("/login", req.url);
-      loginUrl.searchParams.set("next", encodeURIComponent(path));
+      const loginUrl = new URL("/lp/login", req.url);
+      const nextPath = url.search ? `${path}${url.search}` : path;
+      loginUrl.searchParams.set("next", nextPath);
       return NextResponse.redirect(loginUrl);
     }
-    // Check if user has LP role (default for new users)
+    // Check if user has LP role (default for new users) or GP role (admins can access LP pages)
     const userRole = token.role || token.user?.role || "LP";
     if (userRole !== "LP" && userRole !== "GP") {
       // Invalid role - redirect to appropriate location
@@ -47,7 +48,8 @@ export default async function AppMiddleware(req: NextRequest) {
   if (gpRoutes.some((r) => path.startsWith(r))) {
     if (!token?.email) {
       const loginUrl = new URL("/admin/login", req.url);
-      loginUrl.searchParams.set("next", encodeURIComponent(path));
+      const nextPath = url.search ? `${path}${url.search}` : path;
+      loginUrl.searchParams.set("next", nextPath);
       return NextResponse.redirect(loginUrl);
     }
     // Check user role - LP users should be redirected to LP portal
@@ -61,18 +63,23 @@ export default async function AppMiddleware(req: NextRequest) {
   }
 
   // UNAUTHENTICATED if there's no token and the path isn't a login page, redirect appropriately
-  const isLoginPage = path === "/login" || path === "/admin/login";
+  const isLoginPage = path === "/login" || path === "/admin/login" || path === "/lp/login";
   const isAdminRoute = path.startsWith("/dashboard") || path.startsWith("/settings") || path.startsWith("/documents") || path.startsWith("/datarooms");
   
   if (!token?.email && !isLoginPage) {
-    // Admin routes go to admin login, everything else goes to investor login
-    const loginPath = isAdminRoute ? "/admin/login" : "/login";
+    // Determine login path based on route type
+    let loginPath = "/login";
+    if (isAdminRoute) {
+      loginPath = "/admin/login";
+    }
+    // LP routes are already handled above, but this catches any edge cases
+    
     const loginUrl = new URL(loginPath, req.url);
     // Append "next" parameter only if not navigating to the root
     if (path !== "/") {
-      // Always include query string for view pages and email-confirm
-      const nextPath = `${path}${url.search}`;
-      loginUrl.searchParams.set("next", encodeURIComponent(nextPath));
+      // Include query string for view pages and other paths
+      const nextPath = url.search ? `${path}${url.search}` : path;
+      loginUrl.searchParams.set("next", nextPath);
     }
     return NextResponse.redirect(loginUrl);
   }

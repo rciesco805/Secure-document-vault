@@ -68,11 +68,18 @@ export default async function handler(
           },
         });
       }
+      if (user.role !== "LP") {
+        await prisma.user.update({
+          where: { id: user.id },
+          data: { role: "LP" },
+        });
+      }
     } else {
       user = await prisma.user.create({
         data: {
           name,
           email: normalizedEmail,
+          role: "LP",
           investorProfile: {
             create: {
               entityName: entityName || null,

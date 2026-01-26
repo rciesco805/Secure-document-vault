@@ -15,7 +15,7 @@ The BF Fund Investor Dataroom is a 506(c) compliant GP/LP management suite desig
 The platform is built on Next.js 14, utilizing a hybrid Pages and App Router architecture with TypeScript. Styling is managed with Tailwind CSS and shadcn/ui, prioritizing a UX-first approach with mobile-responsiveness, minimal clicks, clear CTAs, and guided wizards. PostgreSQL with Prisma ORM serves as the database, and NextAuth.js handles authentication.
 
 Key features include:
-- **506(c) Compliance**: Accreditation self-certification, comprehensive audit logs, and integrated KYC/AML hooks.
+- **506(c) Compliance**: Accreditation self-certification, comprehensive audit logs, integrated KYC/AML hooks, single-email-per-signin protection, and cross-log access verification.
 - **Self-hosted E-Signature**: Custom React drag-and-drop field placement for legally compliant electronic signatures (ESIGN/UETA) with consent capture and SHA-256 checksum verification.
 - **LP Portal**: Secure, personalized investor portals with role-based access control, real-time dashboard updates, and quick action CTAs for investment-related tasks.
 - **Admin Dashboards**: Unified admin access with a hub navigation, CRM timeline for investor activity, capital tracking, and a compliance audit dashboard with event filtering and export functionalities.

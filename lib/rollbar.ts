@@ -6,12 +6,18 @@ const baseConfig = {
   environment: process.env.NODE_ENV || 'development',
 };
 
+const clientToken = process.env.NEXT_PUBLIC_ROLLBAR_CLIENT_TOKEN;
+
 export const clientConfig = {
-  accessToken: process.env.NEXT_PUBLIC_ROLLBAR_CLIENT_TOKEN,
+  accessToken: clientToken || 'disabled',
+  enabled: !!clientToken,
   ...baseConfig,
 };
 
+const serverToken = process.env.ROLLBAR_SERVER_TOKEN;
+
 export const serverInstance = new Rollbar({
-  accessToken: process.env.ROLLBAR_SERVER_TOKEN,
+  accessToken: serverToken || 'disabled',
+  enabled: !!serverToken,
   ...baseConfig,
 });

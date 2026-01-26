@@ -171,6 +171,8 @@ export const authOptions: NextAuthOptions = {
   },
   events: {
     async createUser(message) {
+      console.log("[AUTH] createUser event triggered for:", message.user.email);
+      
       const params: CreateUserEmailProps = {
         user: {
           name: message.user.name,
@@ -185,7 +187,9 @@ export const authOptions: NextAuthOptions = {
         userId: message.user.id,
       });
 
+      console.log("[AUTH] Sending welcome email to:", message.user.email);
       await sendWelcomeEmail(params);
+      console.log("[AUTH] Welcome email sent successfully");
 
       if (message.user.email) {
         await subscribe(message.user.email);

@@ -19,9 +19,18 @@ export default function ViewerRedirect() {
 }
 
 export async function getServerSideProps(context: GetServerSidePropsContext) {
+  console.log("[VIEWER_REDIRECT] getServerSideProps called");
+  
   const session = await getServerSession(context.req, context.res, authOptions);
+  
+  console.log("[VIEWER_REDIRECT] Session check:", {
+    hasSession: !!session,
+    hasUser: !!session?.user,
+    email: session?.user?.email,
+  });
 
   if (!session?.user?.email) {
+    console.log("[VIEWER_REDIRECT] No session/email, redirecting to login");
     return {
       redirect: {
         destination: "/login",
@@ -32,6 +41,8 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
 
   const user = session.user as CustomUser;
   const userEmail = user.email!.toLowerCase();
+  
+  console.log("[VIEWER_REDIRECT] Processing redirect for:", userEmail);
 
   // Check if visitor mode is requested (admins testing the visitor experience)
   const visitorMode = context.query.mode === "visitor";

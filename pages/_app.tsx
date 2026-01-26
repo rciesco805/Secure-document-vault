@@ -29,7 +29,7 @@ export default function App({
   return (
     <RollbarProvider config={clientConfig}>
       <ErrorBoundary>
-        <>
+        <div id="app-root">
           <Head>
             <title>BF Fund Dataroom | Bermuda Franchise Group</title>
             <meta name="theme-color" content="#000000" />
@@ -96,7 +96,7 @@ export default function App({
               </ThemeProvider>
             </PostHogCustomProvider>
           </SessionProvider>
-        </>
+        </div>
       </ErrorBoundary>
     </RollbarProvider>
   );

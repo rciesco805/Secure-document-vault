@@ -138,6 +138,12 @@ export const authOptions: NextAuthOptions = {
       }
       if (user) {
         token.user = user;
+        // Fetch role from database on initial sign in
+        const dbUser = await prisma.user.findUnique({
+          where: { id: user.id },
+          select: { role: true },
+        });
+        token.role = dbUser?.role || "LP";
       }
       if (trigger === "update") {
         const user = token?.user as CustomUser;
@@ -146,6 +152,7 @@ export const authOptions: NextAuthOptions = {
         });
         if (refreshedUser) {
           token.user = refreshedUser;
+          token.role = refreshedUser.role || "LP";
         } else {
           return {};
         }
@@ -165,6 +172,7 @@ export const authOptions: NextAuthOptions = {
         id: token.sub,
         // @ts-ignore
         ...(token || session).user,
+        role: token.role as string,
       };
       return session;
     },

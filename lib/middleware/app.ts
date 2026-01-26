@@ -12,8 +12,10 @@ export default async function AppMiddleware(req: NextRequest) {
     cookieName: "next-auth.session-token",
   })) as {
     email?: string;
+    role?: string;
     user?: {
       createdAt?: string;
+      role?: string;
     };
   };
 
@@ -22,9 +24,39 @@ export default async function AppMiddleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  // LP authenticated routes (require login but no team membership)
-  const lpAuthRoutes = ["/lp/dashboard", "/lp/docs"];
-  if (token?.email && lpAuthRoutes.some((r) => path.startsWith(r))) {
+  // LP authenticated routes (require login and LP role)
+  const lpAuthRoutes = ["/lp/dashboard", "/lp/docs", "/lp/transactions", "/lp/statements"];
+  if (lpAuthRoutes.some((r) => path.startsWith(r))) {
+    if (!token?.email) {
+      // Not authenticated - redirect to LP login
+      const loginUrl = new URL("/login", req.url);
+      loginUrl.searchParams.set("next", encodeURIComponent(path));
+      return NextResponse.redirect(loginUrl);
+    }
+    // Check if user has LP role (default for new users)
+    const userRole = token.role || token.user?.role || "LP";
+    if (userRole !== "LP" && userRole !== "GP") {
+      // Invalid role - redirect to appropriate location
+      return NextResponse.redirect(new URL("/viewer-redirect", req.url));
+    }
+    return NextResponse.next();
+  }
+  
+  // GP/Admin routes - require GP role or team membership
+  const gpRoutes = ["/dashboard", "/settings", "/documents", "/datarooms", "/admin"];
+  if (gpRoutes.some((r) => path.startsWith(r))) {
+    if (!token?.email) {
+      const loginUrl = new URL("/admin/login", req.url);
+      loginUrl.searchParams.set("next", encodeURIComponent(path));
+      return NextResponse.redirect(loginUrl);
+    }
+    // Check user role - LP users should be redirected to LP portal
+    const userRole = token.role || token.user?.role || "LP";
+    if (userRole === "LP") {
+      // LP users trying to access GP routes - redirect to LP dashboard or viewer portal
+      return NextResponse.redirect(new URL("/viewer-portal", req.url));
+    }
+    // GP role users can proceed - additional team membership check happens at page/API level
     return NextResponse.next();
   }
 

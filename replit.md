@@ -136,6 +136,14 @@ New files for signature customization:
 - `lib/signature/theme/context.tsx` - React context for theme provider
 - `components/signature/enhanced-signature-pad.tsx` - Enhanced signature component with customization
 
+### Signer Portal Integration
+The enhanced signature pad is now integrated into `/view/sign/[token]`:
+- Uses EnhancedSignaturePad with SignatureThemeProvider wrapper
+- Supports pen customization (color, thickness)
+- 5 cursive font options for typed signatures
+- Undo functionality for drawn signatures
+- Data flows directly to existing submission handler
+
 ## Middleware Route Protection
 
 The middleware (`lib/middleware/app.ts`) protects routes as follows:

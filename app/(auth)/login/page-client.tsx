@@ -32,6 +32,10 @@ export default function Login() {
     if (!nextParam) return null;
     
     const decodedPath = decodeURIComponent(nextParam);
+    // Prevent redirect loops - if next points to a login page, ignore it
+    if (decodedPath.includes("/login") || decodedPath.includes("/admin/login") || decodedPath.includes("/lp/login")) {
+      return null;
+    }
     // Block admin routes from investor login - they must use /admin/login
     const adminRoutes = ["/dashboard", "/settings", "/documents", "/datarooms"];
     if (adminRoutes.some(route => decodedPath.startsWith(route))) {

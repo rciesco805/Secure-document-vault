@@ -20,7 +20,13 @@ export default function AdminLoginClient() {
   const searchParams = useSearchParams();
   const next = useMemo(() => {
     const nextParam = searchParams?.get("next");
-    return nextParam ? decodeURIComponent(nextParam) : null;
+    if (!nextParam) return null;
+    const decoded = decodeURIComponent(nextParam);
+    // Prevent redirect loops - if next points to a login page, ignore it
+    if (decoded.includes("/login") || decoded.includes("/admin/login") || decoded.includes("/lp/login")) {
+      return null;
+    }
+    return decoded;
   }, [searchParams]);
   const router = useRouter();
   const { data: session, status } = useSession();

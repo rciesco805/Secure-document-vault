@@ -122,3 +122,21 @@ Access verification covers all 4 paths:
 - **Audit Protection**: Added `onDelete: Restrict` constraints for SEC compliance
 - **Magic Link Fix**: Fixed visitor magic link verification to properly call backend API
 - **Role-Based Routing**: Improved `/viewer-redirect` to use user role as primary routing indicator
+- **Redirect Loop Fix**: Fixed infinite redirect loops on login pages by:
+  - Excluding `/admin/login` from protected GP routes in middleware
+  - Adding client-side protection against redirect loops in login page components
+  - Preventing `next` parameter from pointing to login pages (causes loops)
+
+## Middleware Route Protection
+
+The middleware (`lib/middleware/app.ts`) protects routes as follows:
+
+| Route Pattern | Protection | Unauthenticated Redirect |
+|---------------|------------|--------------------------|
+| `/lp/onboard`, `/lp/login` | Public | None |
+| `/lp/*` | Requires LP or GP role | `/lp/login` |
+| `/dashboard`, `/settings`, `/documents`, `/datarooms`, `/admin/*` (except `/admin/login`) | Requires GP role | `/admin/login` |
+| `/login`, `/admin/login`, `/lp/login` | Public login pages | None |
+| `/viewer-portal` | Authenticated users | `/login` |
+
+**Important**: Login pages (`/login`, `/admin/login`, `/lp/login`) are explicitly excluded from route protection to prevent redirect loops.

@@ -217,11 +217,23 @@ Quick Add uses session-based auth with these settings:
 
 Route protection in `lib/middleware/app.ts`:
 
-| Route Pattern | Auth Required | Role Check |
-|---------------|---------------|------------|
-| `/lp/onboard`, `/lp/login` | No | - |
-| `/lp/*` | Yes | LP or GP |
-| `/dashboard`, `/datarooms`, `/admin` | Yes | GP (or team member) |
-| `/viewer-portal` | Yes | Any authenticated |
+| Route Pattern | Auth Required | Role Check | Unauthenticated Redirect |
+|---------------|---------------|------------|--------------------------|
+| `/login`, `/admin/login`, `/lp/login` | No | - | None (public login pages) |
+| `/lp/onboard` | No | - | None |
+| `/lp/*` | Yes | LP or GP | `/lp/login` |
+| `/dashboard`, `/settings`, `/documents`, `/datarooms` | Yes | GP | `/admin/login` |
+| `/admin/*` (except `/admin/login`) | Yes | GP | `/admin/login` |
+| `/viewer-portal` | Yes | Any authenticated | `/login` |
 
 LP users attempting to access GP routes are redirected to `/viewer-portal`.
+
+### Redirect Loop Prevention
+
+To prevent infinite redirect loops on login pages:
+
+1. **Middleware exclusion**: `/admin/login` is explicitly excluded from protected GP routes
+2. **Client-side protection**: Login page components ignore `next` parameters pointing to login pages
+3. **Server-side protection**: Middleware ignores `next` parameters containing `/login` paths
+
+This ensures users can always access login pages without being caught in redirect loops.

@@ -24,6 +24,12 @@ export default async function AppMiddleware(req: NextRequest) {
     return NextResponse.next();
   }
 
+  // View pages are public - they have their own access control via visitor tokens
+  // This allows magic link verification to happen on the page before any redirect
+  if (path.startsWith("/view/")) {
+    return NextResponse.next();
+  }
+
   // LP authenticated routes (require login and LP/GP role)
   // Match any /lp/* path that isn't public
   if (path.startsWith("/lp/")) {

@@ -134,9 +134,12 @@ The middleware (`lib/middleware/app.ts`) protects routes as follows:
 | Route Pattern | Protection | Unauthenticated Redirect |
 |---------------|------------|--------------------------|
 | `/lp/onboard`, `/lp/login` | Public | None |
+| `/view/*` | Public (own access control) | None |
 | `/lp/*` | Requires LP or GP role | `/lp/login` |
 | `/dashboard`, `/settings`, `/documents`, `/datarooms`, `/admin/*` (except `/admin/login`) | Requires GP role | `/admin/login` |
 | `/login`, `/admin/login`, `/lp/login` | Public login pages | None |
 | `/viewer-portal` | Authenticated users | `/login` |
 
-**Important**: Login pages (`/login`, `/admin/login`, `/lp/login`) are explicitly excluded from route protection to prevent redirect loops.
+**Important**: 
+- Login pages (`/login`, `/admin/login`, `/lp/login`) are explicitly excluded from route protection to prevent redirect loops.
+- View pages (`/view/*`) are public to allow magic link verification - they have their own access control via visitor tokens.

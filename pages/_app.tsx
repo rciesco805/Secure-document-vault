@@ -38,6 +38,11 @@ export default function App({
               content="Secure investor dataroom for Bermuda Franchise Group - Work Well. Play Well. Be Well."
               key="description"
             />
+            {/* Signature fonts for e-signature customization */}
+            <link 
+              href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&family=Great+Vibes&family=Pacifico&family=Sacramento&family=Allura&display=swap" 
+              rel="stylesheet" 
+            />
             <meta
               property="og:title"
               content="BF Fund Dataroom | Bermuda Franchise Group"

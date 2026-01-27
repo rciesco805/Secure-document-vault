@@ -122,10 +122,19 @@ Access verification covers all 4 paths:
 - **Audit Protection**: Added `onDelete: Restrict` constraints for SEC compliance
 - **Magic Link Fix**: Fixed visitor magic link verification to properly call backend API
 - **Role-Based Routing**: Improved `/viewer-redirect` to use user role as primary routing indicator
-- **Redirect Loop Fix**: Fixed infinite redirect loops on login pages by:
-  - Excluding `/admin/login` from protected GP routes in middleware
-  - Adding client-side protection against redirect loops in login page components
-  - Preventing `next` parameter from pointing to login pages (causes loops)
+- **Redirect Loop Fix**: Fixed infinite redirect loops on login pages
+- **E-Signature UI Enhancements**: Added customizable signature pad with:
+  - Customizable pen color and thickness
+  - Draw or Type modes with font selection
+  - SVG export option for signatures
+  - Theme support via React context
+  - Undo functionality for drawn signatures
+
+### E-Signature Theme System
+New files for signature customization:
+- `lib/signature/theme/types.ts` - Theme types and presets
+- `lib/signature/theme/context.tsx` - React context for theme provider
+- `components/signature/enhanced-signature-pad.tsx` - Enhanced signature component with customization
 
 ## Middleware Route Protection
 

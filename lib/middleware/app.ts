@@ -44,8 +44,10 @@ export default async function AppMiddleware(req: NextRequest) {
   }
   
   // GP/Admin routes - require GP role or team membership
+  // Note: /admin/login is excluded - it's a public login page
   const gpRoutes = ["/dashboard", "/settings", "/documents", "/datarooms", "/admin"];
-  if (gpRoutes.some((r) => path.startsWith(r))) {
+  const isAdminLoginPage = path === "/admin/login";
+  if (!isAdminLoginPage && gpRoutes.some((r) => path.startsWith(r))) {
     if (!token?.email) {
       const loginUrl = new URL("/admin/login", req.url);
       const nextPath = url.search ? `${path}${url.search}` : path;

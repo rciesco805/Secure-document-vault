@@ -99,11 +99,19 @@ export default async function AppMiddleware(req: NextRequest) {
   // The actual team check happens on the dashboard page via API
   if (token?.email && isLoginPage) {
     const nextParam = url.searchParams.get("next");
+    // Decode the next parameter and check it's not a login page (prevents redirect loops)
+    let nextPath = nextParam ? decodeURIComponent(nextParam) : null;
+    
+    // Prevent redirect loops - if next points to a login page, use default instead
+    if (nextPath && (nextPath.includes("/login") || nextPath.includes("/admin/login") || nextPath.includes("/lp/login"))) {
+      nextPath = null;
+    }
+    
     // Admin login always goes to dashboard, investor login goes to viewer-redirect
     const defaultRedirect = path === "/admin/login" ? "/dashboard" : "/viewer-redirect";
-    const nextPath = nextParam || defaultRedirect;
+    const finalPath = nextPath || defaultRedirect;
     return NextResponse.redirect(
-      new URL(decodeURIComponent(nextPath), req.url),
+      new URL(finalPath, req.url),
     );
   }
 

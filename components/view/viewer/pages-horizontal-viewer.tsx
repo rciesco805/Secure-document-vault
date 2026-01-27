@@ -75,7 +75,22 @@ export default function PagesHorizontalViewer({
     navData;
 
   const router = useRouter();
-  const { status: sessionStatus } = useSession();
+  const sessionResult = useSession();
+  const rawSessionStatus = sessionResult?.status ?? "loading";
+  const [sessionTimeout, setSessionTimeout] = useState<boolean>(false);
+
+  // Timeout fallback to prevent infinite loading if session check hangs
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (rawSessionStatus === "loading") {
+        setSessionTimeout(true);
+      }
+    }, 5000);
+    return () => clearTimeout(timeout);
+  }, [rawSessionStatus]);
+
+  // If session timed out, treat as unauthenticated to prevent infinite loading
+  const sessionStatus = sessionTimeout && rawSessionStatus === "loading" ? "unauthenticated" : rawSessionStatus;
 
   const showStatsSlideWithAccountCreation =
     showAccountCreationSlide && // if showAccountCreationSlide is enabled

@@ -49,10 +49,27 @@ export interface ButtonProps
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   (
-    { className, variant, size, disabled, loading, asChild = false, ...props },
+    { className, variant, size, disabled, loading, asChild = false, children, ...props },
     ref,
   ) => {
     const Comp = asChild ? Slot : "button";
+    
+    // When asChild is true, Slot expects exactly one child
+    // We need to wrap loading + children in a single element to avoid Children.only error
+    const content = loading ? (
+      <>
+        <LoadingSpinner className="mr-1 h-5 w-5" />
+        {children}
+      </>
+    ) : (
+      children
+    );
+    
+    // When asChild with loading, wrap content in span to satisfy Slot's single-child requirement
+    const slotContent = asChild && loading ? (
+      <span className="inline-flex items-center">{content}</span>
+    ) : content;
+    
     return (
       <Comp
         className={cn(buttonVariants({ variant, size, className }))}
@@ -60,8 +77,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         disabled={disabled || loading}
         {...props}
       >
-        {loading ? <LoadingSpinner className="mr-1 h-5 w-5" /> : null}
-        {props.children}
+        {asChild ? slotContent : content}
       </Comp>
     );
   },

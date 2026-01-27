@@ -304,9 +304,25 @@ export default function ViewPage({
   error?: boolean;
 }) {
   const router = useRouter();
-  const { data: session, status } = useSession();
+  const sessionResult = useSession();
+  const session = sessionResult?.data ?? null;
+  const rawStatus = sessionResult?.status ?? "loading";
+  const [sessionTimeout, setSessionTimeout] = useState<boolean>(false);
   const [storedToken, setStoredToken] = useState<string | undefined>(undefined);
   const [storedEmail, setStoredEmail] = useState<string | undefined>(undefined);
+
+  // Timeout fallback to prevent infinite loading if session check hangs
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (rawStatus === "loading") {
+        setSessionTimeout(true);
+      }
+    }, 5000);
+    return () => clearTimeout(timeout);
+  }, [rawStatus]);
+
+  // If session timed out, treat as unauthenticated to prevent infinite loading
+  const status = sessionTimeout && rawStatus === "loading" ? "unauthenticated" : rawStatus;
 
   useEffect(() => {
     // Retrieve token from cookie on component mount

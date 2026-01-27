@@ -304,7 +304,9 @@ export default function ViewPage({
   notionError,
 }: ViewPageProps & { error?: boolean; notionError?: boolean }) {
   const router = useRouter();
-  const { data: session, status } = useSession();
+  const sessionResult = useSession();
+  const session = sessionResult?.data ?? null;
+  const rawStatus = sessionResult?.status ?? "loading";
   const [storedToken, setStoredToken] = useState<string | undefined>(undefined);
   const [storedEmail, setStoredEmail] = useState<string | undefined>(undefined);
   const [magicLinkVerified, setMagicLinkVerified] = useState<boolean>(false);
@@ -315,14 +317,17 @@ export default function ViewPage({
   // Timeout fallback to prevent infinite loading if session check hangs
   useEffect(() => {
     const timeout = setTimeout(() => {
-      if (status === "loading") {
+      if (rawStatus === "loading") {
         console.warn("[VIEW] Session loading timeout - forcing render");
         setSessionTimeout(true);
       }
     }, 5000); // 5 second timeout
     
     return () => clearTimeout(timeout);
-  }, [status]);
+  }, [rawStatus]);
+
+  // If session timed out, treat as unauthenticated to prevent infinite loading
+  const status = sessionTimeout && rawStatus === "loading" ? "unauthenticated" : rawStatus;
 
   useEffect(() => {
     // Retrieve token from cookie on component mount

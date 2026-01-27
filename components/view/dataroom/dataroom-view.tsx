@@ -123,7 +123,23 @@ export default function DataroomView({
   const [magicLinkProcessed, setMagicLinkProcessed] = useState<boolean>(false);
   const [autoVerifyAttempted, setAutoVerifyAttempted] = useState<boolean>(false);
   
-  const { data: session, status: sessionStatus } = useSession();
+  const sessionResult = useSession();
+  const session = sessionResult?.data ?? null;
+  const rawSessionStatus = sessionResult?.status ?? "loading";
+  const [sessionTimeout, setSessionTimeout] = useState<boolean>(false);
+
+  // Timeout fallback to prevent infinite loading if session check hangs
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (rawSessionStatus === "loading") {
+        setSessionTimeout(true);
+      }
+    }, 5000);
+    return () => clearTimeout(timeout);
+  }, [rawSessionStatus]);
+
+  // If session timed out, treat as unauthenticated to prevent infinite loading
+  const sessionStatus = sessionTimeout && rawSessionStatus === "loading" ? "unauthenticated" : rawSessionStatus;
 
   const handleSubmission = async (overrideCode?: string, overrideEmail?: string): Promise<void> => {
     setIsLoading(true);

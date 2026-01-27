@@ -41,6 +41,8 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
+import { EnhancedSignaturePad, SignaturePadHandle } from "@/components/signature/enhanced-signature-pad";
+import { SignatureThemeProvider } from "@/lib/signature/theme/context";
 
 interface RecipientInfo {
   id: string;
@@ -90,11 +92,13 @@ export default function SignDocument() {
   const [declineReason, setDeclineReason] = useState("");
   const [showSuccess, setShowSuccess] = useState(false);
 
+  const signaturePadRef = useRef<SignaturePadHandle>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const typedCanvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [signatureMode, setSignatureMode] = useState<"type" | "draw">("type");
   const [typedSignature, setTypedSignature] = useState("");
+  const [useEnhancedSignature, setUseEnhancedSignature] = useState(true);
 
   const [pdfNumPages, setPdfNumPages] = useState<number>(0);
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -266,7 +270,9 @@ export default function SignDocument() {
   const handleSubmit = async () => {
     const signatureFields = fields.filter((f) => f.type === "SIGNATURE");
     if (signatureFields.length > 0 && !signatureData) {
-      if (signatureMode === "type") {
+      if (useEnhancedSignature) {
+        toast.error("Please provide your signature before submitting");
+      } else if (signatureMode === "type") {
         toast.error("Please type your name to create a signature");
       } else {
         toast.error("Please draw your signature before submitting");
@@ -605,97 +611,111 @@ export default function SignDocument() {
                   Your Signature
                 </h2>
                 
-                <Tabs
-                  value={signatureMode}
-                  onValueChange={(v) => {
-                    setSignatureMode(v as "type" | "draw");
-                    if (v === "type" && typedSignature) {
-                      const imageData = generateTypedSignatureImage(typedSignature);
-                      setSignatureData(imageData);
-                    } else if (v === "draw") {
-                      const canvas = canvasRef.current;
-                      if (canvas) {
-                        setSignatureData(canvas.toDataURL("image/png"));
-                      }
-                    }
-                  }}
-                  className="w-full"
-                >
-                  <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="type" className="flex items-center gap-2">
-                      <TypeIcon className="h-4 w-4" />
-                      Type
-                    </TabsTrigger>
-                    <TabsTrigger value="draw" className="flex items-center gap-2">
-                      <PenIcon className="h-4 w-4" />
-                      Draw
-                    </TabsTrigger>
-                  </TabsList>
-                  
-                  <TabsContent value="type" className="mt-4">
-                    <p className="mb-3 text-sm text-gray-600">
-                      Type your name to create a signature
-                    </p>
-                    <Input
-                      value={typedSignature}
-                      onChange={(e) => setTypedSignature(e.target.value)}
-                      placeholder="Type your full name"
-                      className="mb-3"
+                {useEnhancedSignature ? (
+                  <SignatureThemeProvider>
+                    <EnhancedSignaturePad
+                      ref={signaturePadRef}
+                      width={320}
+                      height={150}
+                      onSignatureChange={(data) => setSignatureData(data)}
+                      showControls={true}
                     />
-                    {typedSignature && (
-                      <div className="rounded-lg border-2 border-dashed border-gray-300 bg-white p-4">
-                        <p
-                          className="text-center text-3xl text-black"
-                          style={{ fontFamily: "'Brush Script MT', cursive, serif", fontStyle: "italic" }}
-                        >
-                          {typedSignature}
+                  </SignatureThemeProvider>
+                ) : (
+                  <>
+                    <Tabs
+                      value={signatureMode}
+                      onValueChange={(v) => {
+                        setSignatureMode(v as "type" | "draw");
+                        if (v === "type" && typedSignature) {
+                          const imageData = generateTypedSignatureImage(typedSignature);
+                          setSignatureData(imageData);
+                        } else if (v === "draw") {
+                          const canvas = canvasRef.current;
+                          if (canvas) {
+                            setSignatureData(canvas.toDataURL("image/png"));
+                          }
+                        }
+                      }}
+                      className="w-full"
+                    >
+                      <TabsList className="grid w-full grid-cols-2">
+                        <TabsTrigger value="type" className="flex items-center gap-2">
+                          <TypeIcon className="h-4 w-4" />
+                          Type
+                        </TabsTrigger>
+                        <TabsTrigger value="draw" className="flex items-center gap-2">
+                          <PenIcon className="h-4 w-4" />
+                          Draw
+                        </TabsTrigger>
+                      </TabsList>
+                      
+                      <TabsContent value="type" className="mt-4">
+                        <p className="mb-3 text-sm text-gray-600">
+                          Type your name to create a signature
                         </p>
-                      </div>
-                    )}
-                    <canvas
-                      ref={typedCanvasRef}
-                      width={280}
-                      height={120}
-                      className="hidden"
-                    />
-                  </TabsContent>
-                  
-                  <TabsContent value="draw" className="mt-4">
-                    <p className="mb-3 text-sm text-gray-600">
-                      Draw your signature using your mouse or finger
-                    </p>
-                    <div className="relative rounded-lg border-2 border-dashed border-gray-300 bg-white w-full overflow-hidden">
-                      <canvas
-                        ref={canvasRef}
-                        width={280}
-                        height={120}
-                        className="cursor-crosshair touch-none w-full max-w-[280px] mx-auto block"
-                        style={{ touchAction: 'none' }}
-                        onMouseDown={startDrawing}
-                        onMouseMove={draw}
-                        onMouseUp={stopDrawing}
-                        onMouseLeave={stopDrawing}
-                        onTouchStart={startDrawing}
-                        onTouchMove={draw}
-                        onTouchEnd={stopDrawing}
-                      />
-                      {signatureMode === "draw" && !signatureData && (
-                        <div className="pointer-events-none absolute inset-0 flex items-center justify-center text-gray-400 text-sm">
-                          Sign here
+                        <Input
+                          value={typedSignature}
+                          onChange={(e) => setTypedSignature(e.target.value)}
+                          placeholder="Type your full name"
+                          className="mb-3"
+                        />
+                        {typedSignature && (
+                          <div className="rounded-lg border-2 border-dashed border-gray-300 bg-white p-4">
+                            <p
+                              className="text-center text-3xl text-black"
+                              style={{ fontFamily: "'Brush Script MT', cursive, serif", fontStyle: "italic" }}
+                            >
+                              {typedSignature}
+                            </p>
+                          </div>
+                        )}
+                        <canvas
+                          ref={typedCanvasRef}
+                          width={280}
+                          height={120}
+                          className="hidden"
+                        />
+                      </TabsContent>
+                      
+                      <TabsContent value="draw" className="mt-4">
+                        <p className="mb-3 text-sm text-gray-600">
+                          Draw your signature using your mouse or finger
+                        </p>
+                        <div className="relative rounded-lg border-2 border-dashed border-gray-300 bg-white w-full overflow-hidden">
+                          <canvas
+                            ref={canvasRef}
+                            width={280}
+                            height={120}
+                            className="cursor-crosshair touch-none w-full max-w-[280px] mx-auto block"
+                            style={{ touchAction: 'none' }}
+                            onMouseDown={startDrawing}
+                            onMouseMove={draw}
+                            onMouseUp={stopDrawing}
+                            onMouseLeave={stopDrawing}
+                            onTouchStart={startDrawing}
+                            onTouchMove={draw}
+                            onTouchEnd={stopDrawing}
+                          />
+                          {signatureMode === "draw" && !signatureData && (
+                            <div className="pointer-events-none absolute inset-0 flex items-center justify-center text-gray-400 text-sm">
+                              Sign here
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </div>
-                  </TabsContent>
-                </Tabs>
-                
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={clearSignature}
-                  className="mt-2 min-h-[44px] px-4"
-                >
-                  Clear Signature
-                </Button>
+                      </TabsContent>
+                    </Tabs>
+                    
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={clearSignature}
+                      className="mt-2 min-h-[44px] px-4"
+                    >
+                      Clear Signature
+                    </Button>
+                  </>
+                )}
               </div>
 
               <div className="lg:hidden rounded-lg bg-emerald-50 dark:bg-emerald-900/20 p-4 border border-emerald-200 dark:border-emerald-800">

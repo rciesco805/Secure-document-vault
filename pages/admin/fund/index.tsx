@@ -519,7 +519,7 @@ export default function FundDashboard() {
                       />
                       <YAxis tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} />
                       <Tooltip
-                        formatter={(value: number) => formatCurrency(value)}
+                        formatter={((value: number) => formatCurrency(value)) as any}
                         labelStyle={{ color: "#000" }}
                       />
                       <Legend />
@@ -549,14 +549,14 @@ export default function FundDashboard() {
                         paddingAngle={5}
                         dataKey="value"
                         label={({ name, percent }) =>
-                          `${name} (${(percent * 100).toFixed(0)}%)`
+                          `${name} (${((percent ?? 0) * 100).toFixed(0)}%)`
                         }
                       >
                         {pieData.map((_, index) => (
                           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                         ))}
                       </Pie>
-                      <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                      <Tooltip formatter={((value: number) => formatCurrency(value)) as any} />
                     </PieChart>
                   </ResponsiveContainer>
                 </div>

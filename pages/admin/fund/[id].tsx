@@ -496,7 +496,7 @@ export default function FundDetailPage() {
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="name" />
                       <YAxis tickFormatter={(v) => `$${(v / 1000000).toFixed(1)}M`} />
-                      <Tooltip formatter={(v: number) => formatCurrency(v)} />
+                      <Tooltip formatter={((v: number) => formatCurrency(v)) as any} />
                       <Area
                         type="monotone"
                         dataKey="value"
@@ -528,7 +528,7 @@ export default function FundDetailPage() {
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="name" />
                       <YAxis tickFormatter={(v) => `$${(v / 1000000).toFixed(1)}M`} />
-                      <Tooltip formatter={(v: number) => formatCurrency(v)} />
+                      <Tooltip formatter={((v: number) => formatCurrency(v)) as any} />
                       <Bar dataKey="value" fill="#0088FE" />
                     </BarChart>
                   </ResponsiveContainer>
@@ -548,7 +548,7 @@ export default function FundDetailPage() {
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis type="number" tickFormatter={(v) => `$${(v / 1000).toFixed(0)}K`} />
                       <YAxis type="category" dataKey="name" width={80} />
-                      <Tooltip formatter={(v: number) => formatCurrency(v)} />
+                      <Tooltip formatter={((v: number) => formatCurrency(v)) as any} />
                       <Legend />
                       <Bar dataKey="commitment" fill="#0088FE" name="Commitment" />
                       <Bar dataKey="funded" fill="#00C49F" name="Funded" />

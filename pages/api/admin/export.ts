@@ -244,7 +244,7 @@ export default async function handler(
     const documentIds = teamDocuments.map((d) => d.id);
 
     if (modelsToExport.includes("viewAudit") && documentIds.length > 0) {
-      const viewAudits = await prisma.viewerAudit.findMany({
+      const viewAudits = await prisma.view.findMany({
         where: { documentId: { in: documentIds } },
         select: {
           id: true,
@@ -252,12 +252,11 @@ export default async function handler(
           viewerEmail: true,
           viewerName: true,
           viewType: true,
-          duration: true,
           ipAddress: true,
           userAgent: true,
-          country: true,
-          city: true,
-          createdAt: true,
+          geoCountry: true,
+          geoCity: true,
+          viewedAt: true,
         },
       });
       exportData.data.viewAudits = viewAudits;
@@ -265,17 +264,15 @@ export default async function handler(
     }
 
     if (modelsToExport.includes("signatureAudit") && documentIds.length > 0) {
-      const signatureAudits = await prisma.signatureAudit.findMany({
+      const signatureAudits = await prisma.signatureAuditLog.findMany({
         where: { documentId: { in: documentIds } },
         select: {
           id: true,
           documentId: true,
           recipientEmail: true,
-          recipientName: true,
           event: true,
           ipAddress: true,
           userAgent: true,
-          geoLocation: true,
           metadata: true,
           createdAt: true,
         },
@@ -294,13 +291,14 @@ export default async function handler(
       exportData.metadata.modelCounts.auditLogs = auditLogs.length;
     }
 
-    if (modelsToExport.includes("signatureConsent") && documentIds.length > 0) {
-      const consents = await prisma.signatureConsent.findMany({
-        where: { documentId: { in: documentIds } },
-      });
-      exportData.data.signatureConsents = consents;
-      exportData.metadata.modelCounts.signatureConsents = consents.length;
-    }
+    // TODO: Add SignatureConsent model to schema when needed
+    // if (modelsToExport.includes("signatureConsent") && documentIds.length > 0) {
+    //   const consents = await prisma.signatureConsent.findMany({
+    //     where: { documentId: { in: documentIds } },
+    //   });
+    //   exportData.data.signatureConsents = consents;
+    //   exportData.metadata.modelCounts.signatureConsents = consents.length;
+    // }
 
     await prisma.auditLog.create({
       data: {

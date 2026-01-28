@@ -271,7 +271,7 @@ export function CapitalTrackingDashboard({ fundId }: CapitalTrackingDashboardPro
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="name" />
                 <YAxis tickFormatter={(v) => formatCurrency(v)} />
-                <Tooltip formatter={(v: number) => formatCurrency(v)} />
+                <Tooltip formatter={((v: number) => formatCurrency(v)) as any} />
                 <Bar dataKey="value" fill="#8884d8">
                   {capitalFlowData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.fill} />
@@ -299,14 +299,14 @@ export function CapitalTrackingDashboard({ fundId }: CapitalTrackingDashboardPro
                     cy="50%"
                     outerRadius={100}
                     label={({ name, percent }) =>
-                      `${name} (${(percent * 100).toFixed(0)}%)`
+                      `${name} (${((percent ?? 0) * 100).toFixed(0)}%)`
                     }
                   >
                     {metrics.byStatus.map((_, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
-                  <Tooltip formatter={(v: number) => formatCurrency(v)} />
+                  <Tooltip formatter={((v: number) => formatCurrency(v)) as any} />
                   <Legend />
                 </PieChart>
               </ResponsiveContainer>

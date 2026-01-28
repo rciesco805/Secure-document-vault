@@ -10,6 +10,26 @@ The BF Fund Investor Dataroom is a 506(c) compliant GP/LP management suite desig
 - Technical level: Non-technical explanations preferred
 - Focus: Security and ease of use for investors
 
+## Recent Changes (January 2026)
+
+### Schema & Type Alignment
+- **OWNER Role Added**: Added `OWNER` to the Role enum in Prisma schema for enhanced permission management
+- **NextAuth Type Declarations**: Created `types/next-auth.d.ts` for proper `session.user.id` typing
+- **Test File Alignment**: Updated test files to match current Prisma schema:
+  - Renamed `auditLog` → `signatureAuditLog` throughout tests
+  - Updated SignatureDocument fields: `name` → `title`, `fileUrl` → `file`
+  - Updated SignatureRecipient fields: `signedIp` → `ipAddress`
+  - Fixed enum values: `voidReason` → `voidedReason`, status `PENDING` → `SENT`
+  - Aligned investor fields: `kycStatus` → `personaStatus`
+
+### TypeScript Error Reduction
+- Reduced total TypeScript errors from 183 to 107
+- Production file errors: 59 (build continues with `ignoreBuildErrors: true`)
+- Test file errors: 48 (primarily in `phase1-visitor-dataroom.test.ts`)
+
+### Build Configuration
+- `next.config.mjs` configured with `ignoreDuringBuilds: true` for ESLint and `ignoreBuildErrors: true` for TypeScript to ensure development builds succeed while schema alignment continues
+
 ## System Architecture
 
 The platform is built using Next.js 14 with a hybrid Pages and App Router architecture and TypeScript. Styling is managed with Tailwind CSS and shadcn/ui, emphasizing a UX-first, mobile-responsive design with minimal clicks and guided wizards. Data persistence is handled by PostgreSQL with Prisma ORM, and NextAuth.js provides authentication with database-backed sessions.

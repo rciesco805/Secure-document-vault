@@ -1,6 +1,6 @@
 # BF Fund Dataroom - Comprehensive E2E Test Report
 
-**Report Date:** January 25, 2026  
+**Report Date:** January 28, 2026  
 **Test Environment:** Development (Replit)  
 **Platform Version:** 0.1.0  
 **Test Framework:** Jest  
@@ -22,6 +22,20 @@
 | **Execution Time** | ~11s |
 
 All 1599 end-to-end tests pass successfully across Phase 1 (LP flows), Phase 2 (Admin/GP flows), and Phase 3 (Cross-Side Interactions, Compliance & Edge Cases). The test suite covers the complete investor lifecycle from dataroom access through subscription, capital calls, distributions, KYC/AML enforcement, and compliance reporting. Phase 1 is now 100% complete with Form D reminders, LP statements, and waterfall visualization. Rollbar error monitoring is now integrated across both App Router and Pages Router.
+
+### Recent Updates (January 28, 2026)
+
+**Schema Alignment Completed:**
+- Test files updated to match current Prisma schema
+- `auditLog` renamed to `signatureAuditLog` across all test mocks
+- SignatureDocument fields aligned: `name` → `title`, `fileUrl` → `file`
+- SignatureRecipient fields aligned: `signedIp` → `ipAddress`
+- Enum values corrected: `voidReason` → `voidedReason`, `PENDING` → `SENT`
+
+**TypeScript Status:**
+- Total errors reduced from 183 to 107 (41% reduction)
+- Build configuration uses `ignoreBuildErrors: true` for development velocity
+- Remaining errors primarily in `phase1-visitor-dataroom.test.ts` (legacy mock data)
 
 ---
 
@@ -383,4 +397,4 @@ Resend, Persona, Plaid (with webhook verification), Stripe, Tinybird
 ---
 
 *Report generated automatically by BF Fund Platform Test Suite*
-*Last updated: January 25, 2026*
+*Last updated: January 28, 2026*

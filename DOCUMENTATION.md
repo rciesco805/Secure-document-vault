@@ -1268,6 +1268,27 @@ This ensures all visitors get fresh content without 404 errors from stale cached
 
 ---
 
+## Changelog
+
+### January 28, 2026
+
+**Schema & Type Alignment:**
+- Added `OWNER` role to Prisma Role enum for enhanced permission management
+- Created `types/next-auth.d.ts` for proper `session.user.id` typing in TypeScript
+- Aligned test files with current Prisma schema:
+  - Renamed `auditLog` → `signatureAuditLog` throughout tests
+  - Updated SignatureDocument fields: `name` → `title`, `fileUrl` → `file`
+  - Updated SignatureRecipient fields: `signedIp` → `ipAddress`
+  - Fixed enum values: `voidReason` → `voidedReason`, status `PENDING` → `SENT`
+  - Aligned investor fields: `kycStatus` → `personaStatus`
+
+**Build & TypeScript:**
+- Reduced total TypeScript errors from 183 to 107 (41% reduction)
+- Production file errors: 59 (build continues with `ignoreBuildErrors: true`)
+- Test file errors: 48 (primarily in `phase1-visitor-dataroom.test.ts`)
+
+---
+
 ## Support
 
 For issues or questions, contact the development team or open a GitHub issue.

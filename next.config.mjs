@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  productionBrowserSourceMaps: true,
+  // productionBrowserSourceMaps: true, // Disabled - enable after deploy works
   pageExtensions: ["js", "jsx", "ts", "tsx", "mdx"],
   images: {
     minimumCacheTTL: 2592000, // 30 days

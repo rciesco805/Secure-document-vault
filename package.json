@@ -139,6 +139,7 @@
     "nuqs": "^2.8.3",
     "openai": "^6.10.0",
     "pdf-lib": "^1.17.1",
+    "pdf-lib-plus-encrypt": "^1.1.0",
     "persona": "^5.5.0",
     "plaid": "^41.0.0",
     "postcss": "^8.5.6",

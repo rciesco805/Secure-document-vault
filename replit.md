@@ -159,6 +159,37 @@ New security infrastructure in `lib/signature/security/`:
 4. **Timeout protection** - Validators run with timeout (1000ms) and ReDoS pattern blocking
 5. **PKI ready** - Architecture prepared for Certificate Authority integration (future enhancement)
 
+## Encryption & Security Architecture
+
+### Encryption Layers
+
+| Layer | Algorithm | Purpose | Location |
+|-------|-----------|---------|----------|
+| Transport | TLS 1.3 | Data in transit | Managed by Replit |
+| Client-Side | AES-256-GCM | E2E signature encryption | `lib/crypto/client-encryption.ts` |
+| Server-Side | AES-256-GCM | Encryption at rest | `lib/crypto/secure-storage.ts` |
+| PDF Level | PDF 2.0 encryption | Document protection | `lib/crypto/pdf-encryption.ts` |
+
+### Key Features
+- **Client-Side Encryption**: Web Crypto API with PBKDF2 key derivation (100,000 iterations)
+- **PDF Encryption**: Password protection with configurable permissions (print, copy, modify)
+- **Document Checksums**: SHA-256 integrity verification
+- **Secure Token Generation**: Cryptographically random tokens
+
+### Threat Model
+See `lib/crypto/threat-model.ts` for complete STRIDE-based threat analysis covering:
+- Spoofing (identity impersonation)
+- Tampering (document modification)
+- Repudiation (signature denial)
+- Information Disclosure (data breaches)
+- Denial of Service
+- Elevation of Privilege
+
+### Future Enhancements (Roadmap)
+- HSM (Hardware Security Module) integration for FIPS 140-2 compliance
+- Certificate Authority integration for X.509 digital signatures
+- RFC 3161 Timestamp Authority for legal validity
+
 ## External API for Integrations
 
 REST API endpoints for programmatic template creation and document workflows. Uses Bearer token authentication via RestrictedToken.

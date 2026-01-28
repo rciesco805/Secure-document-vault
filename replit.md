@@ -144,6 +144,21 @@ The enhanced signature pad is now integrated into `/view/sign/[token]`:
 - Undo functionality for drawn signatures
 - Data flows directly to existing submission handler
 
+### Security Best Practices for Fund Documents
+New security infrastructure in `lib/signature/security/`:
+- `plugin-executor.ts` - Server-side only plugin execution (no client-side code)
+- `config-validator.ts` - JSON schema validation (Zod) for all plugin configs
+- `audit-logger.ts` - Comprehensive audit logging to SignatureAuditLog
+- `sandbox.ts` - Sandboxed custom validators with timeout protection
+- `index.ts` - Consolidated exports and documentation
+
+**Security Features:**
+1. **No client-side plugin execution** - All plugins run server-side only during signer flow
+2. **Config validation** - All plugin configs validated against JSON schema before save
+3. **Audit all plugin actions** - Every action logged to SignatureAuditLog
+4. **Timeout protection** - Validators run with timeout (1000ms) and ReDoS pattern blocking
+5. **PKI ready** - Architecture prepared for Certificate Authority integration (future enhancement)
+
 ## Middleware Route Protection
 
 The middleware (`lib/middleware/app.ts`) protects routes as follows:

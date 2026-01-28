@@ -1,6 +1,6 @@
 import { useRouter } from "next/router";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import React from "react";
 
 import { ChevronDownIcon, ChevronUpIcon } from "lucide-react";
@@ -404,7 +404,7 @@ export default function PagesVerticalViewer({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Run once on mount
 
-  const handleScroll = () => {
+  const handleScroll = useCallback(() => {
     const container = containerRef.current;
     if (!container) return;
 
@@ -478,7 +478,8 @@ export default function PagesVerticalViewer({
       pageNumberRef.current = maxVisiblePage;
       startTimeRef.current = Date.now();
     }
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pageNumber, numPages, numPagesWithFeedback]);
 
   // Function to preload next image
   const preloadImage = (index: number) => {
@@ -489,7 +490,7 @@ export default function PagesVerticalViewer({
     }
   };
 
-  const goToPreviousPage = () => {
+  const goToPreviousPage = useCallback(() => {
     if (pageNumber <= 1) return;
     if (enableQuestion && feedback && pageNumber === numPagesWithFeedback) {
       const targetImg = imageRefs.current[pageNumber - 2];
@@ -533,9 +534,10 @@ export default function PagesVerticalViewer({
       setPageNumber(pageNumber - 1);
       startTimeRef.current = Date.now();
     }
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pageNumber, enableQuestion, feedback, numPagesWithFeedback]);
 
-  const goToNextPage = () => {
+  const goToNextPage = useCallback(() => {
     if (pageNumber >= numPagesWithAccountCreation) return;
 
     if (pageNumber === numPages && enableQuestion && feedback) {
@@ -580,9 +582,10 @@ export default function PagesVerticalViewer({
       setPageNumber(pageNumber + 1);
       startTimeRef.current = Date.now();
     }
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pageNumber, numPagesWithAccountCreation, numPages, enableQuestion, feedback, numPagesWithFeedback]);
 
-  const handleKeyDown = (event: KeyboardEvent) => {
+  const handleKeyDown = useCallback((event: KeyboardEvent) => {
     switch (event.key) {
       case "ArrowDown":
         event.preventDefault(); // Prevent default behavior
@@ -607,7 +610,7 @@ export default function PagesVerticalViewer({
       default:
         break;
     }
-  };
+  }, [goToNextPage, goToPreviousPage]);
 
   const handleLinkClick = (href: string, event: React.MouseEvent) => {
     // Check if it's an internal page link or external link
@@ -692,13 +695,14 @@ export default function PagesVerticalViewer({
   }, [handleKeyDown, goToNextPage, goToPreviousPage]);
 
   useEffect(() => {
-    if (containerRef.current) {
-      containerRef.current.addEventListener("scroll", handleScroll);
+    const container = containerRef.current;
+    if (container) {
+      container.addEventListener("scroll", handleScroll);
     }
 
     return () => {
-      if (containerRef.current) {
-        containerRef.current.removeEventListener("scroll", handleScroll);
+      if (container) {
+        container.removeEventListener("scroll", handleScroll);
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps

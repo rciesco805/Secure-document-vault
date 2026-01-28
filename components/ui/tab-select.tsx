@@ -31,7 +31,7 @@ export function TabSelect<T extends string>({
                   ? "text-foreground"
                   : "text-muted-foreground hover:text-foreground",
               )}
-              aria-selected={id === selected}
+              data-selected={id === selected}
             >
               {label}
             </button>

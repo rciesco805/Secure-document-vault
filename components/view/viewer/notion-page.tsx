@@ -172,6 +172,7 @@ export const NotionPage = ({
     return () => {
       stopIntervalTracking();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     linkId,
     documentId,
@@ -180,7 +181,6 @@ export const NotionPage = ({
     isPreview,
     startIntervalTracking,
     stopIntervalTracking,
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   ]);
 
   useEffect(() => {
@@ -344,6 +344,7 @@ export const NotionPage = ({
     return () => {
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     linkId,
     documentId,
@@ -353,7 +354,6 @@ export const NotionPage = ({
     trackPageViewSafely,
     stopIntervalTracking,
     getActiveDuration,
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   ]);
 
   // // Function to calculate scroll percentage

@@ -167,6 +167,7 @@ export default function PDFViewer(props: any) {
     return () => {
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     linkId,
     documentId,
@@ -210,6 +211,7 @@ export default function PDFViewer(props: any) {
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pageNumber]);
 
   // Go to next page

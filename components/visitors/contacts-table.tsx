@@ -99,11 +99,11 @@ export function ContactsTable({
 
   const data = useMemo(() => viewers || [], [viewers]);
 
-  const handleDeleteClick = (e: React.MouseEvent, viewer: Viewer) => {
+  const handleDeleteClick = useCallback((e: React.MouseEvent, viewer: Viewer) => {
     e.stopPropagation();
     setViewerToDelete(viewer);
     setDeleteDialogOpen(true);
-  };
+  }, []);
 
   const handleConfirmDelete = async () => {
     if (!viewerToDelete || !teamId) return;

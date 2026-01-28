@@ -1,6 +1,6 @@
 import { useRouter } from "next/router";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import React from "react";
 
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
@@ -410,7 +410,7 @@ export default function PagesHorizontalViewer({
     }
   };
 
-  const goToPreviousPage = () => {
+  const goToPreviousPage = useCallback(() => {
     if (pageNumber <= 1) return;
     if (enableQuestion && feedback && pageNumber === numPagesWithFeedback) {
       setPageNumber(pageNumber - 1);
@@ -443,9 +443,10 @@ export default function PagesHorizontalViewer({
     // decrement page number
     setPageNumber(pageNumber - 1);
     startTimeRef.current = Date.now();
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pageNumber, enableQuestion, feedback, numPagesWithFeedback]);
 
-  const goToNextPage = () => {
+  const goToNextPage = useCallback(() => {
     if (pageNumber >= numPagesWithAccountCreation) return;
 
     if (pageNumber > numPages) {
@@ -473,9 +474,10 @@ export default function PagesHorizontalViewer({
     // increment page number
     setPageNumber(pageNumber + 1);
     startTimeRef.current = Date.now();
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pageNumber, numPagesWithAccountCreation, numPages]);
 
-  const handleKeyDown = (event: KeyboardEvent) => {
+  const handleKeyDown = useCallback((event: KeyboardEvent) => {
     switch (event.key) {
       case "ArrowRight":
         event.preventDefault(); // Prevent default behavior
@@ -490,7 +492,7 @@ export default function PagesHorizontalViewer({
       default:
         break;
     }
-  };
+  }, [goToNextPage, goToPreviousPage]);
 
   const handleLinkClick = (href: string, event: React.MouseEvent) => {
     // Check if it's an internal page link or external link

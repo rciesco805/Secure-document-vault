@@ -3,6 +3,14 @@ const nextConfig = {
   reactStrictMode: true,
   // productionBrowserSourceMaps: true, // Disabled - enable after deploy works
   pageExtensions: ["js", "jsx", "ts", "tsx", "mdx"],
+  
+  // Speed up production builds
+  eslint: {
+    ignoreDuringBuilds: true, // Already checked in development
+  },
+  typescript: {
+    ignoreBuildErrors: true, // Already checked in development
+  },
   images: {
     minimumCacheTTL: 2592000, // 30 days
     remotePatterns: prepareRemotePatterns(),

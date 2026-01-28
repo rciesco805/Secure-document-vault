@@ -94,7 +94,7 @@ export async function listInvestorDocuments(investorId: string): Promise<string[
     const result = await client.list({ prefix });
     
     if (!result.ok) return [];
-    return result.value.objects.map((obj) => obj.key);
+    return result.value.map((obj: { key: string }) => obj.key);
   } catch (error) {
     console.error("Error listing investor documents:", error);
     return [];

@@ -82,7 +82,7 @@ export default function VisitorVideoChart({
               if (active && payload && payload.length) {
                 return (
                   <div className="space-y-1 rounded-md border bg-background p-2 text-sm">
-                    <p className="font-medium">{formatTime(label)}</p>
+                    <p className="font-medium">{formatTime(typeof label === 'number' ? label : 0)}</p>
                     <div className="space-y-0.5 text-muted-foreground">
                       <p>Playback count: {payload[0].value}</p>
                     </div>

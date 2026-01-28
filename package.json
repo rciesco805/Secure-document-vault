@@ -74,6 +74,7 @@
     "@radix-ui/react-use-controllable-state": "^1.2.2",
     "@react-email/components": "^1.0.1",
     "@react-email/render": "^2.0.0",
+    "@replit/object-storage": "^1.0.0",
     "@rollbar/react": "^1.0.0",
     "@sindresorhus/slugify": "^3.0.0",
     "@stripe/stripe-js": "^4.10.0",

@@ -170,16 +170,16 @@ export function InvestorTimeline({
 
   const combinedTimeline = [
     ...events,
-    ...notes.map((note) => ({
+    ...notes.map((note): TimelineEvent => ({
       id: `note-${note.id}`,
-      type: "note" as const,
+      type: "note",
       title: note.isFromInvestor ? "Investor Message" : "GP Reply",
       description: note.content,
       timestamp: note.createdAt,
       investorEmail: note.investor.user.email,
-      investorName: note.investor.entityName || note.investor.user.name,
+      investorName: note.investor.entityName || note.investor.user.name || undefined,
       isFromInvestor: note.isFromInvestor,
-      metadata: {},
+      metadata: undefined,
     })),
   ].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 

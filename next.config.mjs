@@ -4,12 +4,12 @@ const nextConfig = {
   // productionBrowserSourceMaps: true, // Disabled - enable after deploy works
   pageExtensions: ["js", "jsx", "ts", "tsx", "mdx"],
   
-  // Speed up production builds
+  // ESLint and TypeScript checks during build
   eslint: {
-    ignoreDuringBuilds: true, // Already checked in development
+    ignoreDuringBuilds: false,
   },
   typescript: {
-    ignoreBuildErrors: true, // Already checked in development
+    ignoreBuildErrors: false,
   },
   images: {
     minimumCacheTTL: 2592000, // 30 days

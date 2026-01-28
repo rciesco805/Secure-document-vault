@@ -15,14 +15,14 @@
 describe('Transaction API Error Paths', () => {
   describe('POST /api/transactions - Input Validation', () => {
     it('should reject missing transaction type', () => {
-      const body = {
+      const body: Record<string, string> = {
         investorId: 'inv-1',
         fundId: 'fund-1',
         amount: '10000',
       };
 
       const isValid = body.hasOwnProperty('type') && 
-        ['CAPITAL_CALL', 'DISTRIBUTION'].includes(body.type as any);
+        ['CAPITAL_CALL', 'DISTRIBUTION'].includes(body.type);
       
       expect(isValid).toBe(false);
     });

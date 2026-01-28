@@ -2,21 +2,21 @@ import { describe, expect, it, jest, beforeEach } from "@jest/globals";
 
 const mockPrisma = {
   fund: {
-    findMany: jest.fn<() => Promise<any[]>>(),
-    findUnique: jest.fn<() => Promise<any>>(),
-    update: jest.fn<() => Promise<any>>(),
+    findMany: jest.fn<(args?: any) => Promise<any[]>>(),
+    findUnique: jest.fn<(args?: any) => Promise<any>>(),
+    update: jest.fn<(args?: any) => Promise<any>>(),
   },
   investor: {
-    findUnique: jest.fn<() => Promise<any>>(),
+    findUnique: jest.fn<(args?: any) => Promise<any>>(),
   },
   userTeam: {
-    findFirst: jest.fn<() => Promise<any>>(),
+    findFirst: jest.fn<(args?: any) => Promise<any>>(),
   },
   investment: {
-    findMany: jest.fn<() => Promise<any[]>>(),
+    findMany: jest.fn<(args?: any) => Promise<any[]>>(),
   },
   transaction: {
-    findMany: jest.fn<() => Promise<any[]>>(),
+    findMany: jest.fn<(args?: any) => Promise<any[]>>(),
   },
 };
 

@@ -155,7 +155,7 @@ export default function AgreementSheet({
       if (response) {
         const document = await response.json();
         const linkId = document.links[0].id;
-        // Use current domain instead of hardcoded papermark.com
+        // Use current domain dynamically
         const baseUrl = typeof window !== 'undefined' ? window.location.origin : process.env.NEXT_PUBLIC_MARKETING_URL || '';
         setData((prevData) => ({
           ...prevData,

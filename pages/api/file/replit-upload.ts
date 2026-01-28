@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth/next";
 import { randomUUID } from "crypto";
 
 import { CustomUser } from "@/lib/types";
+import { reportError } from "@/lib/error";
 
 import { authOptions } from "../auth/[...nextauth]";
 
@@ -115,6 +116,10 @@ export default async function handler(
       metadata: { fileName, contentType, fileSize, userId },
     });
   } catch (error) {
+    reportError(error, {
+      path: '/api/file/replit-upload',
+      action: 'generate_upload_url',
+    });
     console.error("Error generating upload URL:", error);
     return res.status(500).json({ error: "Failed to generate upload URL" });
   }

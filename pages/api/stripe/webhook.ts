@@ -10,6 +10,7 @@ import { Readable } from "node:stream";
 import type Stripe from "stripe";
 
 import { log } from "@/lib/utils";
+import { reportError } from "@/lib/error";
 
 // Stripe requires the raw body to construct the event.
 // add supportsResponseStreaming to enable waitUntil
@@ -51,6 +52,10 @@ export default async function webhookHandler(
       const stripe = stripeInstance();
       event = stripe.webhooks.constructEvent(buf, sig, webhookSecret);
     } catch (err: any) {
+      reportError(err, {
+        path: '/api/stripe/webhook',
+        action: 'webhook_signature_verification',
+      });
       return res.status(400).send(`Webhook Error: ${err.message}`);
     }
 
@@ -78,6 +83,12 @@ export default async function webhookHandler(
           break;
       }
     } catch (error) {
+      reportError(error, {
+        path: '/api/stripe/webhook',
+        action: 'stripe_webhook',
+        eventType: event.type,
+        eventId: event.id,
+      });
       await log({
         message: `Stripe webhook failed. Error: ${error}`,
         type: "error",

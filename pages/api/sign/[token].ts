@@ -24,6 +24,7 @@ import {
   processDocumentCompletion,
 } from "@/lib/signature/encryption-service";
 import { checkAndAlertAnomalies } from "@/lib/security/anomaly-detection";
+import { reportError } from "@/lib/error";
 
 export default async function handler(
   req: NextApiRequest,
@@ -207,6 +208,11 @@ async function handleGet(
       })),
     });
   } catch (error) {
+    reportError(error, {
+      path: '/api/sign/[token]',
+      action: 'fetch_signing_document',
+      method: 'GET',
+    });
     console.error("Error fetching signing document:", error);
     return res.status(500).json({ message: "Failed to load document" });
   }
@@ -763,6 +769,11 @@ async function handlePost(
       status: result.newStatus,
     });
   } catch (error) {
+    reportError(error, {
+      path: '/api/sign/[token]',
+      action: 'process_signature',
+      method: 'POST',
+    });
     console.error("Error processing signature:", error);
     return res.status(500).json({ message: "Failed to process signature" });
   }

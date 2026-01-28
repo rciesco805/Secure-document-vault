@@ -30,7 +30,7 @@ describe('Mobile Viewport Tests', () => {
     displayName: 'Mobile Investor',
     email: 'mobile@test.com',
     accreditationStatus: 'VERIFIED',
-    kycStatus: 'APPROVED',
+    personaStatus: 'APPROVED',
     createdAt: new Date(),
     updatedAt: new Date(),
   };
@@ -118,11 +118,8 @@ describe('Mobile Viewport Tests', () => {
         userAgent: mobileUserAgents.iPhoneSafari,
         ipAddress: '192.168.1.1',
         deviceType: 'mobile',
-        deviceBrand: 'Apple',
-        deviceModel: 'iPhone',
         browserName: 'Safari',
         osName: 'iOS',
-        osVersion: '16.0',
       };
 
       (mockPrisma.view.create as jest.Mock).mockResolvedValue({
@@ -134,7 +131,7 @@ describe('Mobile Viewport Tests', () => {
       const result = await mockPrisma.view.create({ data: viewData });
 
       expect(result.deviceType).toBe('mobile');
-      expect(result.deviceBrand).toBe('Apple');
+      expect(result.browserName).toBe('Safari');
       expect(result.osName).toBe('iOS');
     });
 
@@ -144,11 +141,8 @@ describe('Mobile Viewport Tests', () => {
         userAgent: mobileUserAgents.androidChrome,
         ipAddress: '192.168.1.2',
         deviceType: 'mobile',
-        deviceBrand: 'Google',
-        deviceModel: 'Pixel 7',
         browserName: 'Chrome',
         osName: 'Android',
-        osVersion: '13',
       };
 
       (mockPrisma.view.create as jest.Mock).mockResolvedValue({
@@ -219,9 +213,11 @@ describe('Mobile Viewport Tests', () => {
         linkId: 'link-doc-123',
         documentId: 'doc-ppm-123',
         userAgent: mobileUserAgents.iPhoneSafari,
-        viewportWidth: viewports.iPhoneSE.width,
-        viewportHeight: viewports.iPhoneSE.height,
         deviceType: 'mobile',
+        auditMetadata: {
+          viewportWidth: viewports.iPhoneSE.width,
+          viewportHeight: viewports.iPhoneSE.height,
+        },
       };
 
       (mockPrisma.view.create as jest.Mock).mockResolvedValue({
@@ -233,8 +229,8 @@ describe('Mobile Viewport Tests', () => {
       const result = await mockPrisma.view.create({ data: viewData });
 
       expect(result.deviceType).toBe('mobile');
-      expect(result.viewportWidth).toBe(375);
-      expect(result.viewportWidth).toBeLessThan(768);
+      expect((result.auditMetadata as any)?.viewportWidth).toBe(375);
+      expect((result.auditMetadata as any)?.viewportWidth).toBeLessThan(768);
     });
 
     it('should use optimized page size for mobile pagination', async () => {

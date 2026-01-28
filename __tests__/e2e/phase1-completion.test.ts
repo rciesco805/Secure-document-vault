@@ -2,25 +2,25 @@ import { describe, expect, it, jest, beforeEach } from "@jest/globals";
 
 const mockPrisma = {
   fund: {
-    findMany: jest.fn(),
-    findUnique: jest.fn(),
-    update: jest.fn(),
+    findMany: jest.fn<() => Promise<any[]>>(),
+    findUnique: jest.fn<() => Promise<any>>(),
+    update: jest.fn<() => Promise<any>>(),
   },
   investor: {
-    findUnique: jest.fn(),
+    findUnique: jest.fn<() => Promise<any>>(),
   },
   userTeam: {
-    findFirst: jest.fn(),
+    findFirst: jest.fn<() => Promise<any>>(),
   },
   investment: {
-    findMany: jest.fn(),
+    findMany: jest.fn<() => Promise<any[]>>(),
   },
   transaction: {
-    findMany: jest.fn(),
+    findMany: jest.fn<() => Promise<any[]>>(),
   },
 };
 
-const mockSendEmail = jest.fn().mockResolvedValue({ success: true });
+const mockSendEmail = jest.fn<() => Promise<{ success: boolean }>>().mockResolvedValue({ success: true });
 
 jest.mock("@/lib/prisma", () => ({
   __esModule: true,

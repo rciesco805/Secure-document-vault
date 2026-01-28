@@ -7,7 +7,7 @@ const stripeOld = new Stripe(
   {
     apiVersion: "2024-06-20",
     appInfo: {
-      name: "Papermark.io",
+      name: "BF Fund Dataroom",
       version: "0.1.0",
     },
     typescript: true,
@@ -19,7 +19,7 @@ const stripeNew = new Stripe(
   {
     apiVersion: "2024-06-20",
     appInfo: {
-      name: "Papermark.io",
+      name: "BF Fund Dataroom",
       version: "0.1.0",
     },
     typescript: true,
@@ -47,7 +47,7 @@ export async function cancelSubscription(
     return await stripe.subscriptions.update(subscriptionId, {
       cancel_at_period_end: true,
       cancellation_details: {
-        comment: "Customer deleted their Papermark instance.",
+        comment: "Customer deleted their BF Fund instance.",
       },
     });
   } catch (error) {

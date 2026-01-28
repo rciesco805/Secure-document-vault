@@ -40,7 +40,7 @@ export default async function handler(
         await res.revalidate(`/view/domains/${link.domainSlug}/${link.slug}`);
       } else {
         console.log("revalidating", `/view/${linkId}`);
-        // revalidate a regular papermark link
+        // revalidate a regular link
         await res.revalidate(`/view/${linkId}`);
       }
     }
@@ -62,7 +62,7 @@ export default async function handler(
           );
           await res.revalidate(`/view/domains/${link.domainSlug}/${link.slug}`);
         } else {
-          // revalidate a regular papermark link
+          // revalidate a regular link
           console.log("revalidating document link", `/view/${link.id}`);
           await res.revalidate(`/view/${link.id}`);
         }

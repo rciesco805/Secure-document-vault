@@ -334,7 +334,7 @@ export default function ViewPage({
     const cookieToken =
       Cookies.get("pm_vft") ||
       Cookies.get(`pm_drs_flag_${router.query.linkId}`);
-    const localStoredEmail = window.localStorage.getItem("papermark.email");
+    const localStoredEmail = window.localStorage.getItem("bffund.email");
     if (cookieToken) {
       setStoredToken(cookieToken);
       if (localStoredEmail) {
@@ -381,7 +381,7 @@ export default function ViewPage({
         const data = await response.json();
         
         if (data.verified) {
-          window.localStorage.setItem("papermark.email", userEmail.toLowerCase());
+          window.localStorage.setItem("bffund.email", userEmail.toLowerCase());
           setStoredEmail(userEmail.toLowerCase());
           setMagicLinkVerified(true);
           
@@ -436,7 +436,7 @@ export default function ViewPage({
 
         if (data.verified) {
           console.log("[MAGIC_LINK] Verification successful for:", data.email);
-          window.localStorage.setItem("papermark.email", data.email.toLowerCase());
+          window.localStorage.setItem("bffund.email", data.email.toLowerCase());
           setStoredEmail(data.email.toLowerCase());
           setMagicLinkVerified(true);
           setStoredToken("verified");

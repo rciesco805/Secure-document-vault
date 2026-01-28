@@ -86,7 +86,7 @@ export default function DataroomDocumentViewPage({
       Cookies.get("pm_vft") || 
       Cookies.get(`pm_drs_flag_${router.query.slug}`) ||
       (linkId ? Cookies.get(`pm_drs_flag_${linkId}`) : undefined);
-    const storedEmail = window.localStorage.getItem("papermark.email");
+    const storedEmail = window.localStorage.getItem("bffund.email");
     if (cookieToken) {
       setStoredToken(cookieToken);
       if (storedEmail) {

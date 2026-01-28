@@ -89,7 +89,7 @@ export default function WatermarkSection({
     <div className="pb-5">
       <LinkItem
         title="Apply Watermark"
-        link="https://www.papermark.com/help/article/document-watermark"
+        link=""
         tooltipContent="Add a dynamic watermark to your content."
         enabled={enabled}
         action={handleWatermarkToggle}

@@ -6,7 +6,7 @@ export default async function DomainMiddleware(req: NextRequest) {
   const path = req.nextUrl.pathname;
   const host = req.headers.get("host");
 
-  // If it's the root path, redirect to papermark.com/home
+  // If it's the root path, redirect to appropriate landing page
   if (path === "/") {
     if (host === "guide.permithealth.com") {
       return NextResponse.redirect(

@@ -328,7 +328,7 @@ export default function ViewPage({
     // Retrieve token from cookie on component mount
     const cookieToken =
       Cookies.get("pm_vft") || Cookies.get(`pm_drs_flag_${router.query.slug}`);
-    const storedEmail = window.localStorage.getItem("papermark.email");
+    const storedEmail = window.localStorage.getItem("bffund.email");
     if (cookieToken) {
       setStoredToken(cookieToken);
       if (storedEmail) {

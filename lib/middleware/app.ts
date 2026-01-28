@@ -5,6 +5,13 @@ import { getToken } from "next-auth/jwt";
 export default async function AppMiddleware(req: NextRequest) {
   const url = req.nextUrl;
   const path = url.pathname;
+  
+  // Fast path for root - immediately redirect to login without token check
+  // This ensures health checks and root access respond quickly
+  if (path === "/") {
+    return NextResponse.redirect(new URL("/login", req.url));
+  }
+  
   const isInvited = url.searchParams.has("invitation");
   const token = (await getToken({
     req,

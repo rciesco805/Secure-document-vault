@@ -159,6 +159,59 @@ New security infrastructure in `lib/signature/security/`:
 4. **Timeout protection** - Validators run with timeout (1000ms) and ReDoS pattern blocking
 5. **PKI ready** - Architecture prepared for Certificate Authority integration (future enhancement)
 
+## External API for Integrations
+
+REST API endpoints for programmatic template creation and document workflows. Uses Bearer token authentication via RestrictedToken.
+
+### Authentication
+All endpoints require a Bearer token in the Authorization header:
+```
+Authorization: Bearer pmk_xxxxx
+```
+Get tokens from: `POST /api/teams/{teamId}/tokens`
+
+### Endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/signature/custom-template` | GET | List templates with pagination |
+| `/api/signature/custom-template` | POST | Create a new signature template |
+| `/api/signature/custom-template` | PUT | Update an existing template |
+| `/api/signature/custom-template` | DELETE | Delete a template |
+| `/api/signature/create-document` | POST | Create a document from template or file |
+| `/api/signature/documents` | GET | List/query documents with filtering |
+| `/api/signature/void-document` | POST | Void an in-progress document |
+| `/api/signature/webhook-events` | GET | Query audit log events |
+
+### Example: Create Template
+```typescript
+POST /api/signature/custom-template
+{
+  "name": "Subscription Agreement",
+  "file": "s3://bucket/template.pdf",
+  "defaultRecipients": [{ "role": "SIGNER" }],
+  "fields": [{
+    "type": "SIGNATURE",
+    "pageNumber": 1,
+    "x": 50, "y": 80,
+    "width": 20, "height": 5
+  }]
+}
+```
+
+### Example: Create Document from Template
+```typescript
+POST /api/signature/create-document
+{
+  "title": "Investment Agreement",
+  "templateId": "clxxxxx",
+  "recipients": [
+    { "name": "John Doe", "email": "john@example.com" }
+  ],
+  "sendNow": true
+}
+```
+
 ## Middleware Route Protection
 
 The middleware (`lib/middleware/app.ts`) protects routes as follows:

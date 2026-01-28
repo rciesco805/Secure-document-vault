@@ -435,8 +435,8 @@ async function handlePost(
           signatureImage: encryptedSignatureData,
           ipAddress,
           userAgent,
-          consentRecord,
-          signatureChecksum,
+          consentRecord: consentRecord as any,
+          signatureChecksum: signatureChecksum as any,
         },
       });
 
@@ -596,7 +596,7 @@ async function handlePost(
                 signedAt: new Date(),
                 ipAddress: r.ipAddress || null,
                 userAgent: r.userAgent || null,
-                auditTrail: document.auditTrail,
+                auditTrail: document.auditTrail as any,
               },
               create: {
                 investorId: investor.id,
@@ -612,7 +612,7 @@ async function handlePost(
                 signedAt: new Date(),
                 ipAddress: r.ipAddress || null,
                 userAgent: r.userAgent || null,
-                auditTrail: document.auditTrail,
+                auditTrail: document.auditTrail as any,
               },
             });
           }

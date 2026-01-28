@@ -49,8 +49,8 @@ export default async function handler(
         name,
         description,
         mode: mode || "FUND",
-        fundConfig: mode === "FUND" ? {} : null,
-        startupConfig: mode === "STARTUP" ? {} : null,
+        fundConfig: mode === "FUND" ? {} : undefined,
+        startupConfig: mode === "STARTUP" ? {} : undefined,
       },
     });
 

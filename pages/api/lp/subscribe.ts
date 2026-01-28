@@ -349,7 +349,7 @@ export default async function handler(
           units: numUnits,
           pricingTierId: selectedTier?.id,
           status: "PENDING",
-          tierBreakdown: tierAllocations.length > 0 ? tierAllocations : null,
+          tierBreakdown: tierAllocations.length > 0 ? (tierAllocations as any) : undefined,
         },
       });
 

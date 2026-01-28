@@ -73,7 +73,7 @@ export default async function handler(
       orderBy: { createdAt: "asc" },
     });
 
-    const auditTrail = [
+    const auditTrail: Array<{ event: string; timestamp: string; details: Record<string, any> }> = [
       {
         event: "Document Created",
         timestamp: document.createdAt.toISOString(),

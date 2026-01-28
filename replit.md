@@ -2,7 +2,7 @@
 
 ## Overview
 
-The BF Fund Investor Dataroom is a 506(c) compliant GP/LP management suite designed to streamline investor relations and compliance. It offers secure document sharing, self-hosted e-signature capabilities, personalized investor portals, and integrated KYC/AML verification. The platform aims to provide a robust, compliant, and user-friendly experience for both fund managers and limited partners, encompassing investor onboarding, accreditation verification, secure document vaults, and comprehensive compliance audit trails.
+The BF Fund Investor Dataroom is a 506(c) compliant GP/LP management suite. It aims to streamline investor relations and compliance by offering secure document sharing, self-hosted e-signature capabilities, personalized investor portals, and integrated KYC/AML verification. The platform provides a robust, compliant, and user-friendly experience for fund managers and limited partners, covering investor onboarding, accreditation verification, secure document vaults, and comprehensive compliance audit trails.
 
 ## User Preferences
 
@@ -12,291 +12,30 @@ The BF Fund Investor Dataroom is a 506(c) compliant GP/LP management suite desig
 
 ## System Architecture
 
-The platform is built on Next.js 14, utilizing a hybrid Pages and App Router architecture with TypeScript. Styling is managed with Tailwind CSS and shadcn/ui, prioritizing a UX-first approach with mobile-responsiveness, minimal clicks, clear CTAs, and guided wizards. PostgreSQL with Prisma ORM serves as the database, and NextAuth.js handles authentication with database-backed sessions.
+The platform uses Next.js 14 with a hybrid Pages and App Router architecture and TypeScript. Styling is handled by Tailwind CSS and shadcn/ui, focusing on a UX-first, mobile-responsive design with minimal clicks and guided wizards. PostgreSQL with Prisma ORM is used for the database, and NextAuth.js provides authentication with database-backed sessions.
 
 Key features include:
-- **506(c) Compliance**: Accreditation self-certification, comprehensive audit logs, integrated KYC/AML hooks, single-email-per-signin protection, and cross-log access verification.
-- **Self-hosted E-Signature**: Custom React drag-and-drop field placement for legally compliant electronic signatures (ESIGN/UETA) with consent capture and SHA-256 checksum verification.
-- **LP Portal**: Secure, personalized investor portals with role-based access control, real-time dashboard updates, and quick action CTAs for investment-related tasks.
-- **Admin Dashboards**: Unified admin access with a hub navigation, CRM timeline for investor activity, capital tracking, and a compliance audit dashboard with event filtering and export functionalities.
-- **Payment & Transaction Flows**: Integration with Plaid for ACH transfers (capital calls, distributions) and Stripe for platform subscription billing, with transactions enforced by KYC/AML verification.
-- **PWA Support**: Progressive Web App features including a service worker, manifest, offline page, and an auto-update cache system ensuring users always access the latest version without manual cache clearing.
-- **Error Monitoring**: Comprehensive error tracking across both App Router and Pages Router using Rollbar, including client-side and server-side error boundaries.
-
-The core flow for investors involves: Dataroom access (optional NDA), account creation, NDA signature (if enabled), accreditation self-certification, Persona KYC/AML verification, and finally, Fundroom dashboard access and subscription/investment.
-
-## Authentication System
-
-### Unified Login Portal
-Both admins (GP) and investors (LP) use the same login page (`/login`). The system routes users based on their role after authentication:
-
-| User Role | Destination | Condition |
-|-----------|-------------|-----------|
-| GP (Admin) | `/hub` | Has team membership |
-| LP (Investor) | `/lp/dashboard` | Has investor profile |
-| Viewer | `/view/{linkId}` | Has viewer/group access |
-| New User | `/viewer-portal` | No specific access found |
-
-### Magic Link Flows
-
-**Admin Magic Links** (server-side verification):
-1. Created via `lib/auth/admin-magic-link.ts`
-2. Link format: `/api/auth/admin-magic-verify?token=...&email=...`
-3. Server verifies token → creates database session → sets cookie → redirects to dashboard
-
-**Visitor Magic Links** (client-side verification):
-1. Created via `lib/auth/create-visitor-magic-link.ts`
-2. Link format: `/view/{linkId}?token=...&email=...`
-3. Page loads → client calls `/api/view/verify-magic-link` → sets cookies → grants access
-
-### Database Sessions
-- Using `@auth/prisma-adapter` for database-backed sessions
-- Sessions stored in `Session` table with `sessionToken` and `userId`
-- Enables instant role revocation without requiring re-login
-- Session cookie: `next-auth.session-token` (or `__Secure-next-auth.session-token` for HTTPS)
-
-### Role-Based Routing (`/viewer-redirect`)
-After login, users are automatically routed based on:
-1. **User role** (GP/LP) from database
-2. **Team membership** (UserTeam table)
-3. **Investor profile** (Investor table)
-4. **Viewer access** (Viewer/ViewerGroup tables)
-
-Admins can test visitor experience by appending `?mode=visitor` to bypass admin routing.
-
-## Database Audit Protection
-
-### onDelete: Restrict Constraints (SEC Compliance)
-The following foreign keys use `RESTRICT` to prevent deletion of audit records:
-
-| Table | Foreign Key | Protects |
-|-------|-------------|----------|
-| `View` | `linkId`, `documentId`, `dataroomId`, `viewerId` | Access audit trail |
-| `Transaction` | `investorId` | Financial transaction history |
-| `SignatureRecipient` | `documentId` | Signature audit trail |
-| `SignatureField` | `documentId`, `recipientId` | Field-level signature data |
-
-**Effect**: Cannot delete Links, Documents, Datarooms, Viewers, Investors, or SignatureDocuments if audit records exist. Must explicitly archive/handle audit records first.
-
-### Cross-Log Access Verification
-Access verification covers all 4 paths:
-1. `ViewerInvitations` - Direct email invitations
-2. `ViewerGroup` → `links` - Group-based link access
-3. `Viewer.dataroom` - Direct dataroom assignment
-4. `ViewerGroup` → `dataroom` - Group-based dataroom access
+-   **506(c) Compliance**: Accreditation self-certification, audit logs, integrated KYC/AML hooks, and access verification.
+-   **Self-hosted E-Signature**: Custom React drag-and-drop field placement for legally compliant electronic signatures (ESIGN/UETA) with consent capture and SHA-256 checksum verification.
+-   **LP Portal**: Secure, personalized investor portals with role-based access control and real-time updates.
+-   **Admin Dashboards**: Unified admin access with CRM timeline, capital tracking, and compliance audit functionalities.
+-   **Payment & Transaction Flows**: Integration with Plaid for ACH transfers and Stripe for platform billing, with transactions enforced by KYC/AML.
+-   **PWA Support**: Progressive Web App features for enhanced user experience and auto-updates.
+-   **Error Monitoring**: Comprehensive error tracking across the application using Rollbar.
+-   **Authentication System**: Unified login portal for admins and investors, supporting magic links for both, and role-based routing post-login. Database-backed sessions enable instant role revocation.
+-   **Database Audit Protection**: `onDelete: Restrict` constraints on critical foreign keys protect audit records for SEC compliance. Cross-log access verification ensures secure data access across various invitation and group mechanisms.
+-   **Encryption & Security**: Multiple encryption layers (TLS 1.3, AES-256-GCM for client-side and server-side, PDF 2.0 encryption) ensure data security. Features include client-side encryption with PBKDF2, PDF password protection, document SHA-256 checksums, and secure token generation. A detailed threat model (STRIDE-based) guides security implementations.
+-   **Security Rate Limiting & Anomaly Detection**: Configurable rate limiting protects sensitive endpoints. Anomaly detection monitors suspicious user patterns (e.g., multiple IPs, rapid location changes, unusual access times, excessive requests, suspicious user agents) with escalating severity levels and automated actions.
+-   **External API for Integrations**: A REST API provides programmatic control for template creation and document workflows, secured with Bearer token authentication.
 
 ## External Dependencies
 
-- **Resend**: Transactional email services for notifications and magic links.
-- **Persona**: KYC/AML verification, integrated via an iframe. Requires: `PERSONA_TEMPLATE_ID`, `PERSONA_ENVIRONMENT_ID`, `PERSONA_WEBHOOK_SECRET`
-- **Plaid**: Bank connectivity for ACH capital calls and distributions.
-- **Tinybird**: Real-time analytics and audit logging.
-- **Stripe**: Platform billing and subscription management.
-- **Replit Object Storage**: Primary storage solution for documents and files, supporting S3-compatible and TUS resumable uploads.
-- **Rollbar**: Real-time error monitoring and tracking for client and server errors.
-- **Google OAuth**: Authentication for admin users.
-- **OpenAI**: Optional AI features.
-
-## Key Files
-
-### Authentication
-- `lib/auth/auth-options.ts` - NextAuth configuration with database sessions
-- `lib/auth/admin-magic-link.ts` - Admin magic link creation/verification
-- `lib/auth/create-visitor-magic-link.ts` - Visitor magic link creation
-- `pages/api/auth/admin-magic-verify.ts` - Admin magic link verification endpoint
-- `pages/api/view/verify-magic-link.ts` - Visitor magic link verification endpoint
-- `pages/viewer-redirect.tsx` - Role-based post-login routing
-
-### Database Schema
-- `prisma/schema/schema.prisma` - Core models
-- `prisma/schema/investor.prisma` - Investor/LP models
-- `prisma/schema/signature.prisma` - E-signature models
-
-### Access Control
-- `lib/access/cross-log-verification.ts` - Cross-log access verification
-- `lib/middleware/app.ts` - Route protection middleware
-
-## Recent Changes (January 2026)
-
-- **Database Sessions**: Migrated from JWT to database sessions using `@auth/prisma-adapter`
-- **Audit Protection**: Added `onDelete: Restrict` constraints for SEC compliance
-- **Magic Link Fix**: Fixed visitor magic link verification to properly call backend API
-- **Role-Based Routing**: Improved `/viewer-redirect` to use user role as primary routing indicator
-- **Redirect Loop Fix**: Fixed infinite redirect loops on login pages
-- **E-Signature UI Enhancements**: Added customizable signature pad with:
-  - Customizable pen color and thickness
-  - Draw or Type modes with font selection
-  - SVG export option for signatures
-  - Theme support via React context
-  - Undo functionality for drawn signatures
-
-### E-Signature Theme System
-New files for signature customization:
-- `lib/signature/theme/types.ts` - Theme types and presets
-- `lib/signature/theme/context.tsx` - React context for theme provider
-- `components/signature/enhanced-signature-pad.tsx` - Enhanced signature component with customization
-
-### Signer Portal Integration
-The enhanced signature pad is now integrated into `/view/sign/[token]`:
-- Uses EnhancedSignaturePad with SignatureThemeProvider wrapper
-- Supports pen customization (color, thickness)
-- 5 cursive font options for typed signatures
-- Undo functionality for drawn signatures
-- Data flows directly to existing submission handler
-
-### Security Best Practices for Fund Documents
-New security infrastructure in `lib/signature/security/`:
-- `plugin-executor.ts` - Server-side only plugin execution (no client-side code)
-- `config-validator.ts` - JSON schema validation (Zod) for all plugin configs
-- `audit-logger.ts` - Comprehensive audit logging to SignatureAuditLog
-- `sandbox.ts` - Sandboxed custom validators with timeout protection
-- `index.ts` - Consolidated exports and documentation
-
-**Security Features:**
-1. **No client-side plugin execution** - All plugins run server-side only during signer flow
-2. **Config validation** - All plugin configs validated against JSON schema before save
-3. **Audit all plugin actions** - Every action logged to SignatureAuditLog
-4. **Timeout protection** - Validators run with timeout (1000ms) and ReDoS pattern blocking
-5. **PKI ready** - Architecture prepared for Certificate Authority integration (future enhancement)
-
-## Encryption & Security Architecture
-
-### Encryption Layers
-
-| Layer | Algorithm | Purpose | Location |
-|-------|-----------|---------|----------|
-| Transport | TLS 1.3 | Data in transit | Managed by Replit |
-| Client-Side | AES-256-GCM | E2E signature encryption | `lib/crypto/client-encryption.ts` |
-| Server-Side | AES-256-GCM | Encryption at rest | `lib/crypto/secure-storage.ts` |
-| PDF Level | PDF 2.0 encryption | Document protection | `lib/crypto/pdf-encryption.ts` |
-
-### Key Features
-- **Client-Side Encryption**: Web Crypto API with PBKDF2 key derivation (100,000 iterations)
-- **PDF Encryption**: Password protection with configurable permissions (print, copy, modify)
-- **Document Checksums**: SHA-256 integrity verification
-- **Secure Token Generation**: Cryptographically random tokens
-
-### Threat Model
-See `lib/crypto/threat-model.ts` for complete STRIDE-based threat analysis covering:
-- Spoofing (identity impersonation)
-- Tampering (document modification)
-- Repudiation (signature denial)
-- Information Disclosure (data breaches)
-- Denial of Service
-- Elevation of Privilege
-
-### Future Enhancements (Roadmap)
-- HSM (Hardware Security Module) integration for FIPS 140-2 compliance
-- Certificate Authority integration for X.509 digital signatures
-- RFC 3161 Timestamp Authority for legal validity
-
-## Security Rate Limiting & Anomaly Detection
-
-### Rate Limiting (`lib/security/rate-limiter.ts`)
-All sensitive endpoints are protected with configurable rate limiting:
-
-| Type | Window | Max Requests | Use Case |
-|------|--------|--------------|----------|
-| Signature | 15 min | 5 | Signature operations |
-| Auth | 1 hour | 10 | Login attempts |
-| API | 1 min | 100 | General API calls |
-| Strict | 1 hour | 3 | Sensitive operations |
-
-### Anomaly Detection (`lib/security/anomaly-detection.ts`)
-Monitors for suspicious patterns:
-- **MULTIPLE_IPS**: User accessing from > 5 different IPs
-- **RAPID_LOCATION_CHANGE**: Access from multiple countries
-- **UNUSUAL_TIME**: Access during 2-5 AM
-- **EXCESSIVE_REQUESTS**: > 10 requests per minute
-- **SUSPICIOUS_USER_AGENT**: Multiple user agents from same user
-
-### Severity Levels
-| Level | Action |
-|-------|--------|
-| LOW | Log only |
-| MEDIUM | Log + monitor |
-| HIGH | Log + investigate |
-| CRITICAL | Block access + alert admin |
-
-### Usage
-```typescript
-import { withRateLimit, signatureRateLimiter } from "@/lib/security";
-import { checkAndAlertAnomalies } from "@/lib/security";
-
-// Rate limiting wrapper
-export default withRateLimit(handler, signatureRateLimiter);
-
-// Anomaly check in handler
-const { allowed, alerts } = await checkAndAlertAnomalies(req, userId);
-if (!allowed) return res.status(403).json({ error: "Access blocked" });
-```
-
-## External API for Integrations
-
-REST API endpoints for programmatic template creation and document workflows. Uses Bearer token authentication via RestrictedToken.
-
-### Authentication
-All endpoints require a Bearer token in the Authorization header:
-```
-Authorization: Bearer pmk_xxxxx
-```
-Get tokens from: `POST /api/teams/{teamId}/tokens`
-
-### Endpoints
-
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/signature/custom-template` | GET | List templates with pagination |
-| `/api/signature/custom-template` | POST | Create a new signature template |
-| `/api/signature/custom-template` | PUT | Update an existing template |
-| `/api/signature/custom-template` | DELETE | Delete a template |
-| `/api/signature/create-document` | POST | Create a document from template or file |
-| `/api/signature/documents` | GET | List/query documents with filtering |
-| `/api/signature/void-document` | POST | Void an in-progress document |
-| `/api/signature/webhook-events` | GET | Query audit log events |
-
-### Example: Create Template
-```typescript
-POST /api/signature/custom-template
-{
-  "name": "Subscription Agreement",
-  "file": "s3://bucket/template.pdf",
-  "defaultRecipients": [{ "role": "SIGNER" }],
-  "fields": [{
-    "type": "SIGNATURE",
-    "pageNumber": 1,
-    "x": 50, "y": 80,
-    "width": 20, "height": 5
-  }]
-}
-```
-
-### Example: Create Document from Template
-```typescript
-POST /api/signature/create-document
-{
-  "title": "Investment Agreement",
-  "templateId": "clxxxxx",
-  "recipients": [
-    { "name": "John Doe", "email": "john@example.com" }
-  ],
-  "sendNow": true
-}
-```
-
-## Middleware Route Protection
-
-The middleware (`lib/middleware/app.ts`) protects routes as follows:
-
-| Route Pattern | Protection | Unauthenticated Redirect |
-|---------------|------------|--------------------------|
-| `/lp/onboard`, `/lp/login` | Public | None |
-| `/view/*` | Public (own access control) | None |
-| `/lp/*` | Requires LP or GP role | `/lp/login` |
-| `/dashboard`, `/settings`, `/documents`, `/datarooms`, `/admin/*` (except `/admin/login`) | Requires GP role | `/admin/login` |
-| `/login`, `/admin/login`, `/lp/login` | Public login pages | None |
-| `/viewer-portal` | Authenticated users | `/login` |
-
-**Important**: 
-- Login pages (`/login`, `/admin/login`, `/lp/login`) are explicitly excluded from route protection to prevent redirect loops.
-- View pages (`/view/*`) are public to allow magic link verification - they have their own access control via visitor tokens.
+-   **Resend**: Transactional email services.
+-   **Persona**: KYC/AML verification.
+-   **Plaid**: Bank connectivity for ACH transfers.
+-   **Tinybird**: Real-time analytics and audit logging.
+-   **Stripe**: Platform billing and subscription management.
+-   **Replit Object Storage**: Primary storage for documents and files (S3-compatible, TUS resumable uploads).
+-   **Rollbar**: Real-time error monitoring.
+-   **Google OAuth**: Authentication for admin users.
+-   **OpenAI**: Optional AI features.

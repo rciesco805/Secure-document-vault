@@ -1,0 +1,234 @@
+~/workspace$ npm run build && ./scripts/upload-sourcemaps.sh
+
+> bf-fund-dataroom@0.1.0 build
+> next build
+
+  ▲ Next.js 14.2.35
+  - Experiments (use with caution):
+    · missingSuspenseWithCSRBailout
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully
+
+./app/(auth)/auth/confirm-email-change/[token]/page-client.tsx
+30:6  Warning: React Hook useEffect has a missing dependency: 'router'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./pages/_app.tsx
+42:13  Warning: Custom fonts not added in `pages/_document.js` will only load for a single page. This is discouraged. See: https://nextjs.org/docs/messages/no-page-custom-font  @next/next/no-page-custom-font
+
+./pages/admin/subscriptions/new.tsx
+84:6  Warning: React Hook useEffect has missing dependencies: 'fetchFunds' and 'fetchInvestors'. Either include them or remove the dependency array.  react-hooks/exhaustive-deps
+
+./pages/api/mupdf/annotate-document.ts
+286:1  Warning: Assign arrow function to a variable before exporting as module default  import/no-anonymous-default-export
+
+./pages/api/mupdf/convert-page.ts
+17:1  Warning: Assign arrow function to a variable before exporting as module default  import/no-anonymous-default-export
+
+./pages/api/mupdf/get-pages.ts
+5:1  Warning: Assign arrow function to a variable before exporting as module default  import/no-anonymous-default-export
+
+./pages/lp/bank-connect.tsx
+30:6  Warning: React Hook useEffect has a missing dependency: 'checkBankStatus'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+128:6  Warning: React Hook useCallback has a missing dependency: 'router'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./pages/lp/dashboard.tsx
+264:6  Warning: React Hook useEffect has a missing dependency: 'fetchInvestorData'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./pages/settings/tags.tsx
+94:6  Warning: React Hook useEffect has a missing dependency: 'tagForm.id'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./pages/sign/[id]/prepare.tsx
+151:6  Warning: React Hook useEffect has a missing dependency: 'selectedRecipient'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./pages/sign/templates/[id]/prepare.tsx
+145:6  Warning: React Hook useEffect has a missing dependency: 'fetchSignedUrl'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./pages/view/[linkId]/embed.tsx
+47:6  Warning: React Hook useEffect has a missing dependency: 'analytics'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./pages/view/[linkId]/index.tsx
+352:6  Warning: React Hook useEffect has a missing dependency: 'router.query'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./pages/view/sign/[token].tsx
+134:6  Warning: React Hook useEffect has a missing dependency: 'fetchDocument'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./pages/visitors/[id]/index.tsx
+107:6  Warning: React Hook useEffect has a missing dependency: 'router'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./pages/visitors/index.tsx
+49:6  Warning: React Hook useEffect has a missing dependency: 'router'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./components/admin/audit-dashboard.tsx
+147:6  Warning: React Hook useEffect has a missing dependency: 'fetchAuditLogs'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./components/admin/bulk-action-wizard.tsx
+91:6  Warning: React Hook useEffect has a missing dependency: 'fetchInvestors'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./components/ai-elements/message.tsx
+191:9  Warning: The 'childrenArray' conditional could make the dependencies of useEffect Hook (at line 198) change on every render. To fix this, wrap the initialization of 'childrenArray' in its own useMemo() Hook.  react-hooks/exhaustive-deps
+
+./components/datarooms/export-visits-modal.tsx
+210:6  Warning: React Hook useCallback has a missing dependency: 'handleClose'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./components/datarooms/folders/sidebar-tree.tsx
+146:6  Warning: React Hook useMemo has an unnecessary dependency: 'dataroomId'. Either exclude it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./components/datarooms/folders/view-tree.tsx
+310:6  Warning: React Hook useMemo has a missing dependency: 'nestedFolders'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./components/datarooms/groups/delete-group/delete-group-modal.tsx
+146:6  Warning: React Hook useCallback has missing dependencies: 'dataroomId', 'groupId', and 'groupName'. Either include them or remove the dependency array.  react-hooks/exhaustive-deps
+
+./components/datarooms/groups/group-permissions.tsx
+767:5  Warning: React Hook useCallback has a missing dependency: 'teamId'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./components/datarooms/settings/delete-dataroooom/delete-dataroom-modal.tsx
+143:6  Warning: React Hook useCallback has missing dependencies: 'dataroomId' and 'dataroomName'. Either include them or remove the dependency array.  react-hooks/exhaustive-deps
+
+./components/documents/export-visits-modal.tsx
+203:6  Warning: React Hook useCallback has a missing dependency: 'handleClose'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./components/documents/filters/sort-button.tsx
+64:6  Warning: React Hook useEffect has a missing dependency: 'router'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./components/documents/notion-accessibility-indicator.tsx
+129:6  Warning: React Hook useEffect has missing dependencies: 'checkAccessibility' and 'primaryVersion.type'. Either include them or remove the dependency array.  react-hooks/exhaustive-deps
+
+./components/documents/preview-viewers/preview-pages-viewer.tsx
+37:6  Warning: React Hook useCallback has an unnecessary dependency: 'numPages'. Either exclude it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./components/layouts/trial-banner.tsx
+31:6  Warning: React Hook useEffect has a missing dependency: 'isTrial'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./components/links/link-sheet/agreement-panel/index.tsx
+269:6  Warning: React Hook useEffect has a missing dependency: 'handleBrowserUpload'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./components/links/link-sheet/custom-fields-panel/custom-field.tsx
+42:6  Warning: React Hook useEffect has a missing dependency: 'onUpdate'. Either include it or remove the dependency array. If 'onUpdate' changes too often, find the parent component that defines it and wrap that definition in useCallback.  react-hooks/exhaustive-deps
+
+./components/links/link-sheet/custom-fields-section.tsx
+51:6  Warning: React Hook useEffect has a missing dependency: 'setData'. Either include it or remove the dependency array. If 'setData' changes too often, find the parent component that defines it and wrap that definition in useCallback.  react-hooks/exhaustive-deps
+
+./components/links/link-sheet/domain-section.tsx
+119:6  Warning: React Hook useEffect has missing dependencies: 'data', 'getDefaultDomainSlug', and 'setData'. Either include them or remove the dependency array. If 'setData' changes too often, find the parent component that defines it and wrap that definition in useCallback.  react-hooks/exhaustive-deps
+
+./components/links/link-sheet/expiration-section.tsx
+38:6  Warning: React Hook useEffect has a missing dependency: 'handlePresetChange'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./components/links/link-sheet/expirationIn-section.tsx
+52:6  Warning: React Hook useEffect has a missing dependency: 'resetStates'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+71:6  Warning: React Hook useCallback has a missing dependency: 'setData'. Either include it or remove the dependency array. If 'setData' changes too often, find the parent component that defines it and wrap that definition in useCallback.  react-hooks/exhaustive-deps
+
+./components/links/link-sheet/index.tsx
+207:6  Warning: React Hook useEffect has missing dependencies: 'groupId', 'isDatarooms', and 'linkType'. Either include them or remove the dependency array. If 'setData' needs the current value of 'linkType', you can also switch to useReducer instead of useState and read 'linkType' in the reducer.  react-hooks/exhaustive-deps
+
+./components/links/link-sheet/pro-banner-section.tsx
+26:6  Warning: React Hook useEffect has missing dependencies: 'data' and 'setData'. Either include them or remove the dependency array. If 'setData' changes too often, find the parent component that defines it and wrap that definition in useCallback.  react-hooks/exhaustive-deps
+
+./components/links/link-sheet/watermark-section.tsx
+56:6  Warning: React Hook useEffect has a missing dependency: 'setData'. Either include it or remove the dependency array. If 'setData' changes too often, find the parent component that defines it and wrap that definition in useCallback.  react-hooks/exhaustive-deps
+
+./components/lp/subscription-modal.tsx
+109:6  Warning: React Hook useEffect has a missing dependency: 'computeBlendedAmount'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./components/search-box.tsx
+151:6  Warning: React Hook useEffect has missing dependencies: 'router' and 'urlParam'. Either include them or remove the dependency array.  react-hooks/exhaustive-deps
+160:6  Warning: React Hook useEffect has missing dependencies: 'debouncedValue', 'queryParams', 'urlParam', and 'value'. Either include them or remove the dependency array.  react-hooks/exhaustive-deps
+160:7  Warning: React Hook useEffect has a complex expression in the dependency array. Extract it to a separate variable so it can be statically checked.  react-hooks/exhaustive-deps
+
+./components/signature/enhanced-signature-pad.tsx
+100:8  Warning: React Hook useEffect has a missing dependency: 'redrawCanvas'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./components/tags/add-tag-modal.tsx
+64:6  Warning: React Hook useMemo has a missing dependency: 'tagForm'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./components/ui/tab-select.tsx
+25:13  Warning: The attribute aria-selected is not supported by the role button. This role is implicit on the element button.  jsx-a11y/role-supports-aria-props
+
+./components/ui/timestamp-tooltip.tsx
+159:5  Warning: React Hook useMemo has a missing dependency: 'commonFormat'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./components/upload-zone.tsx
+572:5  Warning: React Hook useCallback has missing dependencies: 'analytics', 'canAddDocuments', 'dataroomId', 'folderPathName', 'onUploadSuccess', 'plan', 'remainingDocuments', 'router.asPath', 'session?.user', 'setRejectedFiles', 'setUploads', and 'teamInfo?.currentTeam?.id'. Either include them or remove the dependency array. If 'onUploadSuccess' changes too often, find the parent component that defines it and wrap that definition in useCallback.  react-hooks/exhaustive-deps
+856:5  Warning: React Hook useCallback has a missing dependency: 'replicateDataroomFolders'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./components/view/access-form/index.tsx
+127:6  Warning: React Hook useEffect has a missing dependency: 'setData'. Either include it or remove the dependency array. If 'setData' changes too often, find the parent component that defines it and wrap that definition in useCallback.  react-hooks/exhaustive-deps
+
+./components/view/dataroom/dataroom-document-view.tsx
+297:6  Warning: React Hook useEffect has a missing dependency: 'handleSubmission'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./components/view/dataroom/dataroom-view.tsx
+316:6  Warning: React Hook useEffect has a missing dependency: 'handleSubmission'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./components/view/viewer/excel-viewer.tsx
+138:6  Warning: React Hook useEffect has a missing dependency: 'selectedSheetIndex'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./components/view/viewer/notion-page.tsx
+175:6  Warning: React Hook useEffect has a missing dependency: 'navData?.dataroomId'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+313:5  Warning: React Hook useCallback has an unnecessary dependency: 'subPageId'. Either exclude it or remove the dependency array.  react-hooks/exhaustive-deps
+345:6  Warning: React Hook useEffect has a missing dependency: 'navData?.dataroomId'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./components/view/viewer/pages-horizontal-viewer.tsx
+413:9  Warning: The 'goToPreviousPage' function makes the dependencies of useEffect Hook (at line 564) change on every render. To fix this, wrap the definition of 'goToPreviousPage' in its own useCallback() Hook.  react-hooks/exhaustive-deps
+448:9  Warning: The 'goToNextPage' function makes the dependencies of useEffect Hook (at line 564) change on every render. To fix this, wrap the definition of 'goToNextPage' in its own useCallback() Hook.  react-hooks/exhaustive-deps
+478:9  Warning: The 'handleKeyDown' function makes the dependencies of useEffect Hook (at line 564) change on every render. Move it inside the useEffect callback. Alternatively, wrap the definition of 'handleKeyDown' in its own useCallback() Hook.  react-hooks/exhaustive-deps
+618:6  Warning: React Hook useEffect has an unnecessary dependency: 'containerRef.current'. Either exclude it or remove the dependency array. Mutable values like 'containerRef.current' aren't valid dependencies because mutating them doesn't re-render the component.  react-hooks/exhaustive-deps
+
+./components/view/viewer/pages-vertical-viewer.tsx
+407:9  Warning: The 'handleScroll' function makes the dependencies of useEffect Hook (at line 703) change on every render. Move it inside the useEffect callback. Alternatively, wrap the definition of 'handleScroll' in its own useCallback() Hook.  react-hooks/exhaustive-deps
+492:9  Warning: The 'goToPreviousPage' function makes the dependencies of useEffect Hook (at line 691) change on every render. To fix this, wrap the definition of 'goToPreviousPage' in its own useCallback() Hook.  react-hooks/exhaustive-deps
+538:9  Warning: The 'goToNextPage' function makes the dependencies of useEffect Hook (at line 691) change on every render. To fix this, wrap the definition of 'goToNextPage' in its own useCallback() Hook.  react-hooks/exhaustive-deps
+585:9  Warning: The 'handleKeyDown' function makes the dependencies of useEffect Hook (at line 691) change on every render. Move it inside the useEffect callback. Alternatively, wrap the definition of 'handleKeyDown' in its own useCallback() Hook.  react-hooks/exhaustive-deps
+700:22  Warning: The ref value 'containerRef.current' will likely have changed by the time this effect cleanup function runs. If this ref points to a node rendered by React, copy 'containerRef.current' to a variable inside the effect, and use that variable in the cleanup function.  react-hooks/exhaustive-deps
+
+./components/view/viewer/pdf-default-viewer.tsx
+170:6  Warning: React Hook useEffect has a missing dependency: 'props?.navData?.dataroomId'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+213:6  Warning: React Hook useEffect has missing dependencies: 'goToNextPage' and 'goToPreviousPage'. Either include them or remove the dependency array.  react-hooks/exhaustive-deps
+
+./components/visitors/contacts-table.tsx
+102:9  Warning: The 'handleDeleteClick' function makes the dependencies of useMemo Hook (at line 305) change on every render. Move it inside the useMemo callback. Alternatively, wrap the definition of 'handleDeleteClick' in its own useCallback() Hook.  react-hooks/exhaustive-deps
+
+./lib/tracking/safe-page-view-tracker.ts
+189:8  Warning: React Hook useCallback has a missing dependency: 'startTimeRef'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+225:8  Warning: React Hook useCallback has a missing dependency: 'startTimeRef'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+258:8  Warning: React Hook useCallback has a missing dependency: 'startTimeRef'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/basic-features/eslint#disabling-rules
+ ✓ Linting and checking validity of types    
+ ⚠ Using edge runtime on a page currently disables static generation for that page
+   Collecting page data  .TINYBIRD_TOKEN not configured - analytics features will be limited
+TINYBIRD_TOKEN not configured - analytics features will be limited
+Warning: Please use the `legacy` build in Node.js environments.
+   Collecting page data  .Warning: Please use the `legacy` build in Node.js environments.
+   Collecting page data  ...Warning: Please use the `legacy` build in Node.js environments.
+   Collecting page data  ..Warning: Please use the `legacy` build in Node.js environments.
+   Collecting page data  .Warning: Please use the `legacy` build in Node.js environments.
+   Collecting page data  ...Warning: Please use the `legacy` build in Node.js environments.
+   Collecting page data  ...Warning: Please use the `legacy` build in Node.js environments.
+ ✓ Collecting page data    
+   Generating static pages (5/81)  [==  ] ⚠ Entire page "/admin/login" deopted into client-side rendering due to "useSearchParams()". Read more: https://nextjs.org/docs/messages/deopted-into-client-rendering
+    at i (/home/runner/workspace/.next/server/chunks/33856.js:1:36214)
+    at c (/home/runner/workspace/.next/server/chunks/33856.js:1:47197)
+    at h (/home/runner/workspace/.next/server/app/admin/login/page.js:1:3080)
+    at nj (/home/runner/workspace/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:46252)
+    at nM (/home/runner/workspace/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:47572)
+    at nM (/home/runner/workspace/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:61547)
+    at nL (/home/runner/workspace/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:64547)
+    at nB (/home/runner/workspace/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:67539)
+    at nD (/home/runner/workspace/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:66681)
+    at nL (/home/runner/workspace/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:64854)
+ ⚠ Entire page "/login" deopted into client-side rendering due to "useSearchParams()". Read more: https://nextjs.org/docs/messages/deopted-into-client-rendering
+    at i (/home/runner/workspace/.next/server/chunks/33856.js:1:36214)
+    at c (/home/runner/workspace/.next/server/chunks/33856.js:1:47197)
+    at ev (/home/runner/workspace/.next/server/app/(auth)/login/page.js:5:2974)
+    at nj (/home/runner/workspace/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:46252)
+    at nM (/home/runner/workspace/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:47572)
+    at nM (/home/runner/workspace/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:61547)
+    at nL (/home/runner/workspace/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:64547)
+    at nB (/home/runner/workspace/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:67539)
+    at nD (/home/runner/workspace/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:66681)
+    at nL (/home/runner/workspace/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:64854)
+   Generating static pages (40/81)  [ ===]🚀 ~ WebhookSettings ~ name: 
+ ✓ Generating static pages (81/81)

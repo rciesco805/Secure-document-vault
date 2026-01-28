@@ -75,6 +75,7 @@ model Team {
 }
 
 enum Role {
+  OWNER
   SUPER_ADMIN
   ADMIN
   MANAGER

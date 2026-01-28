@@ -60,6 +60,33 @@ Failure to add domains will cause the integration to silently fail in production
 - CSP violations are logged to `/api/csp-report`
 - In development, the CSP is more permissive (allows http: for local testing)
 
+## Planned Upgrades
+
+### Next.js 15/16 Migration (Future Project)
+**Purpose**: Resolve remaining npm audit vulnerabilities and access modern features.
+
+**Key Breaking Changes**:
+1. React 19 required (currently on 18.3.1)
+2. Async request APIs - `cookies()`, `headers()`, `params` become async
+3. ESLint 9 required with eslint-config-next@16
+4. Caching defaults changed - `fetch` no longer cached by default
+5. Turbopack as default bundler
+
+**Dependencies to Update**:
+- `next`: 14.2.35 → 16.x
+- `react` / `react-dom`: 18.3.1 → 19.x  
+- `eslint-config-next`: 14.2.35 → 16.x
+- `next-auth`: Verify v5 compatibility
+
+**Testing Required**:
+- All authentication flows (NextAuth, LP auth)
+- Document upload/view/sign workflows
+- KYC/payment integrations (Persona, Plaid, Stripe)
+- PDF encryption/decryption
+- Admin dashboards and CRM features
+
+**Estimated Effort**: 2-3 days with thorough testing
+
 ## External Dependencies
 - **Resend**: Transactional email services.
 - **Persona**: KYC/AML verification.

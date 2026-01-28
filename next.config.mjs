@@ -45,9 +45,63 @@ const nextConfig = {
   async headers() {
     const isDev = process.env.NODE_ENV === "development";
 
+    const trustedDomains = [
+      "https://fonts.googleapis.com",
+      "https://fonts.gstatic.com",
+      "https://*.posthog.com",
+      "https://eu.posthog.com",
+      "https://api.rollbar.com",
+      "https://*.rollbar.com",
+      "https://unpkg.com",
+      "https://*.replit.app",
+      "https://objectstorage.replit.app",
+      "https://*.bermudafranchisegroup.com",
+      "https://api.stripe.com",
+      "https://js.stripe.com",
+      "https://*.plaid.com",
+      "https://*.persona.com",
+      "https://api.tinybird.co",
+      "https://*.cal.com",
+      "https://cal.com",
+    ].join(" ");
+
+    const scriptSrc = isDev
+      ? `script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: ${trustedDomains} http:;`
+      : `script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' blob: ${trustedDomains};`;
+
+    const styleSrc = isDev
+      ? `style-src 'self' 'unsafe-inline' ${trustedDomains} http:;`
+      : `style-src 'self' 'unsafe-inline' ${trustedDomains};`;
+
+    const connectSrc = isDev
+      ? `connect-src 'self' ${trustedDomains} http: ws: wss:;`
+      : `connect-src 'self' ${trustedDomains};`;
+
+    const imgSrc = isDev
+      ? `img-src 'self' data: blob: ${trustedDomains} http:;`
+      : `img-src 'self' data: blob: ${trustedDomains} https:;`;
+
+    const fontSrc = `font-src 'self' data: https://fonts.gstatic.com ${isDev ? "http:" : ""};`;
+
+    const workerSrc = "worker-src 'self' blob: https://unpkg.com;";
+
+    const baseCsp = [
+      `default-src 'self';`,
+      scriptSrc,
+      styleSrc,
+      imgSrc,
+      fontSrc,
+      workerSrc,
+      connectSrc,
+      `object-src 'none';`,
+      `base-uri 'self';`,
+      `form-action 'self';`,
+      isDev ? "" : "upgrade-insecure-requests;",
+      "report-uri /api/csp-report;",
+    ].filter(Boolean).join(" ");
+
     return [
       {
-        // Prevent HTML pages from being cached - ensures users get new builds
         source: "/:path*",
         headers: [
           {
@@ -64,7 +118,7 @@ const nextConfig = {
           },
           {
             key: "Referrer-Policy",
-            value: "no-referrer-when-downgrade",
+            value: "strict-origin-when-cross-origin",
           },
           {
             key: "X-DNS-Prefetch-Control",
@@ -75,26 +129,16 @@ const nextConfig = {
             value: "SAMEORIGIN",
           },
           {
-            key: "Report-To",
-            value: JSON.stringify({
-              group: "csp-endpoint",
-              max_age: 10886400,
-              endpoints: [{ url: "/api/csp-report" }],
-            }),
+            key: "X-Content-Type-Options",
+            value: "nosniff",
           },
           {
-            key: "Content-Security-Policy-Report-Only",
-            value:
-              `default-src 'self' https: ${isDev ? "http:" : ""}; ` +
-              `script-src 'self' 'unsafe-inline' 'unsafe-eval' https: blob: ${isDev ? "http:" : ""}; ` +
-              `style-src 'self' 'unsafe-inline' https: ${isDev ? "http:" : ""}; ` +
-              `img-src 'self' data: blob: https: ${isDev ? "http:" : ""}; ` +
-              `font-src 'self' data: https: ${isDev ? "http:" : ""}; ` +
-              `worker-src 'self' blob: https://unpkg.com; ` +
-              `frame-ancestors 'none'; ` +
-              `connect-src 'self' https: ${isDev ? "http: ws: wss:" : ""}; ` +
-              `${isDev ? "" : "upgrade-insecure-requests;"} ` +
-              "report-to csp-endpoint;",
+            key: "Permissions-Policy",
+            value: "camera=(), microphone=(), geolocation=()",
+          },
+          {
+            key: "Content-Security-Policy",
+            value: `${baseCsp} frame-ancestors 'none';`,
           },
         ],
       },
@@ -107,35 +151,16 @@ const nextConfig = {
           },
           {
             key: "Content-Security-Policy",
-            value:
-              `default-src 'self' https: ${isDev ? "http:" : ""}; ` +
-              `script-src 'self' 'unsafe-inline' 'unsafe-eval' https: blob: ${isDev ? "http:" : ""}; ` +
-              `style-src 'self' 'unsafe-inline' https: ${isDev ? "http:" : ""}; ` +
-              `img-src 'self' data: blob: https: ${isDev ? "http:" : ""}; ` +
-              `font-src 'self' data: https: ${isDev ? "http:" : ""}; ` +
-              `worker-src 'self' blob: https://unpkg.com; ` +
-              `frame-ancestors 'self'; ` +
-              `connect-src 'self' https: ${isDev ? "http: ws: wss:" : ""}; ` +
-              `${isDev ? "" : "upgrade-insecure-requests;"}`,
+            value: `${baseCsp} frame-ancestors 'self';`,
           },
         ],
       },
       {
-        // Embed routes - allow iframe embedding
         source: "/view/:path*/embed",
         headers: [
           {
             key: "Content-Security-Policy",
-            value:
-              `default-src 'self' https: ${isDev ? "http:" : ""}; ` +
-              `script-src 'self' 'unsafe-inline' 'unsafe-eval' https: blob: ${isDev ? "http:" : ""}; ` +
-              `style-src 'self' 'unsafe-inline' https: ${isDev ? "http:" : ""}; ` +
-              `img-src 'self' data: blob: https: ${isDev ? "http:" : ""}; ` +
-              `font-src 'self' data: https: ${isDev ? "http:" : ""}; ` +
-              `worker-src 'self' blob: https://unpkg.com; ` +
-              "frame-ancestors *; " +
-              `connect-src 'self' https: ${isDev ? "http: ws: wss:" : ""}; ` +
-              `${isDev ? "" : "upgrade-insecure-requests;"}`,
+            value: `${baseCsp} frame-ancestors 'self' https:;`,
           },
           {
             key: "X-Robots-Tag",

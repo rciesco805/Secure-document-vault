@@ -27,7 +27,7 @@ export default function ConfirmEmailChangePageClient() {
     }
 
     updateSession();
-  }, [status, update]);
+  }, [status, update, router]);
 
   return (
     <div className="flex h-screen w-full items-center justify-center">

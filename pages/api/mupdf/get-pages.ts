@@ -2,7 +2,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 
 import * as mupdf from "mupdf";
 
-export default async (req: NextApiRequest, res: NextApiResponse) => {
+async function handler(req: NextApiRequest, res: NextApiResponse) {
   // check if post method
   if (req.method !== "POST") {
     res.status(405).json({ error: "Method Not Allowed" });
@@ -36,4 +36,6 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     console.error("Error:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
-};
+}
+
+export default handler;

@@ -91,7 +91,7 @@ export default function TagSetting() {
     if (open && !tagForm.id) {
       setTagForm((prev) => ({ ...prev, color: randomBadgeColor() }));
     }
-  }, [open]);
+  }, [open, tagForm.id]);
 
   const {
     tagCount,

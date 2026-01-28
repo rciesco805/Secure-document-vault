@@ -14,7 +14,7 @@ export const config = {
   maxDuration: 180,
 };
 
-export default async (req: NextApiRequest, res: NextApiResponse) => {
+async function handler(req: NextApiRequest, res: NextApiResponse) {
   // check if post method
   if (req.method !== "POST") {
     res.status(405).json({ error: "Method Not Allowed" });
@@ -339,4 +339,6 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     });
     throw error;
   }
-};
+}
+
+export default handler;

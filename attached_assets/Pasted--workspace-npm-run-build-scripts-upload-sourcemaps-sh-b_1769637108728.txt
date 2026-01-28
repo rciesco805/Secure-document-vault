@@ -1,0 +1,694 @@
+~/workspace$ npm run build && ./scripts/upload-sourcemaps.sh
+
+> bf-fund-dataroom@0.1.0 build
+> next build
+
+  ▲ Next.js 14.2.35
+  - Experiments (use with caution):
+    · missingSuspenseWithCSRBailout
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully
+
+./app/(auth)/auth/confirm-email-change/[token]/page-client.tsx
+30:6  Warning: React Hook useEffect has a missing dependency: 'router'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./pages/_app.tsx
+42:13  Warning: Custom fonts not added in `pages/_document.js` will only load for a single page. This is discouraged. See: https://nextjs.org/docs/messages/no-page-custom-font  @next/next/no-page-custom-font
+
+./pages/admin/subscriptions/new.tsx
+84:6  Warning: React Hook useEffect has missing dependencies: 'fetchFunds' and 'fetchInvestors'. Either include them or remove the dependency array.  react-hooks/exhaustive-deps
+
+./pages/api/mupdf/annotate-document.ts
+286:1  Warning: Assign arrow function to a variable before exporting as module default  import/no-anonymous-default-export
+
+./pages/api/mupdf/convert-page.ts
+17:1  Warning: Assign arrow function to a variable before exporting as module default  import/no-anonymous-default-export
+
+./pages/api/mupdf/get-pages.ts
+5:1  Warning: Assign arrow function to a variable before exporting as module default  import/no-anonymous-default-export
+
+./pages/lp/bank-connect.tsx
+30:6  Warning: React Hook useEffect has a missing dependency: 'checkBankStatus'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+128:6  Warning: React Hook useCallback has a missing dependency: 'router'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./pages/lp/dashboard.tsx
+264:6  Warning: React Hook useEffect has a missing dependency: 'fetchInvestorData'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./pages/settings/tags.tsx
+94:6  Warning: React Hook useEffect has a missing dependency: 'tagForm.id'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./pages/sign/[id]/prepare.tsx
+151:6  Warning: React Hook useEffect has a missing dependency: 'selectedRecipient'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./pages/sign/templates/[id]/prepare.tsx
+145:6  Warning: React Hook useEffect has a missing dependency: 'fetchSignedUrl'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./pages/view/[linkId]/embed.tsx
+47:6  Warning: React Hook useEffect has a missing dependency: 'analytics'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./pages/view/[linkId]/index.tsx
+352:6  Warning: React Hook useEffect has a missing dependency: 'router.query'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./pages/view/sign/[token].tsx
+134:6  Warning: React Hook useEffect has a missing dependency: 'fetchDocument'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./pages/visitors/[id]/index.tsx
+107:6  Warning: React Hook useEffect has a missing dependency: 'router'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./pages/visitors/index.tsx
+49:6  Warning: React Hook useEffect has a missing dependency: 'router'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./components/admin/audit-dashboard.tsx
+147:6  Warning: React Hook useEffect has a missing dependency: 'fetchAuditLogs'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./components/admin/bulk-action-wizard.tsx
+91:6  Warning: React Hook useEffect has a missing dependency: 'fetchInvestors'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./components/ai-elements/message.tsx
+191:9  Warning: The 'childrenArray' conditional could make the dependencies of useEffect Hook (at line 198) change on every render. To fix this, wrap the initialization of 'childrenArray' in its own useMemo() Hook.  react-hooks/exhaustive-deps
+
+./components/datarooms/export-visits-modal.tsx
+210:6  Warning: React Hook useCallback has a missing dependency: 'handleClose'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./components/datarooms/folders/sidebar-tree.tsx
+146:6  Warning: React Hook useMemo has an unnecessary dependency: 'dataroomId'. Either exclude it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./components/datarooms/folders/view-tree.tsx
+310:6  Warning: React Hook useMemo has a missing dependency: 'nestedFolders'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./components/datarooms/groups/delete-group/delete-group-modal.tsx
+146:6  Warning: React Hook useCallback has missing dependencies: 'dataroomId', 'groupId', and 'groupName'. Either include them or remove the dependency array.  react-hooks/exhaustive-deps
+
+./components/datarooms/groups/group-permissions.tsx
+767:5  Warning: React Hook useCallback has a missing dependency: 'teamId'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./components/datarooms/settings/delete-dataroooom/delete-dataroom-modal.tsx
+143:6  Warning: React Hook useCallback has missing dependencies: 'dataroomId' and 'dataroomName'. Either include them or remove the dependency array.  react-hooks/exhaustive-deps
+
+./components/documents/export-visits-modal.tsx
+203:6  Warning: React Hook useCallback has a missing dependency: 'handleClose'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./components/documents/filters/sort-button.tsx
+64:6  Warning: React Hook useEffect has a missing dependency: 'router'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./components/documents/notion-accessibility-indicator.tsx
+129:6  Warning: React Hook useEffect has missing dependencies: 'checkAccessibility' and 'primaryVersion.type'. Either include them or remove the dependency array.  react-hooks/exhaustive-deps
+
+./components/documents/preview-viewers/preview-pages-viewer.tsx
+37:6  Warning: React Hook useCallback has an unnecessary dependency: 'numPages'. Either exclude it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./components/layouts/trial-banner.tsx
+31:6  Warning: React Hook useEffect has a missing dependency: 'isTrial'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./components/links/link-sheet/agreement-panel/index.tsx
+269:6  Warning: React Hook useEffect has a missing dependency: 'handleBrowserUpload'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./components/links/link-sheet/custom-fields-panel/custom-field.tsx
+42:6  Warning: React Hook useEffect has a missing dependency: 'onUpdate'. Either include it or remove the dependency array. If 'onUpdate' changes too often, find the parent component that defines it and wrap that definition in useCallback.  react-hooks/exhaustive-deps
+
+./components/links/link-sheet/custom-fields-section.tsx
+51:6  Warning: React Hook useEffect has a missing dependency: 'setData'. Either include it or remove the dependency array. If 'setData' changes too often, find the parent component that defines it and wrap that definition in useCallback.  react-hooks/exhaustive-deps
+
+./components/links/link-sheet/domain-section.tsx
+119:6  Warning: React Hook useEffect has missing dependencies: 'data', 'getDefaultDomainSlug', and 'setData'. Either include them or remove the dependency array. If 'setData' changes too often, find the parent component that defines it and wrap that definition in useCallback.  react-hooks/exhaustive-deps
+
+./components/links/link-sheet/expiration-section.tsx
+38:6  Warning: React Hook useEffect has a missing dependency: 'handlePresetChange'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./components/links/link-sheet/expirationIn-section.tsx
+52:6  Warning: React Hook useEffect has a missing dependency: 'resetStates'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+71:6  Warning: React Hook useCallback has a missing dependency: 'setData'. Either include it or remove the dependency array. If 'setData' changes too often, find the parent component that defines it and wrap that definition in useCallback.  react-hooks/exhaustive-deps
+
+./components/links/link-sheet/index.tsx
+207:6  Warning: React Hook useEffect has missing dependencies: 'groupId', 'isDatarooms', and 'linkType'. Either include them or remove the dependency array. If 'setData' needs the current value of 'linkType', you can also switch to useReducer instead of useState and read 'linkType' in the reducer.  react-hooks/exhaustive-deps
+
+./components/links/link-sheet/pro-banner-section.tsx
+26:6  Warning: React Hook useEffect has missing dependencies: 'data' and 'setData'. Either include them or remove the dependency array. If 'setData' changes too often, find the parent component that defines it and wrap that definition in useCallback.  react-hooks/exhaustive-deps
+
+./components/links/link-sheet/watermark-section.tsx
+56:6  Warning: React Hook useEffect has a missing dependency: 'setData'. Either include it or remove the dependency array. If 'setData' changes too often, find the parent component that defines it and wrap that definition in useCallback.  react-hooks/exhaustive-deps
+
+./components/lp/subscription-modal.tsx
+109:6  Warning: React Hook useEffect has a missing dependency: 'computeBlendedAmount'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./components/search-box.tsx
+151:6  Warning: React Hook useEffect has missing dependencies: 'router' and 'urlParam'. Either include them or remove the dependency array.  react-hooks/exhaustive-deps
+160:6  Warning: React Hook useEffect has missing dependencies: 'debouncedValue', 'queryParams', 'urlParam', and 'value'. Either include them or remove the dependency array.  react-hooks/exhaustive-deps
+160:7  Warning: React Hook useEffect has a complex expression in the dependency array. Extract it to a separate variable so it can be statically checked.  react-hooks/exhaustive-deps
+
+./components/signature/enhanced-signature-pad.tsx
+100:8  Warning: React Hook useEffect has a missing dependency: 'redrawCanvas'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./components/tags/add-tag-modal.tsx
+64:6  Warning: React Hook useMemo has a missing dependency: 'tagForm'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./components/ui/tab-select.tsx
+25:13  Warning: The attribute aria-selected is not supported by the role button. This role is implicit on the element button.  jsx-a11y/role-supports-aria-props
+
+./components/ui/timestamp-tooltip.tsx
+159:5  Warning: React Hook useMemo has a missing dependency: 'commonFormat'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./components/upload-zone.tsx
+572:5  Warning: React Hook useCallback has missing dependencies: 'analytics', 'canAddDocuments', 'dataroomId', 'folderPathName', 'onUploadSuccess', 'plan', 'remainingDocuments', 'router.asPath', 'session?.user', 'setRejectedFiles', 'setUploads', and 'teamInfo?.currentTeam?.id'. Either include them or remove the dependency array. If 'onUploadSuccess' changes too often, find the parent component that defines it and wrap that definition in useCallback.  react-hooks/exhaustive-deps
+856:5  Warning: React Hook useCallback has a missing dependency: 'replicateDataroomFolders'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./components/view/access-form/index.tsx
+127:6  Warning: React Hook useEffect has a missing dependency: 'setData'. Either include it or remove the dependency array. If 'setData' changes too often, find the parent component that defines it and wrap that definition in useCallback.  react-hooks/exhaustive-deps
+
+./components/view/dataroom/dataroom-document-view.tsx
+297:6  Warning: React Hook useEffect has a missing dependency: 'handleSubmission'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./components/view/dataroom/dataroom-view.tsx
+316:6  Warning: React Hook useEffect has a missing dependency: 'handleSubmission'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./components/view/viewer/excel-viewer.tsx
+138:6  Warning: React Hook useEffect has a missing dependency: 'selectedSheetIndex'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./components/view/viewer/notion-page.tsx
+175:6  Warning: React Hook useEffect has a missing dependency: 'navData?.dataroomId'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+313:5  Warning: React Hook useCallback has an unnecessary dependency: 'subPageId'. Either exclude it or remove the dependency array.  react-hooks/exhaustive-deps
+345:6  Warning: React Hook useEffect has a missing dependency: 'navData?.dataroomId'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./components/view/viewer/pages-horizontal-viewer.tsx
+413:9  Warning: The 'goToPreviousPage' function makes the dependencies of useEffect Hook (at line 564) change on every render. To fix this, wrap the definition of 'goToPreviousPage' in its own useCallback() Hook.  react-hooks/exhaustive-deps
+448:9  Warning: The 'goToNextPage' function makes the dependencies of useEffect Hook (at line 564) change on every render. To fix this, wrap the definition of 'goToNextPage' in its own useCallback() Hook.  react-hooks/exhaustive-deps
+478:9  Warning: The 'handleKeyDown' function makes the dependencies of useEffect Hook (at line 564) change on every render. Move it inside the useEffect callback. Alternatively, wrap the definition of 'handleKeyDown' in its own useCallback() Hook.  react-hooks/exhaustive-deps
+618:6  Warning: React Hook useEffect has an unnecessary dependency: 'containerRef.current'. Either exclude it or remove the dependency array. Mutable values like 'containerRef.current' aren't valid dependencies because mutating them doesn't re-render the component.  react-hooks/exhaustive-deps
+
+./components/view/viewer/pages-vertical-viewer.tsx
+407:9  Warning: The 'handleScroll' function makes the dependencies of useEffect Hook (at line 703) change on every render. Move it inside the useEffect callback. Alternatively, wrap the definition of 'handleScroll' in its own useCallback() Hook.  react-hooks/exhaustive-deps
+492:9  Warning: The 'goToPreviousPage' function makes the dependencies of useEffect Hook (at line 691) change on every render. To fix this, wrap the definition of 'goToPreviousPage' in its own useCallback() Hook.  react-hooks/exhaustive-deps
+538:9  Warning: The 'goToNextPage' function makes the dependencies of useEffect Hook (at line 691) change on every render. To fix this, wrap the definition of 'goToNextPage' in its own useCallback() Hook.  react-hooks/exhaustive-deps
+585:9  Warning: The 'handleKeyDown' function makes the dependencies of useEffect Hook (at line 691) change on every render. Move it inside the useEffect callback. Alternatively, wrap the definition of 'handleKeyDown' in its own useCallback() Hook.  react-hooks/exhaustive-deps
+700:22  Warning: The ref value 'containerRef.current' will likely have changed by the time this effect cleanup function runs. If this ref points to a node rendered by React, copy 'containerRef.current' to a variable inside the effect, and use that variable in the cleanup function.  react-hooks/exhaustive-deps
+
+./components/view/viewer/pdf-default-viewer.tsx
+170:6  Warning: React Hook useEffect has a missing dependency: 'props?.navData?.dataroomId'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+213:6  Warning: React Hook useEffect has missing dependencies: 'goToNextPage' and 'goToPreviousPage'. Either include them or remove the dependency array.  react-hooks/exhaustive-deps
+
+./components/visitors/contacts-table.tsx
+102:9  Warning: The 'handleDeleteClick' function makes the dependencies of useMemo Hook (at line 305) change on every render. Move it inside the useMemo callback. Alternatively, wrap the definition of 'handleDeleteClick' in its own useCallback() Hook.  react-hooks/exhaustive-deps
+
+./lib/tracking/safe-page-view-tracker.ts
+189:8  Warning: React Hook useCallback has a missing dependency: 'startTimeRef'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+225:8  Warning: React Hook useCallback has a missing dependency: 'startTimeRef'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+258:8  Warning: React Hook useCallback has a missing dependency: 'startTimeRef'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/basic-features/eslint#disabling-rules
+ ✓ Linting and checking validity of types    
+ ⚠ Using edge runtime on a page currently disables static generation for that page
+   Collecting page data  .TINYBIRD_TOKEN not configured - analytics features will be limited
+TINYBIRD_TOKEN not configured - analytics features will be limited
+Warning: Please use the `legacy` build in Node.js environments.
+   Collecting page data  .Warning: Please use the `legacy` build in Node.js environments.
+   Collecting page data  ...Warning: Please use the `legacy` build in Node.js environments.
+   Collecting page data  ..Warning: Please use the `legacy` build in Node.js environments.
+   Collecting page data  .Warning: Please use the `legacy` build in Node.js environments.
+   Collecting page data  ...Warning: Please use the `legacy` build in Node.js environments.
+   Collecting page data  ...Warning: Please use the `legacy` build in Node.js environments.
+ ✓ Collecting page data    
+   Generating static pages (5/81)  [==  ] ⚠ Entire page "/admin/login" deopted into client-side rendering due to "useSearchParams()". Read more: https://nextjs.org/docs/messages/deopted-into-client-rendering
+    at i (/home/runner/workspace/.next/server/chunks/33856.js:1:36214)
+    at c (/home/runner/workspace/.next/server/chunks/33856.js:1:47197)
+    at h (/home/runner/workspace/.next/server/app/admin/login/page.js:1:3080)
+    at nj (/home/runner/workspace/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:46252)
+    at nM (/home/runner/workspace/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:47572)
+    at nM (/home/runner/workspace/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:61547)
+    at nL (/home/runner/workspace/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:64547)
+    at nB (/home/runner/workspace/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:67539)
+    at nD (/home/runner/workspace/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:66681)
+    at nL (/home/runner/workspace/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:64854)
+ ⚠ Entire page "/login" deopted into client-side rendering due to "useSearchParams()". Read more: https://nextjs.org/docs/messages/deopted-into-client-rendering
+    at i (/home/runner/workspace/.next/server/chunks/33856.js:1:36214)
+    at c (/home/runner/workspace/.next/server/chunks/33856.js:1:47197)
+    at ev (/home/runner/workspace/.next/server/app/(auth)/login/page.js:5:2974)
+    at nj (/home/runner/workspace/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:46252)
+    at nM (/home/runner/workspace/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:47572)
+    at nM (/home/runner/workspace/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:61547)
+    at nL (/home/runner/workspace/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:64547)
+    at nB (/home/runner/workspace/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:67539)
+    at nD (/home/runner/workspace/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:66681)
+    at nL (/home/runner/workspace/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:64854)
+   Generating static pages (40/81)  [ ===]🚀 ~ WebhookSettings ~ name: 
+ ✓ Generating static pages (81/81)
+ ✓ Collecting build traces    
+ ✓ Finalizing page optimization    
+
+Route (app)                                                                            Size     First Load JS
+┌ ○ /_not-found                                                                        885 B          94.2 kB
+├ ƒ /admin/funds/new                                                                   5.98 kB         470 kB
+├ ○ /admin/login                                                                       5.45 kB         457 kB
+├ ƒ /admin/settings/fund                                                               5.18 kB         460 kB
+├ ƒ /api/admin/funds                                                                   0 B                0 B
+├ ƒ /api/ai/chat                                                                       0 B                0 B
+├ ƒ /api/ai/chat/[chatId]                                                              0 B                0 B
+├ ƒ /api/ai/chat/[chatId]/messages                                                     0 B                0 B
+├ ƒ /api/ai/store/teams/[teamId]                                                       0 B                0 B
+├ ƒ /api/ai/store/teams/[teamId]/datarooms/[dataroomId]                                0 B                0 B
+├ ƒ /api/ai/store/teams/[teamId]/documents/[documentId]                                0 B                0 B
+├ ƒ /api/cron/domains                                                                  0 B                0 B
+├ ƒ /api/cron/year-in-review                                                           0 B                0 B
+├ ƒ /api/csp-report                                                                    0 B                0 B
+├ ƒ /api/faqs                                                                          0 B                0 B
+├ ƒ /api/feature-flags                                                                 0 B                0 B
+├ ƒ /api/fund-settings/[fundId]                                                        0 B                0 B
+├ ƒ /api/fund-settings/funds                                                           0 B                0 B
+├ ƒ /api/fund-settings/update                                                          0 B                0 B
+├ ƒ /api/funds/create                                                                  0 B                0 B
+├ ƒ /api/help                                                                          0 B                0 B
+├ ƒ /api/links/[id]/upload                                                             0 B                0 B
+├ ƒ /api/og                                                                            0 B                0 B
+├ ƒ /api/og/yir                                                                        0 B                0 B
+├ ƒ /api/views                                                                         0 B                0 B
+├ ƒ /api/views-dataroom                                                                0 B                0 B
+├ ƒ /api/webhooks/callback                                                             0 B                0 B
+├ ƒ /api/workflow-entry/domains/[...domainSlug]                                        0 B                0 B
+├ ƒ /api/workflow-entry/link/[entryLinkId]/access                                      0 B                0 B
+├ ƒ /api/workflow-entry/link/[entryLinkId]/verify                                      0 B                0 B
+├ ƒ /api/workflows                                                                     0 B                0 B
+├ ƒ /api/workflows/[workflowId]                                                        0 B                0 B
+├ ƒ /api/workflows/[workflowId]/executions                                             0 B                0 B
+├ ƒ /api/workflows/[workflowId]/steps                                                  0 B                0 B
+├ ƒ /api/workflows/[workflowId]/steps/[stepId]                                         0 B                0 B
+├ ƒ /auth/confirm-email-change/[token]                                                 626 B           436 kB
+├ ○ /login                                                                             8.49 kB         470 kB
+├ ○ /register                                                                          9.23 kB         444 kB
+├ ○ /robots.txt                                                                        0 B                0 B
+├ ƒ /verify                                                                            183 B           102 kB
+└ ƒ /verify/invitation                                                                 2.85 kB         429 kB
++ First Load JS shared by all                                                          93.3 kB
+  ├ chunks/52117-1d6297a431534d9f.js                                                   31.9 kB
+  ├ chunks/fd9d1056-fd241faf843a1b84.js                                                53.7 kB
+  └ other shared chunks (total)                                                        7.79 kB
+
+Route (pages)                                                                          Size     First Load JS
+┌   /_app                                                                              0 B             569 kB
+├ ○ /404                                                                               689 B           572 kB
+├ ○ /account/general                                                                   6.41 kB         668 kB
+├ ○ /account/security (694 ms)                                                         5.62 kB         667 kB
+├ ƒ /admin/audit                                                                       7.76 kB         608 kB
+├ ○ /admin/entities (461 ms)                                                           8.08 kB         586 kB
+├ ƒ /admin/fund                                                                        6.76 kB         789 kB
+├ ○ /admin/fund/[id] (543 ms)                                                          21.6 kB         729 kB
+├ ƒ /admin/quick-add                                                                   3.8 kB          672 kB
+├ ○ /admin/subscriptions/new (721 ms)                                                  8.88 kB         796 kB
+├ ƒ /api/account                                                                       0 B             569 kB
+├ ƒ /api/account/passkeys                                                              0 B             569 kB
+├ ƒ /api/admin/bulk-action                                                             0 B             569 kB
+├ ƒ /api/admin/capital-tracking                                                        0 B             569 kB
+├ ƒ /api/admin/consolidate-teams                                                       0 B             569 kB
+├ ƒ /api/admin/entities                                                                0 B             569 kB
+├ ƒ /api/admin/entities/[id]                                                           0 B             569 kB
+├ ƒ /api/admin/entities/[id]/config                                                    0 B             569 kB
+├ ƒ /api/admin/export                                                                  0 B             569 kB
+├ ƒ /api/admin/export-blobs                                                            0 B             569 kB
+├ ƒ /api/admin/fix-email-auth                                                          0 B             569 kB
+├ ƒ /api/admin/form-d-reminders                                                        0 B             569 kB
+├ ƒ /api/admin/fund-dashboard                                                          0 B             569 kB
+├ ƒ /api/admin/fund/[id]                                                               0 B             569 kB
+├ ƒ /api/admin/funds/[fundId]/pricing-tiers                                            0 B             569 kB
+├ ƒ /api/admin/import                                                                  0 B             569 kB
+├ ƒ /api/admin/investor-notes                                                          0 B             569 kB
+├ ƒ /api/admin/reports/aum                                                             0 B             569 kB
+├ ƒ /api/admin/reprocess-pdfs                                                          0 B             569 kB
+├ ƒ /api/admin/rollbar-errors                                                          0 B             569 kB
+├ ƒ /api/admin/waterfall                                                               0 B             569 kB
+├ ƒ /api/analytics                                                                     0 B             569 kB
+├ ƒ /api/auth/[...nextauth]                                                            0 B             569 kB
+├ ƒ /api/auth/admin-magic-verify                                                       0 B             569 kB
+├ ƒ /api/auth/check-admin                                                              0 B             569 kB
+├ ƒ /api/check-compliance                                                              0 B             569 kB
+├ ƒ /api/conversations/[[...conversations]]                                            0 B             569 kB
+├ ƒ /api/feedback                                                                      0 B             569 kB
+├ ƒ /api/file/browser-upload                                                           0 B             569 kB
+├ ƒ /api/file/image-upload                                                             0 B             569 kB
+├ ƒ /api/file/notion                                                                   0 B             569 kB
+├ ƒ /api/file/replit-get                                                               0 B             569 kB
+├ ƒ /api/file/replit-get-proxy                                                         0 B             569 kB
+├ ƒ /api/file/replit-upload                                                            0 B             569 kB
+├ ƒ /api/file/s3/get-presigned-get-url                                                 0 B             569 kB
+├ ƒ /api/file/s3/get-presigned-get-url-proxy                                           0 B             569 kB
+├ ƒ /api/file/s3/get-presigned-post-url                                                0 B             569 kB
+├ ƒ /api/file/s3/multipart                                                             0 B             569 kB
+├ ƒ /api/file/tus-viewer/[[...file]]                                                   0 B             569 kB
+├ ƒ /api/file/tus/[[...file]]                                                          0 B             569 kB
+├ ƒ /api/file/upload-config                                                            0 B             569 kB
+├ ƒ /api/funds/[fundId]/aggregates                                                     0 B             569 kB
+├ ƒ /api/funds/[fundId]/settings                                                       0 B             569 kB
+├ ƒ /api/health                                                                        0 B             569 kB
+├ ƒ /api/internal/billing/automatic-unpause                                            0 B             569 kB
+├ ƒ /api/jobs/get-thumbnail                                                            0 B             569 kB
+├ ƒ /api/jobs/send-conversation-new-message-notification                               0 B             569 kB
+├ ƒ /api/jobs/send-conversation-team-member-notification                               0 B             569 kB
+├ ƒ /api/jobs/send-dataroom-new-document-notification                                  0 B             569 kB
+├ ƒ /api/jobs/send-notification                                                        0 B             569 kB
+├ ƒ /api/jobs/send-pause-resume-notification                                           0 B             569 kB
+├ ƒ /api/links                                                                         0 B             569 kB
+├ ƒ /api/links/[id]                                                                    0 B             569 kB
+├ ƒ /api/links/[id]/annotations                                                        0 B             569 kB
+├ ƒ /api/links/[id]/approve-access                                                     0 B             569 kB
+├ ƒ /api/links/[id]/archive                                                            0 B             569 kB
+├ ƒ /api/links/[id]/documents/[documentId]                                             0 B             569 kB
+├ ƒ /api/links/[id]/documents/[documentId]/annotations                                 0 B             569 kB
+├ ƒ /api/links/[id]/duplicate                                                          0 B             569 kB
+├ ƒ /api/links/[id]/preview                                                            0 B             569 kB
+├ ƒ /api/links/[id]/request-access                                                     0 B             569 kB
+├ ƒ /api/links/[id]/visits                                                             0 B             569 kB
+├ ƒ /api/links/domains/[...domainSlug]                                                 0 B             569 kB
+├ ƒ /api/links/download                                                                0 B             569 kB
+├ ƒ /api/links/download/bulk                                                           0 B             569 kB
+├ ƒ /api/links/download/dataroom-document                                              0 B             569 kB
+├ ƒ /api/links/download/dataroom-folder                                                0 B             569 kB
+├ ƒ /api/links/generate-index                                                          0 B             569 kB
+├ ƒ /api/lp/accreditation                                                              0 B             569 kB
+├ ƒ /api/lp/bank/connect                                                               0 B             569 kB
+├ ƒ /api/lp/bank/link-token                                                            0 B             569 kB
+├ ƒ /api/lp/bank/status                                                                0 B             569 kB
+├ ƒ /api/lp/complete-gate                                                              0 B             569 kB
+├ ƒ /api/lp/docs                                                                       0 B             569 kB
+├ ƒ /api/lp/fund-details                                                               0 B             569 kB
+├ ƒ /api/lp/kyc                                                                        0 B             569 kB
+├ ƒ /api/lp/me                                                                         0 B             569 kB
+├ ƒ /api/lp/notes                                                                      0 B             569 kB
+├ ƒ /api/lp/pending-signatures                                                         0 B             569 kB
+├ ƒ /api/lp/register                                                                   0 B             569 kB
+├ ƒ /api/lp/statement                                                                  0 B             569 kB
+├ ƒ /api/lp/subscribe                                                                  0 B             569 kB
+├ ƒ /api/lp/subscription-status                                                        0 B             569 kB
+├ ƒ /api/lp/timeline                                                                   0 B             569 kB
+├ ƒ /api/lp/transactions                                                               0 B             569 kB
+├ ƒ /api/lp/webhooks/investor-updates                                                  0 B             569 kB
+├ ƒ /api/lp/wizard-progress                                                            0 B             569 kB
+├ ƒ /api/mupdf/annotate-document                                                       0 B             569 kB
+├ ƒ /api/mupdf/convert-page                                                            0 B             569 kB
+├ ƒ /api/mupdf/get-pages                                                               0 B             569 kB
+├ ƒ /api/mupdf/process-pdf-local                                                       0 B             569 kB
+├ ƒ /api/passkeys/register                                                             0 B             569 kB
+├ ƒ /api/progress-token                                                                0 B             569 kB
+├ ƒ /api/record_click                                                                  0 B             569 kB
+├ ƒ /api/record_reaction                                                               0 B             569 kB
+├ ƒ /api/record_video_view                                                             0 B             569 kB
+├ ƒ /api/record_view                                                                   0 B             569 kB
+├ ƒ /api/report                                                                        0 B             569 kB
+├ ƒ /api/request-invite                                                                0 B             569 kB
+├ ƒ /api/revalidate                                                                    0 B             569 kB
+├ ƒ /api/sign/[token]                                                                  0 B             569 kB
+├ ƒ /api/sign/status                                                                   0 B             569 kB
+├ ƒ /api/sign/verify/[token]                                                           0 B             569 kB
+├ ƒ /api/signature/create-document                                                     0 B             569 kB
+├ ƒ /api/signature/custom-template                                                     0 B             569 kB
+├ ƒ /api/signature/documents                                                           0 B             569 kB
+├ ƒ /api/signature/void-document                                                       0 B             569 kB
+├ ƒ /api/signature/webhook-events                                                      0 B             569 kB
+├ ƒ /api/stripe/webhook                                                                0 B             569 kB
+├ ƒ /api/subscriptions/create                                                          0 B             569 kB
+├ ƒ /api/teams                                                                         0 B             569 kB
+├ ƒ /api/teams/[teamId]                                                                0 B             569 kB
+├ ƒ /api/teams/[teamId]/access-requests                                                0 B             569 kB
+├ ƒ /api/teams/[teamId]/agreements                                                     0 B             569 kB
+├ ƒ /api/teams/[teamId]/agreements/[agreementId]                                       0 B             569 kB
+├ ƒ /api/teams/[teamId]/agreements/[agreementId]/download                              0 B             569 kB
+├ ƒ /api/teams/[teamId]/ai-settings                                                    0 B             569 kB
+├ ƒ /api/teams/[teamId]/billing                                                        0 B             569 kB
+├ ƒ /api/teams/[teamId]/billing/cancel                                                 0 B             569 kB
+├ ƒ /api/teams/[teamId]/billing/cancellation-feedback                                  0 B             569 kB
+├ ƒ /api/teams/[teamId]/billing/invoices                                               0 B             569 kB
+├ ƒ /api/teams/[teamId]/billing/manage                                                 0 B             569 kB
+├ ƒ /api/teams/[teamId]/billing/pause                                                  0 B             569 kB
+├ ƒ /api/teams/[teamId]/billing/plan                                                   0 B             569 kB
+├ ƒ /api/teams/[teamId]/billing/reactivate                                             0 B             569 kB
+├ ƒ /api/teams/[teamId]/billing/retention-offer                                        0 B             569 kB
+├ ƒ /api/teams/[teamId]/billing/unpause                                                0 B             569 kB
+├ ƒ /api/teams/[teamId]/billing/upgrade                                                0 B             569 kB
+├ ƒ /api/teams/[teamId]/branding                                                       0 B             569 kB
+├ ƒ /api/teams/[teamId]/change-role                                                    0 B             569 kB
+├ ƒ /api/teams/[teamId]/datarooms                                                      0 B             569 kB
+├ ƒ /api/teams/[teamId]/datarooms/[id]                                                 0 B             569 kB
+├ ƒ /api/teams/[teamId]/datarooms/[id]/apply-permissions                               0 B             569 kB
+├ ƒ /api/teams/[teamId]/datarooms/[id]/apply-template                                  0 B             569 kB
+├ ƒ /api/teams/[teamId]/datarooms/[id]/branding                                        0 B             569 kB
+├ ƒ /api/teams/[teamId]/datarooms/[id]/calculate-indexes                               0 B             569 kB
+├ ƒ /api/teams/[teamId]/datarooms/[id]/conversations/[[...conversations]]              0 B             569 kB
+├ ƒ /api/teams/[teamId]/datarooms/[id]/conversations/toggle-conversations              0 B             569 kB
+├ ƒ /api/teams/[teamId]/datarooms/[id]/documents                                       0 B             569 kB
+├ ƒ /api/teams/[teamId]/datarooms/[id]/documents/[documentId]                          0 B             569 kB
+├ ƒ /api/teams/[teamId]/datarooms/[id]/documents/[documentId]/stats                    0 B             569 kB
+├ ƒ /api/teams/[teamId]/datarooms/[id]/documents/move                                  0 B             569 kB
+├ ƒ /api/teams/[teamId]/datarooms/[id]/download/bulk                                   0 B             569 kB
+├ ƒ /api/teams/[teamId]/datarooms/[id]/duplicate                                       0 B             569 kB
+├ ƒ /api/teams/[teamId]/datarooms/[id]/ensure-quick-add                                0 B             569 kB
+├ ƒ /api/teams/[teamId]/datarooms/[id]/export-visits                                   0 B             569 kB
+├ ƒ /api/teams/[teamId]/datarooms/[id]/faqs                                            0 B             569 kB
+├ ƒ /api/teams/[teamId]/datarooms/[id]/faqs/[faqId]                                    0 B             569 kB
+├ ƒ /api/teams/[teamId]/datarooms/[id]/folders                                         0 B             569 kB
+├ ƒ /api/teams/[teamId]/datarooms/[id]/folders/[...name]                               0 B             569 kB
+├ ƒ /api/teams/[teamId]/datarooms/[id]/folders/documents/[...name]                     0 B             569 kB
+├ ƒ /api/teams/[teamId]/datarooms/[id]/folders/manage                                  0 B             569 kB
+├ ƒ /api/teams/[teamId]/datarooms/[id]/folders/manage/[folderId]                       0 B             569 kB
+├ ƒ /api/teams/[teamId]/datarooms/[id]/folders/manage/[folderId]/dataroom-to-dataroom  0 B             569 kB
+├ ƒ /api/teams/[teamId]/datarooms/[id]/folders/move                                    0 B             569 kB
+├ ƒ /api/teams/[teamId]/datarooms/[id]/folders/parents/[...name]                       0 B             569 kB
+├ ƒ /api/teams/[teamId]/datarooms/[id]/generate-index                                  0 B             569 kB
+├ ƒ /api/teams/[teamId]/datarooms/[id]/groups                                          0 B             569 kB
+├ ƒ /api/teams/[teamId]/datarooms/[id]/groups/[groupId]                                0 B             569 kB
+├ ƒ /api/teams/[teamId]/datarooms/[id]/groups/[groupId]/export-visits                  0 B             569 kB
+├ ƒ /api/teams/[teamId]/datarooms/[id]/groups/[groupId]/invite                         0 B             569 kB
+├ ƒ /api/teams/[teamId]/datarooms/[id]/groups/[groupId]/links                          0 B             569 kB
+├ ƒ /api/teams/[teamId]/datarooms/[id]/groups/[groupId]/members                        0 B             569 kB
+├ ƒ /api/teams/[teamId]/datarooms/[id]/groups/[groupId]/members/[memberId]             0 B             569 kB
+├ ƒ /api/teams/[teamId]/datarooms/[id]/groups/[groupId]/permissions                    0 B             569 kB
+├ ƒ /api/teams/[teamId]/datarooms/[id]/groups/[groupId]/uninvited                      0 B             569 kB
+├ ƒ /api/teams/[teamId]/datarooms/[id]/groups/[groupId]/views                          0 B             569 kB
+├ ƒ /api/teams/[teamId]/datarooms/[id]/links                                           0 B             569 kB
+├ ƒ /api/teams/[teamId]/datarooms/[id]/links/[linkId]/invite                           0 B             569 kB
+├ ƒ /api/teams/[teamId]/datarooms/[id]/permission-groups                               0 B             569 kB
+├ ƒ /api/teams/[teamId]/datarooms/[id]/permission-groups/[permissionGroupId]           0 B             569 kB
+├ ƒ /api/teams/[teamId]/datarooms/[id]/quick-add                                       0 B             569 kB
+├ ƒ /api/teams/[teamId]/datarooms/[id]/quick-add/invite                                0 B             569 kB
+├ ƒ /api/teams/[teamId]/datarooms/[id]/reorder                                         0 B             569 kB
+├ ƒ /api/teams/[teamId]/datarooms/[id]/stats                                           0 B             569 kB
+├ ƒ /api/teams/[teamId]/datarooms/[id]/users                                           0 B             569 kB
+├ ƒ /api/teams/[teamId]/datarooms/[id]/viewers                                         0 B             569 kB
+├ ƒ /api/teams/[teamId]/datarooms/[id]/views                                           0 B             569 kB
+├ ƒ /api/teams/[teamId]/datarooms/[id]/views-count                                     0 B             569 kB
+├ ƒ /api/teams/[teamId]/datarooms/[id]/views/[viewId]/custom-fields                    0 B             569 kB
+├ ƒ /api/teams/[teamId]/datarooms/[id]/views/[viewId]/history                          0 B             569 kB
+├ ƒ /api/teams/[teamId]/datarooms/[id]/views/[viewId]/user-agent                       0 B             569 kB
+├ ƒ /api/teams/[teamId]/datarooms/create-from-folder                                   0 B             569 kB
+├ ƒ /api/teams/[teamId]/datarooms/generate                                             0 B             569 kB
+├ ƒ /api/teams/[teamId]/datarooms/generate-ai                                          0 B             569 kB
+├ ƒ /api/teams/[teamId]/datarooms/generate-ai-structure                                0 B             569 kB
+├ ƒ /api/teams/[teamId]/datarooms/trial                                                0 B             569 kB
+├ ƒ /api/teams/[teamId]/documents                                                      0 B             569 kB
+├ ƒ /api/teams/[teamId]/documents/[id]                                                 0 B             569 kB
+├ ƒ /api/teams/[teamId]/documents/[id]/add-to-dataroom                                 0 B             569 kB
+├ ƒ /api/teams/[teamId]/documents/[id]/advanced-mode                                   0 B             569 kB
+├ ƒ /api/teams/[teamId]/documents/[id]/annotations                                     0 B             569 kB
+├ ƒ /api/teams/[teamId]/documents/[id]/annotations/[annotationId]                      0 B             569 kB
+├ ƒ /api/teams/[teamId]/documents/[id]/annotations/[annotationId]/images               0 B             569 kB
+├ ƒ /api/teams/[teamId]/documents/[id]/change-orientation                              0 B             569 kB
+├ ƒ /api/teams/[teamId]/documents/[id]/check-notion-accessibility                      0 B             569 kB
+├ ƒ /api/teams/[teamId]/documents/[id]/duplicate                                       0 B             569 kB
+├ ƒ /api/teams/[teamId]/documents/[id]/export-visits                                   0 B             569 kB
+├ ƒ /api/teams/[teamId]/documents/[id]/links                                           0 B             569 kB
+├ ƒ /api/teams/[teamId]/documents/[id]/overview                                        0 B             569 kB
+├ ƒ /api/teams/[teamId]/documents/[id]/preview-data                                    0 B             569 kB
+├ ƒ /api/teams/[teamId]/documents/[id]/stats                                           0 B             569 kB
+├ ƒ /api/teams/[teamId]/documents/[id]/toggle-dark-mode                                0 B             569 kB
+├ ƒ /api/teams/[teamId]/documents/[id]/toggle-download-only                            0 B             569 kB
+├ ƒ /api/teams/[teamId]/documents/[id]/update-name                                     0 B             569 kB
+├ ƒ /api/teams/[teamId]/documents/[id]/update-notion-url                               0 B             569 kB
+├ ƒ /api/teams/[teamId]/documents/[id]/versions                                        0 B             569 kB
+├ ƒ /api/teams/[teamId]/documents/[id]/video-analytics                                 0 B             569 kB
+├ ƒ /api/teams/[teamId]/documents/[id]/views                                           0 B             569 kB
+├ ƒ /api/teams/[teamId]/documents/[id]/views-count                                     0 B             569 kB
+├ ƒ /api/teams/[teamId]/documents/[id]/views/[viewId]/click-events                     0 B             569 kB
+├ ƒ /api/teams/[teamId]/documents/[id]/views/[viewId]/custom-fields                    0 B             569 kB
+├ ƒ /api/teams/[teamId]/documents/[id]/views/[viewId]/stats                            0 B             569 kB
+├ ƒ /api/teams/[teamId]/documents/[id]/views/[viewId]/user-agent                       0 B             569 kB
+├ ƒ /api/teams/[teamId]/documents/[id]/views/[viewId]/video-stats                      0 B             569 kB
+├ ƒ /api/teams/[teamId]/documents/agreement                                            0 B             569 kB
+├ ƒ /api/teams/[teamId]/documents/document-processing-status                           0 B             569 kB
+├ ƒ /api/teams/[teamId]/documents/move                                                 0 B             569 kB
+├ ƒ /api/teams/[teamId]/documents/search                                               0 B             569 kB
+├ ƒ /api/teams/[teamId]/documents/update                                               0 B             569 kB
+├ ƒ /api/teams/[teamId]/domains                                                        0 B             569 kB
+├ ƒ /api/teams/[teamId]/domains/[domain]                                               0 B             569 kB
+├ ƒ /api/teams/[teamId]/domains/[domain]/verify                                        0 B             569 kB
+├ ƒ /api/teams/[teamId]/enable-advanced-mode                                           0 B             569 kB
+├ ƒ /api/teams/[teamId]/export-jobs                                                    0 B             569 kB
+├ ƒ /api/teams/[teamId]/export-jobs/[exportId]                                         0 B             569 kB
+├ ƒ /api/teams/[teamId]/export-jobs/[exportId]/send-email                              0 B             569 kB
+├ ƒ /api/teams/[teamId]/folders                                                        0 B             569 kB
+├ ƒ /api/teams/[teamId]/folders/[...name]                                              0 B             569 kB
+├ ƒ /api/teams/[teamId]/folders/documents/[...name]                                    0 B             569 kB
+├ ƒ /api/teams/[teamId]/folders/manage                                                 0 B             569 kB
+├ ƒ /api/teams/[teamId]/folders/manage/[folderId]                                      0 B             569 kB
+├ ƒ /api/teams/[teamId]/folders/manage/[folderId]/add-to-dataroom                      0 B             569 kB
+├ ƒ /api/teams/[teamId]/folders/move                                                   0 B             569 kB
+├ ƒ /api/teams/[teamId]/folders/parents/[...name]                                      0 B             569 kB
+├ ƒ /api/teams/[teamId]/funds                                                          0 B             569 kB
+├ ƒ /api/teams/[teamId]/global-block-list                                              0 B             569 kB
+├ ƒ /api/teams/[teamId]/ignored-domains                                                0 B             569 kB
+├ ƒ /api/teams/[teamId]/incoming-webhooks                                              0 B             569 kB
+├ ƒ /api/teams/[teamId]/investor-timeline                                              0 B             569 kB
+├ ƒ /api/teams/[teamId]/investors                                                      0 B             569 kB
+├ ƒ /api/teams/[teamId]/invitations                                                    0 B             569 kB
+├ ƒ /api/teams/[teamId]/invitations/accept                                             0 B             569 kB
+├ ƒ /api/teams/[teamId]/invitations/resend                                             0 B             569 kB
+├ ƒ /api/teams/[teamId]/invite                                                         0 B             569 kB
+├ ƒ /api/teams/[teamId]/limits                                                         0 B             569 kB
+├ ƒ /api/teams/[teamId]/links/[id]                                                     0 B             569 kB
+├ ƒ /api/teams/[teamId]/presets                                                        0 B             569 kB
+├ ƒ /api/teams/[teamId]/presets/[id]                                                   0 B             569 kB
+├ ƒ /api/teams/[teamId]/qanda/notes                                                    0 B             569 kB
+├ ƒ /api/teams/[teamId]/qanda/questions                                                0 B             569 kB
+├ ƒ /api/teams/[teamId]/qanda/questions/[questionId]/reply                             0 B             569 kB
+├ ƒ /api/teams/[teamId]/qanda/questions/[questionId]/status                            0 B             569 kB
+├ ƒ /api/teams/[teamId]/remove-teammate                                                0 B             569 kB
+├ ƒ /api/teams/[teamId]/settings                                                       0 B             569 kB
+├ ƒ /api/teams/[teamId]/signature-audit/export                                         0 B             569 kB
+├ ƒ /api/teams/[teamId]/signature-documents                                            0 B             569 kB
+├ ƒ /api/teams/[teamId]/signature-documents/[documentId]                               0 B             569 kB
+├ ƒ /api/teams/[teamId]/signature-documents/[documentId]/audit-log                     0 B             569 kB
+├ ƒ /api/teams/[teamId]/signature-documents/[documentId]/correct                       0 B             569 kB
+├ ƒ /api/teams/[teamId]/signature-documents/[documentId]/download                      0 B             569 kB
+├ ƒ /api/teams/[teamId]/signature-documents/[documentId]/fields                        0 B             569 kB
+├ ƒ /api/teams/[teamId]/signature-documents/[documentId]/remind                        0 B             569 kB
+├ ƒ /api/teams/[teamId]/signature-documents/[documentId]/send                          0 B             569 kB
+├ ƒ /api/teams/[teamId]/signature-documents/bulk                                       0 B             569 kB
+├ ƒ /api/teams/[teamId]/signature-templates                                            0 B             569 kB
+├ ƒ /api/teams/[teamId]/signature-templates/[templateId]                               0 B             569 kB
+├ ƒ /api/teams/[teamId]/signature-templates/[templateId]/use                           0 B             569 kB
+├ ƒ /api/teams/[teamId]/tags                                                           0 B             569 kB
+├ ƒ /api/teams/[teamId]/tags/[id]                                                      0 B             569 kB
+├ ƒ /api/teams/[teamId]/toggle-fundroom-access                                         0 B             569 kB
+├ ƒ /api/teams/[teamId]/tokens                                                         0 B             569 kB
+├ ƒ /api/teams/[teamId]/update-advanced-mode                                           0 B             569 kB
+├ ƒ /api/teams/[teamId]/update-name                                                    0 B             569 kB
+├ ƒ /api/teams/[teamId]/update-replicate-folders                                       0 B             569 kB
+├ ƒ /api/teams/[teamId]/viewers                                                        0 B             569 kB
+├ ƒ /api/teams/[teamId]/viewers/[id]                                                   0 B             569 kB
+├ ƒ /api/teams/[teamId]/viewers/check-access                                           0 B             569 kB
+├ ƒ /api/teams/[teamId]/views/[id]/archive                                             0 B             569 kB
+├ ƒ /api/teams/[teamId]/webhooks                                                       0 B             569 kB
+├ ƒ /api/teams/[teamId]/webhooks/[id]                                                  0 B             569 kB
+├ ƒ /api/teams/[teamId]/webhooks/[id]/events                                           0 B             569 kB
+├ ƒ /api/teams/[teamId]/workflow-links                                                 0 B             569 kB
+├ ƒ /api/test-error                                                                    0 B             569 kB
+├ ƒ /api/transactions                                                                  0 B             569 kB
+├ ƒ /api/transactions/[id]/process                                                     0 B             569 kB
+├ ƒ /api/unsubscribe/dataroom                                                          0 B             569 kB
+├ ƒ /api/unsubscribe/yir                                                               0 B             569 kB
+├ ƒ /api/user/permissions                                                              0 B             569 kB
+├ ƒ /api/view/auto-verify-session                                                      0 B             569 kB
+├ ƒ /api/view/verify-magic-link                                                        0 B             569 kB
+├ ƒ /api/viewer/my-datarooms                                                           0 B             569 kB
+├ ƒ /api/viewer/notes                                                                  0 B             569 kB
+├ ƒ /api/viewer/questions                                                              0 B             569 kB
+├ ƒ /api/webhooks/esign                                                                0 B             569 kB
+├ ƒ /api/webhooks/persona                                                              0 B             569 kB
+├ ƒ /api/webhooks/plaid                                                                0 B             569 kB
+├ ƒ /api/webhooks/services/[...path]                                                   0 B             569 kB
+├ ○ /branding                                                                          14.1 kB         742 kB
+├ ƒ /dashboard                                                                         25.5 kB         820 kB
+├ ƒ /datarooms                                                                         21.9 kB         798 kB
+├ ○ /datarooms/[id]                                                                    6.49 kB        1.04 MB
+├ ○ /datarooms/[id]/analytics                                                          8.18 kB        1.05 MB
+├ ○ /datarooms/[id]/branding                                                           9.04 kB           1 MB
+├ ○ /datarooms/[id]/conversations                                                      7.08 kB         939 kB
+├ ○ /datarooms/[id]/conversations/[conversationId]                                     9.67 kB         946 kB
+├ ○ /datarooms/[id]/conversations/faqs (712 ms)                                        8.05 kB         936 kB
+├ ○ /datarooms/[id]/documents                                                          1.4 kB         1.09 MB
+├ ○ /datarooms/[id]/documents/[...name]                                                1.43 kB        1.09 MB
+├ ○ /datarooms/[id]/groups                                                             6.49 kB         935 kB
+├ ○ /datarooms/[id]/groups/[groupId]                                                   7.38 kB         946 kB
+├ ○ /datarooms/[id]/groups/[groupId]/group-analytics                                   3.4 kB          949 kB
+├ ○ /datarooms/[id]/groups/[groupId]/links                                             9.28 kB        1.03 MB
+├ ○ /datarooms/[id]/groups/[groupId]/members                                           8.51 kB         941 kB
+├ ○ /datarooms/[id]/groups/[groupId]/permissions                                       7.96 kB         936 kB
+├ ○ /datarooms/[id]/permissions                                                        8.8 kB         1.02 MB
+├ ○ /datarooms/[id]/settings                                                           10 kB           949 kB
+├ ○ /datarooms/[id]/settings/downloads                                                 5.29 kB         934 kB
+├ ○ /datarooms/[id]/settings/file-permissions                                          5.53 kB         934 kB
+├ ○ /datarooms/[id]/settings/notifications                                             5.38 kB         934 kB
+├ ○ /datarooms/[id]/settings/qanda                                                     6.66 kB         939 kB
+├ ○ /datarooms/[id]/settings/welcome                                                   9.38 kB         952 kB
+├ ○ /datarooms/[id]/users                                                              4.08 kB         942 kB
+├ ƒ /documents                                                                         4.66 kB        1.06 MB
+├ ○ /documents/[id]                                                                    161 kB         1.37 MB
+├ ○ /documents/new                                                                     3.8 kB          886 kB
+├ ○ /documents/tree/[...name]                                                          951 B          1.06 MB
+├ ○ /entrance_ppreview_demo                                                            911 B           570 kB
+├ ƒ /hub                                                                               1.83 kB         578 kB
+├ ○ /lp/bank-connect                                                                   5.62 kB         575 kB
+├ ○ /lp/dashboard                                                                      42.3 kB         621 kB
+├ ƒ /lp/docs                                                                           2.79 kB         575 kB
+├ ○ /lp/login                                                                          3.04 kB         589 kB
+├ ○ /lp/onboard                                                                        3.37 kB         575 kB
+├ ○ /nav_ppreview_demo                                                                 971 B           570 kB
+├ ○ /offline                                                                           1.04 kB         570 kB
+├ ƒ /public/dataroom/[id]                                                              5.69 kB         598 kB
+├ ○ /room_ppreview_demo                                                                945 B           570 kB
+├ ○ /settings/agreements                                                               16.5 kB         824 kB
+├ ○ /settings/ai                                                                       5.83 kB         667 kB
+├ ○ /settings/billing                                                                  312 B           570 kB
+├ ○ /settings/billing/invoices                                                         319 B           570 kB
+├ ○ /settings/data-migration                                                           8.22 kB         670 kB
+├ ○ /settings/domains                                                                  10.2 kB         719 kB
+├ ƒ /settings/funds                                                                    4.86 kB         667 kB
+├ ƒ /settings/general                                                                  7.87 kB         746 kB
+├ ○ /settings/incoming-webhooks                                                        3.65 kB         674 kB
+├ ○ /settings/investor-timeline                                                        3.56 kB         665 kB
+├ ○ /settings/people                                                                   5.29 kB         667 kB
+├ ○ /settings/presets                                                                  3.54 kB         672 kB
+├ ○ /settings/presets/[id]                                                             15.3 kB         890 kB
+├ ○ /settings/presets/new                                                              5.12 kB         913 kB
+├ ƒ /settings/sign                                                                     11.2 kB         791 kB
+├ ƒ /settings/signature-audit                                                          6.43 kB         682 kB
+├ ○ /settings/tags                                                                     10.6 kB         679 kB
+├ ○ /settings/tokens                                                                   3.27 kB         671 kB
+├ ○ /settings/upgrade                                                                  312 B           570 kB
+├ ○ /settings/webhooks                                                                 2.39 kB         664 kB
+├ ○ /settings/webhooks/[id]                                                            44.9 kB         722 kB
+├ ○ /settings/webhooks/new                                                             2.6 kB          669 kB
+├ ƒ /sign                                                                              4.14 kB         666 kB
+├ ƒ /sign/[id]                                                                         17.9 kB         686 kB
+├ ○ /sign/[id]/prepare                                                                 9.18 kB         785 kB
+├ ƒ /sign/bulk                                                                         10.7 kB         790 kB
+├ ƒ /sign/new                                                                          9.27 kB         796 kB
+├ ƒ /sign/templates                                                                    4.76 kB         666 kB
+├ ○ /sign/templates/[id]/prepare                                                       6.15 kB         782 kB
+├ ○ /unsubscribe                                                                       902 B           570 kB
+├ ƒ /view/[linkId]                                                                     3.77 kB        1.39 MB
+├ ƒ /view/[linkId]/d/[documentId]                                                      1.57 kB        1.31 MB
+├ ƒ /view/[linkId]/embed                                                               1.24 kB        1.38 MB
+├ ● /view/domains/[domain]/[slug]                                                      3.1 kB         1.39 MB
+├ ● /view/domains/[domain]/[slug]/d/[documentId] (361 ms)                              1.61 kB        1.31 MB
+├ ○ /view/sign/[token]                                                                 17.9 kB         707 kB
+├ ○ /viewer-portal                                                                     2.79 kB         575 kB
+├ ƒ /viewer-redirect                                                                   440 B           570 kB
+├ ○ /visitors                                                                          10.2 kB         696 kB
+├ ○ /visitors/[id]                                                                     13.6 kB         700 kB
+├ ○ /welcome                                                                           15.5 kB         902 kB
+├ ○ /workflows                                                                         2.37 kB         664 kB
+├ ○ /workflows/[id]                                                                    9.86 kB         675 kB
+└ ○ /workflows/new                                                                     3.08 kB         672 kB
++ First Load JS shared by all                                                          623 kB
+  ├ chunks/framework-4a7c26f4cf8558e6.js                                               44.9 kB
+  ├ chunks/main-b994bc21429b44d4.js                                                    34.4 kB
+  ├ chunks/pages/_app-e1bab80658e0ae8f.js                                              482 kB
+  ├ css/f42ebb1226969852.css                                                           54 kB
+  └ other shared chunks (total)                                                        7.57 kB
+
+ƒ Middleware                                                                           71.9 kB
+
+○  (Static)   prerendered as static content
+●  (SSG)      prerendered as static HTML (uses getStaticProps)
+ƒ  (Dynamic)  server-rendered on demand
+
+Uploading source maps to Rollbar...
+Code version: 9bbef154ff3d52077fb6fc86ccdfc8a42641a0ff
+Source map upload complete!
+~/workspace$ 

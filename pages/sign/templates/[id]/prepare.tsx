@@ -142,6 +142,7 @@ export default function PrepareTemplatePage() {
         fetchSignedUrl(template.file);
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [template]);
 
   const fetchSignedUrl = async (fileKey: string) => {

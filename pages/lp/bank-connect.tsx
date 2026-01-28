@@ -25,11 +25,7 @@ export default function BankConnectPage() {
   const [error, setError] = useState<string | null>(null);
   const [configured, setConfigured] = useState(true);
 
-  useEffect(() => {
-    checkBankStatus();
-  }, []);
-
-  const checkBankStatus = async () => {
+  const checkBankStatus = useCallback(async () => {
     try {
       const res = await fetch("/api/lp/bank/status");
       if (!res.ok) {
@@ -56,7 +52,11 @@ export default function BankConnectPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [router]);
+
+  useEffect(() => {
+    checkBankStatus();
+  }, [checkBankStatus]);
 
   const fetchLinkToken = async () => {
     try {
@@ -125,7 +125,7 @@ export default function BankConnectPage() {
     } finally {
       setConnecting(false);
     }
-  }, []);
+  }, [router]);
 
   const { open, ready } = usePlaidLink({
     token: linkToken,

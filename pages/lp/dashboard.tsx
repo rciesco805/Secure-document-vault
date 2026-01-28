@@ -261,6 +261,7 @@ export default function LPDashboard() {
 
     fetchInvestorData();
     fetchFundDetails();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionStatus, router, fetchFundDetails]);
 
   // Real-time polling for dashboard updates

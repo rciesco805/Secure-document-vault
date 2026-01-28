@@ -190,6 +190,47 @@ See `lib/crypto/threat-model.ts` for complete STRIDE-based threat analysis cover
 - Certificate Authority integration for X.509 digital signatures
 - RFC 3161 Timestamp Authority for legal validity
 
+## Security Rate Limiting & Anomaly Detection
+
+### Rate Limiting (`lib/security/rate-limiter.ts`)
+All sensitive endpoints are protected with configurable rate limiting:
+
+| Type | Window | Max Requests | Use Case |
+|------|--------|--------------|----------|
+| Signature | 15 min | 5 | Signature operations |
+| Auth | 1 hour | 10 | Login attempts |
+| API | 1 min | 100 | General API calls |
+| Strict | 1 hour | 3 | Sensitive operations |
+
+### Anomaly Detection (`lib/security/anomaly-detection.ts`)
+Monitors for suspicious patterns:
+- **MULTIPLE_IPS**: User accessing from > 5 different IPs
+- **RAPID_LOCATION_CHANGE**: Access from multiple countries
+- **UNUSUAL_TIME**: Access during 2-5 AM
+- **EXCESSIVE_REQUESTS**: > 10 requests per minute
+- **SUSPICIOUS_USER_AGENT**: Multiple user agents from same user
+
+### Severity Levels
+| Level | Action |
+|-------|--------|
+| LOW | Log only |
+| MEDIUM | Log + monitor |
+| HIGH | Log + investigate |
+| CRITICAL | Block access + alert admin |
+
+### Usage
+```typescript
+import { withRateLimit, signatureRateLimiter } from "@/lib/security";
+import { checkAndAlertAnomalies } from "@/lib/security";
+
+// Rate limiting wrapper
+export default withRateLimit(handler, signatureRateLimiter);
+
+// Anomaly check in handler
+const { allowed, alerts } = await checkAndAlertAnomalies(req, userId);
+if (!allowed) return res.status(403).json({ error: "Access blocked" });
+```
+
 ## External API for Integrations
 
 REST API endpoints for programmatic template creation and document workflows. Uses Bearer token authentication via RestrictedToken.

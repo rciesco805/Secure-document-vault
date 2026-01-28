@@ -17,7 +17,7 @@ import {
 } from "@react-email/components";
 import { UploadIcon } from "lucide-react";
 
-interface PapermarkYearInReviewEmailProps {
+interface YearInReviewEmailProps {
   year: number;
   minutesSpentOnDocs: number;
   uploadedDocuments: number;
@@ -32,7 +32,7 @@ interface PapermarkYearInReviewEmailProps {
   unsubscribeUrl: string;
 }
 
-export default function PapermarkYearInReviewEmail({
+export default function YearInReviewEmail({
   year = 2024,
   minutesSpentOnDocs = 1234,
   uploadedDocuments = 25,
@@ -45,7 +45,7 @@ export default function PapermarkYearInReviewEmail({
   sharerPercentile = 95,
   viewingLocations = ["United States", "United Kingdom", "Germany", "Japan"],
   unsubscribeUrl,
-}: PapermarkYearInReviewEmailProps) {
+}: YearInReviewEmailProps) {
   return (
     <Html>
       <Head />

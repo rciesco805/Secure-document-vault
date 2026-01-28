@@ -1,7 +1,7 @@
 import { render } from "@react-email/components";
 import { nanoid } from "nanoid";
 
-import YearInReviewEmail from "@/components/emails/year-in-review-papermark";
+import YearInReviewEmail from "@/components/emails/year-in-review";
 
 import prisma from "@/lib/prisma";
 import { resend } from "@/lib/resend";

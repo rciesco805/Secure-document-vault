@@ -34,7 +34,7 @@ export default function SignatureReminderEmail({
     <Html>
       <Head />
       <Preview>
-        Reminder: Your signature is still needed on "{documentTitle}"
+        {`Reminder: Your signature is still needed on "${documentTitle}"`}
       </Preview>
       <Body style={main}>
         <Container style={container}>

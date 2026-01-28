@@ -52,7 +52,7 @@ export default function DataroomGroupLinksPage() {
               <div>
                 <h3 className="text-lg font-medium">Group Links</h3>
                 <p className="text-sm text-muted-foreground">
-                  Links created for this group. Viewers using these links will have the group's permissions.
+                  Links created for this group. Viewers using these links will have the group&apos;s permissions.
                 </p>
               </div>
               <Button onClick={() => setIsLinkSheetOpen(true)}>

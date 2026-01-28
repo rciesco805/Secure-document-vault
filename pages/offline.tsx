@@ -14,9 +14,9 @@ export default function OfflinePage() {
           <div className="mx-auto w-20 h-20 rounded-full bg-slate-800 flex items-center justify-center mb-6">
             <WifiOff className="h-10 w-10 text-slate-400" />
           </div>
-          <h1 className="text-2xl font-bold text-white mb-2">You're Offline</h1>
+          <h1 className="text-2xl font-bold text-white mb-2">You&apos;re Offline</h1>
           <p className="text-slate-400 mb-6">
-            It looks like you've lost your internet connection. Please check your
+            It looks like you&apos;ve lost your internet connection. Please check your
             connection and try again.
           </p>
           <Button
@@ -27,7 +27,7 @@ export default function OfflinePage() {
             Try Again
           </Button>
           <p className="text-xs text-slate-500 mt-8">
-            Some features may be available offline once you've visited them before.
+            Some features may be available offline once you&apos;ve visited them before.
           </p>
         </div>
       </div>

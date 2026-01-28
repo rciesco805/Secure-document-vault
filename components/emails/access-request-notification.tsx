@@ -32,7 +32,7 @@ export default function AccessRequestNotificationEmail({
     <Html>
       <Head />
       <Preview>
-        New access request for {dataroomName} from {requesterName || requesterEmail}
+        {`New access request for ${dataroomName} from ${requesterName || requesterEmail}`}
       </Preview>
       <Body style={main}>
         <Container style={container}>
@@ -56,7 +56,7 @@ export default function AccessRequestNotificationEmail({
               {requesterMessage && (
                 <>
                   <Text style={detailLabel}>Message:</Text>
-                  <Text style={detailValue}>"{requesterMessage}"</Text>
+                  <Text style={detailValue}>&quot;{requesterMessage}&quot;</Text>
                 </>
               )}
             </Section>

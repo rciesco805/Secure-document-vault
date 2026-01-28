@@ -321,7 +321,7 @@ export default function AccessForm({
                     className="text-sm underline underline-offset-2 hover:no-underline"
                     style={{ color: determineTextColor(brand?.accentColor) === "white" ? "rgb(156, 163, 175)" : "rgb(107, 114, 128)" }}
                   >
-                    Don't have access? Request it here
+                    Don&apos;t have access? Request it here
                   </button>
                 )}
               </div>

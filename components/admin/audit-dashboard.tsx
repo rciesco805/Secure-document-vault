@@ -480,7 +480,7 @@ export function AuditDashboard({ teamId }: AuditDashboardProps) {
               <p className="text-sm text-amber-700 mt-1">
                 This audit trail maintains records of all electronic signature events including
                 IP addresses, timestamps, user agents, and device information. These records are
-                required for "reasonable steps" verification of accredited investor status under
+                required for &quot;reasonable steps&quot; verification of accredited investor status under
                 SEC Rule 506(c). Audit logs are retained for 7 years per regulatory requirements.
               </p>
             </div>

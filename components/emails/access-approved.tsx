@@ -47,7 +47,7 @@ export default function AccessApprovedEmail({
 
             <Text style={paragraph}>
               You can now view the dataroom by clicking the button below. 
-              You'll be signed in automatically with your email address.
+              You&apos;ll be signed in automatically with your email address.
             </Text>
 
             <Section style={buttonContainer}>

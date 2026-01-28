@@ -56,7 +56,7 @@ export default function QuestionReply({
                 Your Question:
               </Text>
               <Text className="m-0 text-sm italic text-gray-600">
-                "{originalQuestion}"
+                &quot;{originalQuestion}&quot;
               </Text>
             </Section>
             <Section className="my-4 rounded border border-blue-200 bg-blue-50 p-4">

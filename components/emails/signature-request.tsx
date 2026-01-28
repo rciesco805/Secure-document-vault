@@ -32,7 +32,7 @@ export default function SignatureRequestEmail({
     <Html>
       <Head />
       <Preview>
-        {senderName} has requested your signature on "{documentTitle}"
+        {`${senderName} has requested your signature on "${documentTitle}"`}
       </Preview>
       <Body style={main}>
         <Container style={container}>
@@ -55,7 +55,7 @@ export default function SignatureRequestEmail({
             {message && (
               <Section style={messageBox}>
                 <Text style={messageLabel}>Message from sender:</Text>
-                <Text style={messageText}>"{message}"</Text>
+                <Text style={messageText}>&quot;{message}&quot;</Text>
               </Section>
             )}
 

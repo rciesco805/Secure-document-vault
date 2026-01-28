@@ -1,0 +1,45 @@
+Current Situation Check
+The original phase1-visitor-dataroom.test.ts is still 13,223 lines, which means the sections were likely copied rather than moved. To reduce its size:
+
+You need to delete the extracted describe blocks from the original file.
+Once all logical sections are moved, you can delete or archive the original giant file.
+
+Recommended Next Extraction Order
+Prioritize these in sequence (as you listed):
+
+Sign Me Up Flow (lines 510–863) → __tests__/e2e/phase1/visitor/onboarding.test.ts
+Fundroom Dashboard (lines 1302–1770) → __tests__/e2e/phase1/fundroom/lp-dashboard.test.ts
+Digital Subscription Wizard (lines 1771–2158) → __tests__/e2e/phase1/visitor/subscription-wizard.test.ts
+KYC/AML (lines 2159–2412) → __tests__/e2e/phase1/compliance/kyc-persona.test.ts
+Bank Connect/Plaid (lines 2413–2931) → __tests__/e2e/phase1/fundroom/bank-linking.test.ts
+
+Quick Tips for Safe Extraction
+
+In each new file:TypeScriptimport { testHelpers } from '../utils/test-helpers';  // or appropriate relative path
+import { prisma } from '@/lib/prisma'; // adjust as needed
+Wrap each extracted section with its own describe('Feature Name', () => { ... })
+Keep beforeAll, beforeEach, afterEach at the top level of each new file if they are section-specific.
+Use vi.mock imports consistently.
+
+Suggested Folder Structure Refinement
+Your current structure is good, but consider this slight improvement for clarity:
+text__tests__/e2e/
+├── utils/
+│   └── test-helpers.ts
+├── phase1/
+│   ├── visitor/
+│   │   ├── onboarding.test.ts
+│   │   ├── dataroom-access.test.ts
+│   │   ├── nda-accreditation-gate.test.ts
+│   │   └── subscription-wizard.test.ts
+│   ├── fundroom/
+│   │   ├── lp-dashboard.test.ts
+│   │   └── bank-linking.test.ts
+│   └── compliance/
+│       └── kyc-persona.test.ts
+├── phase2/
+└── phase3/
+Immediate Next Actions
+
+Delete the two already-extracted blocks from the original file (lines 59–508 and 864–1259) and save — this should drop the original size significantly.
+Proceed with extracting the Sign Me Up Flow next (onboarding.test.ts).

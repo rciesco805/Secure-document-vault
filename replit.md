@@ -42,8 +42,9 @@ The BF Fund Investor Dataroom is a 506(c) compliant GP/LP management suite desig
   - Function declaration in strict mode → arrow function conversion
 
 ### Build Configuration
-- `next.config.mjs` configured with `ignoreDuringBuilds: true` for ESLint and `ignoreBuildErrors: true` for TypeScript to ensure development builds succeed while schema alignment continues
-- Production build ready with 0 TypeScript errors
+- **Strict builds enabled**: `next.config.mjs` now uses `ignoreDuringBuilds: false` and `ignoreBuildErrors: false`
+- **ESLint errors fixed**: Resolved `react/no-unescaped-entities` errors in 10 files (escape apostrophes with `&apos;` and quotes with `&quot;` or template literals in JSX)
+- Production build passes with 0 errors (warnings for React Hook dependencies are non-blocking)
 
 ## System Architecture
 

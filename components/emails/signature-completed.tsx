@@ -32,7 +32,7 @@ export default function SignatureCompletedEmail({
     <Html>
       <Head />
       <Preview>
-        "{documentTitle}" has been signed by all parties
+        {`"${documentTitle}" has been signed by all parties`}
       </Preview>
       <Body style={main}>
         <Container style={container}>

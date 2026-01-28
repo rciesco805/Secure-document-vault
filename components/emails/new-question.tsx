@@ -66,7 +66,7 @@ export default function NewQuestion({
             </Text>
             <Section className="my-4 rounded border border-gray-200 bg-gray-50 p-4">
               <Text className="m-0 text-sm italic text-gray-700">
-                "{questionContent}"
+                &quot;{questionContent}&quot;
               </Text>
             </Section>
             <Text className="text-sm leading-6 text-black">

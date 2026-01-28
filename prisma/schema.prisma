@@ -74,6 +74,9 @@ model User {
   // Audit logs
   auditLogs AuditLog[]
 
+  // Signature documents created by this user
+  createdSignatureDocuments SignatureDocument[] @relation("SignatureDocumentOwner")
+
   @@index([role])
 }
 
@@ -1128,6 +1131,7 @@ model SignatureDocument {
   teamId      String
   team        Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
   createdById String
+  owner       User   @relation("SignatureDocumentOwner", fields: [createdById], references: [id], onDelete: Cascade)
 
   recipients SignatureRecipient[]
   fields     SignatureField[]

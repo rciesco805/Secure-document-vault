@@ -28,7 +28,7 @@ import { X } from "lucide-react";
 export default function Login() {
   const searchParams = useSearchParams();
   const next = useMemo(() => {
-    const nextParam = searchParams.get("next");
+    const nextParam = searchParams?.get("next");
     if (!nextParam) return null;
     
     const decodedPath = decodeURIComponent(nextParam);

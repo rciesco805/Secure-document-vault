@@ -4,6 +4,7 @@ import prisma from "@/lib/prisma";
 import { authOptions } from "../auth/[...nextauth]";
 import { sendEmail } from "@/lib/resend";
 import { randomBytes } from "crypto";
+import SignatureRequestEmail from "@/components/emails/signature-request";
 
 export const config = {
   api: {
@@ -51,6 +52,7 @@ export default async function handler(
       include: {
         teams: {
           where: { teamId },
+          include: { team: true },
         },
       },
     });
@@ -59,6 +61,7 @@ export default async function handler(
       return res.status(403).json({ message: "Forbidden" });
     }
 
+    const team = user.teams[0].team;
     const role = user.teams[0].role;
     if (!["ADMIN", "OWNER", "SUPER_ADMIN"].includes(role)) {
       return res.status(403).json({ message: "Admin access required" });
@@ -128,22 +131,14 @@ export default async function handler(
         await sendEmail({
           to: investor.user.email,
           subject: document.emailSubject || "Sign Your Subscription Agreement",
-          react: null,
-          text: `
-Hello ${investor.entityName || investor.user.name || "Investor"},
-
-You have a new subscription agreement ready for your signature.
-
-Subscription Amount: $${parseFloat(amount).toLocaleString()}
-
-Please click the link below to review and sign:
-${signingUrl}
-
-If you have any questions, please contact the fund manager.
-
-Best regards,
-BF Fund Team
-          `.trim(),
+          react: SignatureRequestEmail({
+            recipientName: investor.entityName || investor.user.name || "Investor",
+            documentTitle: document.title,
+            senderName: "BF Fund",
+            teamName: team.name,
+            message: `Subscription Amount: $${parseFloat(amount).toLocaleString()}`,
+            signingUrl: signingUrl,
+          }),
         });
       } catch (emailError) {
         console.error("Error sending signature email:", emailError);

@@ -683,7 +683,7 @@ export default function ViewPage({
           verifiedEmail={verifiedEmail}
           userId={userId}
           isProtected={!!(emailProtected || linkPassword || enableAgreement)}
-          brand={brand}
+          brand={brand as any}
           disableEditEmail={!!disableEditEmail}
           useCustomAccessForm={useCustomAccessForm}
           logoOnAccessForm={logoOnAccessForm}

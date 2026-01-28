@@ -133,11 +133,11 @@ export default async function handler(
     });
     const investorMap = new Map(investors.map((i) => [i.id, i.entityName]));
 
-    function anonymizeInvestor(investorId: string, entityName: string | null): string {
+    const anonymizeInvestor = (investorId: string, entityName: string | null): string => {
       const name = entityName || "Investor";
       if (name.length <= 3) return name[0] + "***";
       return name.slice(0, 2) + "***" + name.slice(-1);
-    }
+    };
 
     const investorIdMap = new Map<string, string>();
     let investorCounter = 1;

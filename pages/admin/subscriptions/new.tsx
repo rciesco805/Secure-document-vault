@@ -162,12 +162,11 @@ export default function NewSubscriptionPage() {
 
     try {
       setIsUploading(true);
-      const uploadedUrl = await putFile({
+      const uploadResult = await putFile({
         file: currentFile,
         teamId: teamId!,
-        onProgress: () => {},
       });
-      setFileUrl(uploadedUrl);
+      setFileUrl(uploadResult.data);
       setIsUploading(false);
 
       const res = await fetch("/api/subscriptions/create", {
@@ -175,7 +174,7 @@ export default function NewSubscriptionPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...formData,
-          file: uploadedUrl,
+          file: uploadResult.data,
           teamId,
         }),
       });

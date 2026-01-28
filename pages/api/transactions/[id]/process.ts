@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/lib/prisma";
 import { getUserWithRole } from "@/lib/auth/with-role";
-import { PlaidApi, Configuration, PlaidEnvironments } from "plaid";
+import { PlaidApi, Configuration, PlaidEnvironments, TransferType, TransferNetwork, ACHClass } from "plaid";
 
 const plaidConfig = new Configuration({
   basePath: PlaidEnvironments[process.env.PLAID_ENV || "sandbox"],
@@ -74,9 +74,9 @@ export default async function handler(
 
     if (process.env.PLAID_CLIENT_ID && process.env.PLAID_SECRET) {
       try {
-        const transferType = transaction.type === "CAPITAL_CALL" ? "debit" : "credit";
-        const network = "ach";
-        const achClass = transaction.type === "CAPITAL_CALL" ? "ppd" : "ccd";
+        const transferType = transaction.type === "CAPITAL_CALL" ? TransferType.Debit : TransferType.Credit;
+        const network = TransferNetwork.Ach;
+        const achClass = transaction.type === "CAPITAL_CALL" ? ACHClass.Ppd : ACHClass.Ccd;
 
         const response = await plaidClient.transferCreate({
           access_token: transaction.bankLink.plaidAccessToken,
@@ -91,7 +91,7 @@ export default async function handler(
                        transaction.investor?.user?.name || 
                        "Investor",
           },
-        });
+        } as any);
 
         plaidTransferId = response.data.transfer.id;
       } catch (plaidError: any) {
@@ -136,7 +136,7 @@ export default async function handler(
           {
             action: "PROCESSED",
             timestamp: new Date().toISOString(),
-            userId: user.userId,
+            userId: user.id,
             plaidTransferId,
           },
         ],

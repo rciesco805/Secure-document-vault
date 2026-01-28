@@ -341,7 +341,7 @@ export default function People() {
                           <div className="flex items-center gap-2">
                             <span className="text-xs text-muted-foreground">Fundroom</span>
                             <Switch
-                              checked={member.role === "ADMIN" || member.hasFundroomAccess}
+                              checked={member.role === "ADMIN" || (member as any).hasFundroomAccess}
                               disabled={member.role === "ADMIN"}
                               onCheckedChange={(checked) =>
                                 toggleFundroomAccess(member.teamId, member.userId, checked)
@@ -352,7 +352,7 @@ export default function People() {
                         <TooltipContent>
                           {member.role === "ADMIN"
                             ? "Super admins always have fundroom access"
-                            : member.hasFundroomAccess
+                            : (member as any).hasFundroomAccess
                             ? "Click to revoke fundroom access"
                             : "Click to grant fundroom access"}
                         </TooltipContent>

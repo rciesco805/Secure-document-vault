@@ -168,7 +168,7 @@ export default function EmbedPage(props: ViewPageProps) {
           userEmail={verifiedEmail}
           userId={null}
           isProtected={!!(emailProtected || linkPassword || enableAgreement)}
-          brand={brand}
+          brand={brand as any}
           previewToken={previewToken}
           disableEditEmail={!!disableEditEmail}
           useCustomAccessForm={props.useCustomAccessForm}

@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import { getFile } from "@/lib/files/get-file";
 import { sendEmail } from "@/lib/resend";
 import SignatureCompletedEmail from "@/components/emails/signature-completed";
+import CapitalCallThresholdEmail from "@/components/emails/capital-call-threshold";
 import { sendToNextSigners } from "@/pages/api/teams/[teamId]/signature-documents/[documentId]/send";
 import { ratelimit } from "@/lib/redis";
 import {
@@ -682,13 +683,11 @@ async function handlePost(
                       await sendEmail({
                         to: email,
                         subject: `${fundWithTeam.name} has reached capital call threshold`,
-                        html: `
-                          <h2>Capital Call Threshold Reached</h2>
-                          <p><strong>${fundWithTeam.name}</strong> has reached the configured capital call threshold.</p>
-                          <p>Current committed capital: <strong>$${Number(fundWithTeam.currentRaise).toLocaleString()}</strong></p>
-                          <p>Threshold: <strong>$${Number(fundWithTeam.capitalCallThreshold).toLocaleString()}</strong></p>
-                          <p>You can now proceed with capital calls for this fund.</p>
-                        `,
+                        react: CapitalCallThresholdEmail({
+                          fundName: fundWithTeam.name,
+                          currentRaise: `$${Number(fundWithTeam.currentRaise).toLocaleString()}`,
+                          threshold: `$${Number(fundWithTeam.capitalCallThreshold).toLocaleString()}`,
+                        }),
                       }).catch(() => {});
                     }
                   }

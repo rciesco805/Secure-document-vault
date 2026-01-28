@@ -57,11 +57,10 @@ async function handleGet(
 
     let fileUrl = null;
     try {
-      const fileResult = await getFile({
+      fileUrl = await getFile({
         type: template.storageType,
         data: template.file,
       });
-      fileUrl = fileResult?.url || null;
     } catch (error) {
       console.error("Error getting template file URL:", error);
     }

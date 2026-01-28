@@ -63,13 +63,13 @@ export default async function handler(
       return res.status(404).json({ message: "Document not found" });
     }
 
-    const fileResult = await getFile({ type: document.storageType, data: document.file });
+    const fileUrl = await getFile({ type: document.storageType, data: document.file });
 
-    if (!fileResult || !fileResult.fileUrl) {
+    if (!fileUrl) {
       return res.status(404).json({ message: "Document file not found" });
     }
 
-    const pdfResponse = await fetch(fileResult.fileUrl);
+    const pdfResponse = await fetch(fileUrl);
     if (!pdfResponse.ok) {
       return res.status(500).json({ message: "Failed to fetch document file" });
     }

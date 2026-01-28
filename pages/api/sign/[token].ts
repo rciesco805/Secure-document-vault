@@ -18,6 +18,11 @@ import {
   ESIGN_CONSENT_TEXT,
   ESIGN_CONSENT_VERSION,
 } from "@/lib/signature/checksum";
+import {
+  getEncryptedSignatureForStorage,
+  processDocumentCompletion,
+} from "@/lib/signature/encryption-service";
+import { checkAndAlertAnomalies } from "@/lib/security/anomaly-detection";
 
 export default async function handler(
   req: NextApiRequest,
@@ -257,6 +262,15 @@ async function handlePost(
       return res.status(400).json({ message: "You have already declined this document" });
     }
 
+    const { allowed: anomalyAllowed, alerts } = await checkAndAlertAnomalies(req, recipient.id);
+    if (!anomalyAllowed) {
+      console.warn(`[SECURITY] Blocked signing attempt for recipient ${recipient.id} due to anomalies:`, alerts);
+      return res.status(403).json({ 
+        message: "Access blocked due to suspicious activity. Please try again later or contact support.",
+        code: "ANOMALY_DETECTED"
+      });
+    }
+
     const ipAddress = (req.headers["x-forwarded-for"] as string)?.split(",")[0] 
       || req.socket.remoteAddress 
       || null;
@@ -382,6 +396,22 @@ async function handlePost(
       ipAddress
     );
 
+    let encryptedSignatureData: string | null = null;
+    if (signatureImage) {
+      try {
+        const { storedValue, checksum } = await getEncryptedSignatureForStorage(
+          signatureImage,
+          document.id,
+          recipient.id
+        );
+        encryptedSignatureData = storedValue;
+        console.log(`[SECURITY] Signature encrypted with checksum: ${checksum.substring(0, 16)}...`);
+      } catch (encryptError) {
+        console.error("Failed to encrypt signature, storing unencrypted:", encryptError);
+        encryptedSignatureData = signatureImage;
+      }
+    }
+
     const result = await prisma.$transaction(async (tx) => {
       if (fields && Array.isArray(fields)) {
         for (const field of fields) {
@@ -402,7 +432,7 @@ async function handlePost(
         data: {
           status: "SIGNED",
           signedAt,
-          signatureImage: signatureImage || null,
+          signatureImage: encryptedSignatureData,
           ipAddress,
           userAgent,
           consentRecord,
@@ -470,6 +500,20 @@ async function handlePost(
         event: "document.completed",
         metadata: { signerCount: result.allRecipients.filter((r) => r.status === "SIGNED").length },
       }).catch(console.error);
+
+      processDocumentCompletion(document.id, {
+        encrypt: true,
+        generatePassword: true,
+      }).then((encryptionResult) => {
+        if (encryptionResult.success && encryptionResult.encryptedDocument) {
+          console.log(`[SECURITY] Document ${document.id} encrypted successfully`);
+        } else if (!encryptionResult.success) {
+          console.error(`[SECURITY] Document encryption failed: ${encryptionResult.error}`);
+        }
+      }).catch((err) => {
+        console.error("[SECURITY] Document encryption error:", err);
+      });
+
       const completedAt = new Date().toLocaleDateString("en-US", {
         year: "numeric",
         month: "long",

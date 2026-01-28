@@ -13,8 +13,8 @@ describe('E-Sign Wizard Flow E2E', () => {
     it('should create signature document with PDF upload', async () => {
       (mockPrisma.signatureDocument.create as jest.Mock).mockResolvedValue({
         id: 'doc-1',
-        name: 'Subscription Agreement',
-        fileUrl: 'https://storage.example.com/docs/subscription.pdf',
+        title: 'Subscription Agreement',
+        file: 'https://storage.example.com/docs/subscription.pdf',
         status: 'DRAFT',
         teamId: 'team-1',
         createdAt: new Date(),
@@ -22,10 +22,11 @@ describe('E-Sign Wizard Flow E2E', () => {
 
       const doc = await mockPrisma.signatureDocument.create({
         data: {
-          name: 'Subscription Agreement',
-          fileUrl: 'https://storage.example.com/docs/subscription.pdf',
+          title: 'Subscription Agreement',
+          file: 'https://storage.example.com/docs/subscription.pdf',
           status: 'DRAFT',
           teamId: 'team-1',
+          createdById: 'user-1',
         },
       });
 
@@ -114,19 +115,19 @@ describe('E-Sign Wizard Flow E2E', () => {
   });
 
   describe('Step 4: Send for Signing', () => {
-    it('should update document status to PENDING on send', async () => {
+    it('should update document status to SENT on send', async () => {
       (mockPrisma.signatureDocument.update as jest.Mock).mockResolvedValue({
         id: 'doc-1',
-        status: 'PENDING',
+        status: 'SENT',
         sentAt: new Date(),
       });
 
       const sent = await mockPrisma.signatureDocument.update({
         where: { id: 'doc-1' },
-        data: { status: 'PENDING', sentAt: new Date() },
+        data: { status: 'SENT', sentAt: new Date() },
       });
 
-      expect(sent.status).toBe('PENDING');
+      expect(sent.status).toBe('SENT');
       expect(sent.sentAt).toBeDefined();
     });
 
@@ -165,12 +166,12 @@ describe('E-Sign Wizard Flow E2E', () => {
         id: 'r-1',
         status: 'SIGNED',
         signedAt: new Date(),
-        signedIp: '192.168.1.1',
+        ipAddress: '192.168.1.1',
       });
 
       const signed = await mockPrisma.signatureRecipient.update({
         where: { id: 'r-1' },
-        data: { status: 'SIGNED', signedAt: new Date(), signedIp: '192.168.1.1' },
+        data: { status: 'SIGNED', signedAt: new Date(), ipAddress: '192.168.1.1' },
       });
 
       expect(signed.status).toBe('SIGNED');
@@ -293,12 +294,12 @@ describe('E-Sign Wizard Flow E2E', () => {
         id: 'doc-1',
         status: 'VOIDED',
         voidedAt: new Date(),
-        voidReason: 'Incorrect information',
+        voidedReason: 'Incorrect information',
       });
 
       const voided = await mockPrisma.signatureDocument.update({
         where: { id: 'doc-1' },
-        data: { status: 'VOIDED', voidedAt: new Date(), voidReason: 'Incorrect information' },
+        data: { status: 'VOIDED', voidedAt: new Date(), voidedReason: 'Incorrect information' },
       });
 
       expect(voided.status).toBe('VOIDED');

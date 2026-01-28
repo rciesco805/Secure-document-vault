@@ -237,27 +237,24 @@ const nextConfig = {
 
 function prepareRemotePatterns() {
   let patterns = [
-    // static images and videos
-    { protocol: "https", hostname: "assets.papermark.io" },
-    { protocol: "https", hostname: "cdn.papermarkassets.com" },
+    // BF Fund assets
+    { protocol: "https", hostname: "dataroom.bermudafranchisegroup.com" },
+    { protocol: "https", hostname: "*.bermudafranchisegroup.com" },
+    // CDN and storage
     { protocol: "https", hostname: "d2kgph70pw5d9n.cloudfront.net" },
+    { protocol: "https", hostname: "d36r2enbzam0iu.cloudfront.net" },
+    { protocol: "https", hostname: "d35vw2hoyyl88.cloudfront.net" },
     // twitter img
     { protocol: "https", hostname: "pbs.twimg.com" },
     // linkedin img
     { protocol: "https", hostname: "media.licdn.com" },
     // google img
     { protocol: "https", hostname: "lh3.googleusercontent.com" },
-    // papermark img
-    { protocol: "https", hostname: "www.papermark.io" },
-    { protocol: "https", hostname: "app.papermark.io" },
-    { protocol: "https", hostname: "www.papermark.com" },
-    { protocol: "https", hostname: "app.papermark.com" },
     // useragent img
     { protocol: "https", hostname: "faisalman.github.io" },
-    // special document pages
-    { protocol: "https", hostname: "d36r2enbzam0iu.cloudfront.net" },
-    // us special storage
-    { protocol: "https", hostname: "d35vw2hoyyl88.cloudfront.net" },
+    // Replit Object Storage
+    { protocol: "https", hostname: "*.replit.app" },
+    { protocol: "https", hostname: "objectstorage.replit.app" },
   ];
 
   // Default region patterns

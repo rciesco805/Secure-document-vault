@@ -121,10 +121,10 @@ export const getApexDomain = (url: string) => {
   }
   const parts = domain.split(".");
   if (parts.length > 2) {
-    // if it's a subdomain (e.g. papermark.vercel.app), return the last 2 parts
+    // if it's a subdomain (e.g. dataroom.bermudafranchisegroup.com), return the last 2 parts
     return parts.slice(-2).join(".");
   }
-  // if it's a normal domain (e.g. papermark.com), we return the domain
+  // if it's a normal domain (e.g. bermudafranchisegroup.com), we return the domain
   return domain;
 };
 

@@ -14,7 +14,7 @@ export const STAGGER_CHILD_VARIANTS = {
   },
 };
 
-export const PAPERMARK_HEADERS = {
+export const BFFUND_HEADERS = {
   headers: {
     "x-powered-by":
       "BF Fund Dataroom - Bermuda Franchise Group Investor Portal",

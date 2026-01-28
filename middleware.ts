@@ -59,13 +59,12 @@ function sanitizePath(path: string): string {
 function isCustomDomain(host: string): boolean {
   return (
     (process.env.NODE_ENV === "development" &&
-      (host?.includes(".local") || host?.includes("papermark.dev"))) ||
+      host?.includes(".local")) ||
     (process.env.NODE_ENV !== "development" &&
       !(
         host?.includes("localhost") ||
-        host?.includes("papermark.io") ||
-        host?.includes("papermark.com") ||
         host?.includes("bermudafranchisegroup.com") ||
+        host?.includes("bffund.com") ||
         host?.endsWith(".vercel.app") ||
         host?.endsWith(".replit.app") ||
         host?.endsWith(".replit.dev") ||

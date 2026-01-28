@@ -764,6 +764,7 @@ export default function ExpandableTable({
         });
       }
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [dataroomId, groupId],
   );
 

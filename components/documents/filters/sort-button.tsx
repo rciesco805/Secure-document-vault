@@ -61,6 +61,7 @@ export default function SortButton() {
       undefined,
       { shallow: true },
     );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sortBy]);
 
   const resetSort = () => setSortBy(null);

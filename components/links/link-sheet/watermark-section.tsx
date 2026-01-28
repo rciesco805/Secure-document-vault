@@ -53,6 +53,7 @@ export default function WatermarkSection({
           : null,
       }));
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [presets, isAllowed]);
 
   const initialconfig: WatermarkConfig = {

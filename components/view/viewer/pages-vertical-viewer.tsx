@@ -688,6 +688,7 @@ export default function PagesVerticalViewer({
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [handleKeyDown, goToNextPage, goToPreviousPage]);
 
   useEffect(() => {
@@ -700,6 +701,7 @@ export default function PagesVerticalViewer({
         containerRef.current.removeEventListener("scroll", handleScroll);
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [handleScroll]);
 
   const [containerWidth, setContainerWidth] = useState<number>(0);

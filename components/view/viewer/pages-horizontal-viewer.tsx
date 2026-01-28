@@ -561,6 +561,7 @@ export default function PagesHorizontalViewer({
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [handleKeyDown, goToNextPage, goToPreviousPage]);
 
   // Add zoom handlers
@@ -615,7 +616,8 @@ export default function PagesHorizontalViewer({
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [containerRef.current, pageNumber, imageDimensions]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pageNumber, imageDimensions]);
 
   const handleToggleAnnotations = (enabled: boolean) => {
     setAnnotationsEnabled(enabled);

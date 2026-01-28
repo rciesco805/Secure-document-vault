@@ -46,6 +46,7 @@ export default function Visitors() {
 
   useEffect(() => {
     if (isFree && !isTrial) router.push("/documents");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isTrial, isFree]);
 
   return (

@@ -124,6 +124,7 @@ export default function AccessForm({
         email: userEmail || prevData.email,
       }));
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [email]);
 
   const isFormValid = () => {

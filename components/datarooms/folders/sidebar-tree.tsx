@@ -143,7 +143,8 @@ const SidebarFolders = ({
       return buildNestedFolderStructure(folders);
     }
     return [];
-  }, [folders, dataroomId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [folders]);
 
   return (
     <FileTree>

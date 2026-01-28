@@ -148,6 +148,7 @@ export default function PrepareDocument() {
         }))
       );
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [document]);
 
   const onDocumentLoadSuccess = useCallback(({ numPages }: { numPages: number }) => {

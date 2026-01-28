@@ -28,6 +28,7 @@ export default function TrialBanner() {
     } else {
       setShowTrialBanner(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (isTrial && showTrialBanner) {

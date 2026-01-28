@@ -266,6 +266,7 @@ export default function AgreementSheet({
     if (currentFile) {
       handleBrowserUpload();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentFile]);
 
   return (

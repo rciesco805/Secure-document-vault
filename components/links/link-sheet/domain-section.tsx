@@ -116,6 +116,7 @@ export default function DomainSection({
         setDisplayValue(domainValue);
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     domains,
     editLink,

@@ -200,6 +200,7 @@ export function ExportVisitsModal({
       );
       handleClose();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [document.id, teamId, document.name]);
 
   // Send export via email

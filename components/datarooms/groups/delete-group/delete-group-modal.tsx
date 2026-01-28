@@ -143,6 +143,7 @@ export function useDeleteGroupModal({
         setShowDeleteGroupModal={setShowDeleteGroupModal}
       />
     );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showDeleteGroupModal, setShowDeleteGroupModal]);
 
   return useMemo(

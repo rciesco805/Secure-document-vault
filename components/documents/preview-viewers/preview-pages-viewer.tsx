@@ -34,7 +34,8 @@ export function PreviewPagesViewer({
       setCurrentPage(currentPage - 1);
       setImageLoaded(imageCache[currentPage - 1] || false);
     }
-  }, [currentPage, numPages, imageCache]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage, imageCache]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {

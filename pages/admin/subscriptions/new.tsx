@@ -81,6 +81,7 @@ export default function NewSubscriptionPage() {
       fetchInvestors();
       fetchFunds();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [teamId]);
 
   const fetchInvestors = async () => {

@@ -207,6 +207,7 @@ export function ExportVisitsModal({
       );
       handleClose();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [teamId, dataroomId, groupId, dataroomName, groupName]);
 
   // Send export via email

@@ -180,6 +180,7 @@ export const NotionPage = ({
     isPreview,
     startIntervalTracking,
     stopIntervalTracking,
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   ]);
 
   useEffect(() => {
@@ -310,6 +311,7 @@ export const NotionPage = ({
         window.scrollTo({ top: 0, behavior: "smooth" });
       }
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [subPageId, recordMap],
   );
 
@@ -351,6 +353,7 @@ export const NotionPage = ({
     trackPageViewSafely,
     stopIntervalTracking,
     getActiveDuration,
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   ]);
 
   // // Function to calculate scroll percentage

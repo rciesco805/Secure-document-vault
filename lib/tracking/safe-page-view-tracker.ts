@@ -186,6 +186,7 @@ export function useSafePageViewTracker(options: TrackingOptions = {}) {
         }
 
         return totalActiveTime;
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [activityTracking]);
 
     const startIntervalTracking = useCallback((trackingData: Omit<TrackingData, 'duration'>) => {
@@ -222,6 +223,7 @@ export function useSafePageViewTracker(options: TrackingOptions = {}) {
                 startTimeRef.current = Date.now();
             }
         }, intervalDuration);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [intervalTracking, intervalDuration, getActiveDuration, trackPageViewSafely, startInactivityTimeout]);
 
     const stopIntervalTracking = useCallback(() => {
@@ -255,6 +257,7 @@ export function useSafePageViewTracker(options: TrackingOptions = {}) {
 
         // Restart inactivity timeout if activity tracking is enabled
         startInactivityTimeout();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [startInactivityTimeout]);
 
     // Cleanup on unmount

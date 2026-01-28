@@ -140,6 +140,7 @@ export function useDeleteDataroomModal({
         setShowDeleteDataroomModal={setShowDeleteDataroomModal}
       />
     );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showDeleteDataroomModal, setShowDeleteDataroomModal]);
 
   return useMemo(

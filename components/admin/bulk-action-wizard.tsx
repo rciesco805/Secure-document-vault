@@ -88,6 +88,7 @@ export function BulkActionWizard({
     if (isOpen && fundId) {
       fetchInvestors();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, fundId]);
 
   const fetchInvestors = async () => {

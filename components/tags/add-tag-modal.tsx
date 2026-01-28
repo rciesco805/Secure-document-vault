@@ -61,6 +61,7 @@ export function AddTagsModal({
     if (tagForm.id && tagForm.id !== initialValues.current.id) {
       initialValues.current = tagForm;
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tagForm.id]);
 
   const hasChanged =

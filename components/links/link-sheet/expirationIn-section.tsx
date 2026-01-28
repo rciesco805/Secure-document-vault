@@ -49,6 +49,7 @@ export default function ExpirationInSection({
       futureDate.setSeconds(futureDate.getSeconds() + data.expiresIn);
       setCustomDate(futureDate);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data.expiresIn]);
 
   const handleEnableExpiration = useCallback(() => {
@@ -68,7 +69,8 @@ export default function ExpirationInSection({
       setCustomDate(null);
     }
     setEnabled(!enabled);
-  }, [enabled, data, resetStates]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [enabled, data]);
 
   resetStates;
 

@@ -144,6 +144,7 @@ export function AuditDashboard({ teamId }: AuditDashboardProps) {
 
   useEffect(() => {
     fetchAuditLogs();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [teamId, page, eventFilter, startDate, endDate]);
 
   const fetchAuditLogs = async () => {

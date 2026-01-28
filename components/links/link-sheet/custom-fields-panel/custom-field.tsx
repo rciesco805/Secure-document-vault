@@ -39,6 +39,7 @@ export default memo(function CustomField({
 
   useEffect(() => {
     onUpdate(localField);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [localField]);
 
   const handleInputChange = (

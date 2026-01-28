@@ -313,6 +313,7 @@ export default function DataroomView({
     if (sessionStatus !== "loading") {
       autoVerifySession();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionStatus, session?.user?.email, emailProtected, autoVerifyAttempted, submitted, isLoading, link.id]);
 
   // If token is present, run handle submit which will verify token and get document

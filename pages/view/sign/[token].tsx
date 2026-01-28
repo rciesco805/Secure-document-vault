@@ -131,6 +131,7 @@ export default function SignDocument() {
     if (token) {
       fetchDocument();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
   const fetchDocument = async () => {

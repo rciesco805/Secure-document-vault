@@ -1,7 +1,7 @@
 "use client";
 
 import type { ComponentProps, HTMLAttributes, ReactElement } from "react";
-import { createContext, memo, useContext, useEffect, useState } from "react";
+import { createContext, memo, useContext, useEffect, useMemo, useState } from "react";
 
 import type { FileUIPart, UIMessage } from "ai";
 import {
@@ -191,11 +191,14 @@ export const MessageBranchContent = ({
   const childrenArray = Array.isArray(children) ? children : [children];
 
   // Use useEffect to update branches when they change
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const stableChildrenArray = useMemo(() => childrenArray, [childrenArray.length]);
+  
   useEffect(() => {
-    if (branches.length !== childrenArray.length) {
-      setBranches(childrenArray);
+    if (branches.length !== stableChildrenArray.length) {
+      setBranches(stableChildrenArray);
     }
-  }, [childrenArray, branches, setBranches]);
+  }, [stableChildrenArray, branches, setBranches]);
 
   return childrenArray.map((branch, index) => (
     <div

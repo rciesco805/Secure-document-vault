@@ -126,6 +126,7 @@ export default function NotionAccessibilityIndicator({
     if (primaryVersion.type === "notion") {
       checkAccessibility();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Only render for Notion documents

@@ -307,6 +307,7 @@ const SidebarFolders = ({
     }
 
     return null;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [folders, documents, folderId]);
 
   const hasCustomAccent = !!accentColor;

@@ -569,6 +569,7 @@ export default function UploadZone({
       }));
       onUploadSuccess?.(dataroomDocuments);
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [
       onUploadStart,
       onUploadProgress,
@@ -853,6 +854,7 @@ export default function UploadZone({
 
       return filesToBePassedToOnDrop;
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [
       folderPathName,
       endpointTargetType,

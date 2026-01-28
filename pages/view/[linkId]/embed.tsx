@@ -44,6 +44,7 @@ export default function EmbedPage(props: ViewPageProps) {
 
       return () => document.body.classList.remove("embed-view");
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router.isReady, router.query.linkId]);
 
   // Show loading state while checking

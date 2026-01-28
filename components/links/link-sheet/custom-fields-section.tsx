@@ -48,6 +48,7 @@ export default function CustomFieldsSection({
           : [],
       }));
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [presets, isAllowed]);
 
   const handleCustomFieldsToggle = useCallback(() => {

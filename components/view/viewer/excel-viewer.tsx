@@ -135,6 +135,7 @@ export default function ExcelViewer({
     return () => {
       stopIntervalTracking();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     linkId,
     documentId,

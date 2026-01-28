@@ -204,6 +204,7 @@ export default function LinkSheet({
 
   useEffect(() => {
     setData(currentLink || DEFAULT_LINK_PROPS(linkType, groupId, !isDatarooms));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentLink]);
 
   const handlePreviewLink = async (link: LinkWithViews) => {

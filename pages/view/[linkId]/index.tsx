@@ -349,6 +349,7 @@ export default function ViewPage({
       window.localStorage.setItem(`pm_magic_token_${linkId}`, token);
       window.localStorage.setItem(`pm_magic_email_${linkId}`, email.toLowerCase().trim());
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router.query.linkId, router.query.token, router.query.email]);
 
   // Auto-verify authenticated users from viewer portal

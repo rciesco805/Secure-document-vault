@@ -106,6 +106,7 @@ export function SubscriptionModal({
         setAmount(blendedAmount.toFixed(2));
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [units, isFlat, sortedTiers]);
 
   const handleContinue = () => {

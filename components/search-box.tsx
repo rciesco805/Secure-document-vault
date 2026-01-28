@@ -148,6 +148,7 @@ export function SearchBoxPersisted({
       isCustomDomain ? `/${router.query.slug}` : undefined, // Preserve custom domain URL
       { shallow: true },
     );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedValue]);
 
   useEffect(() => {
@@ -157,6 +158,7 @@ export function SearchBoxPersisted({
       setValue(queryValue);
       setDebouncedValue(queryValue);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [queryParams[urlParam]]);
 
   return (

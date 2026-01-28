@@ -23,6 +23,7 @@ export function ProBannerSection({
     if (data.showBanner) {
       setData({ ...data, showBanner: false });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return null;

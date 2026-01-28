@@ -97,6 +97,7 @@ export const EnhancedSignaturePad = forwardRef<SignaturePadHandle, EnhancedSigna
     // Redraw canvas when strokes change
     useEffect(() => {
       redrawCanvas();
+      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [strokes, theme.canvasBackground]);
 
     // Expose methods via ref

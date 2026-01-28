@@ -33,7 +33,7 @@ The platform implements an **enforcing CSP** (not report-only) with strict domai
 - **font-src**: fonts.gstatic.com
 
 **IMPORTANT - Adding New Integrations:**
-When adding a new third-party service (analytics, payments, APIs, CDNs), you MUST add its domain to the appropriate CSP list in `next.config.mjs`:
+When adding a new third-party service (analytics, payments, APIs, CDNs), you MUST add its domain to the appropriate CSP list in `lib/middleware/csp.ts`:
 1. For JavaScript SDKs: Add to `trustedScriptDomains`
 2. For API calls: Add to `trustedConnectDomains`
 3. For images/assets: Add to `trustedImageDomains`
@@ -43,17 +43,24 @@ When adding a new third-party service (analytics, payments, APIs, CDNs), you MUS
 Failure to add domains will cause the integration to silently fail in production (blocked by CSP).
 
 **Security Features:**
-- Production uses `wasm-unsafe-eval` (allows WASM for PDF processing, blocks eval())
+- **Nonce-based CSP**: Scripts require per-request nonces (generated in middleware, injected via `_document.tsx`)
+- Production uses `'strict-dynamic'` with nonces (eliminates need for `'unsafe-inline'` for scripts)
+- Production uses `wasm-unsafe-eval` (allows WASM for PDF processing, blocks regular eval())
 - Frame-ancestors: Main routes `none`, /view/ routes `self`, embed routes configurable
 - Additional headers: `X-Content-Type-Options: nosniff`, `Permissions-Policy`, strict `Referrer-Policy`
+
+**CSP Implementation:**
+- Nonces generated in `middleware.ts` using `lib/middleware/csp.ts`
+- Nonces passed to `_document.tsx` via `x-nonce` header
+- `NextScript` and `Head` components receive nonce prop for inline scripts
 
 **Environment Variables:**
 - `CSP_EMBED_ALLOWED_ORIGINS`: Space-separated list of domains that can embed /view/*/embed routes
 - `CSP_EMBED_ALLOW_ALL=true`: Allow any HTTPS origin to embed (less secure, use only if needed)
 
 **Known Limitations:**
-- `unsafe-inline` required for styles (Tailwind/shadcn) and Next.js hydration scripts
-- Future improvement: Implement nonce-based CSP for additional XSS protection
+- `unsafe-inline` still required for styles (Tailwind/shadcn dynamic classes)
+- Third-party scripts (PostHog, Stripe, etc.) must be in trustedScriptDomains
 
 **Debugging CSP Issues:**
 - Check browser console for "Refused to..." errors

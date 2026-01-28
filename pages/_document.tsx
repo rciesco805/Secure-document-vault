@@ -1,9 +1,19 @@
-import { Head, Html, Main, NextScript } from "next/document";
+import {
+  DocumentContext,
+  Head,
+  Html,
+  Main,
+  NextScript,
+} from "next/document";
 
-export default function Document() {
+interface DocumentProps {
+  nonce: string;
+}
+
+function Document({ nonce }: DocumentProps) {
   return (
     <Html lang="en" className="bg-background" suppressHydrationWarning>
-      <Head>
+      <Head nonce={nonce}>
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#059669" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -17,8 +27,16 @@ export default function Document() {
       </Head>
       <body className="">
         <Main />
-        <NextScript />
+        <NextScript nonce={nonce} />
       </body>
     </Html>
   );
 }
+
+Document.getInitialProps = async (ctx: DocumentContext) => {
+  const initialProps = await ctx.defaultGetInitialProps(ctx);
+  const nonce = ctx.req?.headers?.["x-nonce"] as string || "";
+  return { ...initialProps, nonce };
+};
+
+export default Document;

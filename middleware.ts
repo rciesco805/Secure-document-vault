@@ -1,6 +1,7 @@
 import { NextFetchEvent, NextRequest, NextResponse } from "next/server";
 
 import AppMiddleware from "@/lib/middleware/app";
+import { createCSPResponse, wrapResponseWithCSP } from "@/lib/middleware/csp";
 import DomainMiddleware from "@/lib/middleware/domain";
 
 import { BLOCKED_PATHNAMES } from "./lib/constants";
@@ -104,15 +105,18 @@ export default async function middleware(req: NextRequest, ev: NextFetchEvent) {
     }
 
     if (isAnalyticsPath(path)) {
-      return PostHogMiddleware(req);
+      const response = await PostHogMiddleware(req);
+      return wrapResponseWithCSP(req, response);
     }
 
     if (isWebhookPath(host)) {
-      return IncomingWebhookMiddleware(req);
+      const response = await IncomingWebhookMiddleware(req);
+      return wrapResponseWithCSP(req, response);
     }
 
     if (isCustomDomain(host || "")) {
-      return DomainMiddleware(req);
+      const response = await DomainMiddleware(req);
+      return wrapResponseWithCSP(req, response);
     }
 
     if (
@@ -120,7 +124,11 @@ export default async function middleware(req: NextRequest, ev: NextFetchEvent) {
       !path.startsWith("/verify") &&
       !path.startsWith("/unsubscribe")
     ) {
-      return AppMiddleware(req);
+      const response = await AppMiddleware(req);
+      if (response) {
+        return wrapResponseWithCSP(req, response);
+      }
+      return createCSPResponse(req);
     }
 
     if (path.startsWith("/view/")) {
@@ -132,12 +140,12 @@ export default async function middleware(req: NextRequest, ev: NextFetchEvent) {
 
       if (isBlocked || path.includes(".")) {
         const url = req.nextUrl.clone();
-        url.pathname = "/404";
-        return NextResponse.rewrite(url, { status: 404 });
+        const rewriteResponse = NextResponse.rewrite(url, { status: 404 });
+        return wrapResponseWithCSP(req, rewriteResponse);
       }
     }
 
-    return NextResponse.next();
+    return createCSPResponse(req);
   } catch (error) {
     serverInstance.error(error as Error, {
       path: req.nextUrl.pathname,

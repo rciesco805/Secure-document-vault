@@ -21,7 +21,7 @@ jest.mock("@/lib/prisma", () => ({
       update: jest.fn(),
     },
     user: { findUnique: jest.fn() },
-    auditLog: { create: jest.fn() },
+    signatureAuditLog: { create: jest.fn() },
   },
 }));
 
@@ -307,7 +307,7 @@ describe("Fund Capital Call Threshold", () => {
         thresholdAmount: 1800000,
       });
 
-      (mockPrisma.auditLog.create as jest.Mock).mockResolvedValue({});
+      (mockPrisma.signatureAuditLog.create as jest.Mock).mockResolvedValue({});
 
       expect(mockPrisma.fundAggregate.update).toBeDefined();
     });

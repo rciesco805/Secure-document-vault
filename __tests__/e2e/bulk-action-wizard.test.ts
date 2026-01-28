@@ -21,7 +21,7 @@ jest.mock('@/lib/prisma', () => ({
     capitalCall: { create: jest.fn(), createMany: jest.fn() },
     distribution: { create: jest.fn(), createMany: jest.fn() },
     transaction: { create: jest.fn(), createMany: jest.fn() },
-    auditLog: { create: jest.fn() },
+    signatureAuditLog: { create: jest.fn() },
   },
 }));
 
@@ -38,7 +38,7 @@ const mockPrisma = prisma as jest.Mocked<typeof prisma>;
 describe('Bulk Action Wizard', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    (mockPrisma.auditLog.create as jest.Mock).mockResolvedValue({});
+    (mockPrisma.signatureAuditLog.create as jest.Mock).mockResolvedValue({});
   });
 
   describe('Wizard Step Validation', () => {

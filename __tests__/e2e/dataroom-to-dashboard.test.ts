@@ -30,11 +30,17 @@ describe('Dataroom → Onboard → Gate → Dashboard E2E Flow', () => {
 
   const mockDataroom = {
     id: 'dataroom-1',
+    pId: 'dr_test123',
     teamId: 'team-1',
     name: 'Fund Documents',
-    isPublic: false,
-    ndaRequired: true,
+    description: null,
+    agentsEnabled: false,
+    conversationsEnabled: false,
+    enableChangeNotifications: false,
+    allowBulkDownload: true,
+    showLastUpdated: true,
     createdAt: new Date(),
+    updatedAt: new Date(),
   };
 
   const mockUser = {
@@ -59,29 +65,26 @@ describe('Dataroom → Onboard → Gate → Dashboard E2E Flow', () => {
   };
 
   describe('Phase 1: Dataroom Access Request', () => {
-    it('should allow unauthenticated view of public dataroom listing', async () => {
-      (mockPrisma.dataroom.findFirst as jest.Mock).mockResolvedValue({
-        ...mockDataroom,
-        isPublic: true,
-      });
-
-      const dataroom = await mockPrisma.dataroom.findFirst({
-        where: { id: 'dataroom-1', isPublic: true },
-      });
-
-      expect(dataroom).not.toBeNull();
-      expect(dataroom?.isPublic).toBe(true);
-    });
-
-    it('should block access to NDA-gated dataroom for unauthenticated users', async () => {
+    it('should allow unauthenticated view of dataroom listing', async () => {
       (mockPrisma.dataroom.findFirst as jest.Mock).mockResolvedValue(mockDataroom);
 
       const dataroom = await mockPrisma.dataroom.findFirst({
         where: { id: 'dataroom-1' },
       });
 
-      expect(dataroom?.ndaRequired).toBe(true);
-      const canAccess = !dataroom?.ndaRequired;
+      expect(dataroom).not.toBeNull();
+      expect(dataroom?.name).toBe('Fund Documents');
+    });
+
+    it('should block access to NDA-gated fund for unauthenticated users', async () => {
+      (mockPrisma.fund.findFirst as jest.Mock).mockResolvedValue(mockFund);
+
+      const fund = await mockPrisma.fund.findFirst({
+        where: { id: 'fund-1' },
+      });
+
+      expect(fund?.ndaGateEnabled).toBe(true);
+      const canAccess = !fund?.ndaGateEnabled;
       expect(canAccess).toBe(false);
     });
 
@@ -398,9 +401,9 @@ describe('Dataroom → Onboard → Gate → Dashboard E2E Flow', () => {
 
   describe('Complete Flow Integration', () => {
     it('should complete full flow: dataroom → onboard → NDA → accreditation → dashboard', async () => {
-      (mockPrisma.dataroom.findFirst as jest.Mock).mockResolvedValue(mockDataroom);
-      const dataroom = await mockPrisma.dataroom.findFirst({ where: { id: 'dataroom-1' } });
-      expect(dataroom?.ndaRequired).toBe(true);
+      (mockPrisma.fund.findFirst as jest.Mock).mockResolvedValue(mockFund);
+      const fund = await mockPrisma.fund.findFirst({ where: { id: 'fund-1' } });
+      expect(fund?.ndaGateEnabled).toBe(true);
 
       (mockPrisma.user.create as jest.Mock).mockResolvedValue(mockUser);
       const user = await mockPrisma.user.create({

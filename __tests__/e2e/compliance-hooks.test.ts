@@ -143,31 +143,31 @@ describe('Compliance Hooks E2E', () => {
 
       (mockPrisma.investor.update as jest.Mock).mockResolvedValue({
         id: 'investor-1',
-        kycStatus: 'VERIFIED',
-        kycVerifiedAt: new Date(),
+        personaStatus: 'APPROVED',
+        personaVerifiedAt: new Date(),
       });
 
       const updated = await mockPrisma.investor.update({
         where: { id: 'investor-1' },
-        data: { kycStatus: 'VERIFIED', kycVerifiedAt: new Date() },
+        data: { personaStatus: 'APPROVED', personaVerifiedAt: new Date() },
       });
 
-      expect(updated.kycStatus).toBe('VERIFIED');
+      expect(updated.personaStatus).toBe('APPROVED');
     });
 
     it('should update investor KYC status on inquiry.failed', async () => {
       (mockPrisma.investor.update as jest.Mock).mockResolvedValue({
         id: 'investor-1',
-        kycStatus: 'FAILED',
-        kycFailedReason: 'Document verification failed',
+        personaStatus: 'DECLINED',
+        personaData: { failedReason: 'Document verification failed' },
       });
 
       const updated = await mockPrisma.investor.update({
         where: { id: 'investor-1' },
-        data: { kycStatus: 'FAILED', kycFailedReason: 'Document verification failed' },
+        data: { personaStatus: 'DECLINED', personaData: { failedReason: 'Document verification failed' } },
       });
 
-      expect(updated.kycStatus).toBe('FAILED');
+      expect(updated.personaStatus).toBe('DECLINED');
     });
   });
 

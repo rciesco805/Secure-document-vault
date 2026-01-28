@@ -96,7 +96,7 @@ describe('NDA Gate Flow E2E', () => {
   });
 
   describe('NDA/Accreditation Acknowledgment API', () => {
-    it('should store NDA acknowledgment with timestamp and IP', async () => {
+    it('should store NDA acknowledgment with timestamp', async () => {
       const acknowledgmentData = {
         investorId: 'investor-1',
         type: 'NDA',
@@ -107,26 +107,26 @@ describe('NDA Gate Flow E2E', () => {
 
       (mockPrisma.investor.update as jest.Mock).mockResolvedValue({
         id: 'investor-1',
-        ndaAcknowledgedAt: acknowledgmentData.timestamp,
-        ndaAcknowledgedIp: acknowledgmentData.ipAddress,
+        ndaSigned: true,
+        ndaSignedAt: acknowledgmentData.timestamp,
       });
 
       const updated = await mockPrisma.investor.update({
         where: { id: 'investor-1' },
         data: {
-          ndaAcknowledgedAt: acknowledgmentData.timestamp,
-          ndaAcknowledgedIp: acknowledgmentData.ipAddress,
+          ndaSigned: true,
+          ndaSignedAt: acknowledgmentData.timestamp,
         },
       });
 
-      expect(updated.ndaAcknowledgedAt).not.toBeNull();
-      expect(updated.ndaAcknowledgedIp).toBe('192.168.1.1');
+      expect(updated.ndaSigned).toBe(true);
+      expect(updated.ndaSignedAt).not.toBeNull();
     });
 
     it('should store accreditation with SEC 506(c) compliance data', async () => {
       const accreditationData = {
         investorId: 'investor-1',
-        criteria: 'networth',
+        criteria: 'NET_WORTH',
         ipAddress: '192.168.1.1',
         userAgent: 'Mozilla/5.0',
         timestamp: new Date(),
@@ -134,22 +134,22 @@ describe('NDA Gate Flow E2E', () => {
 
       (mockPrisma.investor.update as jest.Mock).mockResolvedValue({
         id: 'investor-1',
-        accreditedAt: accreditationData.timestamp,
-        accreditedIp: accreditationData.ipAddress,
-        accreditationCriteria: accreditationData.criteria,
+        accreditationStatus: 'SELF_CERTIFIED',
+        accreditationType: accreditationData.criteria,
+        accreditationExpiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
       });
 
       const updated = await mockPrisma.investor.update({
         where: { id: 'investor-1' },
         data: {
-          accreditedAt: accreditationData.timestamp,
-          accreditedIp: accreditationData.ipAddress,
-          accreditationCriteria: accreditationData.criteria,
+          accreditationStatus: 'SELF_CERTIFIED',
+          accreditationType: accreditationData.criteria,
+          accreditationExpiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
         },
       });
 
-      expect(updated.accreditedAt).not.toBeNull();
-      expect(updated.accreditationCriteria).toBe('networth');
+      expect(updated.accreditationStatus).toBe('SELF_CERTIFIED');
+      expect(updated.accreditationType).toBe('NET_WORTH');
     });
   });
 

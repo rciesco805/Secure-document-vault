@@ -24,11 +24,8 @@ jest.mock("@/lib/prisma", () => ({
     transaction: { findMany: jest.fn(), create: jest.fn() },
     subscription: { findMany: jest.fn(), findFirst: jest.fn(), create: jest.fn() },
     fundAggregate: { findMany: jest.fn(), findFirst: jest.fn(), create: jest.fn() },
-    auditLog: { create: jest.fn(), findMany: jest.fn() },
+    signatureAuditLog: { create: jest.fn(), findMany: jest.fn() },
     document: { findMany: jest.fn() },
-    viewerAudit: { findMany: jest.fn() },
-    signatureAudit: { findMany: jest.fn() },
-    signatureConsent: { findMany: jest.fn() },
   },
 }));
 
@@ -52,12 +49,9 @@ const mockPrisma = prisma as jest.Mocked<typeof prisma>;
 describe("Data Migration E2E", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    (mockPrisma.auditLog.create as jest.Mock).mockResolvedValue({});
-    (mockPrisma.auditLog.findMany as jest.Mock).mockResolvedValue([]);
+    (mockPrisma.signatureAuditLog.create as jest.Mock).mockResolvedValue({});
+    (mockPrisma.signatureAuditLog.findMany as jest.Mock).mockResolvedValue([]);
     (mockPrisma.document.findMany as jest.Mock).mockResolvedValue([]);
-    (mockPrisma.viewerAudit.findMany as jest.Mock).mockResolvedValue([]);
-    (mockPrisma.signatureAudit.findMany as jest.Mock).mockResolvedValue([]);
-    (mockPrisma.signatureConsent.findMany as jest.Mock).mockResolvedValue([]);
   });
 
   describe("Export Endpoint", () => {
@@ -169,7 +163,7 @@ describe("Data Migration E2E", () => {
 
       await exportHandler(req, res);
 
-      expect(mockPrisma.auditLog.create).toHaveBeenCalledWith(
+      expect(mockPrisma.signatureAuditLog.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
             eventType: "DATA_EXPORT",
@@ -395,7 +389,7 @@ describe("Data Migration E2E", () => {
 
       await importHandler(req, res);
 
-      expect(mockPrisma.auditLog.create).toHaveBeenCalledWith(
+      expect(mockPrisma.signatureAuditLog.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
             eventType: "DATA_IMPORT",

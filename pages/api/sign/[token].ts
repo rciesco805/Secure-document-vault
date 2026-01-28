@@ -231,6 +231,12 @@ async function handlePost(
                 name: true,
               },
             },
+            owner: {
+              select: {
+                name: true,
+                email: true,
+              },
+            },
           },
         },
       },

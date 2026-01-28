@@ -63,7 +63,7 @@ export async function getInvestorDocument(path: string): Promise<Buffer | null> 
   try {
     const client = getStorageClient();
     const result = await client.downloadAsBytes(path);
-    return result.ok ? Buffer.from(result.value as Uint8Array) : null;
+    return result.ok ? Buffer.from(result.value as unknown as Uint8Array) : null;
   } catch (error) {
     console.error("Error downloading investor document:", error);
     return null;
@@ -76,7 +76,7 @@ export async function getInvestorDocumentUrl(path: string): Promise<string | nul
     const result = await client.downloadAsBytes(path);
     if (!result.ok) return null;
     
-    const base64 = Buffer.from(result.value as Uint8Array).toString("base64");
+    const base64 = Buffer.from(result.value as unknown as Uint8Array).toString("base64");
     const ext = path.split(".").pop()?.toLowerCase() || "pdf";
     const mimeType = ext === "pdf" ? "application/pdf" : `image/${ext}`;
     

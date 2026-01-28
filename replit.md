@@ -23,14 +23,42 @@ Core features include:
 Security is implemented with a defense-in-depth approach featuring four encryption layers: Transport (TLS 1.3), Client-Side (AES-256-GCM using Web Crypto API), Server-Side (AES-256-GCM using Node.js crypto module), and PDF Level (PDF 2.0 AES-256 using `pdf-lib-plus-encrypt`). The system incorporates rate limiting and anomaly detection to identify and mitigate suspicious activities, employing a STRIDE-based threat model. The signature workflow is secured with a dedicated encryption service, ensuring signature images and documents are encrypted, and all events are logged to an audit trail. An external API provides programmatic access to signature features, authenticated via Bearer tokens.
 
 ### Content Security Policy (CSP)
-The platform implements an enforcing CSP with strict domain whitelisting:
-- **script-src**: Whitelisted domains for PostHog, Rollbar, Stripe JS, Plaid, Persona
-- **connect-src**: All API endpoints, Vercel Blob storage, CloudFront CDNs
-- **img-src**: All image CDNs from remotePatterns configuration
-- **Production**: Uses `wasm-unsafe-eval` instead of `unsafe-eval` (allows WASM, blocks general eval)
-- **Frame-ancestors**: Main routes `none`, /view/ routes `self`, embed routes `self` by default
-- **Embed configuration**: Set `CSP_EMBED_ALLOWED_ORIGINS` for partner domains or `CSP_EMBED_ALLOW_ALL=true` for any HTTPS
-- **Known limitation**: `unsafe-inline` required for styles (Tailwind/shadcn) and Next.js hydration scripts
+The platform implements an **enforcing CSP** (not report-only) with strict domain whitelisting. This is a critical security feature that blocks any scripts, connections, or resources from non-whitelisted domains.
+
+**Current Whitelisted Domains** (in `next.config.mjs`):
+- **script-src**: PostHog, Rollbar, unpkg.com, Stripe JS, Plaid, Persona
+- **connect-src**: PostHog, Rollbar, Replit storage, Stripe API, Plaid, Persona, Tinybird, Cal.com, Vercel Blob
+- **img-src**: CloudFront CDNs, Twitter, LinkedIn, Google, Replit, Vercel Blob, dynamic upload hosts
+- **style-src**: Google Fonts
+- **font-src**: fonts.gstatic.com
+
+**IMPORTANT - Adding New Integrations:**
+When adding a new third-party service (analytics, payments, APIs, CDNs), you MUST add its domain to the appropriate CSP list in `next.config.mjs`:
+1. For JavaScript SDKs: Add to `trustedScriptDomains`
+2. For API calls: Add to `trustedConnectDomains`
+3. For images/assets: Add to `trustedImageDomains`
+4. For fonts: Add to `trustedFontDomains`
+5. For styles: Add to `trustedStyleDomains`
+
+Failure to add domains will cause the integration to silently fail in production (blocked by CSP).
+
+**Security Features:**
+- Production uses `wasm-unsafe-eval` (allows WASM for PDF processing, blocks eval())
+- Frame-ancestors: Main routes `none`, /view/ routes `self`, embed routes configurable
+- Additional headers: `X-Content-Type-Options: nosniff`, `Permissions-Policy`, strict `Referrer-Policy`
+
+**Environment Variables:**
+- `CSP_EMBED_ALLOWED_ORIGINS`: Space-separated list of domains that can embed /view/*/embed routes
+- `CSP_EMBED_ALLOW_ALL=true`: Allow any HTTPS origin to embed (less secure, use only if needed)
+
+**Known Limitations:**
+- `unsafe-inline` required for styles (Tailwind/shadcn) and Next.js hydration scripts
+- Future improvement: Implement nonce-based CSP for additional XSS protection
+
+**Debugging CSP Issues:**
+- Check browser console for "Refused to..." errors
+- CSP violations are logged to `/api/csp-report`
+- In development, the CSP is more permissive (allows http: for local testing)
 
 ## External Dependencies
 - **Resend**: Transactional email services.

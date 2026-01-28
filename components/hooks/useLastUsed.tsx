@@ -11,7 +11,7 @@ export function useLastUsed() {
   const [lastUsed, setLastUsed] = useState<LoginType>();
 
   useEffect(() => {
-    const storedValue = localStorage.getItem("last_papermark_login");
+    const storedValue = localStorage.getItem("last_bffund_login");
     if (storedValue) {
       setLastUsed(storedValue as LoginType);
     }
@@ -19,9 +19,9 @@ export function useLastUsed() {
 
   useEffect(() => {
     if (lastUsed) {
-      localStorage.setItem("last_papermark_login", lastUsed);
+      localStorage.setItem("last_bffund_login", lastUsed);
     } else {
-      localStorage.removeItem("last_papermark_login");
+      localStorage.removeItem("last_bffund_login");
     }
   }, [lastUsed]);
 

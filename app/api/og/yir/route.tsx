@@ -29,7 +29,7 @@ export async function GET(req: NextRequest) {
         {/* Left Side Text */}
         <div tw="flex flex-col text-white" style={{ marginLeft: "48px" }}>
           <div tw="flex text-7xl font-bold mb-4 tracking-tighter">
-            Papermark
+            BF Fund
           </div>
           <div tw="flex text-5xl mb-4">Year in Review</div>
           <div tw="flex text-7xl font-bold">{year}</div>
@@ -49,7 +49,7 @@ export async function GET(req: NextRequest) {
           {/* Header Section */}
           <div tw="flex items-start p-8 items-center">
             <div tw="flex text-2xl font-bold text-white tracking-tighter">
-              Papermark
+              BF Fund
             </div>
           </div>
 

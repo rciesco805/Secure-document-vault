@@ -28,7 +28,7 @@ export function ScheduleCallModal({
     if (open) {
       (async function () {
         try {
-          const cal = await getCalApi({ namespace: "papermark-support" });
+          const cal = await getCalApi({ namespace: "bffund-support" });
           cal("ui", { hideEventTypeDetails: true, layout: "month_view" });
           setCalLoaded(true);
         } catch (error) {
@@ -79,8 +79,8 @@ export function ScheduleCallModal({
       <div className="max-h-[540px] rounded-lg border bg-white dark:bg-gray-800">
         {calLoaded ? (
           <Cal
-            namespace="papermark-support"
-            calLink={`marcseitz/papermark-support?email=${session?.user?.email || ""}&name=${session?.user?.name || ""}`}
+            namespace="bffund-support"
+            calLink={`bffund/support?email=${session?.user?.email || ""}&name=${session?.user?.name || ""}`}
             style={{
               width: "100%",
               height: "540px",

@@ -355,7 +355,7 @@ export default function AgreementSheet({
                       required={data.contentType === "LINK"}
                       autoComplete="off"
                       data-1p-ignore
-                      placeholder="https://www.papermark.com/nda"
+                      placeholder="https://example.com/nda"
                       value={data.link || ""}
                       onChange={(e) => {
                         const newValue = e.target.value;

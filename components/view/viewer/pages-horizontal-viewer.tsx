@@ -723,7 +723,7 @@ export default function PagesHorizontalViewer({
                                 src={
                                   loadedImages[index]
                                     ? page.file
-                                    : "https://www.papermark.com/_static/blank.gif"
+                                    : "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
                                 }
                                 alt={`Page ${index + 1}`}
                               />

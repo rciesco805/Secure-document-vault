@@ -57,7 +57,8 @@ const publishWebhookEventToQStash = async ({
     url: webhook.url,
     body: payload,
     headers: {
-      "X-Papermark-Signature": signature,
+      "X-BFFund-Signature": signature,
+      "X-Papermark-Signature": signature, // Backward compatibility - deprecated, will be removed in future
       "Upstash-Hide-Headers": "true",
     },
     callback: callbackUrl.href,

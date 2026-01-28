@@ -41,7 +41,7 @@ export default function PasswordSection({
         enabled={enabled}
         action={handleEnablePassword}
         tooltipContent="Users must enter a password to access the content."
-        link="https://www.papermark.com/password-protection"
+        link="https://www.bermudafranchisegroup.com/help/password-protection"
       />
 
       {enabled && (

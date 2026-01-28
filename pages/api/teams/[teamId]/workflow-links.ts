@@ -93,7 +93,7 @@ export default async function handle(
           id: link.id,
           name: link.name,
           slug: link.slug,
-          domainSlug: link.domainSlug, // Will be null for papermark.com links
+          domainSlug: link.domainSlug, // Will be null for bffund.com links
           linkType: link.linkType,
           documentId: link.documentId,
           dataroomId: link.dataroomId,

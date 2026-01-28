@@ -111,7 +111,7 @@ export default function ExpirationInSection({
       <LinkItem
         title="Link Expires After"
         enabled={enabled}
-        link="https://www.papermark.com/help/article/expiration-date"
+        link="https://www.bermudafranchisegroup.com/help/expiration-date"
         action={handleEnableExpiration}
         tooltipContent="Set how long the link will remain active after creation."
       />

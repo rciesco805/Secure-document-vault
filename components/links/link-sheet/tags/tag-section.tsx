@@ -114,7 +114,7 @@ export default function TagSection({
           <Label htmlFor="link-domain">Tags</Label>
           <BadgeTooltip
             content="Group links by tags to organize and track performance"
-            link="https://www.papermark.com/help/article/tag-links"
+            link="https://www.bermudafranchisegroup.com/help/tag-links"
           >
             <CircleHelpIcon className="h-4 w-4 shrink-0 text-muted-foreground hover:text-foreground" />
           </BadgeTooltip>

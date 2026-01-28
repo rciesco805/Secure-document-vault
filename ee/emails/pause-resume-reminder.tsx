@@ -41,10 +41,10 @@ export default function PauseResumeReminderEmail({
           <Container className="mx-auto my-[40px] w-[465px] rounded border border-solid border-[#eaeaea] p-[20px]">
             <Section className="mt-[32px]">
               <Img
-                src={`${baseUrl}/_static/papermark-logo.png`}
+                src={`${baseUrl}/_static/bffund-logo.png`}
                 width="160"
                 height="48"
-                alt="Papermark"
+                alt="BF Fund"
                 className="mx-auto my-0"
               />
             </Section>
@@ -119,18 +119,18 @@ export default function PauseResumeReminderEmail({
             <Text className="text-[14px] leading-[24px] text-black">
               Best regards,
               <br />
-              The Papermark Team
+              The BF Fund Team
             </Text>
 
             <Section className="mt-[32px] border-t border-solid border-[#eaeaea] pt-[20px]">
               <Text className="text-[12px] leading-[16px] text-[#666]">
                 This email was sent to you as an admin/manager of the {teamName}{" "}
-                team on Papermark. If you believe this was sent in error, please
+                team on BF Fund. If you believe this was sent in error, please
                 contact our support team.
               </Text>
 
               <Text className="text-[12px] leading-[16px] text-[#666]">
-                Papermark - The secure document sharing platform
+                BF Fund - The secure investor dataroom platform
               </Text>
             </Section>
           </Container>

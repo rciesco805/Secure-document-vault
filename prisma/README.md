@@ -32,7 +32,7 @@ mkdir -p prisma/migrations/20240408000000_add_model
 - Generate the migration
 
 ```bash
-prisma migrate diff --from-migrations prisma/migrations --to-schema-datamodel prisma/schema.prisma --shadow-database-url "postgresql://<USER>@localhost:5432/papermark-shadow-db" --script > prisma/migrations/20240408000000_add_model/migration.sql
+prisma migrate diff --from-migrations prisma/migrations --to-schema-datamodel prisma/schema.prisma --shadow-database-url "postgresql://<USER>@localhost:5432/bffund-shadow-db" --script > prisma/migrations/20240408000000_add_model/migration.sql
 ```
 
 - Apply the migration

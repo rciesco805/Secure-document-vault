@@ -64,7 +64,7 @@ export const CreateWorkflowRequestSchema = z.object({
   name: z.string().min(1, "Workflow name is required").max(100),
   description: z.string().max(500).optional(),
   // Entry link details
-  domain: z.string().nullish(), // null or undefined means papermark.com
+  domain: z.string().nullish(), // null or undefined means bffund.com
   slug: z
     .string()
     .regex(
@@ -73,7 +73,7 @@ export const CreateWorkflowRequestSchema = z.object({
     )
     .min(1)
     .max(100)
-    .nullish(), // slug is only required for custom domains, not for papermark.com
+    .nullish(), // slug is only required for custom domains, not for bffund.com
 });
 
 export const UpdateWorkflowRequestSchema = z.object({

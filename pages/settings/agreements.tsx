@@ -59,7 +59,7 @@ export default function NdaAgreements() {
                   content="How to require NDA agreement before viewing documents?"
                   key="nda-help"
                   linkText="Learn more"
-                  link="https://www.papermark.com/help/article/require-nda-to-view"
+                  link="https://www.bermudafranchisegroup.com/help/require-nda"
                 >
                   <CircleHelpIcon className="h-4 w-4 shrink-0 text-muted-foreground hover:text-foreground" />
                 </BadgeTooltip>

@@ -19,7 +19,7 @@ export default function NameSection({
 
   useEffect(() => {
     // Load name from localStorage when the component mounts
-    const storedName = window.localStorage.getItem("papermark.name");
+    const storedName = window.localStorage.getItem("bffund.name");
     if (storedName) {
       setData((prevData) => ({
         ...prevData,
@@ -31,7 +31,7 @@ export default function NameSection({
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newName = e.target.value;
     // Store the new email in localStorage
-    window.localStorage.setItem("papermark.name", newName);
+    window.localStorage.setItem("bffund.name", newName);
     // Update the state
     setData({ ...data, name: newName });
   };

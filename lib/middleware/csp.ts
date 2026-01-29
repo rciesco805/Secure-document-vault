@@ -100,8 +100,8 @@ export function buildCSP(nonce: string, path: string): string {
   // Note: Using 'unsafe-inline' in production due to Next.js 16 Turbopack nonce propagation issues
   // TODO: Re-enable nonce-based CSP once Next.js fixes nonce handling in production builds
   const scriptSrc = isDev
-    ? `script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: ${trustedScriptDomains} http:;`
-    : `script-src 'self' 'unsafe-inline' 'unsafe-eval' wasm-unsafe-eval blob: ${trustedScriptDomains};`;
+    ? `script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: data: ${trustedScriptDomains} http:;`
+    : `script-src 'self' 'unsafe-inline' 'unsafe-eval' wasm-unsafe-eval blob: data: ${trustedScriptDomains};`;
 
   const styleSrc = isDev
     ? `style-src 'self' 'unsafe-inline' ${trustedStyleDomains} http:;`

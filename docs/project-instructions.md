@@ -59,14 +59,16 @@ pages/                    # Next.js Pages Router (main app, API routes)
   api/sign/               # E-signature endpoints (sign, verify)
 app/                      # Next.js App Router (auth, admin sections)
 components/               # React components (UI, LP, signatures)
-lib/                      # Shared utilities (auth, audit, Prisma)
-prisma/schema/            # Multi-file Prisma schema
+lib/                      # Shared utilities (auth, audit, Prisma, storage providers)
+  storage/providers/      # Multi-provider storage abstraction (Replit, S3, R2, local)
+  storage/encryption/     # AES-256-GCM encryption service
+prisma/                   # Database schema (40+ models)
 docs/                     # Platform documentation
 __tests__/                # Jest E2E tests (1599+ passing)
 public/                   # Fund assets, PWA files
 .github/workflows/        # CI/CD
 ee/                       # Enterprise tweaks
-middleware.ts             # Auth/webhooks
+middleware.ts             # Auth/webhooks/CSP
 ```
 
 ### Key Models (Prisma)
@@ -83,13 +85,20 @@ middleware.ts             # Auth/webhooks
 - `Entity` - Mode 'FUND'/'STARTUP', configs like thresholds/fees/pricing tiers
 
 ### Integrations
-- Plaid (banking, ACH transfers)
-- Persona (KYC/AML)
-- Resend (emails)
-- Tinybird (analytics)
-- Stripe (platform billing)
-- Multi-Provider Storage (Replit, AWS S3, Cloudflare R2, or local filesystem)
-- Rollbar (error monitoring)
+- **Plaid** (banking, ACH transfers) - Sandbox mode: `PLAID_ENV=sandbox`
+- **Persona** (KYC/AML) - Sandbox mode: `PERSONA_ENVIRONMENT=sandbox`
+- **Resend** (transactional emails)
+- **Tinybird** (real-time analytics)
+- **Stripe** (platform billing) - Test mode: use `sk_test_*` keys
+- **Multi-Provider Storage** (Replit, AWS S3, Cloudflare R2, or local filesystem)
+- **Rollbar** (error monitoring) - Client and server-side tracking
+
+### Development & Testing
+See `docs/SANDBOX_TESTING.md` for complete sandbox configuration guide including:
+- Test credentials for Plaid, Persona, and Stripe
+- Webhook simulation commands
+- Local storage setup
+- Privacy notice requirements
 
 ### Recent Commits Focus
 - LP-focused (Plaid/transfers, bank linking)

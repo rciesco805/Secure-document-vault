@@ -120,11 +120,17 @@ STORAGE_ENCRYPTION_KEY=xxx                 # AES-256 encryption key (hex)
 
 ## External Dependencies
 - **Resend**: Transactional email services.
-- **Persona**: KYC/AML verification.
-- **Plaid**: Bank connectivity for ACH transfers.
+- **Persona**: KYC/AML verification (sandbox mode: `PERSONA_ENVIRONMENT=sandbox`).
+- **Plaid**: Bank connectivity for ACH transfers (sandbox mode: `PLAID_ENV=sandbox`).
 - **Tinybird**: Real-time analytics and audit logging.
-- **Stripe**: Platform billing and subscription management.
+- **Stripe**: Platform billing (test mode: use `sk_test_*` keys).
 - **Storage Providers**: Replit Object Storage, AWS S3, Cloudflare R2, or local filesystem.
-- **Rollbar**: Real-time error monitoring.
+- **Rollbar**: Real-time error monitoring (client and server-side).
 - **Google OAuth**: Admin authentication.
 - **OpenAI**: Optional AI features.
+
+## Development & Testing
+- **Sandbox Testing Guide**: See `docs/SANDBOX_TESTING.md` for complete sandbox/development configuration.
+- **Test Credentials**: Plaid sandbox uses `user_good`/`pass_good`; Persona sandbox uses test SSN patterns.
+- **Local Storage**: Set `STORAGE_PROVIDER=local` for development without cloud storage.
+- **Mock Services**: Set `MOCK_EXTERNAL_SERVICES=true` to bypass external API calls in tests.

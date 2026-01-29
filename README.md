@@ -66,18 +66,20 @@ This platform is designed for SEC Rule 506(c) compliant private offerings:
 
 ## Tech Stack
 
-- [Next.js](https://nextjs.org/) – Framework (Hybrid Pages/App Router)
+- [Next.js 16](https://nextjs.org/) – Framework (Hybrid Pages/App Router)
+- [React 19](https://react.dev/) – UI Library
 - [TypeScript](https://www.typescriptlang.org/) – Language
-- [Tailwind](https://tailwindcss.com/) – CSS
-- [shadcn/ui](https://ui.shadcn.com) - UI Components
-- [Prisma](https://prisma.io) - ORM [![Made with Prisma](https://made-with.prisma.io/dark.svg)](https://prisma.io)
-- [PostgreSQL](https://www.postgresql.org/) - Database
+- [Tailwind CSS](https://tailwindcss.com/) – Styling
+- [shadcn/ui](https://ui.shadcn.com) – UI Components
+- [Prisma](https://prisma.io) – ORM [![Made with Prisma](https://made-with.prisma.io/dark.svg)](https://prisma.io)
+- [PostgreSQL](https://www.postgresql.org/) – Database
 - [NextAuth.js](https://next-auth.js.org/) – Authentication
 - [Tinybird](https://tinybird.co) – Real-time Analytics
 - [Resend](https://resend.com) – Transactional Email
 - [Persona](https://withpersona.com) – KYC/AML Verification
 - [Plaid](https://plaid.com) – Bank Connectivity
 - [Stripe](https://stripe.com) – Platform Billing
+- [Rollbar](https://rollbar.com) – Error Monitoring
 - **Multi-Provider Storage** – Replit Object Storage, AWS S3, Cloudflare R2, or local filesystem
 
 ## Payment Architecture
@@ -113,16 +115,35 @@ npm run dev
 ### Environment Variables
 
 ```env
+# Core
 DATABASE_URL=postgresql://...
 NEXTAUTH_SECRET=...
+
+# Email
 RESEND_API_KEY=...
+
+# KYC/AML (sandbox mode available)
 PERSONA_API_KEY=...
+PERSONA_ENVIRONMENT=sandbox  # sandbox or production
+
+# Bank Connectivity (sandbox mode available)
 PLAID_CLIENT_ID=...
 PLAID_SECRET=...
+PLAID_ENV=sandbox  # sandbox, development, or production
+
+# Payments
 STRIPE_SECRET_KEY=...
 STRIPE_PUBLISHABLE_KEY=...
+
+# Analytics
 TINYBIRD_TOKEN=...
+
+# Error Monitoring
+ROLLBAR_SERVER_TOKEN=...
+NEXT_PUBLIC_ROLLBAR_CLIENT_TOKEN=...
 ```
+
+For complete environment setup, see [.env.example](.env.example) and [docs/SANDBOX_TESTING.md](docs/SANDBOX_TESTING.md).
 
 ## Testing
 
@@ -140,31 +161,46 @@ npm test -- --testPathPattern="phase1"
 ```
 
 ### Test Coverage
-- **1235+ passing tests** across all phases
+- **1599+ passing tests** across all phases
 - Phase 1: LP/Visitor dataroom access, onboarding, subscriptions
 - Phase 2: Admin/GP dashboard, bulk actions, fund management
 - Phase 3: Cross-side interactions, edge cases, compliance stress tests
 
+### Sandbox & Development Testing
+
+For development without production API keys:
+
+```bash
+PLAID_ENV=sandbox
+PERSONA_ENVIRONMENT=sandbox
+STORAGE_PROVIDER=local
+```
+
+See [docs/SANDBOX_TESTING.md](docs/SANDBOX_TESTING.md) for complete sandbox configuration including test credentials and webhook simulation.
+
 ## Database Schema
 
-The Prisma schema is organized into multiple files in `prisma/schema/`:
+The Prisma schema is located at `prisma/schema.prisma` with 40+ models organized by domain:
 
-- `schema.prisma` - Core models (User, Team, Account, Session)
-- `investor.prisma` - LP Portal models (Investor, Fund, Investment, CapitalCall, Distribution)
-- `document.prisma` - Document management
-- `dataroom.prisma` - Dataroom access and sharing
-- `signature.prisma` - E-signature workflows
-- `entity.prisma` - Entity mode configuration (FUND/STARTUP)
+- **Core**: User, Team, Account, Session
+- **LP Portal**: Investor, Fund, Investment, CapitalCall, Distribution, Transaction
+- **Documents**: Document, DocumentVersion, DocumentPage, Folder
+- **Datarooms**: Dataroom, DataroomDocument, DataroomFolder, DataroomBrand
+- **Access Control**: Link, Viewer, ViewerGroup, PermissionGroup, AccessRequest
+- **E-Signatures**: SignatureDocument, SignatureRecipient, SignatureField, SignatureTemplate
+- **Entity**: Entity mode configuration (FUND/STARTUP)
 
 ## Roadmap
 
-### Phase 1 (MVP) - ~90% Complete
+### Phase 1 (MVP) - Complete
 - Core LP onboarding with NDA gate
 - Accredited investor self-certification wizard
 - Fundroom dashboard with investment tracking
 - Self-hosted e-signature (BF Fund Sign)
 - Dual threshold system (Initial Closing vs Full Authorized)
 - Form D compliance tracking
+- Multi-provider storage abstraction (Replit, S3, R2, local)
+- Error monitoring with Rollbar
 
 ### Phase 2 - In Progress
 - Plaid-powered ACH transfers with webhook-driven compliance logging

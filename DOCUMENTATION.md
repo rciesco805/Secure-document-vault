@@ -880,14 +880,23 @@ The app will be available at `http://localhost:5000`
 | `PERSONA_ENVIRONMENT_ID` | For KYC | Environment ID for embedded flow |
 | `PERSONA_WEBHOOK_SECRET` | For KYC | Webhook signature verification secret |
 
-### Storage (Replit Object Storage)
+### Storage (Multi-Provider)
+
+The platform supports multiple storage backends for deployment flexibility:
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `DEFAULT_OBJECT_STORAGE_BUCKET_ID` | Yes | Replit storage bucket ID |
-| `NEXT_PUBLIC_UPLOAD_TRANSPORT` | Yes | Upload method: `replit`, `s3`, or `vercel` |
-| `PRIVATE_OBJECT_DIR` | Optional | Directory for private files |
-| `BLOB_READ_WRITE_TOKEN` | Optional | Vercel Blob token (if using Vercel storage) |
+| `STORAGE_PROVIDER` | No | Storage backend: `replit`, `s3`, `r2`, or `local` (default: replit) |
+| `STORAGE_BUCKET` | For S3/R2 | S3 or R2 bucket name |
+| `STORAGE_REGION` | For S3 | AWS region (default: us-east-1) |
+| `STORAGE_ENDPOINT` | For R2/MinIO | Custom S3-compatible endpoint URL |
+| `STORAGE_ACCESS_KEY_ID` | For S3/R2 | AWS access key ID |
+| `STORAGE_SECRET_ACCESS_KEY` | For S3/R2 | AWS secret access key |
+| `STORAGE_LOCAL_PATH` | For local | Local filesystem path (default: ./.storage) |
+| `STORAGE_ENCRYPTION_KEY` | Recommended | AES-256 encryption key (64-character hex string) |
+| `DEFAULT_OBJECT_STORAGE_BUCKET_ID` | For Replit | Replit storage bucket ID |
+| `PRIVATE_OBJECT_DIR` | For Replit | Directory for private files |
+| `BLOB_READ_WRITE_TOKEN` | For Vercel | Vercel Blob token (if using Vercel storage) |
 
 ### Security
 
@@ -1163,7 +1172,7 @@ Every investor action is logged:
 
 | Data Type | Encryption Method |
 |-----------|------------------|
-| **Documents at Rest** | AES-256 via Replit Object Storage |
+| **Documents at Rest** | AES-256-GCM via unified storage provider (Replit, S3, R2, or local) |
 | **Plaid Access Tokens** | AES-256-GCM with per-token IV and auth tag |
 | **Sessions** | Encrypted cookies with NEXTAUTH_SECRET |
 | **Passwords** | bcrypt hashing with salt |

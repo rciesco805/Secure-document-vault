@@ -141,7 +141,7 @@ The BF Fund Platform is a custom-built investor portal with two integrated modul
 |--------|-------------|
 | AES-256 Encryption | All files encrypted at rest |
 | HTTPS Only | All traffic encrypted in transit |
-| Secure File Storage | Replit Object Storage with encryption |
+| Secure File Storage | Multi-provider storage (Replit, S3, R2, local) with AES-256 encryption |
 | Token-Based Access | Per-recipient authorization tokens |
 | IP Logging | Track access locations |
 
@@ -167,12 +167,12 @@ Only two authorized admins:
 ### Technology Stack
 | Component | Technology |
 |-----------|------------|
-| Framework | Next.js 14 (React) |
+| Framework | Next.js 16 (React 19) |
 | Language | TypeScript |
 | Database | PostgreSQL |
 | ORM | Prisma |
 | Authentication | NextAuth.js |
-| File Storage | Replit Object Storage (encrypted) |
+| File Storage | Multi-provider (Replit, AWS S3, Cloudflare R2, local) with AES-256 encryption |
 | Email Service | Resend API |
 | PDF Processing | pdf-lib, MuPDF |
 | AI Features | OpenAI API |
@@ -227,12 +227,35 @@ Only two authorized admins:
 
 ## File Storage Architecture
 
-### Storage Backends
-| Backend | Purpose |
-|---------|---------|
-| Replit Object Storage | Primary encrypted storage |
-| S3-Compatible | AWS S3 endpoint support |
-| TUS Protocol | Resumable uploads for large files |
+### Storage Provider Abstraction
+The platform includes a unified storage abstraction layer supporting multiple deployment targets:
+
+| Provider | Configuration | Use Case |
+|----------|---------------|----------|
+| `replit` | Default for Replit deployments | Replit Object Storage with sidecar signed URLs |
+| `s3` | AWS S3 or S3-compatible services | Production deployments on AWS, MinIO, DigitalOcean Spaces |
+| `r2` | Cloudflare R2 | Cost-effective S3-compatible storage |
+| `local` | Local filesystem | Development and testing without cloud storage |
+
+### Configuration Environment Variables
+```
+STORAGE_PROVIDER=replit|s3|r2|local
+STORAGE_BUCKET=my-bucket
+STORAGE_REGION=us-east-1
+STORAGE_ENDPOINT=https://...
+STORAGE_ACCESS_KEY_ID=xxx
+STORAGE_SECRET_ACCESS_KEY=xxx
+STORAGE_ENCRYPTION_KEY=xxx (64-char hex for AES-256)
+```
+
+### Key Storage Components
+| Component | Location | Purpose |
+|-----------|----------|---------|
+| StorageProvider Interface | `lib/storage/providers/types.ts` | Unified API for all providers |
+| Provider Factory | `lib/storage/providers/index.ts` | Creates appropriate provider from config |
+| CryptoService | `lib/storage/encryption/crypto-service.ts` | AES-256-GCM encryption with HKDF key derivation |
+| TUS Store Factory | `lib/storage/tus-store-factory.ts` | Resumable uploads across providers |
+| Investor Storage | `lib/storage/investor-storage.ts` | Investor document operations |
 
 ### Supported File Types
 - PDF documents

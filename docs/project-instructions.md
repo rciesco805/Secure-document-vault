@@ -88,7 +88,7 @@ middleware.ts             # Auth/webhooks
 - Resend (emails)
 - Tinybird (analytics)
 - Stripe (platform billing)
-- Replit Object Storage (documents)
+- Multi-Provider Storage (Replit, AWS S3, Cloudflare R2, or local filesystem)
 - Rollbar (error monitoring)
 
 ### Recent Commits Focus
@@ -125,7 +125,7 @@ The architecture is a modular Next.js app for secure, compliant portals. Data po
 - Stripe (hybrid)
 - Persona (KYC)
 - Resend (emails)
-- Blob storage (S3-compatible)
+- Multi-Provider Storage (Replit, S3, R2, local) with AES-256 encryption
 - Hooks: Wolters Kluwer (K1), QuickBooks (expenses)
 
 ### Deployment

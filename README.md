@@ -78,7 +78,7 @@ This platform is designed for SEC Rule 506(c) compliant private offerings:
 - [Persona](https://withpersona.com) – KYC/AML Verification
 - [Plaid](https://plaid.com) – Bank Connectivity
 - [Stripe](https://stripe.com) – Platform Billing
-- [Replit Object Storage](https://replit.com) – Document Storage
+- **Multi-Provider Storage** – Replit Object Storage, AWS S3, Cloudflare R2, or local filesystem
 
 ## Payment Architecture
 
@@ -185,12 +185,18 @@ The Prisma schema is organized into multiple files in `prisma/schema/`:
 ### Replit (Recommended)
 This project is optimized for Replit deployment with built-in database, secrets management, and object storage.
 
-### Vercel
-```bash
-# Deploy to Vercel
-vercel deploy
+### Vercel / Docker / VPS
+The platform includes a unified storage abstraction layer supporting multiple backends:
 
-# Set environment variables in Vercel dashboard
+```bash
+# Storage Provider Configuration
+STORAGE_PROVIDER=s3|r2|local     # Storage backend (default: replit)
+STORAGE_BUCKET=my-bucket          # S3/R2 bucket name
+STORAGE_REGION=us-east-1          # AWS region
+STORAGE_ENDPOINT=https://...      # Custom endpoint (for R2/MinIO)
+STORAGE_ACCESS_KEY_ID=xxx         # AWS access key
+STORAGE_SECRET_ACCESS_KEY=xxx     # AWS secret key
+STORAGE_ENCRYPTION_KEY=xxx        # AES-256 key (64-char hex)
 ```
 
 ### Docker

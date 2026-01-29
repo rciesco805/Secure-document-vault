@@ -1,5 +1,6 @@
-import { GetStaticPropsContext } from "next";
-import { useRouter } from "next/router";
+"use client";
+
+import { useRouter, useParams, useSearchParams } from "next/navigation";
 
 import React, { useEffect, useState } from "react";
 
@@ -58,6 +59,11 @@ export default function DataroomDocumentViewPage({
   logoOnAccessForm,
 }: DataroomDocumentProps) {
   const router = useRouter();
+  const params = useParams();
+  const searchParams = useSearchParams();
+  const domain = params.domain as string;
+  const slug = params.slug as string;
+  const documentId = params.documentId as string;
   const sessionResult = useSession();
   const session = sessionResult?.data ?? null;
   const rawStatus = sessionResult?.status ?? "loading";
@@ -84,7 +90,7 @@ export default function DataroomDocumentViewPage({
     const linkId = linkData?.link?.id;
     const cookieToken =
       Cookies.get("pm_vft") || 
-      Cookies.get(`pm_drs_flag_${router.query.slug}`) ||
+      Cookies.get(`pm_drs_flag_${slug}`) ||
       (linkId ? Cookies.get(`pm_drs_flag_${linkId}`) : undefined);
     const storedEmail = window.localStorage.getItem("bffund.email");
     if (cookieToken) {
@@ -93,9 +99,9 @@ export default function DataroomDocumentViewPage({
         setStoredEmail(storedEmail.toLowerCase());
       }
     }
-  }, [router.query.slug, linkData?.link?.id]);
+  }, [slug, linkData?.link?.id]);
 
-  if (router.isFallback) {
+  if (false) {
     return (
       <div className="flex h-screen items-center justify-center bg-black">
         <LoadingSpinner className="h-20 w-20" />
@@ -103,21 +109,14 @@ export default function DataroomDocumentViewPage({
     );
   }
 
-  const {
-    email: verifiedEmail,
-    d: disableEditEmail,
-    previewToken,
-    preview,
-  } = router.query as {
-    email: string;
-    d: string;
-    previewToken?: string;
-    preview?: string;
-  };
+  const verifiedEmail = searchParams.get("email") || "";
+  const disableEditEmail = searchParams.get("d") || "";
+  const previewToken = searchParams.get("previewToken") || undefined;
+  const preview = searchParams.get("preview") || undefined;
   const { link, brand } = linkData;
 
   // Render the document view for DATAROOM_LINK
-  if (!linkData || status === "loading" || router.isFallback) {
+  if (!linkData || status === "loading" || false) {
     return (
       <>
         <CustomMetaTag
@@ -196,122 +195,3 @@ export default function DataroomDocumentViewPage({
   );
 }
 
-export async function getStaticProps(context: GetStaticPropsContext) {
-  const {
-    domain: domainParam,
-    slug: slugParam,
-    documentId: documentIdParam,
-  } = context.params as {
-    domain: string;
-    slug: string;
-    documentId: string;
-  };
-
-  try {
-    const domain = z
-      .string()
-      .regex(/^([a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$/)
-      .parse(domainParam);
-    const slug = z
-      .string()
-      .regex(/^[a-zA-Z0-9_-]+$/, "Invalid path parameter")
-      .parse(slugParam);
-    const documentId = z.string().cuid().parse(documentIdParam);
-
-    const res = await fetch(
-      `${process.env.NEXTAUTH_URL}/api/links/domains/${encodeURIComponent(
-        domain,
-      )}/${encodeURIComponent(slug)}/documents/${documentId}`,
-    );
-    if (!res.ok) {
-      throw new Error(`Failed to fetch: ${res.status}`);
-    }
-
-    const { linkType, link, brand } =
-      (await res.json()) as DataroomDocumentLinkData;
-
-    if (!link || !linkType) {
-      return { notFound: true };
-    }
-
-    if (linkType !== "DATAROOM_LINK") {
-      return { notFound: true };
-    }
-
-    let pageId = null;
-    let recordMap = null;
-    let theme = null;
-
-    const { type, file, ...versionWithoutTypeAndFile } =
-      link.dataroomDocument.document.versions[0];
-
-    if (type === "notion") {
-      theme = new URL(file).searchParams.get("mode");
-      const notionPageId = parsePageId(file, { uuid: false });
-      if (!notionPageId) {
-        return {
-          notFound: true,
-        };
-      }
-
-      pageId = notionPageId;
-      recordMap = await notion.getPage(pageId, { signFileUrls: false });
-      // TODO: separately sign the file urls until PR merged and published; ref: https://github.com/NotionX/react-notion-x/issues/580#issuecomment-2542823817
-      await addSignedUrls({ recordMap });
-    }
-
-    const { teamId, team, ...linkData } = link;
-
-    const { advancedExcelEnabled, ...linkDocument } =
-      linkData.dataroomDocument.document;
-
-    return {
-      props: {
-        linkData: {
-          linkType: "DATAROOM_LINK",
-          link: {
-            ...linkData,
-            teamId: teamId || null,
-            dataroomDocument: {
-              ...linkData.dataroomDocument,
-              document: {
-                ...linkDocument,
-                versions: [versionWithoutTypeAndFile],
-              },
-            },
-          },
-          brand,
-        },
-        notionData: {
-          rootNotionPageId: null, // do not pass rootNotionPageId to the client
-          recordMap,
-          theme,
-        },
-        meta: {
-          enableCustomMetatag: link.enableCustomMetatag || false,
-          metaTitle: link.metaTitle,
-          metaDescription: link.metaDescription,
-          metaImage: link.metaImage,
-          metaFavicon: link.metaFavicon ?? "/favicon.ico",
-          metaUrl: `https://${domain}/${slug}` || null,
-        },
-        showPoweredByBanner: false,
-        showAccountCreationSlide: false,
-        useAdvancedExcelViewer: advancedExcelEnabled,
-        useCustomAccessForm: true,
-        logoOnAccessForm: true,
-      },
-      revalidate: brand || recordMap ? 10 : 60,
-    };
-  } catch (error) {
-    console.error("Fetching error:", error);
-    return { props: { error: true }, revalidate: 30 };
-  }
-}
-
-export async function getStaticPaths() {
-  return {
-    paths: [],
-    fallback: true,
-  };
-}

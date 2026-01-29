@@ -1,4 +1,6 @@
-import { useRouter } from "next/router";
+"use client";
+
+import { useRouter, useParams, useSearchParams } from "next/navigation";
 
 import { useEffect, useState } from "react";
 
@@ -10,19 +12,19 @@ import LoadingSpinner from "@/components/ui/loading-spinner";
 import DataroomView from "@/components/view/dataroom/dataroom-view";
 import DocumentView from "@/components/view/document-view";
 
-import { ViewPageProps } from "./index";
+import { ViewPageProps } from "../page-client";
 
-// Reuse the same getServerSideProps from the main view page
-export { getServerSideProps } from "./index";
 
 export default function EmbedPage(props: ViewPageProps) {
   const router = useRouter();
+  const params = useParams();
+  const searchParams = useSearchParams();
+  const linkId = params.linkId as string;
   const [isEmbedded, setIsEmbedded] = useState<boolean | null>(null);
   const analytics = useAnalytics();
 
   useEffect(() => {
-    // Only run when router is ready and linkId is present
-    if (!router.isReady || !router.query.linkId) return;
+    if (!linkId) return;
 
     // Check if the page is embedded in an iframe
     const isInIframe = window !== window.parent;
@@ -36,7 +38,7 @@ export default function EmbedPage(props: ViewPageProps) {
       const embedSource = referrer ? new URL(referrer).hostname : "direct";
 
       analytics.capture("Embedded Link Loaded", {
-        linkId: router.query.linkId as string,
+        linkId,
         embedSource,
         url: referrer || "unknown",
         userAgent: window.navigator.userAgent,
@@ -45,7 +47,7 @@ export default function EmbedPage(props: ViewPageProps) {
       return () => document.body.classList.remove("embed-view");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [router.isReady, router.query.linkId]);
+  }, [linkId]);
 
   // Show loading state while checking
   if (isEmbedded === null) {
@@ -63,15 +65,9 @@ export default function EmbedPage(props: ViewPageProps) {
     );
   }
 
-  const {
-    email: verifiedEmail,
-    d: disableEditEmail,
-    previewToken,
-  } = router.query as {
-    email: string;
-    d: string;
-    previewToken?: string;
-  };
+  const verifiedEmail = searchParams.get("email") || "";
+  const disableEditEmail = searchParams.get("d") || "";
+  const previewToken = searchParams.get("previewToken") || undefined;
   const { linkType, brand } = props.linkData;
 
   // Render the document view for DOCUMENT_LINK

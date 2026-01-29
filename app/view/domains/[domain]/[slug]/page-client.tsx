@@ -1,5 +1,6 @@
-import { GetStaticPropsContext } from "next";
-import { useRouter } from "next/router";
+"use client";
+
+import { useRouter, useParams, useSearchParams } from "next/navigation";
 
 import { useEffect, useState } from "react";
 
@@ -46,223 +47,6 @@ type WorkflowLinkData = {
   brand: Brand | null;
 };
 
-export const getStaticProps = async (context: GetStaticPropsContext) => {
-  const { domain: domainParam, slug: slugParam } = context.params as {
-    domain: string;
-    slug: string;
-  };
-
-  try {
-    const domain = z
-      .string()
-      .regex(/^([a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$/)
-      .parse(domainParam);
-    const slug = z
-      .string()
-      .regex(/^[a-zA-Z0-9_-]+$/, "Invalid path parameter")
-      .parse(slugParam);
-
-    const res = await fetch(
-      `${process.env.NEXTAUTH_URL}/api/links/domains/${encodeURIComponent(
-        domain,
-      )}/${encodeURIComponent(slug)}`,
-    );
-    if (!res.ok) {
-      throw new Error(`Failed to fetch: ${res.status}`);
-    }
-    const responseData = (await res.json()) as any;
-    const { linkType, link, brand, linkId } = responseData;
-
-    if (!linkType) {
-      return {
-        notFound: true,
-      };
-    }
-
-    // Handle workflow links - minimal props needed
-    if (linkType === "WORKFLOW_LINK") {
-      return {
-        props: {
-          linkData: {
-            linkType: "WORKFLOW_LINK",
-            entryLinkId: linkId || "",
-            domain,
-            slug,
-            brand: brand || null,
-          },
-          notionData: {
-            rootNotionPageId: null,
-            recordMap: null,
-            theme: null,
-          },
-          meta: {
-            enableCustomMetatag: false,
-            metaTitle: null,
-            metaDescription: null,
-            metaImage: null,
-            metaUrl: `https://${domain}/${slug}`,
-            metaFavicon: "/favicon.ico",
-          },
-          showPoweredByBanner: false,
-          showAccountCreationSlide: false,
-          useAdvancedExcelViewer: false,
-          useCustomAccessForm: false,
-          logoOnAccessForm: false,
-        },
-        revalidate: 60,
-      };
-    }
-
-    if (!link) {
-      return {
-        notFound: true,
-      };
-    }
-
-    // Manage the data for the document link
-    if (linkType === "DOCUMENT_LINK") {
-      let pageId = null;
-      let recordMap = null;
-      let theme = null;
-
-      const { type, file, ...versionWithoutTypeAndFile } =
-        link.document.versions[0];
-
-      if (type === "notion") {
-        theme = new URL(file).searchParams.get("mode");
-        const notionPageId = parsePageId(file, { uuid: false });
-        if (!notionPageId) {
-          return {
-            notFound: true,
-          };
-        }
-
-        pageId = notionPageId;
-        recordMap = await notion.getPage(pageId);
-      }
-
-      const { team, teamId, advancedExcelEnabled, ...linkDocument } =
-        link.document;
-      const teamPlan = team?.plan || "free";
-
-      return {
-        props: {
-          linkData: {
-            linkType: "DOCUMENT_LINK",
-            link: {
-              ...link,
-              teamId: teamId || null,
-              document: {
-                ...linkDocument,
-                versions: [versionWithoutTypeAndFile],
-                // TODO: remove this once the assistant feature is re-enabled
-                assistantEnabled: false,
-              },
-            },
-            brand,
-          },
-          notionData: {
-            rootNotionPageId: null, // do not pass rootNotionPageId to the client
-            recordMap,
-            theme,
-          },
-          meta: {
-            enableCustomMetatag: link.enableCustomMetatag || false,
-            metaTitle: link.metaTitle,
-            metaDescription: link.metaDescription,
-            metaImage: link.metaImage,
-            metaFavicon: link.metaFavicon || "/favicon.ico",
-            metaUrl: `https://${domain}/${slug}` || null,
-          },
-          showAccountCreationSlide: link.showBanner || teamPlan === "free",
-          useAdvancedExcelViewer: advancedExcelEnabled,
-          useCustomAccessForm: true,
-          logoOnAccessForm: true,
-        },
-        revalidate: 10,
-      };
-    }
-
-    // Manage the data for the dataroom link
-    if (linkType === "DATAROOM_LINK") {
-      // iterate the link.documents and extract type and file and rest of the props
-      let documents = [];
-      for (const document of link.dataroom.documents) {
-        const { file, updatedAt, ...versionWithoutTypeAndFile } =
-          document.document.versions[0];
-
-        const newDocument = {
-          ...document.document,
-          dataroomDocumentId: document.id,
-          folderId: document.folderId,
-          orderIndex: document.orderIndex,
-          hierarchicalIndex: document.hierarchicalIndex,
-          versions: [
-            {
-              ...versionWithoutTypeAndFile,
-              updatedAt:
-                document.updatedAt > updatedAt ? document.updatedAt : updatedAt, // use the latest updatedAt
-            },
-          ],
-        };
-
-        documents.push(newDocument);
-      }
-
-      const { teamId } = link.dataroom;
-
-      // Check if dataroomIndex feature flag is enabled
-      const featureFlags = await getFeatureFlags({ teamId });
-      const dataroomIndexEnabled = featureFlags.dataroomIndex;
-
-      const lastUpdatedAt = link.dataroom.documents.reduce(
-        (max: number, doc: any) => {
-          return Math.max(
-            max,
-            new Date(doc.document.versions[0].updatedAt).getTime(),
-          );
-        },
-        new Date(link.dataroom.createdAt).getTime(),
-      );
-
-      return {
-        props: {
-          linkData: {
-            linkType: "DATAROOM_LINK",
-            link: {
-              ...link,
-              teamId: teamId || null,
-              dataroom: {
-                ...link.dataroom,
-                documents,
-                lastUpdatedAt: lastUpdatedAt,
-              },
-            },
-            brand,
-          },
-          meta: {
-            enableCustomMetatag: link.enableCustomMetatag || false,
-            metaTitle: link.metaTitle,
-            metaDescription: link.metaDescription,
-            metaImage: link.metaImage,
-            metaFavicon: link.metaFavicon || "/favicon.ico",
-            metaUrl: `https://${domain}/${slug}` || null,
-          },
-          showPoweredByBanner: false,
-          showAccountCreationSlide: false,
-          useAdvancedExcelViewer: false, // INFO: this is managed in the API route
-          useCustomAccessForm: true,
-          logoOnAccessForm: true,
-          dataroomIndexEnabled,
-        },
-        revalidate: 10,
-      };
-    }
-  } catch (error) {
-    console.error("Fetching error:", error);
-    return { props: { error: true }, revalidate: 30 };
-  }
-};
 
 export async function getStaticPaths() {
   return {
@@ -304,6 +88,10 @@ export default function ViewPage({
   error?: boolean;
 }) {
   const router = useRouter();
+  const params = useParams();
+  const searchParams = useSearchParams();
+  const domain = params.domain as string;
+  const slug = params.slug as string;
   const sessionResult = useSession();
   const session = sessionResult?.data ?? null;
   const rawStatus = sessionResult?.status ?? "loading";
@@ -327,7 +115,7 @@ export default function ViewPage({
   useEffect(() => {
     // Retrieve token from cookie on component mount
     const cookieToken =
-      Cookies.get("pm_vft") || Cookies.get(`pm_drs_flag_${router.query.slug}`);
+      Cookies.get("pm_vft") || Cookies.get(`pm_drs_flag_${slug}`);
     const storedEmail = window.localStorage.getItem("bffund.email");
     if (cookieToken) {
       setStoredToken(cookieToken);
@@ -335,9 +123,9 @@ export default function ViewPage({
         setStoredEmail(storedEmail.toLowerCase());
       }
     }
-  }, [router.query.slug]);
+  }, [slug]);
 
-  if (router.isFallback) {
+  if (false) {
     return (
       <div className="flex h-screen items-center justify-center bg-black">
         <LoadingSpinner className="h-20 w-20" />
@@ -351,17 +139,10 @@ export default function ViewPage({
     );
   }
 
-  const {
-    email: verifiedEmail,
-    d: disableEditEmail,
-    previewToken,
-    preview,
-  } = router.query as {
-    email: string;
-    d: string;
-    previewToken?: string;
-    preview?: string;
-  };
+  const verifiedEmail = searchParams.get("email") || "";
+  const disableEditEmail = searchParams.get("d") || "";
+  const previewToken = searchParams.get("previewToken") || undefined;
+  const preview = searchParams.get("preview") || undefined;
   const { linkType } = linkData;
 
   // Render workflow access view for WORKFLOW_LINK
@@ -472,7 +253,7 @@ export default function ViewPage({
   if (linkType === "DATAROOM_LINK") {
     const { link, brand } = linkData as DataroomLinkData;
 
-    if (!link || status === "loading" || router.isFallback) {
+    if (!link || status === "loading" || false) {
       return (
         <>
           <CustomMetaTag

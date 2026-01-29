@@ -90,8 +90,15 @@ The platform is actively migrating from Next.js Pages Router to App Router for i
 - `/sign/certificate/[documentId]` → `app/sign/certificate/[documentId]/` (completion certificates)
 - `/sign/certificate/verify` → `app/sign/certificate/verify/` (certificate verification)
 
-### Phase 4 Pending
-Admin pages, documents, datarooms, settings, remaining viewer pages
+### Phase 4 Complete: Viewer Pages (January 29, 2026)
+- `/view/[linkId]` → `app/view/[linkId]/` (link viewer - 701 lines)
+- `/view/[linkId]/embed` → `app/view/[linkId]/embed/` (embedded viewer)
+- `/view/[linkId]/d/[documentId]` → `app/view/[linkId]/d/[documentId]/` (dataroom document)
+- `/view/domains/[domain]/[slug]` → `app/view/domains/[domain]/[slug]/` (custom domain viewer)
+- `/view/domains/[domain]/[slug]/d/[documentId]` → `app/view/domains/[domain]/[slug]/d/[documentId]/` (custom domain document)
+
+### Phase 5 Pending
+Admin pages, documents, datarooms, settings
 
 ### Current App Router Structure
 ```
@@ -121,6 +128,11 @@ app/
 │       ├── [documentId]/      # /sign/certificate/[documentId]
 │       └── verify/            # /sign/certificate/verify
 ├── view/
+│   ├── [linkId]/              # /view/[linkId] - link viewer
+│   │   ├── embed/             # /view/[linkId]/embed - embedded
+│   │   └── d/[documentId]/    # /view/[linkId]/d/[documentId] - dataroom doc
+│   ├── domains/[domain]/[slug]/  # Custom domain viewers
+│   │   └── d/[documentId]/    # Custom domain document view
 │   └── sign/
 │       └── [token]/           # /view/sign/[token] - public signing
 ├── layout.tsx                 # Root layout with providers

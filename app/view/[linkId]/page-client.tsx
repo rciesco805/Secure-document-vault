@@ -1,5 +1,6 @@
-import { GetServerSidePropsContext } from "next";
-import { useRouter } from "next/router";
+"use client";
+
+import { useRouter, useParams, useSearchParams } from "next/navigation";
 
 import { useEffect, useState } from "react";
 
@@ -69,225 +70,6 @@ export interface ViewPageProps {
   annotationsEnabled?: boolean;
 }
 
-export const getServerSideProps = async (context: GetServerSidePropsContext) => {
-  const { linkId: linkIdParam } = context.params as { linkId: string };
-
-  // Set cache headers to prevent aggressive caching
-  context.res.setHeader(
-    'Cache-Control',
-    'private, no-cache, no-store, must-revalidate'
-  );
-
-  try {
-    // Accept both CUID format and quicklink format (quicklink_xxx)
-    const linkId = z.string().min(1).parse(linkIdParam);
-    const res = await fetch(`${process.env.NEXTAUTH_URL}/api/links/${linkId}`);
-    if (!res.ok) {
-      throw new Error(`Failed to fetch: ${res.status}`);
-    }
-
-    const { linkType, link, brand } = (await res.json()) as any;
-
-    if (!linkType) {
-      return {
-        notFound: true,
-      };
-    }
-
-    // Handle workflow links - minimal props needed
-    if (linkType === "WORKFLOW_LINK") {
-      return {
-        props: {
-          linkData: {
-            linkType: "WORKFLOW_LINK",
-            entryLinkId: linkId,
-            brand: brand || null,
-          },
-          notionData: {
-            rootNotionPageId: null,
-            recordMap: null,
-            theme: null,
-          },
-          meta: {
-            enableCustomMetatag: false,
-            metaTitle: null,
-            metaDescription: null,
-            metaImage: null,
-            metaUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/view/${linkId}`,
-            metaFavicon: "/favicon.ico",
-          },
-          showPoweredByBanner: false,
-          showAccountCreationSlide: false,
-          useAdvancedExcelViewer: false,
-          useCustomAccessForm: false,
-          logoOnAccessForm: false,
-        },
-      };
-    }
-
-    if (!link) {
-      return {
-        notFound: true,
-      };
-    }
-
-    // Manage the data for the document link
-    if (linkType === "DOCUMENT_LINK") {
-      let pageId = null;
-      let recordMap = null;
-      let theme = null;
-
-      const { type, file, ...versionWithoutTypeAndFile } =
-        link.document.versions[0];
-
-      if (type === "notion") {
-        try {
-          theme = new URL(file).searchParams.get("mode");
-          const notionPageId = parsePageId(file, { uuid: false });
-          if (!notionPageId) {
-            return { notFound: true };
-          }
-
-          pageId = notionPageId;
-          recordMap = await notion.getPage(pageId, { signFileUrls: false });
-          await addSignedUrls({ recordMap });
-        } catch (notionError) {
-          console.error("Notion API error:", notionError);
-          // Return a temporary error page instead of 404
-          return {
-            props: { notionError: true },
-          };
-        }
-      }
-
-      const { team, teamId, advancedExcelEnabled, ...linkDocument } =
-        link.document;
-      const teamPlan = team?.plan || "free";
-
-      // Check feature flags for document links
-      const featureFlags = await getFeatureFlags({ teamId });
-      const annotationsEnabled = featureFlags.annotations;
-
-      return {
-        props: {
-          linkData: {
-            linkType: "DOCUMENT_LINK",
-            link: {
-              ...link,
-              teamId: teamId,
-              document: {
-                ...linkDocument,
-                versions: [versionWithoutTypeAndFile],
-                // TODO: remove this once the assistant feature is re-enabled
-                assistantEnabled: false,
-              },
-            },
-            brand,
-          },
-          notionData: {
-            rootNotionPageId: null, // do not pass rootNotionPageId to the client
-            recordMap,
-            theme,
-          },
-          meta: {
-            enableCustomMetatag: link.enableCustomMetatag || false,
-            metaTitle: link.metaTitle,
-            metaDescription: link.metaDescription,
-            metaImage: link.metaImage,
-            metaFavicon: brand?.favicon || link.metaFavicon || "/favicon.ico",
-            metaUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/view/${linkId}`,
-          },
-          showPoweredByBanner: link.showBanner || teamPlan === "free",
-          showAccountCreationSlide: link.showBanner || teamPlan === "free",
-          useAdvancedExcelViewer: advancedExcelEnabled,
-          useCustomAccessForm: true,
-          logoOnAccessForm: true,
-          annotationsEnabled,
-        },
-      };
-    }
-
-    // Manage the data for the dataroom link
-    if (linkType === "DATAROOM_LINK") {
-      // iterate the link.documents and extract type and file and rest of the props
-      let documents = [];
-      for (const document of link.dataroom.documents) {
-        const { file, updatedAt, ...versionWithoutTypeAndFile } =
-          document.document.versions[0];
-
-        const newDocument = {
-          ...document.document,
-          dataroomDocumentId: document.id,
-          folderId: document.folderId,
-          orderIndex: document.orderIndex,
-          hierarchicalIndex: document.hierarchicalIndex,
-          versions: [
-            {
-              ...versionWithoutTypeAndFile,
-              updatedAt:
-                document.updatedAt > updatedAt ? document.updatedAt : updatedAt, // use the latest updatedAt
-            },
-          ],
-        };
-
-        documents.push(newDocument);
-      }
-
-      const { teamId } = link.dataroom;
-
-      // Check feature flags
-      const featureFlags = await getFeatureFlags({ teamId });
-      const dataroomIndexEnabled = featureFlags.dataroomIndex;
-      const annotationsEnabled = featureFlags.annotations;
-
-      const lastUpdatedAt = link.dataroom.documents.reduce(
-        (max: number, doc: any) => {
-          return Math.max(
-            max,
-            new Date(doc.document.versions[0].updatedAt).getTime(),
-          );
-        },
-        new Date(link.dataroom.createdAt).getTime(),
-      );
-
-      return {
-        props: {
-          linkData: {
-            linkType: "DATAROOM_LINK",
-            link: {
-              ...link,
-              teamId: teamId,
-              dataroom: {
-                ...link.dataroom,
-                documents,
-                lastUpdatedAt: lastUpdatedAt,
-              },
-            },
-            brand,
-          },
-          meta: {
-            enableCustomMetatag: link.enableCustomMetatag || false,
-            metaTitle: link.metaTitle,
-            metaDescription: link.metaDescription,
-            metaImage: link.metaImage,
-            metaFavicon: brand?.favicon || link.metaFavicon || "/favicon.ico",
-            metaUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/view/${linkId}`,
-          },
-          showPoweredByBanner: false,
-          showAccountCreationSlide: false,
-          useAdvancedExcelViewer: false, // INFO: this is managed in the API route
-          useCustomAccessForm: true,
-          logoOnAccessForm: true,
-          dataroomIndexEnabled,
-          annotationsEnabled,
-        },
-      };
-    }
-  } catch (error) {
-    console.error("Fetching error:", error);
-    return { props: { error: true } };
-  }
-};
 
 export default function ViewPage({
   linkData,
@@ -304,6 +86,13 @@ export default function ViewPage({
   notionError,
 }: ViewPageProps & { error?: boolean; notionError?: boolean }) {
   const router = useRouter();
+  const params = useParams();
+  const searchParams = useSearchParams();
+  const linkId = params.linkId as string;
+  const queryToken = searchParams.get("token") || undefined;
+  const queryEmail = searchParams.get("email") || undefined;
+  const queryPreviewToken = searchParams.get("previewToken") || undefined;
+  const queryD = searchParams.get("d") || undefined;
   const sessionResult = useSession();
   const session = sessionResult?.data ?? null;
   const rawStatus = sessionResult?.status ?? "loading";
@@ -333,7 +122,7 @@ export default function ViewPage({
     // Retrieve token from cookie on component mount
     const cookieToken =
       Cookies.get("pm_vft") ||
-      Cookies.get(`pm_drs_flag_${router.query.linkId}`);
+      Cookies.get(`pm_drs_flag_${linkId}`);
     const localStoredEmail = window.localStorage.getItem("bffund.email");
     if (cookieToken) {
       setStoredToken(cookieToken);
@@ -342,20 +131,17 @@ export default function ViewPage({
       }
     }
     
-    const linkId = router.query.linkId as string;
-    const { token, email } = router.query as { token?: string; email?: string };
-    
-    if (token && email && linkId) {
-      window.localStorage.setItem(`pm_magic_token_${linkId}`, token);
-      window.localStorage.setItem(`pm_magic_email_${linkId}`, email.toLowerCase().trim());
+    if (queryToken && queryEmail && linkId) {
+      window.localStorage.setItem(`pm_magic_token_${linkId}`, queryToken);
+      window.localStorage.setItem(`pm_magic_email_${linkId}`, queryEmail.toLowerCase().trim());
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [router.query.linkId, router.query.token, router.query.email]);
+  }, [linkId, queryToken, queryEmail]);
 
   // Auto-verify authenticated users from viewer portal
   useEffect(() => {
     const autoVerifyAuthenticatedUser = async () => {
-      const linkId = router.query.linkId as string;
+      const linkId = linkId as string;
       const userEmail = (session?.user as CustomUser)?.email;
       
       if (
@@ -403,17 +189,17 @@ export default function ViewPage({
       }
     };
     
-    if (router.isReady && status === "authenticated") {
+    if (true && status === "authenticated") {
       autoVerifyAuthenticatedUser();
     }
-  }, [router.isReady, router.query.linkId, status, session, storedToken, magicLinkVerified, isVerifyingMagicLink, autoVerifyAttempted]);
+  }, [true, linkId, status, session, storedToken, magicLinkVerified, isVerifyingMagicLink, autoVerifyAttempted]);
 
   // Handle magic link verification via backend
   useEffect(() => {
     const verifyMagicLink = async () => {
-      const linkId = router.query.linkId as string;
-      const token = router.query.token as string | undefined;
-      const email = router.query.email as string | undefined;
+      const linkId = linkId as string;
+      const token = queryToken as string | undefined;
+      const email = queryEmail as string | undefined;
 
       if (!token || !email || !linkId) {
         return;
@@ -464,10 +250,10 @@ export default function ViewPage({
       }
     };
 
-    if (router.isReady) {
+    if (true) {
       verifyMagicLink();
     }
-  }, [router.isReady, router.query.linkId, router.query.token, router.query.email, magicLinkVerified, isVerifyingMagicLink]);
+  }, [true, linkId, queryToken, queryEmail, magicLinkVerified, isVerifyingMagicLink]);
 
   if (router.isFallback) {
     return (
@@ -489,19 +275,11 @@ export default function ViewPage({
     );
   }
 
-  const {
-    email: verifiedEmail,
-    d: disableEditEmail,
-    previewToken,
-    preview,
-    token: magicLinkToken,
-  } = router.query as {
-    email: string;
-    d: string;
-    previewToken?: string;
-    preview?: string;
-    token?: string;
-  };
+  const verifiedEmail = queryEmail || "";
+  const disableEditEmail = queryD || "";
+  const previewToken = queryPreviewToken;
+  const preview = searchParams.get("preview") || undefined;
+  const magicLinkToken = queryToken;
   const { linkType } = linkData;
 
   // Render workflow access view for WORKFLOW_LINK

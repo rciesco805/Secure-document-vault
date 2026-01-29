@@ -1,5 +1,6 @@
-import { GetServerSidePropsContext } from "next";
-import { useRouter } from "next/router";
+"use client";
+
+import { useRouter, useParams, useSearchParams } from "next/navigation";
 
 import React, { useEffect, useState } from "react";
 
@@ -58,6 +59,10 @@ export default function DataroomDocumentViewPage({
   logoOnAccessForm,
 }: DataroomDocumentProps) {
   const router = useRouter();
+  const params = useParams();
+  const searchParams = useSearchParams();
+  const linkId = params.linkId as string;
+  const documentId = params.documentId as string;
   const sessionResult = useSession();
   const session = sessionResult?.data ?? null;
   const rawStatus = sessionResult?.status ?? "loading";
@@ -84,7 +89,7 @@ export default function DataroomDocumentViewPage({
     const linkSlug = linkData?.link?.slug;
     const cookieToken =
       Cookies.get("pm_vft") || 
-      Cookies.get(`pm_drs_flag_${router.query.linkId}`) ||
+      Cookies.get(`pm_drs_flag_${linkId}`) ||
       (linkSlug ? Cookies.get(`pm_drs_flag_${linkSlug}`) : undefined);
     const storedEmail = window.localStorage.getItem("bffund.email");
     if (cookieToken) {
@@ -93,19 +98,12 @@ export default function DataroomDocumentViewPage({
         setStoredEmail(storedEmail.toLowerCase());
       }
     }
-  }, [router.query.linkId, linkData?.link?.slug]);
+  }, [linkId, linkData?.link?.slug]);
 
-  const {
-    email: verifiedEmail,
-    d: disableEditEmail,
-    previewToken,
-    preview,
-  } = router.query as {
-    email: string;
-    d: string;
-    previewToken?: string;
-    preview?: string;
-  };
+  const verifiedEmail = searchParams.get("email") || "";
+  const disableEditEmail = searchParams.get("d") || "";
+  const previewToken = searchParams.get("previewToken") || undefined;
+  const preview = searchParams.get("preview") || undefined;
   const { link, brand } = linkData;
 
   // Render the document view for DATAROOM_LINK
@@ -186,115 +184,4 @@ export default function DataroomDocumentViewPage({
       />
     </>
   );
-}
-
-export async function getServerSideProps(context: GetServerSidePropsContext) {
-  const { linkId: linkIdParam, documentId: documentIdParam } =
-    context.params as {
-      linkId: string;
-      documentId: string;
-    };
-
-  // Set cache headers to prevent aggressive caching
-  context.res.setHeader(
-    'Cache-Control',
-    'private, no-cache, no-store, must-revalidate'
-  );
-
-  try {
-    // Accept both CUID format and quicklink format (quicklink_xxx)
-    const linkId = z.string().min(1).parse(linkIdParam);
-    const documentId = z.string().min(1).parse(documentIdParam);
-    const res = await fetch(
-      `${process.env.NEXTAUTH_URL}/api/links/${linkId}/documents/${documentId}`,
-    );
-    
-    if (!res.ok) {
-      console.error(`API error: ${res.status} ${res.statusText}`);
-      return { notFound: true };
-    }
-    
-    const { linkType, link, brand } =
-      (await res.json()) as DataroomDocumentLinkData;
-
-    if (!link || !linkType) {
-      return { notFound: true };
-    }
-
-    if (linkType !== "DATAROOM_LINK") {
-      return { notFound: true };
-    }
-
-    if (!link.dataroomDocument?.document?.versions?.[0]) {
-      console.error("Document data not found in link response");
-      return { notFound: true };
-    }
-
-    let pageId = null;
-    let recordMap = null;
-    let theme = null;
-
-    const { type, file, ...versionWithoutTypeAndFile } =
-      link.dataroomDocument.document.versions[0];
-
-    if (type === "notion") {
-      theme = new URL(file).searchParams.get("mode");
-      const notionPageId = parsePageId(file, { uuid: false });
-      if (!notionPageId) {
-        return {
-          notFound: true,
-        };
-      }
-
-      pageId = notionPageId;
-      recordMap = await notion.getPage(pageId, { signFileUrls: false });
-      await addSignedUrls({ recordMap });
-    }
-
-    const { teamId, team, ...linkData } = link;
-
-    const { advancedExcelEnabled, ...linkDocument } =
-      linkData.dataroomDocument.document;
-
-    return {
-      props: {
-        linkData: {
-          linkType: "DATAROOM_LINK",
-          link: {
-            ...linkData,
-            teamId: teamId,
-            dataroomDocument: {
-              ...linkData.dataroomDocument,
-              document: {
-                ...linkDocument,
-                versions: [versionWithoutTypeAndFile],
-              },
-            },
-          },
-          brand,
-        },
-        notionData: {
-          rootNotionPageId: null,
-          recordMap,
-          theme,
-        },
-        meta: {
-          enableCustomMetatag: link.enableCustomMetatag || false,
-          metaTitle: link.metaTitle,
-          metaDescription: link.metaDescription,
-          metaImage: link.metaImage,
-          metaFavicon: brand?.favicon || link.metaFavicon || "/favicon.ico",
-          metaUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/view/${linkId}`,
-        },
-        showPoweredByBanner: false,
-        showAccountCreationSlide: false,
-        useAdvancedExcelViewer: advancedExcelEnabled,
-        useCustomAccessForm: true,
-        logoOnAccessForm: true,
-      },
-    };
-  } catch (error) {
-    console.error("Fetching error:", error);
-    return { props: { error: true } };
-  }
 }

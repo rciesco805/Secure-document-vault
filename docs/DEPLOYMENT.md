@@ -29,12 +29,52 @@ Replit automatically provides:
 
 ### Required Secrets
 
-Set these in Replit Secrets panel:
+Set these in Replit Secrets panel (Secrets tab in left sidebar):
+
+**Core Authentication:**
 ```
 NEXTAUTH_SECRET=<generate with: openssl rand -base64 32>
+NEXTAUTH_URL=https://your-domain.com
 GOOGLE_CLIENT_ID=<from Google Cloud Console>
 GOOGLE_CLIENT_SECRET=<from Google Cloud Console>
 ```
+
+**External Integrations:**
+```
+# Plaid (Banking/ACH)
+PLAID_CLIENT_ID=<from Plaid dashboard>
+PLAID_SECRET=<from Plaid dashboard>
+
+# Persona (KYC/AML)
+PERSONA_API_KEY=<from Persona dashboard>
+PERSONA_WEBHOOK_SECRET=<from Persona webhook settings>
+PERSONA_TEMPLATE_ID=<your verification template ID>
+
+# Stripe (Payments)
+STRIPE_SECRET_KEY=<from Stripe dashboard>
+STRIPE_WEBHOOK_SECRET=<from Stripe webhook settings>
+
+# Resend (Email)
+RESEND_API_KEY=<from Resend dashboard>
+
+# Analytics
+TINYBIRD_TOKEN=<from Tinybird workspace settings>
+
+# Error Monitoring
+ROLLBAR_SERVER_TOKEN=<from Rollbar project>
+NEXT_PUBLIC_ROLLBAR_CLIENT_TOKEN=<from Rollbar project>
+```
+
+### Production vs Development Secrets
+
+Replit supports separate environments. Set in respective tabs:
+
+| Secret | Development | Production |
+|--------|-------------|------------|
+| `PLAID_ENV` | `sandbox` | `production` |
+| `PERSONA_ENVIRONMENT` | `sandbox` | `production` |
+| `STRIPE_SECRET_KEY` | `sk_test_...` | `sk_live_...` |
+| `NEXTAUTH_URL` | Dev domain | Production domain |
 
 ### Differences from Self-Hosted
 
@@ -129,6 +169,135 @@ your-domain.com {
     reverse_proxy app:3000
 }
 ```
+
+---
+
+## Vercel Deployment
+
+Vercel provides easy deployment for Next.js applications with automatic builds and previews.
+
+### Prerequisites
+
+1. Vercel account connected to your Git repository
+2. External PostgreSQL database (Neon, Supabase, Railway, or AWS RDS)
+3. External object storage (AWS S3 or Cloudflare R2)
+
+### Step 1: Import Project
+
+1. Go to [vercel.com/new](https://vercel.com/new)
+2. Import your Git repository
+3. Vercel auto-detects Next.js configuration
+
+### Step 2: Configure Environment Variables
+
+In Vercel Dashboard → Project Settings → Environment Variables:
+
+**Required Variables:**
+```
+# Database (external PostgreSQL)
+DATABASE_URL=postgresql://user:password@host:5432/bf_fund_dataroom
+
+# Authentication
+NEXTAUTH_SECRET=<generate with: openssl rand -base64 32>
+NEXTAUTH_URL=https://your-vercel-domain.vercel.app
+GOOGLE_CLIENT_ID=<from Google Cloud Console>
+GOOGLE_CLIENT_SECRET=<from Google Cloud Console>
+
+# Storage (S3 or R2)
+STORAGE_PROVIDER=s3
+STORAGE_BUCKET=your-bucket-name
+STORAGE_REGION=us-east-1
+STORAGE_ACCESS_KEY_ID=<AWS access key>
+STORAGE_SECRET_ACCESS_KEY=<AWS secret key>
+STORAGE_ENCRYPTION_KEY=<64-char hex string for AES-256>
+
+# For Cloudflare R2:
+# STORAGE_PROVIDER=r2
+# STORAGE_ENDPOINT=https://<account-id>.r2.cloudflarestorage.com
+```
+
+**External Services (same as Replit):**
+```
+# Plaid
+PLAID_CLIENT_ID=xxx
+PLAID_SECRET=xxx
+PLAID_ENV=production
+
+# Persona
+PERSONA_API_KEY=xxx
+PERSONA_WEBHOOK_SECRET=xxx
+PERSONA_ENVIRONMENT=production
+
+# Stripe
+STRIPE_SECRET_KEY=sk_live_xxx
+STRIPE_WEBHOOK_SECRET=whsec_xxx
+
+# Other integrations
+RESEND_API_KEY=xxx
+TINYBIRD_TOKEN=xxx
+ROLLBAR_SERVER_TOKEN=xxx
+NEXT_PUBLIC_ROLLBAR_CLIENT_TOKEN=xxx
+```
+
+### Step 3: Configure Build Settings
+
+Vercel auto-detects these, but verify in Project Settings → General:
+
+```
+Build Command: npm run build
+Output Directory: .next
+Install Command: npm ci
+```
+
+### Step 4: Database Migration
+
+Before first deployment or after schema changes:
+
+```bash
+# Set DATABASE_URL to production
+export DATABASE_URL=postgresql://user:password@host:5432/bf_fund_dataroom
+
+# Run migrations
+npx prisma migrate deploy
+
+# Or for initial setup
+npx prisma db push
+```
+
+### Step 5: Configure Webhooks
+
+Update webhook URLs in external services to point to Vercel domain:
+
+| Service | Webhook URL |
+|---------|-------------|
+| Persona | `https://your-domain.vercel.app/api/webhooks/persona` |
+| Stripe | `https://your-domain.vercel.app/api/webhooks/stripe` |
+| Plaid | `https://your-domain.vercel.app/api/webhooks/plaid` |
+
+### Vercel-Specific Considerations
+
+**Function Timeout:**
+- Hobby: 10 seconds
+- Pro: 60 seconds
+- Enterprise: 900 seconds
+
+For long-running operations (PDF generation, large uploads), consider Pro plan or use background jobs.
+
+**Cold Starts:**
+Edge functions have faster cold starts. Consider for high-traffic API routes.
+
+**Preview Deployments:**
+Set `NEXTAUTH_URL` as an environment variable with "Preview" scope:
+```
+NEXTAUTH_URL=https://$VERCEL_URL
+```
+
+### Custom Domain Setup
+
+1. Go to Project Settings → Domains
+2. Add your domain (e.g., `dataroom.yourdomain.com`)
+3. Configure DNS with provided CNAME/A records
+4. SSL is automatically provisioned
 
 ---
 

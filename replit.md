@@ -43,11 +43,12 @@ When adding a new third-party service (analytics, payments, APIs, CDNs), you MUS
 Failure to add domains will cause the integration to silently fail in production (blocked by CSP).
 
 **Security Features:**
-- **Nonce-based CSP**: Scripts require per-request nonces (generated in middleware, injected via `_document.tsx`)
-- Production uses `'strict-dynamic'` with nonces (eliminates need for `'unsafe-inline'` for scripts)
+- Production uses `unsafe-inline` for scripts (temporary fix for Next.js 16 Turbopack nonce issues)
 - Production uses `wasm-unsafe-eval` (allows WASM for PDF processing, blocks regular eval())
 - Frame-ancestors: Main routes `none`, /view/ routes `self`, embed routes configurable
 - Additional headers: `X-Content-Type-Options: nosniff`, `Permissions-Policy`, strict `Referrer-Policy`
+
+**Note**: Nonce-based CSP is temporarily disabled due to Next.js 16 compatibility issues. Will re-enable when Next.js fixes nonce propagation.
 
 **CSP Implementation:**
 - Nonces generated in `middleware.ts` using `lib/middleware/csp.ts`
@@ -68,6 +69,36 @@ Failure to add domains will cause the integration to silently fail in production
 - In development, the CSP is more permissive (allows http: for local testing)
 
 ## Recent Changes
+
+### Persona Webhook & Tinybird Analytics Integration (January 29, 2026)
+Added automated KYC status updates and real-time analytics:
+
+**Persona Webhook Integration:**
+- Webhook endpoint: `pages/api/webhooks/persona.ts`
+- Auto-updates investor KYC status on verification events (approved, declined, expired)
+- Signature verification with HMAC-SHA256
+- Requires: `PERSONA_WEBHOOK_SECRET` environment variable
+
+**Tinybird Analytics Pipeline:**
+- Implementation: `lib/tinybird/publish.ts`
+- Tracks: page views, video engagement, click events, signature events, webhook events
+- Requires: `TINYBIRD_TOKEN` environment variable
+
+**E-Signature Accessibility Improvements:**
+- Added ARIA labels to signature pads (`components/lp/signature-pad.tsx`, `components/signature/enhanced-signature-pad.tsx`)
+- Canvas elements have `role="img"` with descriptive labels
+- Font selection uses `role="radiogroup"` pattern
+- All buttons have proper `aria-label` attributes
+
+**Mobile Document Viewer Enhancements:**
+- Touch swipe gestures for page navigation in `components/view/viewer/pdf-default-viewer.tsx`
+- Responsive page sizing (95% mobile, 85% tablet, 80% desktop)
+- Improved navigation button sizing and focus states
+- Full ARIA accessibility labels
+
+**CSP Fix for Next.js 16:**
+- Updated `lib/middleware/csp.ts` to use `unsafe-inline` for scripts in production
+- Addresses nonce propagation issues with Next.js 16 Turbopack
 
 ### Next.js 16 Migration (Completed January 2026)
 Successfully upgraded the platform to resolve security vulnerabilities:
@@ -191,8 +222,8 @@ Gradual migration from Pages Router to full App Router for better Server Actions
 Comprehensive testing and improvements for the self-hosted e-signature feature:
 - **Field Positioning**: Test drag-drop precision across pages/viewports for all 10+ field types
 - **PDF Compatibility**: Test with varied PDFs (scanned, protected, large, complex layouts)
-- **Mobile Support**: Touch support for signing on mobile devices
-- **Accessibility**: ARIA labels for signature fields
+- **Mobile Support**: Touch support for signing on mobile devices - COMPLETED
+- **Accessibility**: ARIA labels for signature fields - COMPLETED (Jan 29, 2026)
 - **Font Embedding**: Verify fonts render correctly in completed PDFs
 - **Completion Certificates**: Validate certificate generation
 - **Tamper Evidence**: Verify signature embedding and checksum validation
@@ -207,14 +238,15 @@ Entity Mode toggle (FUND vs STARTUP) for platform flexibility:
 
 ### Mobile Optimization
 Mobile-responsive design improvements:
-- **Status**: In progress
-- **Completed**: Responsive layouts using Tailwind CSS, mobile-friendly navigation, touch-optimized signature pad with pointer events API
-- **Pending**: Mobile-specific document viewer, PWA offline support
+- **Status**: Mostly complete
+- **Completed**: Responsive layouts using Tailwind CSS, mobile-friendly navigation, touch-optimized signature pad with pointer events API, mobile PDF viewer with swipe gestures (Jan 29, 2026)
+- **Pending**: PWA offline support
 - **Target**: Full mobile experience for LP investors
 
 ### Real-Time Features Reliability
 Error handling improvements for real-time data features:
-- **Tinybird Analytics**: Error states with retry UI
+- **Tinybird Analytics**: Fully integrated (Jan 29, 2026) - tracks page views, video engagement, signatures
+- **Persona Webhooks**: Auto-updates KYC status (Jan 29, 2026)
 - **30-Second Polling**: Graceful degradation on connection issues
 - **Recharts Visualizations**: Error boundaries with fallback UI
-- **Status**: Improved - error handling added to capital tracking, video analytics components
+- **Status**: Complete - analytics pipeline and webhook integrations active

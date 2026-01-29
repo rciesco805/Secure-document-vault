@@ -1,8 +1,9 @@
+"use client";
+
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { withAdminGuard } from "@/lib/auth/admin-guard";
 import {
   FileTextIcon,
   PlusIcon,
@@ -83,7 +84,7 @@ function EmptyState() {
   );
 }
 
-export default function TemplatesPage() {
+export default function TemplatesPageClient() {
   const router = useRouter();
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
@@ -268,5 +269,3 @@ export default function TemplatesPage() {
     </AppLayout>
   );
 }
-
-export const getServerSideProps = withAdminGuard();

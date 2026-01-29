@@ -1,6 +1,7 @@
-import { useRouter } from "next/router";
+"use client";
+
+import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { withAdminGuard } from "@/lib/auth/admin-guard";
 import { useTeam } from "@/context/team-context";
 import {
   CheckCircle2Icon,
@@ -129,7 +130,7 @@ function EmptyState() {
   );
 }
 
-export default function SignatureDashboard() {
+export default function SignatureDashboardClient() {
   const router = useRouter();
   const teamInfo = useTeam();
   const { documents, loading, pagination } = useSignatureDocuments();
@@ -290,5 +291,3 @@ export default function SignatureDashboard() {
     </AppLayout>
   );
 }
-
-export const getServerSideProps = withAdminGuard();

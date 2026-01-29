@@ -1,5 +1,7 @@
+"use client";
+
 import { useState, useEffect, useRef, useCallback } from "react";
-import { useRouter } from "next/router";
+import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import { useTeam } from "@/context/team-context";
 import { toast } from "sonner";
@@ -23,11 +25,14 @@ import {
   ZoomOutIcon,
   SettingsIcon,
   MapPinIcon,
-  PlusIcon,
+  SendIcon,
+  FileTextIcon,
+  UsersIcon,
+  MousePointerClickIcon,
 } from "lucide-react";
 import { Document, Page, pdfjs } from "react-pdf";
 
-import { useSignatureTemplate } from "@/lib/swr/use-signature-templates";
+import { useSignatureDocument } from "@/lib/swr/use-signature-documents";
 
 import AppLayout from "@/components/layouts/app";
 import { Button } from "@/components/ui/button";
@@ -35,6 +40,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Progress } from "@/components/ui/progress";
 import {
   Card,
   CardContent,
@@ -49,8 +55,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+
+// Progress steps for the wizard
+const WIZARD_STEPS = [
+  { id: 1, label: "Upload", icon: FileTextIcon, description: "Upload document" },
+  { id: 2, label: "Recipients", icon: UsersIcon, description: "Add signers" },
+  { id: 3, label: "Place Fields", icon: MousePointerClickIcon, description: "Add signature fields" },
+  { id: 4, label: "Send", icon: SendIcon, description: "Review & send" },
+];
 
 const fieldTypes = [
   { type: "SIGNATURE", label: "Signature", icon: PenIcon },
@@ -68,44 +88,25 @@ const fieldTypes = [
 interface PlacedField {
   id: string;
   type: string;
-  recipientIndex: number;
+  recipientId: string;
   pageNumber: number;
   x: number;
   y: number;
   width: number;
   height: number;
   label?: string;
-  placeholder?: string;
   required?: boolean;
 }
 
-interface RecipientRole {
-  role: string;
-  name: string;
-  order: number;
-}
-
-const defaultRoles: RecipientRole[] = [
-  { role: "SIGNER", name: "Signer 1", order: 1 },
-];
-
-const roleColors = [
-  { bg: "bg-blue-500", border: "border-blue-500" },
-  { bg: "bg-green-500", border: "border-green-500" },
-  { bg: "bg-purple-500", border: "border-purple-500" },
-  { bg: "bg-orange-500", border: "border-orange-500" },
-  { bg: "bg-pink-500", border: "border-pink-500" },
-];
-
-export default function PrepareTemplatePage() {
+export default function PrepareDocument() {
   const router = useRouter();
-  const { id } = router.query;
+  const params = useParams();
+  const id = params.id as string;
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
 
-  const { template, loading, mutate } = useSignatureTemplate(id as string);
-  const [roles, setRoles] = useState<RecipientRole[]>(defaultRoles);
-  const [selectedRoleIndex, setSelectedRoleIndex] = useState<number>(0);
+  const { document, loading, mutate } = useSignatureDocument(id as string);
+  const [selectedRecipient, setSelectedRecipient] = useState<string>("");
   const [selectedFieldType, setSelectedFieldType] = useState<string>("SIGNATURE");
   const [fields, setFields] = useState<PlacedField[]>([]);
   const [isSaving, setIsSaving] = useState(false);
@@ -117,53 +118,48 @@ export default function PrepareTemplatePage() {
   const [resizeStart, setResizeStart] = useState({ x: 0, y: 0, width: 0, height: 0 });
   const [dragging, setDragging] = useState<string | null>(null);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0, fieldX: 0, fieldY: 0 });
-  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const pageRef = useRef<HTMLDivElement>(null);
+  const [draggedFieldType, setDraggedFieldType] = useState<string | null>(null);
 
   const selectedField = fields.find(f => f.id === selectedFieldId);
 
+  // Calculate wizard progress
+  const hasRecipients = (document?.recipients?.length || 0) > 0;
+  const hasFields = fields.length > 0;
+  const currentStep = 3; // We're on the "Place Fields" step
+  const progressPercent = hasFields ? 75 : 50;
+
   useEffect(() => {
-    if (template) {
-      if (template.defaultRecipients && Array.isArray(template.defaultRecipients)) {
-        const parsedRoles = template.defaultRecipients as RecipientRole[];
-        if (parsedRoles.length > 0) {
-          setRoles(parsedRoles);
-          setSelectedRoleIndex(0);
-        }
-      }
-      if (template.fields && Array.isArray(template.fields)) {
-        setFields(template.fields as PlacedField[]);
-      }
-      if (template.fileUrl) {
-        setPdfUrl(template.fileUrl);
-      } else if (template.file) {
-        fetchSignedUrl(template.file);
-      }
+    if (document?.recipients?.length && !selectedRecipient) {
+      setSelectedRecipient(document.recipients[0].id);
+    }
+    if (document?.fields) {
+      setFields(
+        document.fields.map((f: any) => ({
+          id: f.id,
+          type: f.type,
+          recipientId: f.recipientId || "",
+          pageNumber: f.pageNumber,
+          x: f.x,
+          y: f.y,
+          width: f.width,
+          height: f.height,
+          label: f.label || "",
+          required: f.required !== false,
+        }))
+      );
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [template]);
-
-  const fetchSignedUrl = async (fileKey: string) => {
-    if (!teamId) return;
-    try {
-      const response = await fetch(`/api/teams/${teamId}/documents/signed-url?key=${encodeURIComponent(fileKey)}`);
-      if (response.ok) {
-        const { url } = await response.json();
-        setPdfUrl(url);
-      }
-    } catch (error) {
-      console.error("Failed to fetch signed URL:", error);
-    }
-  };
+  }, [document]);
 
   const onDocumentLoadSuccess = useCallback(({ numPages }: { numPages: number }) => {
     setNumPages(numPages);
   }, []);
 
   const handlePageClick = (e: React.MouseEvent) => {
-    if (!pageRef.current || resizing || dragging) return;
+    if (!pageRef.current || !selectedRecipient || resizing || dragging) return;
 
     const target = e.target as HTMLElement;
     if (target.closest('.field-box')) {
@@ -179,22 +175,69 @@ export default function PrepareTemplatePage() {
     const fieldConfig = getFieldDimensions(selectedFieldType);
 
     const newField: PlacedField = {
-      id: `field-${Date.now()}`,
+      id: `temp-${Date.now()}`,
       type: selectedFieldType,
-      recipientIndex: selectedRoleIndex,
+      recipientId: selectedRecipient,
       pageNumber: currentPage,
       x: Math.max(0, Math.min(x - fieldConfig.width / 2, 100 - fieldConfig.width)),
       y: Math.max(0, Math.min(y - fieldConfig.height / 2, 100 - fieldConfig.height)),
       width: fieldConfig.width,
       height: fieldConfig.height,
       label: "",
-      placeholder: "",
       required: true,
     };
 
     setFields([...fields, newField]);
     setSelectedFieldId(newField.id);
     toast.success(`Added ${selectedFieldType.toLowerCase().replace("_", " ")} field`);
+  };
+
+  // Handle drag from sidebar field types
+  const handleFieldTypeDragStart = (e: React.DragEvent, type: string) => {
+    e.dataTransfer.setData("fieldType", type);
+    setDraggedFieldType(type);
+  };
+
+  const handleFieldTypeDragEnd = () => {
+    setDraggedFieldType(null);
+  };
+
+  const handlePageDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "copy";
+  };
+
+  const handlePageDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    const fieldType = e.dataTransfer.getData("fieldType");
+    if (!fieldType || !pageRef.current || !selectedRecipient) {
+      setDraggedFieldType(null);
+      return;
+    }
+
+    const rect = pageRef.current.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+
+    const fieldConfig = getFieldDimensions(fieldType);
+
+    const newField: PlacedField = {
+      id: `temp-${Date.now()}`,
+      type: fieldType,
+      recipientId: selectedRecipient,
+      pageNumber: currentPage,
+      x: Math.max(0, Math.min(x - fieldConfig.width / 2, 100 - fieldConfig.width)),
+      y: Math.max(0, Math.min(y - fieldConfig.height / 2, 100 - fieldConfig.height)),
+      width: fieldConfig.width,
+      height: fieldConfig.height,
+      label: "",
+      required: true,
+    };
+
+    setFields([...fields, newField]);
+    setSelectedFieldId(newField.id);
+    setDraggedFieldType(null);
+    toast.success(`Added ${fieldType.toLowerCase().replace("_", " ")} field`);
   };
 
   const getFieldDimensions = (type: string) => {
@@ -327,50 +370,55 @@ export default function PrepareTemplatePage() {
   }, [dragging, dragStart, fields]);
 
   const handleSave = async () => {
-    if (!teamId || !template) return;
+    if (!teamId || !document) return;
     setIsSaving(true);
 
     try {
       const response = await fetch(
-        `/api/teams/${teamId}/signature-templates/${template.id}`,
+        `/api/teams/${teamId}/signature-documents/${document.id}/fields`,
         {
-          method: "PATCH",
+          method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ 
-            fields,
-            defaultRecipients: roles,
-          }),
+          body: JSON.stringify({ fields }),
         }
       );
 
-      if (!response.ok) throw new Error("Failed to save template");
+      if (!response.ok) throw new Error("Failed to save fields");
 
-      toast.success("Template saved successfully");
+      toast.success("Fields saved successfully");
       mutate();
     } catch (error) {
-      toast.error("Failed to save template");
+      toast.error("Failed to save fields");
     } finally {
       setIsSaving(false);
     }
   };
 
-  const addRole = () => {
-    const newRoleNumber = roles.length + 1;
-    const newRole: RecipientRole = {
-      role: "SIGNER",
-      name: `Signer ${newRoleNumber}`,
-      order: newRoleNumber,
-    };
-    const newRoles = [...roles, newRole];
-    setRoles(newRoles);
-    setSelectedRoleIndex(newRoles.length - 1);
+  const getRecipientColor = (recipientId: string) => {
+    const colors = [
+      "bg-blue-500",
+      "bg-green-500",
+      "bg-purple-500",
+      "bg-orange-500",
+      "bg-pink-500",
+    ];
+    const index =
+      document?.recipients?.findIndex((r: any) => r.id === recipientId) || 0;
+    return colors[index % colors.length];
   };
 
-  const getRoleColor = (roleIndex: number) => {
-    return roleColors[roleIndex % roleColors.length];
+  const getRecipientBorderColor = (recipientId: string) => {
+    const colors = [
+      "border-blue-500",
+      "border-green-500",
+      "border-purple-500",
+      "border-orange-500",
+      "border-pink-500",
+    ];
+    const index =
+      document?.recipients?.findIndex((r: any) => r.id === recipientId) || 0;
+    return colors[index % colors.length];
   };
-
-  const selectedRole = roles[selectedRoleIndex];
 
   if (loading) {
     return (
@@ -386,14 +434,14 @@ export default function PrepareTemplatePage() {
     );
   }
 
-  if (!template) {
+  if (!document) {
     return (
       <AppLayout>
         <div className="flex min-h-[calc(100vh-72px)] items-center justify-center">
           <div className="text-center">
-            <h3 className="text-lg font-medium">Template not found</h3>
-            <Link href="/settings/sign">
-              <Button className="mt-4">Back to Templates</Button>
+            <h3 className="text-lg font-medium">Document not found</h3>
+            <Link href="/sign">
+              <Button className="mt-4">Back to Documents</Button>
             </Link>
           </div>
         </div>
@@ -404,33 +452,98 @@ export default function PrepareTemplatePage() {
   return (
     <AppLayout>
       <div className="sticky top-0 mb-4 min-h-[calc(100vh-72px)] rounded-lg bg-white p-4 dark:bg-gray-900 sm:mx-4 sm:pt-8">
-        <section className="mb-6 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Link href="/settings/sign">
-              <Button variant="ghost" size="icon">
-                <ArrowLeftIcon className="h-5 w-5" />
+        {/* Progress Wizard Stepper */}
+        <div className="mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-4">
+              <Link href={`/sign/${document.id}`}>
+                <Button variant="ghost" size="icon">
+                  <ArrowLeftIcon className="h-5 w-5" />
+                </Button>
+              </Link>
+              <div>
+                <h2 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
+                  Prepare: {document.title}
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  Drag fields from the sidebar or click on the document to place them
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" onClick={handleSave} disabled={isSaving}>
+                <SaveIcon className="mr-2 h-4 w-4" />
+                {isSaving ? "Saving..." : "Save"}
               </Button>
-            </Link>
-            <div>
-              <h2 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
-                Edit Template: {template.name}
-              </h2>
-              <p className="text-sm text-muted-foreground">
-                Click on the document to place signature fields for each recipient role
-              </p>
+              <Link href={`/sign/${document.id}`}>
+                <Button>
+                  <SendIcon className="mr-2 h-4 w-4" />
+                  Review & Send
+                </Button>
+              </Link>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" onClick={handleSave} disabled={isSaving}>
-              <SaveIcon className="mr-2 h-4 w-4" />
-              {isSaving ? "Saving..." : "Save Template"}
-            </Button>
-            <Link href="/settings/sign">
-              <Button>
-                <CheckIcon className="mr-2 h-4 w-4" />
-                Done
-              </Button>
-            </Link>
+
+          {/* Visual Progress Steps */}
+          <TooltipProvider>
+            <div className="relative">
+              <Progress value={progressPercent} className="h-2 mb-4" />
+              <div className="flex justify-between">
+                {WIZARD_STEPS.map((step, index) => {
+                  const StepIcon = step.icon;
+                  const isCompleted = step.id < currentStep || (step.id === 3 && hasFields);
+                  const isCurrent = step.id === currentStep;
+                  
+                  return (
+                    <Tooltip key={step.id}>
+                      <TooltipTrigger asChild>
+                        <div 
+                          className={`flex flex-col items-center gap-1 ${
+                            isCurrent ? 'text-primary' : isCompleted ? 'text-green-600' : 'text-muted-foreground'
+                          }`}
+                        >
+                          <div 
+                            className={`flex h-8 w-8 items-center justify-center rounded-full border-2 transition-colors ${
+                              isCurrent 
+                                ? 'border-primary bg-primary text-white' 
+                                : isCompleted 
+                                  ? 'border-green-600 bg-green-600 text-white' 
+                                  : 'border-muted-foreground/30 bg-background'
+                            }`}
+                          >
+                            {isCompleted && step.id !== currentStep ? (
+                              <CheckIcon className="h-4 w-4" />
+                            ) : (
+                              <StepIcon className="h-4 w-4" />
+                            )}
+                          </div>
+                          <span className="text-xs font-medium hidden sm:block">{step.label}</span>
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>{step.description}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  );
+                })}
+              </div>
+            </div>
+          </TooltipProvider>
+        </div>
+
+        <section className="mb-4 flex items-center justify-between">
+          {/* Field count indicator */}
+          <div className="flex items-center gap-2 text-sm">
+            <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+              fields.length > 0 ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+            }`}>
+              {fields.length} {fields.length === 1 ? 'field' : 'fields'} placed
+            </span>
+            {!hasRecipients && (
+              <span className="inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-800 dark:bg-red-900 dark:text-red-200">
+                No recipients added
+              </span>
+            )}
           </div>
         </section>
 
@@ -486,11 +599,15 @@ export default function PrepareTemplatePage() {
                     <div 
                       ref={pageRef}
                       onClick={handlePageClick}
-                      className="relative cursor-crosshair shadow-lg"
+                      onDragOver={handlePageDragOver}
+                      onDrop={handlePageDrop}
+                      className={`relative cursor-crosshair shadow-lg transition-all ${
+                        draggedFieldType ? 'ring-2 ring-primary ring-offset-2' : ''
+                      }`}
                     >
-                      {pdfUrl ? (
+                      {document.fileUrl ? (
                         <Document
-                          file={pdfUrl}
+                          file={document.fileUrl}
                           onLoadSuccess={onDocumentLoadSuccess}
                           loading={
                             <div className="flex h-96 w-full items-center justify-center bg-white">
@@ -524,7 +641,7 @@ export default function PrepareTemplatePage() {
                             className={`field-box absolute flex items-center justify-center rounded border-2 ${
                               selectedFieldId === field.id 
                                 ? 'border-solid border-primary ring-2 ring-primary/50' 
-                                : `border-dashed ${getRoleColor(field.recipientIndex).border}`
+                                : `border-dashed ${getRecipientBorderColor(field.recipientId)}`
                             } ${dragging === field.id ? 'cursor-grabbing' : 'cursor-grab'} bg-white/80`}
                             style={{
                               left: `${field.x}%`,
@@ -578,69 +695,44 @@ export default function PrepareTemplatePage() {
           <div className="space-y-4">
             <Card>
               <CardHeader className="pb-3">
-                <CardTitle className="text-base">Recipient Roles</CardTitle>
-                <CardDescription className="text-xs">
-                  Define placeholder roles for signers
-                </CardDescription>
+                <CardTitle className="text-base">Select Recipient</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
+              <CardContent>
                 <Select
-                  value={String(selectedRoleIndex)}
-                  onValueChange={(val) => setSelectedRoleIndex(parseInt(val))}
+                  value={selectedRecipient}
+                  onValueChange={setSelectedRecipient}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select role" />
+                    <SelectValue placeholder="Select recipient" />
                   </SelectTrigger>
                   <SelectContent>
-                    {roles.map((role, index) => (
-                      <SelectItem key={index} value={String(index)}>
+                    {document.recipients?.map((recipient: any) => (
+                      <SelectItem key={recipient.id} value={recipient.id}>
                         <div className="flex items-center gap-2">
-                          <div className={`h-2 w-2 rounded-full ${getRoleColor(index).bg}`} />
-                          {role.name}
+                          <div
+                            className={`h-2 w-2 rounded-full ${getRecipientColor(
+                              recipient.id
+                            )}`}
+                          />
+                          {recipient.name}
                         </div>
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-                <Button variant="outline" size="sm" className="w-full" onClick={addRole}>
-                  <PlusIcon className="mr-2 h-4 w-4" />
-                  Add Signer Role
-                </Button>
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base">Field Types</CardTitle>
-                <CardDescription className="text-xs">
-                  Select a field type, then click on the document
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 gap-2">
-                  {fieldTypes.map((field) => (
-                    <Button
-                      key={field.type}
-                      variant={selectedFieldType === field.type ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setSelectedFieldType(field.type)}
-                      className="justify-start"
-                    >
-                      <field.icon className="mr-2 h-4 w-4" />
-                      <span className="truncate text-xs">{field.label}</span>
-                    </Button>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            {selectedField && (
+            {selectedField ? (
               <Card>
                 <CardHeader className="pb-3">
                   <CardTitle className="flex items-center gap-2 text-base">
                     <SettingsIcon className="h-4 w-4" />
                     Field Properties
                   </CardTitle>
+                  <CardDescription className="text-xs">
+                    Edit the selected field
+                  </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
@@ -682,11 +774,11 @@ export default function PrepareTemplatePage() {
                         type="number"
                         value={Math.round(selectedField.height)}
                         onChange={(e) => {
-                          const value = Math.max(3, Math.min(30, parseInt(e.target.value) || 3));
+                          const value = Math.max(2, Math.min(20, parseInt(e.target.value) || 2));
                           updateFieldProperty(selectedField.id, "height", value);
                         }}
-                        min={3}
-                        max={30}
+                        min={2}
+                        max={20}
                         className="mt-1"
                       />
                     </div>
@@ -695,12 +787,12 @@ export default function PrepareTemplatePage() {
                   <div className="flex items-center space-x-2">
                     <Checkbox
                       id="field-required"
-                      checked={selectedField.required}
+                      checked={selectedField.required !== false}
                       onCheckedChange={(checked) => 
-                        updateFieldProperty(selectedField.id, "required", checked)
+                        updateFieldProperty(selectedField.id, "required", checked === true)
                       }
                     />
-                    <Label htmlFor="field-required" className="text-sm">
+                    <Label htmlFor="field-required" className="text-sm cursor-pointer">
                       Required field
                     </Label>
                   </div>
@@ -712,11 +804,105 @@ export default function PrepareTemplatePage() {
                     onClick={() => removeField(selectedField.id)}
                   >
                     <Trash2Icon className="mr-2 h-4 w-4" />
-                    Remove Field
+                    Delete Field
                   </Button>
                 </CardContent>
               </Card>
+            ) : (
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base">Field Types</CardTitle>
+                  <CardDescription className="text-xs">
+                    Select a field type, then click on the document
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 gap-2">
+                    {fieldTypes.map(({ type, label, icon: Icon }) => (
+                      <button
+                        key={type}
+                        draggable
+                        onClick={() => setSelectedFieldType(type)}
+                        onDragStart={(e) => handleFieldTypeDragStart(e, type)}
+                        onDragEnd={handleFieldTypeDragEnd}
+                        className={`flex flex-col items-center gap-1 rounded-lg border p-3 text-xs transition-colors cursor-grab active:cursor-grabbing ${
+                          selectedFieldType === type
+                            ? "border-primary bg-primary/10"
+                            : "border-gray-200 hover:border-gray-300 dark:border-gray-700"
+                        } ${draggedFieldType === type ? "opacity-50" : ""}`}
+                      >
+                        <Icon className="h-4 w-4" />
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="mt-3 text-xs text-muted-foreground text-center">
+                    Drag to document or click to select, then click on page
+                  </p>
+                </CardContent>
+              </Card>
             )}
+
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base">Placed Fields</CardTitle>
+                <CardDescription className="text-xs">
+                  Click a field to edit its properties
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {fields.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">
+                    No fields placed yet
+                  </p>
+                ) : (
+                  <div className="space-y-2">
+                    {fields.map((field) => {
+                      const recipient = document.recipients?.find(
+                        (r: any) => r.id === field.recipientId
+                      );
+                      return (
+                        <div
+                          key={field.id}
+                          onClick={() => {
+                            setSelectedFieldId(field.id);
+                            setCurrentPage(field.pageNumber);
+                          }}
+                          className={`flex cursor-pointer items-center justify-between rounded border p-2 text-sm transition-colors ${
+                            selectedFieldId === field.id
+                              ? "border-primary bg-primary/10"
+                              : "hover:bg-gray-50 dark:hover:bg-gray-800"
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <div
+                              className={`h-2 w-2 rounded-full ${getRecipientColor(
+                                field.recipientId
+                              )}`}
+                            />
+                            <span className="truncate">
+                              {field.label || field.type.replace("_", " ")}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              (p.{field.pageNumber})
+                            </span>
+                          </div>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              removeField(field.id);
+                            }}
+                            className="text-red-500 hover:text-red-700"
+                          >
+                            <Trash2Icon className="h-4 w-4" />
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>

@@ -79,8 +79,19 @@ The platform is actively migrating from Next.js Pages Router to App Router for i
 - `/lp/bank-connect` → `app/lp/bank-connect/` (Plaid bank linking for ACH)
 - `/lp/offline-documents` → `app/lp/offline-documents/` (offline document management)
 
-### Phase 3 Pending
-Viewer pages, admin pages, documents, datarooms, settings
+### Phase 3 Complete: E-Signature Pages (January 29, 2026)
+- `/sign` → `app/sign/` (signature dashboard - document list)
+- `/sign/new` → `app/sign/new/` (create new signature document)
+- `/sign/bulk` → `app/sign/bulk/` (bulk send to multiple recipients)
+- `/sign/templates` → `app/sign/templates/` (reusable templates)
+- `/sign/[id]` → `app/sign/[id]/` (document detail view - 827 lines)
+- `/sign/[id]/prepare` → `app/sign/[id]/prepare/` (field placement - 908 lines)
+- `/view/sign/[token]` → `app/view/sign/[token]/` (public signing interface - 840 lines)
+- `/sign/certificate/[documentId]` → `app/sign/certificate/[documentId]/` (completion certificates)
+- `/sign/certificate/verify` → `app/sign/certificate/verify/` (certificate verification)
+
+### Phase 4 Pending
+Admin pages, documents, datarooms, settings, remaining viewer pages
 
 ### Current App Router Structure
 ```
@@ -99,6 +110,19 @@ app/
 │   ├── onboard/               # /lp/onboard - onboarding flow
 │   ├── bank-connect/          # /lp/bank-connect - Plaid ACH linking
 │   └── offline-documents/     # /lp/offline-documents - offline docs
+├── sign/                      # E-Signature module
+│   ├── page.tsx               # /sign - dashboard
+│   ├── new/                   # /sign/new - create document
+│   ├── bulk/                  # /sign/bulk - bulk send
+│   ├── templates/             # /sign/templates - templates
+│   ├── [id]/                  # /sign/[id] - document detail
+│   │   └── prepare/           # /sign/[id]/prepare - field placement
+│   └── certificate/           # Completion certificates
+│       ├── [documentId]/      # /sign/certificate/[documentId]
+│       └── verify/            # /sign/certificate/verify
+├── view/
+│   └── sign/
+│       └── [token]/           # /view/sign/[token] - public signing
 ├── layout.tsx                 # Root layout with providers
 └── providers.tsx              # Client-side providers wrapper
 ```

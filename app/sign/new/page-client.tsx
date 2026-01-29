@@ -1,7 +1,8 @@
+"use client";
+
 import { useState } from "react";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { withAdminGuard } from "@/lib/auth/admin-guard";
 import { useTeam } from "@/context/team-context";
 import { toast } from "sonner";
 import {
@@ -45,7 +46,7 @@ interface Recipient {
   signingOrder: number;
 }
 
-export default function NewSignatureDocument() {
+export default function NewSignatureDocumentClient() {
   const router = useRouter();
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
@@ -53,7 +54,6 @@ export default function NewSignatureDocument() {
   const [isLoading, setIsLoading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [currentFile, setCurrentFile] = useState<File | null>(null);
-  const [fileUrl, setFileUrl] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -488,5 +488,3 @@ export default function NewSignatureDocument() {
     </AppLayout>
   );
 }
-
-export const getServerSideProps = withAdminGuard();

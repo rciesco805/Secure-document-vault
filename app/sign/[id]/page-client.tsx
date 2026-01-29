@@ -1,7 +1,8 @@
+"use client";
+
 import { useState } from "react";
-import { useRouter } from "next/router";
+import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
-import { withAdminGuard } from "@/lib/auth/admin-guard";
 import { useTeam } from "@/context/team-context";
 import { toast } from "sonner";
 import {
@@ -175,7 +176,8 @@ function RecipientStatusBadge({ status }: { status: string }) {
 
 export default function SignatureDocumentDetail() {
   const router = useRouter();
-  const { id } = router.query;
+  const params = useParams();
+  const id = params.id as string;
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
 
@@ -824,4 +826,3 @@ export default function SignatureDocumentDetail() {
   );
 }
 
-export const getServerSideProps = withAdminGuard();

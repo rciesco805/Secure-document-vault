@@ -1,6 +1,7 @@
+"use client";
+
 import { useState, useEffect, useRef, useCallback } from "react";
-import { useRouter } from "next/router";
-import Head from "next/head";
+import { useRouter, useParams } from "next/navigation";
 import { toast } from "sonner";
 import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/Page/AnnotationLayer.css";
@@ -76,7 +77,8 @@ interface FieldInfo {
 
 export default function SignDocument() {
   const router = useRouter();
-  const { token } = router.query;
+  const params = useParams();
+  const token = params.token as string;
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -434,10 +436,6 @@ export default function SignDocument() {
 
   return (
     <>
-      <Head>
-        <title>Sign: {document?.title || "Document"} | BF Fund Sign</title>
-      </Head>
-
       <div className="min-h-screen bg-gray-100">
         <header className="border-b bg-white shadow-sm">
           <div className="mx-auto flex max-w-5xl flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:py-4">

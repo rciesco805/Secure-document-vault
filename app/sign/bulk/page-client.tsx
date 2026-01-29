@@ -1,7 +1,8 @@
+"use client";
+
 import { useState } from "react";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { withAdminGuard } from "@/lib/auth/admin-guard";
 import { useTeam } from "@/context/team-context";
 import { toast } from "sonner";
 import {
@@ -39,7 +40,7 @@ interface BulkRecipient {
   email: string;
 }
 
-export default function BulkSendSignatureDocument() {
+export default function BulkSendClient() {
   const router = useRouter();
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
@@ -513,5 +514,3 @@ export default function BulkSendSignatureDocument() {
     </AppLayout>
   );
 }
-
-export const getServerSideProps = withAdminGuard();

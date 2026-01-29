@@ -1,5 +1,7 @@
 # BF Fund Investor Dataroom
 
+[![Tests](https://github.com/BermudaFranchiseGroup/bf-fund-dataroom/actions/workflows/test.yml/badge.svg)](https://github.com/BermudaFranchiseGroup/bf-fund-dataroom/actions/workflows/test.yml)
+
 A comprehensive 506(c) fund GP/LP management suite designed to streamline investor relations and compliance. Built for fund managers who need secure document sharing, self-hosted e-signature capabilities, personalized investor portals, and integrated KYC/AML verification.
 
 ## Features

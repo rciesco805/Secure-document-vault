@@ -1,0 +1,111 @@
+name: Integration Tests
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 6 * * 1'
+
+env:
+  DATABASE_URL: ${{ secrets.DATABASE_URL }}
+  NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
+  NEXTAUTH_URL: http://localhost:3000
+  PLAID_CLIENT_ID: ${{ secrets.PLAID_CLIENT_ID }}
+  PLAID_SECRET: ${{ secrets.PLAID_SECRET }}
+  PLAID_ENV: sandbox
+  PERSONA_API_KEY: ${{ secrets.PERSONA_API_KEY }}
+  PERSONA_ENVIRONMENT: sandbox
+  PERSONA_ENVIRONMENT_ID: ${{ secrets.PERSONA_ENVIRONMENT_ID }}
+  PERSONA_TEMPLATE_ID: ${{ secrets.PERSONA_TEMPLATE_ID }}
+  PERSONA_WEBHOOK_SECRET: ${{ secrets.PERSONA_WEBHOOK_SECRET }}
+  STORAGE_PROVIDER: local
+  STORAGE_LOCAL_PATH: ./.storage-test
+
+jobs:
+  plaid-sandbox:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Create test storage directory
+        run: mkdir -p .storage-test
+
+      - name: Run Plaid sandbox tests
+        run: npm test -- --testPathPattern="plaid.*integration" --passWithNoTests
+
+  persona-sandbox:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Persona sandbox tests
+        run: npm test -- --testPathPattern="persona.*integration" --passWithNoTests
+
+  storage-providers:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Create test storage directory
+        run: mkdir -p .storage-test
+
+      - name: Run storage provider tests
+        run: npm test -- --testPathPattern="storage.*integration" --passWithNoTests
+
+  api-endpoints:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      - name: Run E2E API tests
+        run: npm test -- --testPathPattern="e2e" --passWithNoTests

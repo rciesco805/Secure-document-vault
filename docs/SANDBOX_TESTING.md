@@ -4,17 +4,13 @@ This guide covers how to configure external service dependencies for development
 
 ## Quick Start - Development Mode
 
-For local development without external services, set these environment variables:
+For local development with sandbox/test mode, set these environment variables:
 
 ```bash
 # Use sandbox/test mode for all services
 PLAID_ENV=sandbox
 PERSONA_ENVIRONMENT=sandbox
 STORAGE_PROVIDER=local
-
-# Optional: Skip external service calls entirely
-MOCK_EXTERNAL_SERVICES=true
-SKIP_KYC_VERIFICATION=true
 ```
 
 ---
@@ -172,29 +168,21 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 
 ---
 
-## Mock Services for Testing
+## Running Tests
 
-The platform includes support for mock services when `MOCK_EXTERNAL_SERVICES=true`:
-
-### Mock Plaid
-- Link tokens return immediately
-- Public token exchange returns mock access tokens
-- Account balances return test data
-
-### Mock Persona
-- Inquiry creation returns mock inquiry IDs
-- Status checks return configurable states
-- Set `SKIP_KYC_VERIFICATION=true` to bypass KYC gates entirely
-
-### Running Tests
 ```bash
-# Run all tests with mocks
-MOCK_EXTERNAL_SERVICES=true npm test
+# Run all tests
+npm test
 
 # Run specific test suites
 npm run test:unit
 npm run test:e2e
+
+# Run tests with coverage
+npm run test:coverage
 ```
+
+**Note**: Tests use sandbox/test credentials for external services. The test suite mocks external API responses where appropriate.
 
 ---
 

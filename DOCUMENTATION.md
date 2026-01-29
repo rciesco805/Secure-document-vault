@@ -1106,10 +1106,6 @@ For local development and testing, external services can be configured in sandbo
 PLAID_ENV=sandbox
 PERSONA_ENVIRONMENT=sandbox
 STORAGE_PROVIDER=local
-
-# Skip external services entirely (optional)
-MOCK_EXTERNAL_SERVICES=true
-SKIP_KYC_VERIFICATION=true
 ```
 
 | Service | Sandbox Variable | Dashboard |

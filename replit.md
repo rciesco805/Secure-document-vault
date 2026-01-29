@@ -133,4 +133,3 @@ STORAGE_ENCRYPTION_KEY=xxx                 # AES-256 encryption key (hex)
 - **Sandbox Testing Guide**: See `docs/SANDBOX_TESTING.md` for complete sandbox/development configuration.
 - **Test Credentials**: Plaid sandbox uses `user_good`/`pass_good`; Persona sandbox uses test SSN patterns.
 - **Local Storage**: Set `STORAGE_PROVIDER=local` for development without cloud storage.
-- **Mock Services**: Set `MOCK_EXTERNAL_SERVICES=true` to bypass external API calls in tests.

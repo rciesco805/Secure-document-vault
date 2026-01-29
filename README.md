@@ -180,15 +180,18 @@ See [docs/SANDBOX_TESTING.md](docs/SANDBOX_TESTING.md) for complete sandbox conf
 
 ## Database Schema
 
-The Prisma schema is located at `prisma/schema.prisma` with 40+ models organized by domain:
+The Prisma schema is located at `prisma/schema.prisma` with **85+ models** organized by domain:
 
-- **Core**: User, Team, Account, Session
+- **Core**: User, Team, Account, Session, Brand, Domain
 - **LP Portal**: Investor, Fund, Investment, CapitalCall, Distribution, Transaction
 - **Documents**: Document, DocumentVersion, DocumentPage, Folder
 - **Datarooms**: Dataroom, DataroomDocument, DataroomFolder, DataroomBrand
 - **Access Control**: Link, Viewer, ViewerGroup, PermissionGroup, AccessRequest
-- **E-Signatures**: SignatureDocument, SignatureRecipient, SignatureField, SignatureTemplate
-- **Entity**: Entity mode configuration (FUND/STARTUP)
+- **E-Signatures**: SignatureDocument, SignatureRecipient, SignatureField, SignatureTemplate, SignatureAuditLog
+- **Compliance**: AuditLog, AccreditationAck
+- **Banking**: BankLink, Transaction
+
+For complete database setup, migrations, and seeding guide, see [docs/DATABASE_SETUP.md](docs/DATABASE_SETUP.md).
 
 ## Roadmap
 

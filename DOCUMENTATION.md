@@ -1014,6 +1014,8 @@ The platform supports multiple storage backends for deployment flexibility:
 
 ## Database Schema
 
+The platform uses a single Prisma schema file (`prisma/schema.prisma`) with **85+ models**. For complete database setup, migrations, seeding, and production deployment guidance, see **[docs/DATABASE_SETUP.md](docs/DATABASE_SETUP.md)**.
+
 ### Core Models
 
 | Model | Description | Key Fields |

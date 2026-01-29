@@ -130,6 +130,7 @@ STORAGE_ENCRYPTION_KEY=xxx                 # AES-256 encryption key (hex)
 - **OpenAI**: Optional AI features.
 
 ## Development & Testing
-- **Sandbox Testing Guide**: See `docs/SANDBOX_TESTING.md` for complete sandbox/development configuration.
+- **Database Setup Guide**: See `docs/DATABASE_SETUP.md` for migrations, seeding, and production workflows.
+- **Sandbox Testing Guide**: See `docs/SANDBOX_TESTING.md` for external service sandbox configuration.
 - **Test Credentials**: Plaid sandbox uses `user_good`/`pass_good`; Persona sandbox uses test SSN patterns.
 - **Local Storage**: Set `STORAGE_PROVIDER=local` for development without cloud storage.

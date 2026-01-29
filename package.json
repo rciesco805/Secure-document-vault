@@ -88,6 +88,7 @@
     "@tremor/react": "^3.18.7",
     "@trigger.dev/react-hooks": "^3.3.17",
     "@trigger.dev/sdk": "^3.3.17",
+    "@tus/file-store": "^2.0.0",
     "@tus/s3-store": "^1.9.1",
     "@tus/server": "^1.10.2",
     "@tus/utils": "^0.5.1",

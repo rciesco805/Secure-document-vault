@@ -1,13 +1,14 @@
-import { Client } from "@replit/object-storage";
 import crypto from "crypto";
+import { getStorageProvider } from "./providers";
+import type { StorageProvider } from "./providers/types";
 
-let storageClient: Client | null = null;
+let cachedProvider: StorageProvider | null = null;
 
-function getStorageClient(): Client {
-  if (!storageClient) {
-    storageClient = new Client();
+function getProvider(): StorageProvider {
+  if (!cachedProvider) {
+    cachedProvider = getStorageProvider();
   }
-  return storageClient;
+  return cachedProvider;
 }
 
 export function getInvestorStoragePath(investorId: string, filename: string): string {
@@ -31,15 +32,17 @@ export async function uploadInvestorDocument(
   content: Buffer | string,
   filename: string
 ): Promise<{ path: string; hash: string }> {
-  const client = getStorageClient();
+  const provider = getProvider();
   const path = getInvestorStoragePath(investorId, `documents/${docType}/${filename}`);
   
   const contentBuffer = typeof content === "string" ? Buffer.from(content, "base64") : content;
-  const hash = crypto.createHash("sha256").update(contentBuffer).digest("hex");
   
-  await client.uploadFromBytes(path, contentBuffer);
+  const result = await provider.put(path, contentBuffer, {
+    encrypt: true,
+    contentType: getContentType(filename),
+  });
   
-  return { path, hash };
+  return { path, hash: result.hash };
 }
 
 export async function uploadInvestorSignature(
@@ -47,23 +50,25 @@ export async function uploadInvestorSignature(
   docType: string,
   signatureDataUrl: string
 ): Promise<{ path: string; hash: string }> {
-  const client = getStorageClient();
+  const provider = getProvider();
   
   const base64Data = signatureDataUrl.replace(/^data:image\/\w+;base64,/, "");
   const signatureBuffer = Buffer.from(base64Data, "base64");
-  const hash = crypto.createHash("sha256").update(signatureBuffer).digest("hex");
   
   const path = getInvestorSignaturePath(investorId, docType);
-  await client.uploadFromBytes(path, signatureBuffer);
   
-  return { path, hash };
+  const result = await provider.put(path, signatureBuffer, {
+    encrypt: true,
+    contentType: "image/png",
+  });
+  
+  return { path, hash: result.hash };
 }
 
 export async function getInvestorDocument(path: string): Promise<Buffer | null> {
   try {
-    const client = getStorageClient();
-    const result = await client.downloadAsBytes(path);
-    return result.ok ? Buffer.from(result.value as unknown as Uint8Array) : null;
+    const provider = getProvider();
+    return await provider.get(path, { decrypt: true });
   } catch (error) {
     console.error("Error downloading investor document:", error);
     return null;
@@ -72,11 +77,12 @@ export async function getInvestorDocument(path: string): Promise<Buffer | null> 
 
 export async function getInvestorDocumentUrl(path: string): Promise<string | null> {
   try {
-    const client = getStorageClient();
-    const result = await client.downloadAsBytes(path);
-    if (!result.ok) return null;
+    const provider = getProvider();
+    const data = await provider.get(path, { decrypt: true });
     
-    const base64 = Buffer.from(result.value as unknown as Uint8Array).toString("base64");
+    if (!data) return null;
+    
+    const base64 = data.toString("base64");
     const ext = path.split(".").pop()?.toLowerCase() || "pdf";
     const mimeType = ext === "pdf" ? "application/pdf" : `image/${ext}`;
     
@@ -87,14 +93,25 @@ export async function getInvestorDocumentUrl(path: string): Promise<string | nul
   }
 }
 
+export async function getInvestorDocumentSignedUrl(
+  path: string,
+  expiresIn: number = 3600
+): Promise<string | null> {
+  try {
+    const provider = getProvider();
+    return await provider.getSignedUrl(path, { expiresIn, method: "GET" });
+  } catch (error) {
+    console.error("Error getting signed URL:", error);
+    return null;
+  }
+}
+
 export async function listInvestorDocuments(investorId: string): Promise<string[]> {
   try {
-    const client = getStorageClient();
+    const provider = getProvider();
     const prefix = `investors/${investorId}/documents/`;
-    const result = await client.list({ prefix });
-    
-    if (!result.ok) return [];
-    return result.value.map((obj: any) => obj.key);
+    const result = await provider.list({ prefix });
+    return result.keys;
   } catch (error) {
     console.error("Error listing investor documents:", error);
     return [];
@@ -103,9 +120,8 @@ export async function listInvestorDocuments(investorId: string): Promise<string[
 
 export async function deleteInvestorDocument(path: string): Promise<boolean> {
   try {
-    const client = getStorageClient();
-    const result = await client.delete(path);
-    return result.ok;
+    const provider = getProvider();
+    return await provider.delete(path);
   } catch (error) {
     console.error("Error deleting investor document:", error);
     return false;
@@ -116,3 +132,52 @@ export function verifyDocumentIntegrity(content: Buffer, expectedHash: string): 
   const actualHash = crypto.createHash("sha256").update(content).digest("hex");
   return actualHash === expectedHash;
 }
+
+export async function copyInvestorDocument(
+  sourcePath: string,
+  destPath: string
+): Promise<boolean> {
+  try {
+    const provider = getProvider();
+    return await provider.copy(sourcePath, destPath);
+  } catch (error) {
+    console.error("Error copying investor document:", error);
+    return false;
+  }
+}
+
+export async function investorDocumentExists(path: string): Promise<boolean> {
+  try {
+    const provider = getProvider();
+    return await provider.exists(path);
+  } catch {
+    return false;
+  }
+}
+
+function getContentType(filename: string): string {
+  const ext = filename.split(".").pop()?.toLowerCase();
+  switch (ext) {
+    case "pdf":
+      return "application/pdf";
+    case "png":
+      return "image/png";
+    case "jpg":
+    case "jpeg":
+      return "image/jpeg";
+    case "gif":
+      return "image/gif";
+    case "doc":
+      return "application/msword";
+    case "docx":
+      return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+    default:
+      return "application/octet-stream";
+  }
+}
+
+export function resetStorageProvider(): void {
+  cachedProvider = null;
+}
+
+export { getProvider as getStorageProvider };

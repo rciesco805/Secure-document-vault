@@ -83,13 +83,48 @@ Successfully upgraded the platform to resolve security vulnerabilities:
 
 **Note**: The "middleware" file convention is deprecated in Next.js 16. Consider migrating to "proxy" convention in a future update.
 
+### Storage Provider Abstraction (January 2026)
+The platform now includes a unified storage abstraction layer that supports multiple deployment targets:
+
+**Supported Providers:**
+- `replit` - Replit Object Storage (default for Replit deployments)
+- `s3` - AWS S3 or S3-compatible services
+- `r2` - Cloudflare R2
+- `local` - Local filesystem (for development/testing)
+
+**Configuration Environment Variables:**
+```
+STORAGE_PROVIDER=replit|s3|r2|local       # Storage backend (default: replit)
+STORAGE_BUCKET=my-bucket                   # S3/R2 bucket name
+STORAGE_REGION=us-east-1                   # AWS region
+STORAGE_ENDPOINT=https://...               # Custom S3 endpoint (for R2/MinIO)
+STORAGE_ACCESS_KEY_ID=xxx                  # AWS access key
+STORAGE_SECRET_ACCESS_KEY=xxx              # AWS secret key
+STORAGE_LOCAL_PATH=./.storage              # Local storage path
+STORAGE_ENCRYPTION_KEY=xxx                 # AES-256 encryption key (hex)
+```
+
+**Key Files:**
+- `lib/storage/providers/` - Storage provider implementations
+- `lib/storage/providers/types.ts` - StorageProvider interface
+- `lib/storage/providers/index.ts` - Provider factory and configuration
+- `lib/storage/encryption/crypto-service.ts` - AES-256 encryption service
+- `lib/storage/tus-store-factory.ts` - TUS resumable upload store factory
+- `lib/storage/investor-storage.ts` - Investor document operations (uses unified provider)
+
+**Migration from Replit-only to multi-provider:**
+1. Set `STORAGE_PROVIDER` to desired backend
+2. Configure provider-specific env vars (bucket, credentials, etc.)
+3. Set `STORAGE_ENCRYPTION_KEY` for AES-256 encryption (64-char hex string)
+4. Existing Replit storage paths are automatically handled
+
 ## External Dependencies
 - **Resend**: Transactional email services.
 - **Persona**: KYC/AML verification.
 - **Plaid**: Bank connectivity for ACH transfers.
 - **Tinybird**: Real-time analytics and audit logging.
 - **Stripe**: Platform billing and subscription management.
-- **Replit Object Storage**: Document storage (S3-compatible, TUS uploads).
+- **Storage Providers**: Replit Object Storage, AWS S3, Cloudflare R2, or local filesystem.
 - **Rollbar**: Real-time error monitoring.
 - **Google OAuth**: Admin authentication.
 - **OpenAI**: Optional AI features.

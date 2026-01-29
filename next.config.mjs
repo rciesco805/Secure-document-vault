@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  output: "standalone",
   // productionBrowserSourceMaps: true, // Disabled - enable after deploy works
   pageExtensions: ["js", "jsx", "ts", "tsx", "mdx"],
   

@@ -1092,7 +1092,7 @@ The platform captures errors at multiple levels:
 | **Client-side** | `app/providers.tsx` | Captures browser errors via Rollbar client |
 | **Route-level** | `app/error.tsx` | Catches and reports route-specific errors |
 | **Global** | `app/global-error.tsx` | Catches unhandled application errors |
-| **Server-side** | `middleware.ts` | Captures middleware/API errors with context |
+| **Server-side** | `proxy.ts` | Captures middleware/API errors with context |
 
 ### Environment Variables
 

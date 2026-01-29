@@ -68,7 +68,7 @@ __tests__/                # Jest E2E tests (1599+ passing)
 public/                   # Fund assets, PWA files
 .github/workflows/        # CI/CD
 ee/                       # Enterprise tweaks
-middleware.ts             # Auth/webhooks/CSP
+proxy.ts             # Auth/webhooks/CSP
 ```
 
 ### Key Models (Prisma)

@@ -95,9 +95,9 @@ Before deploying, ensure:
 **Implemented:**
 - **sanitize-html** (`lib/utils/sanitize-html.ts`): Strips all HTML tags from user content
   - Used in: team name updates, branding settings, agreements, conversation features
-- **Path sanitization** (`middleware.ts:53-58`): Removes `..` sequences and normalizes slashes
-- **Host validation** (`middleware.ts:19-29`): Validates host format and length
-- **IP validation** (`middleware.ts:31-47`): Validates client IP format (IPv4/IPv6)
+- **Path sanitization** (`proxy.ts:53-58`): Removes `..` sequences and normalizes slashes
+- **Host validation** (`proxy.ts:19-29`): Validates host format and length
+- **IP validation** (`proxy.ts:31-47`): Validates client IP format (IPv4/IPv6)
 
 ### Audit Logging
 

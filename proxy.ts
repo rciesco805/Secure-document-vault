@@ -90,7 +90,7 @@ export const config = {
   ],
 };
 
-export default async function middleware(req: NextRequest, ev: NextFetchEvent) {
+export default async function proxy(req: NextRequest, ev: NextFetchEvent) {
   try {
     const path = sanitizePath(req.nextUrl.pathname);
     const host = req.headers.get("host");
@@ -152,7 +152,7 @@ export default async function middleware(req: NextRequest, ev: NextFetchEvent) {
       method: req.method,
       host: req.headers.get("host"),
     });
-    console.error("[Middleware Error]", error instanceof Error ? error.message : "Unknown error");
+    console.error("[Proxy Error]", error instanceof Error ? error.message : "Unknown error");
     
     return createErrorResponse("Internal server error", 500);
   }

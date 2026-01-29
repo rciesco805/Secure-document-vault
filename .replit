@@ -27,7 +27,6 @@ NEXT_PUBLIC_BASE_URL = "https://df50c344-693e-455c-bef7-f789d56774bd-00-jcveq2hx
 NEXT_PUBLIC_MARKETING_URL = "https://df50c344-693e-455c-bef7-f789d56774bd-00-jcveq2hx1o9i.spock.replit.dev"
 NEXT_PUBLIC_APP_BASE_HOST = "df50c344-693e-455c-bef7-f789d56774bd-00-jcveq2hx1o9i.spock.replit.dev"
 NEXT_PRIVATE_DOCUMENT_PASSWORD_KEY = "bermuda-franchise-secure-key-2025"
-NEXT_PRIVATE_VERIFICATION_SECRET = "bermuda-franchise-secure-verification-2025"
 NEXT_PUBLIC_UPLOAD_TRANSPORT = "replit"
 PLAID_ENV = "sandbox"
 
@@ -36,7 +35,6 @@ NEXTAUTH_URL = "https://dataroom.bermudafranchisegroup.com"
 NEXT_PUBLIC_BASE_URL = "https://dataroom.bermudafranchisegroup.com"
 NEXT_PUBLIC_MARKETING_URL = "https://dataroom.bermudafranchisegroup.com"
 NEXT_PRIVATE_DOCUMENT_PASSWORD_KEY = "bermuda-franchise-secure-key-2025"
-NEXT_PRIVATE_VERIFICATION_SECRET = "bermuda-franchise-secure-verification-2025"
 VERIFICATION_EMAIL_BASE_URL = "https://dataroom.bermudafranchisegroup.com"
 NEXT_PUBLIC_APP_BASE_HOST = "dataroom.bermudafranchisegroup.com"
 NEXT_PUBLIC_UPLOAD_TRANSPORT = "replit"
@@ -44,6 +42,7 @@ NEXT_PUBLIC_UPLOAD_TRANSPORT = "replit"
 [userenv.shared]
 INTERNAL_API_KEY = "3a7c175095f67508534bed6edd171bfa94e713d810080003b7007514222d806d"
 PERSONA_CLIENT_ID = ""
+NEXT_PRIVATE_VERIFICATION_SECRET = "bermuda-franchise-secure-verification-2025"
 
 [workflows]
 runButton = "Project"

@@ -86,7 +86,7 @@ function createErrorResponse(message: string, status: number): NextResponse {
 
 export const config = {
   matcher: [
-    "/((?!api/|_next/|_static|vendor|_icons|_vercel|favicon.ico|favicon.png|sitemap.xml).*)",
+    "/((?!api/|_next/|_static|vendor|_icons|_vercel|favicon.ico|favicon.png|sitemap.xml|sw.js|sw-version.json|manifest.json|offline).*)",
   ],
 };
 

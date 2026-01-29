@@ -1,5 +1,4 @@
 import { createMocks } from "node-mocks-http";
-import { getUserWithRole, requireRole, filterByInvestorIfLP, AuthenticatedUser } from "@/lib/auth/with-role";
 
 jest.mock("next-auth/next", () => ({
   getServerSession: jest.fn(),
@@ -25,8 +24,14 @@ jest.mock("@/pages/api/auth/[...nextauth]", () => ({
   authOptions: {},
 }));
 
+jest.mock("@/lib/auth/auth-options", () => ({
+  __esModule: true,
+  authOptions: {},
+}));
+
 import { getServerSession } from "next-auth/next";
 import prisma from "@/lib/prisma";
+import { getUserWithRole, requireRole, filterByInvestorIfLP, AuthenticatedUser } from "@/lib/auth/with-role";
 
 const mockGetServerSession = getServerSession as jest.MockedFunction<typeof getServerSession>;
 const mockPrisma = prisma as jest.Mocked<typeof prisma>;

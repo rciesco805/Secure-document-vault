@@ -1,0 +1,73 @@
+[
+  {
+    "httpRequest": {
+      "method": "POST",
+      "path": "/plaid/sandbox/transfer"
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "Content-Type": ["application/json"]
+      },
+      "body": {
+        "transfer": {
+          "id": "transfer_sandbox_123",
+          "status": "pending",
+          "amount": "1000.00"
+        }
+      }
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "POST",
+      "path": "/plaid/sandbox/item/fire_webhook"
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "Content-Type": ["application/json"]
+      },
+      "body": {
+        "request_id": "webhook_sandbox_123"
+      }
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "POST",
+      "path": "/persona/api/v1/verifications"
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "Content-Type": ["application/json"]
+      },
+      "body": {
+        "data": {
+          "type": "verification",
+          "id": "ver_sandbox_123",
+          "attributes": {
+            "status": "created"
+          }
+        }
+      }
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/health"
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "Content-Type": ["application/json"]
+      },
+      "body": {
+        "status": "healthy",
+        "services": ["plaid-mock", "persona-mock"]
+      }
+    }
+  }
+]

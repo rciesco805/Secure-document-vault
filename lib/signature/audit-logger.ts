@@ -63,7 +63,7 @@ export async function logSignatureEvent(
       },
     });
 
-    if (process.env.TINYBIRD_TOKEN) {
+    if (process.env.TINYBIRD_TOKEN && auditLog?.id) {
       try {
         await recordSignatureEvent({
           timestamp: new Date().toISOString(),

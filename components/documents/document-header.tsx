@@ -551,8 +551,10 @@ export default function DocumentHeader({
               onBlur={handleNameSubmit}
               onKeyDown={preventEnterAndSubmit}
               title="Click to edit"
-              dangerouslySetInnerHTML={{ __html: prismaDocument.name }}
-            />
+              suppressContentEditableWarning={true}
+            >
+              {prismaDocument.name}
+            </h2>
             {isEditingName && (
               <span className="mt-1 text-xs text-muted-foreground">
                 {`Press <Enter> to save the name.`}

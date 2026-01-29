@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-This is a customized fork of Papermark, evolved into a secure dataroom and LP portal for General Partners (GPs) managing private investments under 506(c) rules. It provides tech-driven capital raises, transactions, and reporting.
+This is the BF Fund Investor Dataroom, a secure dataroom and LP portal for General Partners (GPs) managing private investments under 506(c) rules. It provides tech-driven capital raises, transactions, and reporting. The platform is based on the open-source Papermark project but has been extensively customized for BF Fund's needs.
 
 The "uniquefundroom" (per-LP dashboard + storage) is a personalized, secure space post-account, including fund data, signed docs, notes, and hooks for automations like Plaid payments and Persona KYC.
 
@@ -46,7 +46,7 @@ The platform is flexible for multi-fund/startup use: Toggle entity modes (`FUND`
 ## Repo Status
 
 ### Core
-Papermark fork for secure sharing/analytics/branding/self-hosting. Customizations for LP portals: dataroom access, investor tracking, e-sign flows.
+BF Fund Dataroom platform with secure sharing, analytics, branding, and self-hosting capabilities. Includes LP portals, dataroom access, investor tracking, and e-sign flows.
 
 ### Directory Structure
 

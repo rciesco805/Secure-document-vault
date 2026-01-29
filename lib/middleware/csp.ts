@@ -53,9 +53,6 @@ const dynamicImageHosts = [
 const trustedImageDomains = [
   "https://dataroom.bermudafranchisegroup.com",
   "https://*.bermudafranchisegroup.com",
-  "https://d2kgph70pw5d9n.cloudfront.net",
-  "https://d36r2enbzam0iu.cloudfront.net",
-  "https://d35vw2hoyyl88.cloudfront.net",
   "https://pbs.twimg.com",
   "https://media.licdn.com",
   "https://lh3.googleusercontent.com",

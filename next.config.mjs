@@ -180,10 +180,6 @@ function prepareRemotePatterns() {
     // BF Fund assets
     { protocol: "https", hostname: "dataroom.bermudafranchisegroup.com" },
     { protocol: "https", hostname: "*.bermudafranchisegroup.com" },
-    // CDN and storage
-    { protocol: "https", hostname: "d2kgph70pw5d9n.cloudfront.net" },
-    { protocol: "https", hostname: "d36r2enbzam0iu.cloudfront.net" },
-    { protocol: "https", hostname: "d35vw2hoyyl88.cloudfront.net" },
     // twitter img
     { protocol: "https", hostname: "pbs.twimg.com" },
     // linkedin img

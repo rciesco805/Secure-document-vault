@@ -2,19 +2,19 @@
 
 ## Recent Changes (January 29, 2026)
 
-### App Router Migration - Phase 2 Complete
-- **LP Portal Migration**: All 5 investor portal pages successfully migrated from Pages Router to App Router
-  - `pages/lp/dashboard.tsx` → `app/lp/dashboard/` (1150+ lines - largest single page migration)
-  - `pages/lp/docs.tsx` → `app/lp/docs/`
-  - `pages/lp/onboard.tsx` → `app/lp/onboard/`
-  - `pages/lp/bank-connect.tsx` → `app/lp/bank-connect/`
-  - `pages/lp/offline-documents.tsx` → `app/lp/offline-documents/`
-- **Route Conflict Resolution**: Fixed `/dashboard` route conflict by using `app/lp/` folder instead of `app/(lp)/` route group (route groups don't add to URL path, causing conflict with admin `/dashboard`)
-- **Server/Client Separation**: Each page now has proper `page.tsx` (server) and `page-client.tsx` (client) components
-- **Navigation Updates**: All pages updated to use `next/navigation` instead of deprecated `next/router`
-- **Metadata Migration**: Removed `Head` components, metadata now exported from server components
+### App Router Migration - Phase 4 Complete (Viewer Pages Cleanup)
+- **Server-Side Code Removal**: Removed all Pages Router remnants from viewer client components
+  - Removed `getServerSideProps`/`getStaticProps` blocks containing `context.params`, `context.res.setHeader`, and `NEXTAUTH_URL` fetches
+  - Removed `getStaticPaths` export from domain viewer
+  - Removed `router.isFallback` checks (App Router doesn't have this API)
+- **Files Cleaned**: 
+  - `app/view/[linkId]/page-client.tsx`
+  - `app/view/[linkId]/d/[documentId]/page-client.tsx`
+  - `app/view/domains/[domain]/[slug]/page-client.tsx`
+  - `app/view/domains/[domain]/[slug]/d/[documentId]/page-client.tsx`
+- All viewer pages now use App Router patterns exclusively (useParams, useSearchParams, useRouter from next/navigation)
 
-### Previous Changes (January 24-28, 2026)
+### Previous Changes (January 24-29, 2026)
 - **Visitor Authorization Pre-Check**: Added `/api/auth/check-visitor` endpoint that validates user authorization BEFORE sending magic link emails
 - **Separate Login Portals**: Maintained distinct login paths - `/login` for investors/visitors, `/admin/login` for administrators
 - **PWA User-Scoped Caching**: Implemented isolated cache storage per user preventing cross-user data exposure

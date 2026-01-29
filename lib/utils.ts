@@ -1,4 +1,4 @@
-import { NextRouter } from "next/router";
+import type { NextRouter } from "next/router";
 
 import slugify from "@sindresorhus/slugify";
 import { upload } from "@vercel/blob/client";

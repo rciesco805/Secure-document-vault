@@ -17,8 +17,51 @@ Core features include:
 - **LP Portal**: Personalized investor portals with role-based access.
 - **Admin Dashboards**: CRM timeline, capital tracking, and compliance audit.
 - **Payment Flows**: Plaid ACH transfers and Stripe billing with KYC enforcement.
-- **PWA Support**: Progressive Web App with auto-updates.
+- **PWA Support**: Progressive Web App with offline document access, auto-updates, and seamless deployment transitions.
 - **Error Monitoring**: Rollbar integration for real-time tracking.
+
+## PWA Offline Document Caching
+The platform includes a comprehensive offline document caching system for investors to access saved documents without internet connectivity.
+
+### Key Features
+- **User-Scoped Caching**: Each user has isolated cache storage (`bf-fund-documents-user-{userId}-{version}`) preventing cross-user data exposure
+- **Save for Offline**: Documents can be saved via the "Save Offline" button in document viewers
+- **Offline Documents Page**: Dedicated page at `/lp/offline-documents` to view and manage cached documents
+- **Automatic Cache Clearing**: User caches are cleared on logout via `signOutWithCacheClear()`
+
+### Security Controls
+- Origin validation restricts caching to trusted domains only
+- User ID is required for all cache operations (save, get, remove, stats)
+- IndexedDB stores document metadata with user scoping
+- Cache names include version for proper invalidation on updates
+
+### Key Files
+- `public/sw.js` - Service worker with caching logic
+- `lib/offline/document-cache.ts` - Client-side cache management API
+- `lib/offline/use-offline-cache-sync.ts` - Session sync and secure logout
+- `components/offline/save-offline-button.tsx` - UI component for saving documents
+- `pages/lp/offline-documents.tsx` - Offline documents management page
+
+## Cache Invalidation Strategy
+The platform uses aggressive cache invalidation to ensure users always receive the latest code after deployments without manual cache clearing.
+
+### Build-Time Versioning
+- `scripts/generate-sw-version.js` generates a unique hash on each build
+- `CACHE_VERSION` is automatically updated (e.g., `v5-3feb7a2f4e189f76`)
+- Both `npm run build` and `vercel-build` run the version script
+
+### Service Worker Updates
+- Registration uses `updateViaCache: 'none'` to bypass browser caching
+- Cache-busting query parameter added to SW URL
+- Immediate `registration.update()` on page load
+- Hourly automatic update checks for installed PWAs
+- `skipWaiting()` and `clients.claim()` for immediate takeover
+
+### Caching Strategy
+- **Network-First**: All static assets (JS, CSS, images, `/_next/static/`) use network-first with cache fallback
+- **No-Cache Headers**: `sw.js` and all pages have `Cache-Control: no-cache, no-store, must-revalidate`
+- **Automatic Cleanup**: Old caches are deleted on SW activation (except user document caches)
+- **Safe Reload**: `controllerchange` listener with refresh guard prevents reload loops
 
 Security is implemented with a defense-in-depth approach featuring four encryption layers: Transport (TLS 1.3), Client-Side (AES-256-GCM using Web Crypto API), Server-Side (AES-256-GCM using Node.js crypto module), and PDF Level (PDF 2.0 AES-256 using `pdf-lib-plus-encrypt`). The system incorporates rate limiting with three tiers (auth: 10/hour, strict: 3/hour, api: 100/min) and anomaly detection to identify and mitigate suspicious activities, employing a STRIDE-based threat model. The signature workflow is secured with a dedicated encryption service, ensuring signature images and documents are encrypted, and all events are logged to an audit trail. An external API provides programmatic access to signature features, authenticated via Bearer tokens.
 

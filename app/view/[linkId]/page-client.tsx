@@ -255,13 +255,6 @@ export default function ViewPage({
     }
   }, [true, linkId, queryToken, queryEmail, magicLinkVerified, isVerifyingMagicLink]);
 
-  if (router.isFallback) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-black">
-        <LoadingSpinner className="h-20 w-20" />
-      </div>
-    );
-  }
 
   if (error) {
     return (
@@ -307,7 +300,7 @@ export default function ViewPage({
 
     // Use sessionTimeout to prevent infinite loading
     const isDocSessionLoading = status === "loading" && !sessionTimeout;
-    if (!linkData || isDocSessionLoading || router.isFallback) {
+    if (!linkData || isDocSessionLoading) {
       return (
         <>
           <CustomMetaTag
@@ -397,7 +390,7 @@ export default function ViewPage({
     const needsAutoVerify = status === "authenticated" && !storedToken && !magicLinkVerified && !autoVerifyAttempted;
     const isAutoVerifying = status === "authenticated" && !storedToken && !magicLinkVerified && isVerifyingMagicLink;
     const isSessionLoading = status === "loading" && !sessionTimeout;
-    const shouldShowLoading = !link || isSessionLoading || router.isFallback || needsAutoVerify || isAutoVerifying;
+    const shouldShowLoading = !link || isSessionLoading || needsAutoVerify || isAutoVerifying;
     
     if (shouldShowLoading) {
       return (

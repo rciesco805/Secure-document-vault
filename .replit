@@ -13,7 +13,7 @@ packages = ["jq"]
 deploymentTarget = "autoscale"
 ignorePorts = false
 build = ["npm", "run", "build"]
-run = ["bash", "scripts/start-production.sh"]
+run = ["npm", "run", "start"]
 
 [agent]
 expertMode = true

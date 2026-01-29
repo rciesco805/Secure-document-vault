@@ -29,6 +29,7 @@ NEXT_PUBLIC_APP_BASE_HOST = "df50c344-693e-455c-bef7-f789d56774bd-00-jcveq2hx1o9
 NEXT_PRIVATE_DOCUMENT_PASSWORD_KEY = "bermuda-franchise-secure-key-2025"
 NEXT_PRIVATE_VERIFICATION_SECRET = "bermuda-franchise-secure-verification-2025"
 NEXT_PUBLIC_UPLOAD_TRANSPORT = "replit"
+PLAID_ENV = "sandbox"
 
 [userenv.production]
 NEXTAUTH_URL = "https://dataroom.bermudafranchisegroup.com"

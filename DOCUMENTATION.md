@@ -878,6 +878,7 @@ The app will be available at `http://localhost:5000`
 | `PERSONA_API_KEY` | For KYC | API key from [withpersona.com](https://withpersona.com) |
 | `PERSONA_TEMPLATE_ID` | For KYC | Inquiry template ID |
 | `PERSONA_ENVIRONMENT_ID` | For KYC | Environment ID for embedded flow |
+| `PERSONA_ENVIRONMENT` | For KYC | Environment: `sandbox` (default) or `production` |
 | `PERSONA_WEBHOOK_SECRET` | For KYC | Webhook signature verification secret |
 
 ### Storage (Multi-Provider)
@@ -1094,6 +1095,29 @@ Team ─────────────────────────
 ---
 
 ## Testing
+
+### Sandbox & Development Configuration
+
+For local development and testing, external services can be configured in sandbox mode. See the full guide: **[docs/SANDBOX_TESTING.md](docs/SANDBOX_TESTING.md)**
+
+**Quick Setup:**
+```bash
+# Essential sandbox settings
+PLAID_ENV=sandbox
+PERSONA_ENVIRONMENT=sandbox
+STORAGE_PROVIDER=local
+
+# Skip external services entirely (optional)
+MOCK_EXTERNAL_SERVICES=true
+SKIP_KYC_VERIFICATION=true
+```
+
+| Service | Sandbox Variable | Dashboard |
+|---------|------------------|-----------|
+| Plaid | `PLAID_ENV=sandbox` | [dashboard.plaid.com](https://dashboard.plaid.com) |
+| Persona | `PERSONA_ENVIRONMENT=sandbox` | [withpersona.com](https://withpersona.com) |
+| Stripe | Use `sk_test_*` keys | [dashboard.stripe.com](https://dashboard.stripe.com) |
+| Storage | `STORAGE_PROVIDER=local` | N/A |
 
 ### Run Tests
 

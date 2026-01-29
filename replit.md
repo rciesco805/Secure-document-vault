@@ -69,6 +69,25 @@ A critical security feature is the **enforcing Content Security Policy (CSP)**, 
 
 The platform includes a unified storage abstraction layer supporting multiple providers: Replit Object Storage, AWS S3, Cloudflare R2, and local filesystem for development. This is configured via `STORAGE_PROVIDER` and related environment variables, with AES-256 encryption available for stored data.
 
+## Rollbar Error Monitoring Configuration
+Rollbar provides real-time error monitoring for both client and server-side errors.
+
+### Required Secrets
+- `NEXT_PUBLIC_ROLLBAR_CLIENT_TOKEN`: Client-side error tracking (must be "post_client_item" scope token, NOT the Public ID)
+- `ROLLBAR_SERVER_TOKEN`: Server-side error tracking (must be "post_server_item" scope token)
+- `ROLLBAR_POST_SERVER_ITEM_ACCESS_TOKEN`: Alternative server token for API access
+- `ROLLBAR_READ_TOKEN`: For fetching error data from Rollbar API
+
+### How to Get Tokens
+1. Go to Rollbar Dashboard > Project Settings > Project Access Tokens
+2. For client token: Use or create a token with "post_client_item" scope
+3. For server token: Use or create a token with "post_server_item" scope
+4. IMPORTANT: Do NOT use the "Public ID" - it's just an identifier, not an access token
+
+### Key Files
+- `lib/rollbar.ts` - Rollbar client and server configuration
+- `pages/_app.tsx` - RollbarProvider wraps the app for client-side error boundary
+
 ## External Dependencies
 - **Resend**: Transactional email services.
 - **Persona**: KYC/AML verification.
@@ -76,6 +95,6 @@ The platform includes a unified storage abstraction layer supporting multiple pr
 - **Tinybird**: Real-time analytics and audit logging.
 - **Stripe**: Platform billing.
 - **Storage Providers**: Replit Object Storage, AWS S3, Cloudflare R2, or local filesystem.
-- **Rollbar**: Real-time error monitoring.
+- **Rollbar**: Real-time error monitoring (see configuration section above).
 - **Google OAuth**: Admin authentication.
 - **OpenAI**: Optional AI features.

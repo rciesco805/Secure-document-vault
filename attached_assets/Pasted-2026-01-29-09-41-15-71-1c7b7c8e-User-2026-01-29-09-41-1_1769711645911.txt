@@ -1,0 +1,200 @@
+2026-01-29 09:41:15.71
+1c7b7c8e
+User
+}
+2026-01-29 09:41:15.71
+1c7b7c8e
+User
+at (Error: listen EADDRNOTAVAIL: address not available 34.117.33.233:5000) {
+2026-01-29 09:41:15.71
+1c7b7c8e
+User
+Error: listen EADDRNOTAVAIL: address not available 34.117.33.233:5000
+2026-01-29 09:41:15.71
+1c7b7c8e
+User
+address: '34.117.33.233',
+2026-01-29 09:41:15.71
+1c7b7c8e
+User
+syscall: 'listen',
+2026-01-29 09:41:15.71
+1c7b7c8e
+User
+port: 5000
+2026-01-29 09:41:15.71
+1c7b7c8e
+User
+errno: -99,
+2026-01-29 09:41:15.71
+1c7b7c8e
+User
+code: 'EADDRNOTAVAIL',
+2026-01-29 09:41:15.72
+1c7b7c8e
+System
+command finished with error [node .next/standalone/server.js]: exit status 1
+2026-01-29 09:41:18.43
+1c7b7c8e
+User
+⨯ Failed to start server
+2026-01-29 09:41:18.43
+1c7b7c8e
+User
+Error: listen EADDRNOTAVAIL: address not available 34.117.33.233:5000
+2026-01-29 09:41:18.43
+1c7b7c8e
+User
+address: '34.117.33.233',
+2026-01-29 09:41:18.43
+1c7b7c8e
+User
+errno: -99,
+2026-01-29 09:41:18.43
+1c7b7c8e
+User
+}
+2026-01-29 09:41:18.43
+1c7b7c8e
+User
+at (Error: listen EADDRNOTAVAIL: address not available 34.117.33.233:5000) {
+2026-01-29 09:41:18.43
+1c7b7c8e
+User
+syscall: 'listen',
+2026-01-29 09:41:18.43
+1c7b7c8e
+User
+port: 5000
+2026-01-29 09:41:18.43
+1c7b7c8e
+User
+code: 'EADDRNOTAVAIL',
+2026-01-29 09:41:18.45
+1c7b7c8e
+System
+command finished with error [node .next/standalone/server.js]: exit status 1
+2026-01-29 09:41:24.52
+1c7b7c8e
+User
+⨯ Failed to start server
+2026-01-29 09:41:24.52
+1c7b7c8e
+User
+address: '34.117.33.233',
+2026-01-29 09:41:24.52
+1c7b7c8e
+User
+}
+2026-01-29 09:41:24.52
+1c7b7c8e
+User
+code: 'EADDRNOTAVAIL',
+2026-01-29 09:41:24.52
+1c7b7c8e
+User
+port: 5000
+2026-01-29 09:41:24.52
+1c7b7c8e
+User
+Error: listen EADDRNOTAVAIL: address not available 34.117.33.233:5000
+2026-01-29 09:41:24.52
+1c7b7c8e
+User
+at (Error: listen EADDRNOTAVAIL: address not available 34.117.33.233:5000) {
+2026-01-29 09:41:24.52
+1c7b7c8e
+User
+syscall: 'listen',
+2026-01-29 09:41:24.52
+1c7b7c8e
+User
+errno: -99,
+2026-01-29 09:41:24.53
+1c7b7c8e
+System
+command finished with error [node .next/standalone/server.js]: exit status 1
+2026-01-29 09:41:28.83
+1c7b7c8e
+User
+⨯ Failed to start server
+2026-01-29 09:41:28.83
+1c7b7c8e
+User
+errno: -99,
+2026-01-29 09:41:28.83
+1c7b7c8e
+User
+Error: listen EADDRNOTAVAIL: address not available 34.117.33.233:5000
+2026-01-29 09:41:28.83
+1c7b7c8e
+User
+code: 'EADDRNOTAVAIL',
+2026-01-29 09:41:28.83
+1c7b7c8e
+User
+port: 5000
+2026-01-29 09:41:28.83
+1c7b7c8e
+User
+}
+2026-01-29 09:41:28.83
+1c7b7c8e
+User
+syscall: 'listen',
+2026-01-29 09:41:28.83
+1c7b7c8e
+User
+address: '34.117.33.233',
+2026-01-29 09:41:28.83
+1c7b7c8e
+User
+at (Error: listen EADDRNOTAVAIL: address not available 34.117.33.233:5000) {
+2026-01-29 09:41:28.85
+1c7b7c8e
+System
+command finished with error [node .next/standalone/server.js]: exit status 1
+2026-01-29 09:41:31.14
+1c7b7c8e
+System
+crash loop detected
+2026-01-29 09:48:01.64
+66301375
+System
+system: received signal terminated
+2026-01-29 09:58:25.81
+1552d001
+System
+starting up user application
+2026-01-29 09:58:25.82
+1552d001
+System
+metasidecar: loaded enterprise status from environment is_enterprise=false
+2026-01-29 09:58:25.82
+1552d001
+System
+forwarding local port 5000 to external port 80 (mapped as 1104)
+2026-01-29 09:58:28.40
+1552d001
+User
+▲ Next.js 16.1.6
+2026-01-29 09:58:28.40
+1552d001
+User
+✓ Starting...
+2026-01-29 09:58:28.40
+1552d001
+User
+- Local: http://localhost:5000
+2026-01-29 09:58:28.40
+1552d001
+User
+- Network: http://0.0.0.0:5000
+2026-01-29 09:58:28.79
+1552d001
+User
+✓ Ready in 402ms
+2026-01-29 09:59:19.82
+1552d001
+User
+Warning: Please use the `legacy` build in Node.js environments.

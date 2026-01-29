@@ -197,6 +197,84 @@ Recommended retention periods for compliance:
 - Use environment variables for configuration
 - Use Replit Secrets or similar secure storage for sensitive values
 
+## Security Hardening Guide
+
+### Secrets Rotation Schedule
+
+| Secret | Rotation Frequency | Impact |
+|--------|-------------------|--------|
+| `NEXTAUTH_SECRET` | Quarterly | Invalidates all sessions |
+| `STORAGE_ENCRYPTION_KEY` | Annually | Requires re-encryption |
+| Database password | Quarterly | Connection string update |
+| `PLAID_SECRET` | As needed | Regenerate in dashboard |
+| `STRIPE_SECRET_KEY` | As needed | Regenerate in dashboard |
+| `PERSONA_API_KEY` | As needed | Regenerate in dashboard |
+
+**Rotation Procedure:**
+1. Generate new secret value
+2. Update in environment (Replit Secrets or `.env.local`)
+3. Deploy/restart application
+4. Monitor logs for authentication errors
+5. Document rotation date
+
+### Rate Limiting
+
+Recommended limits for sensitive endpoints:
+
+| Endpoint | Limit | Window |
+|----------|-------|--------|
+| `/api/auth/*` | 5 requests | 15 minutes |
+| `/api/webhooks/*` | 100 requests | 1 minute |
+| `/api/funds/*` | 50 requests | 1 minute |
+| `/api/documents/*` | 30 requests | 1 minute |
+
+Implementation example (using `rate-limiter-flexible`):
+```typescript
+import { RateLimiterMemory } from 'rate-limiter-flexible';
+
+const authLimiter = new RateLimiterMemory({
+  points: 5,
+  duration: 900, // 15 minutes
+});
+```
+
+### CORS Configuration
+
+Production CORS settings in `next.config.mjs`:
+
+```javascript
+async headers() {
+  return [
+    {
+      source: '/api/:path*',
+      headers: [
+        { key: 'Access-Control-Allow-Origin', value: process.env.NEXTAUTH_URL },
+        { key: 'Access-Control-Allow-Methods', value: 'GET,POST,PUT,DELETE,OPTIONS' },
+        { key: 'Access-Control-Allow-Headers', value: 'Content-Type,Authorization' },
+        { key: 'Access-Control-Max-Age', value: '86400' },
+      ],
+    },
+  ];
+}
+```
+
+### Backup Strategy
+
+**Database Backups:**
+- Daily automated backups (retain 30 days)
+- Weekly backups (retain 1 year)
+- Point-in-time recovery enabled
+
+**File Storage Backups:**
+- S3/R2: Enable bucket versioning
+- Local: Daily compressed archives
+
+**Backup Verification:**
+- Monthly restore tests
+- Documented recovery procedure
+
+See `docs/DEPLOYMENT.md` for detailed backup scripts.
+
 ## Recommended Enhancements
 
 The following security improvements are recommended but not yet implemented:

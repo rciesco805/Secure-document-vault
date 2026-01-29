@@ -26,6 +26,8 @@ jest.mock("@/lib/prisma", () => ({
     fundAggregate: { findMany: jest.fn(), findFirst: jest.fn(), create: jest.fn() },
     signatureAuditLog: { create: jest.fn(), findMany: jest.fn() },
     document: { findMany: jest.fn() },
+    view: { findMany: jest.fn() },
+    auditLog: { findMany: jest.fn(), create: jest.fn() },
   },
 }));
 
@@ -52,6 +54,9 @@ describe("Data Migration E2E", () => {
     (mockPrisma.signatureAuditLog.create as jest.Mock).mockResolvedValue({});
     (mockPrisma.signatureAuditLog.findMany as jest.Mock).mockResolvedValue([]);
     (mockPrisma.document.findMany as jest.Mock).mockResolvedValue([]);
+    (mockPrisma.view.findMany as jest.Mock).mockResolvedValue([]);
+    (mockPrisma.auditLog.findMany as jest.Mock).mockResolvedValue([]);
+    (mockPrisma.auditLog.create as jest.Mock).mockResolvedValue({});
   });
 
   describe("Export Endpoint", () => {
@@ -163,7 +168,7 @@ describe("Data Migration E2E", () => {
 
       await exportHandler(req, res);
 
-      expect(mockPrisma.signatureAuditLog.create).toHaveBeenCalledWith(
+      expect(mockPrisma.auditLog.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
             eventType: "DATA_EXPORT",
@@ -389,7 +394,7 @@ describe("Data Migration E2E", () => {
 
       await importHandler(req, res);
 
-      expect(mockPrisma.signatureAuditLog.create).toHaveBeenCalledWith(
+      expect(mockPrisma.auditLog.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
             eventType: "DATA_IMPORT",

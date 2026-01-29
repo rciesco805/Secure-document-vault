@@ -44,6 +44,11 @@ jest.mock("@/pages/api/auth/[...nextauth]", () => ({
   authOptions: {},
 }));
 
+jest.mock("@/lib/auth/auth-options", () => ({
+  __esModule: true,
+  authOptions: {},
+}));
+
 import { getServerSession } from "next-auth/next";
 import prisma from "@/lib/prisma";
 import fundDashboardHandler from "@/pages/api/admin/fund-dashboard";

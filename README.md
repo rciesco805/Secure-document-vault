@@ -281,7 +281,3 @@ docker run -p 3000:3000 --env-file .env bf-fund-dataroom
 3. Commit your changes (`git commit -m 'Add amazing feature'`)
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
-
-## License
-
-This project is licensed under the AGPL-3.0 License.

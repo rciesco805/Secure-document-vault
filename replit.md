@@ -155,3 +155,24 @@ Comprehensive testing and improvements for the self-hosted e-signature feature:
 - **Completion Certificates**: Validate certificate generation
 - **Tamper Evidence**: Verify signature embedding and checksum validation
 - **Optional**: Screenshot protection and watermark implementation
+
+### Phase 3: Entity Mode Expansion
+Entity Mode toggle (FUND vs STARTUP) for platform flexibility:
+- **Status**: Partially implemented - toggle exists in admin settings
+- **Completed**: Database schema supports entity mode, UI toggle present
+- **Pending**: Full STARTUP-specific workflows, different compliance requirements, startup-specific document templates
+- **Target**: Expand beyond 506(c) fund management to general startup fundraising
+
+### Mobile Optimization
+Mobile-responsive design improvements:
+- **Status**: In progress
+- **Completed**: Responsive layouts using Tailwind CSS, mobile-friendly navigation
+- **Pending**: Touch-optimized signature pad, mobile-specific document viewer, PWA offline support
+- **Target**: Full mobile experience for LP investors
+
+### Real-Time Features Reliability
+Error handling improvements for real-time data features:
+- **Tinybird Analytics**: Error states with retry UI
+- **30-Second Polling**: Graceful degradation on connection issues
+- **Recharts Visualizations**: Error boundaries with fallback UI
+- **Status**: Improved - error handling added to capital tracking, video analytics components

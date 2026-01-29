@@ -46,7 +46,14 @@ export default function VideoAnalytics({
 
   if (error) {
     console.error("Error loading video analytics:", error);
-    return null;
+    return (
+      <Card>
+        <CardContent className="flex h-[300px] flex-col items-center justify-center text-muted-foreground">
+          <p>Unable to load video analytics</p>
+          <p className="text-sm">Please refresh the page to try again</p>
+        </CardContent>
+      </Card>
+    );
   }
 
   if (isLoading) {

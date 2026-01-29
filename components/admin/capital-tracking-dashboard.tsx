@@ -99,20 +99,25 @@ export function CapitalTrackingDashboard({ fundId }: CapitalTrackingDashboardPro
   const [metrics, setMetrics] = useState<CapitalMetrics | null>(null);
   const [investors, setInvestors] = useState<InvestorCapital[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<string>("commitment");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
+      setError(null);
       const res = await fetch(`/api/admin/capital-tracking?fundId=${fundId}`);
       if (res.ok) {
         const data = await res.json();
         setMetrics(data.metrics);
         setInvestors(data.investors || []);
+      } else {
+        setError("Failed to load capital tracking data");
       }
     } catch (error) {
       console.error("Failed to fetch capital tracking:", error);
+      setError("Connection error. Please check your internet and try again.");
     } finally {
       setLoading(false);
     }
@@ -156,12 +161,14 @@ export function CapitalTrackingDashboard({ fundId }: CapitalTrackingDashboardPro
     );
   }
 
-  if (!metrics) {
+  if (error || !metrics) {
     return (
       <Card>
         <CardContent className="flex flex-col items-center justify-center py-12">
-          <AlertCircle className="h-12 w-12 text-muted-foreground mb-2" />
-          <p className="text-muted-foreground">Failed to load capital data</p>
+          <AlertCircle className="h-12 w-12 text-destructive mb-2" />
+          <p className="text-muted-foreground">
+            {error || "Failed to load capital data"}
+          </p>
           <Button variant="outline" className="mt-4" onClick={fetchData}>
             <RefreshCw className="h-4 w-4 mr-2" />
             Retry

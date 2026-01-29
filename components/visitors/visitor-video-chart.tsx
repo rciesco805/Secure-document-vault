@@ -37,7 +37,13 @@ export default function VisitorVideoChart({
 
   if (videoError) {
     console.error("Error loading video events:", videoError);
-    return null;
+    return (
+      <Card>
+        <div className="flex h-[200px] flex-col items-center justify-center text-muted-foreground">
+          <p>Unable to load video data</p>
+        </div>
+      </Card>
+    );
   }
 
   if (!videoEvents) {

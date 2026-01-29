@@ -57,11 +57,18 @@ function verifyWebhookSignature(
 
 export const config = {
   api: {
-    bodyParser: {
-      raw: { type: "application/json" },
-    },
+    bodyParser: false,
   },
 };
+
+async function getRawBody(req: NextApiRequest): Promise<Buffer> {
+  return new Promise((resolve, reject) => {
+    const chunks: Buffer[] = [];
+    req.on('data', (chunk: Buffer) => chunks.push(chunk));
+    req.on('end', () => resolve(Buffer.concat(chunks)));
+    req.on('error', reject);
+  });
+}
 
 export default async function handler(
   req: NextApiRequest,
@@ -72,6 +79,9 @@ export default async function handler(
   }
 
   try {
+    const rawBody = await getRawBody(req);
+    const payload = JSON.parse(rawBody.toString()) as EsignWebhookPayload;
+    
     const webhookSecret = process.env.ESIGN_WEBHOOK_SECRET;
     const signature = req.headers["x-esign-signature"] as string | undefined;
 
@@ -89,15 +99,13 @@ export default async function handler(
       }
 
       // Use deterministic JSON serialization for signature verification
-      const rawBody = JSON.stringify(req.body, Object.keys(req.body).sort());
+      const sortedBody = JSON.stringify(payload, Object.keys(payload).sort());
       
-      if (!verifyWebhookSignature(rawBody, signature, webhookSecret)) {
+      if (!verifyWebhookSignature(sortedBody, signature, webhookSecret)) {
         console.error("[ESIGN_WEBHOOK] Invalid signature");
         return res.status(401).json({ message: "Invalid webhook signature" });
       }
     }
-
-    const payload = req.body as EsignWebhookPayload;
 
     if (!payload.event || !payload.data?.documentId) {
       return res.status(400).json({ message: "Invalid webhook payload" });

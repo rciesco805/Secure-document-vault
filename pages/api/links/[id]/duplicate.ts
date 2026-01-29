@@ -10,10 +10,6 @@ import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 import { sendLinkCreatedWebhook } from "@/lib/webhook/triggers/link-created";
 
-export const config = {
-  // in order to enable `waitUntil` function
-  supportsResponseStreaming: true,
-};
 
 export default async function handle(
   req: NextApiRequest,

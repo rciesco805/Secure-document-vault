@@ -16,10 +16,6 @@ const bodyValidation = z.object({
   abuseType: z.number().int().min(1).max(6),
 });
 
-export const config = {
-  // in order to enable `waitUntil` function
-  supportsResponseStreaming: true,
-};
 
 export default async function handler(
   req: NextApiRequest,

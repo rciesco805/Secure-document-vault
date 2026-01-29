@@ -26,11 +26,6 @@ import {
 import { sendLinkCreatedWebhook } from "@/lib/webhook/triggers/link-created";
 import { webhookFileUrlSchema } from "@/lib/zod/url-validation";
 
-export const config = {
-  // in order to enable `waitUntil` function
-  supportsResponseStreaming: true,
-  maxDuration: 120,
-};
 
 // Define a common link schema to reuse
 const LinkSchema = z.object({

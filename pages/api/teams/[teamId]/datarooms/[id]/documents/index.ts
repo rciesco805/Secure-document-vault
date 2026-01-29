@@ -12,10 +12,6 @@ import { CustomUser } from "@/lib/types";
 import { log } from "@/lib/utils";
 import { sortItemsByIndexAndName } from "@/lib/utils/sort-items-by-index-name";
 
-export const config = {
-  // in order to enable `waitUntil` function
-  supportsResponseStreaming: true,
-};
 
 export default async function handle(
   req: NextApiRequest,

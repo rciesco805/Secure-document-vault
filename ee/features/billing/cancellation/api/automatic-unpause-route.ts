@@ -8,10 +8,6 @@ import { timingSafeEqual } from "crypto";
 import prisma from "@/lib/prisma";
 import { log } from "@/lib/utils";
 
-export const config = {
-  // in order to enable `waitUntil` function
-  supportsResponseStreaming: true,
-};
 
 export async function handleRoute(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {

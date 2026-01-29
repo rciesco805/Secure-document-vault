@@ -13,10 +13,6 @@ import { log, serializeFileSize } from "@/lib/utils";
 import { supportsAdvancedExcelMode } from "@/lib/utils/get-content-type";
 import { documentUploadSchema } from "@/lib/zod/url-validation";
 
-export const config = {
-  // in order to enable `waitUntil` function
-  supportsResponseStreaming: true,
-};
 
 export default async function handle(
   req: NextApiRequest,

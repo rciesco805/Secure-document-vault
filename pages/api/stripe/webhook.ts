@@ -14,12 +14,6 @@ import { reportError } from "@/lib/error";
 
 // Stripe requires the raw body to construct the event.
 // add supportsResponseStreaming to enable waitUntil
-export const config = {
-  supportsResponseStreaming: true,
-  api: {
-    bodyParser: false,
-  },
-};
 
 async function buffer(readable: Readable) {
   const chunks: Buffer[] = [];

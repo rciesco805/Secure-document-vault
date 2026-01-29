@@ -20,6 +20,27 @@ Core features include:
 - **PWA Support**: Progressive Web App with offline document access, auto-updates, and seamless deployment transitions.
 - **Error Monitoring**: Rollbar integration for real-time tracking.
 
+## Authentication Flow
+The platform has separate login portals for different user types:
+
+### Visitor/Investor Portal (`/login`)
+- For investors and LPs accessing their datarooms
+- Checks authorization BEFORE sending magic link email
+- User must be: a viewer record, in a viewer group, or in a link's allowList
+- If not authorized, shows "Request Access" message directing to "Request Invite" button
+- Admins using this portal enter as visitors (not admin access)
+
+### Admin Portal (`/admin/login`)
+- For BF Fund team administrators only
+- Checks if email is in admin list before sending magic link
+- Redirects to admin dashboard (`/dashboard`) after login
+- Only way to access admin dashboard
+
+### Authorization Check
+- API endpoint `/api/auth/check-visitor` validates before magic link is sent
+- API endpoint `/api/auth/check-admin` validates admin access
+- Prevents unauthorized emails from receiving magic links
+
 ## PWA Offline Document Caching
 The platform includes a comprehensive offline document caching system for investors to access saved documents without internet connectivity.
 

@@ -224,7 +224,7 @@ export default function Login() {
           </div>
           <form
             className="flex flex-col gap-4 px-4 sm:px-12"
-            onSubmit={(e) => {
+            onSubmit={async (e) => {
               e.preventDefault();
               
               // Prevent double submission
@@ -239,6 +239,34 @@ export default function Login() {
 
               isSubmittingRef.current = true;
               setClickedMethod("email");
+
+              // Check if user is authorized before sending magic link
+              try {
+                const checkRes = await fetch("/api/auth/check-visitor", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ email: emailValidation.data }),
+                });
+                const { isAuthorized, isAdmin } = await checkRes.json();
+                
+                if (!isAuthorized) {
+                  setClickedMethod(undefined);
+                  setShowAccessNotice(true);
+                  isSubmittingRef.current = false;
+                  return;
+                }
+
+                // If admin using visitor portal, they enter as visitor
+                if (isAdmin) {
+                  toast.info("You will access the platform as a visitor through this portal.");
+                }
+              } catch (error) {
+                setClickedMethod(undefined);
+                toast.error("Unable to verify access. Please try again.");
+                isSubmittingRef.current = false;
+                return;
+              }
+
               // Pass mode=visitor so admins testing from this page get visitor experience
               const callbackUrl = next || "/viewer-redirect?mode=visitor";
               signIn("email", {
@@ -254,7 +282,7 @@ export default function Login() {
                   setShowAccessNotice(false);
                 } else {
                   setEmailButtonText("Continue with Email");
-                  setShowAccessNotice(true);
+                  toast.error("Failed to send login email. Please try again.");
                   isSubmittingRef.current = false;
                 }
                 setClickedMethod(undefined);

@@ -12,7 +12,8 @@ import {
   LogOut,
   MailIcon,
 } from "lucide-react";
-import { signOut, useSession } from "next-auth/react";
+import { useSession } from "next-auth/react";
+import { signOutWithCacheClear } from "@/lib/offline/use-offline-cache-sync";
 import { toast } from "sonner";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -176,7 +177,7 @@ export function NavUser() {
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={() =>
-                  signOut({
+                  signOutWithCacheClear({
                     callbackUrl: `${window.location.origin}`,
                   })
                 }

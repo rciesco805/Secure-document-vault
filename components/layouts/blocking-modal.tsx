@@ -5,7 +5,8 @@ import { useTeam } from "@/context/team-context";
 import { TeamContextType } from "@/context/team-context";
 import { PlanEnum } from "@/ee/stripe/constants";
 import { InfoIcon, ShieldAlertIcon } from "lucide-react";
-import { signOut, useSession } from "next-auth/react";
+import { useSession } from "next-auth/react";
+import { signOutWithCacheClear } from "@/lib/offline/use-offline-cache-sync";
 
 import { usePlan } from "@/lib/swr/use-billing";
 import { useGetTeam } from "@/lib/swr/use-team";
@@ -177,7 +178,7 @@ export const BlockingModal = () => {
             <Button
               variant="link"
               className="w-full sm:w-auto"
-              onClick={() => signOut()}
+              onClick={() => signOutWithCacheClear()}
             >
               Log out
             </Button>

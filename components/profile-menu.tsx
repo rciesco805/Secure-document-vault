@@ -5,7 +5,8 @@ import { useState } from "react";
 
 import { HelpCircle, LogOut, Search } from "lucide-react";
 import { FileText } from "lucide-react";
-import { signOut, useSession } from "next-auth/react";
+import { useSession } from "next-auth/react";
+import { signOutWithCacheClear } from "@/lib/offline/use-offline-cache-sync";
 
 import { cn } from "@/lib/utils";
 
@@ -150,7 +151,7 @@ const ProfileMenu = ({ className, size }: ProfileMenuProps) => {
 
                   <Link
                     onClick={() =>
-                      signOut({
+                      signOutWithCacheClear({
                         callbackUrl: `${window.location.origin}`,
                       })
                     }

@@ -11,23 +11,31 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { PWAInstallPrompt } from "@/components/pwa-install";
+import { useOfflineCacheSync } from "@/lib/offline/use-offline-cache-sync";
+
+function OfflineCacheSyncProvider({ children }: { children: React.ReactNode }) {
+  useOfflineCacheSync();
+  return <>{children}</>;
+}
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <RollbarProvider config={clientConfig}>
       <ErrorBoundary>
         <SessionProvider>
-          <PostHogCustomProvider>
-            <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
-              <NuqsAdapter>
-                <Toaster closeButton />
-                <TooltipProvider delayDuration={100}>
-                  {children}
-                </TooltipProvider>
-                <PWAInstallPrompt />
-              </NuqsAdapter>
-            </ThemeProvider>
-          </PostHogCustomProvider>
+          <OfflineCacheSyncProvider>
+            <PostHogCustomProvider>
+              <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+                <NuqsAdapter>
+                  <Toaster closeButton />
+                  <TooltipProvider delayDuration={100}>
+                    {children}
+                  </TooltipProvider>
+                  <PWAInstallPrompt />
+                </NuqsAdapter>
+              </ThemeProvider>
+            </PostHogCustomProvider>
+          </OfflineCacheSyncProvider>
         </SessionProvider>
       </ErrorBoundary>
     </RollbarProvider>

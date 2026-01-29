@@ -1,6 +1,7 @@
 import { useRouter } from "next/router";
 import Link from "next/link";
-import { useSession, signOut } from "next-auth/react";
+import { useSession } from "next-auth/react";
+import { signOutWithCacheClear } from "@/lib/offline/use-offline-cache-sync";
 import useSWR from "swr";
 import { useEffect, useRef, useState } from "react";
 
@@ -91,7 +92,7 @@ export default function ViewerPortal() {
   }
 
   const handleLogout = async () => {
-    await signOut({ callbackUrl: "/login" });
+    await signOutWithCacheClear({ callbackUrl: "/login" });
   };
 
   return (

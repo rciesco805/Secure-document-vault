@@ -9,7 +9,7 @@ import {
 } from "react";
 
 import { TeamContextType, useTeam } from "@/context/team-context";
-import { signOut } from "next-auth/react";
+import { signOutWithCacheClear } from "@/lib/offline/use-offline-cache-sync";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
@@ -64,7 +64,7 @@ function DeleteTeamModal({
           });
           await mutate("/api/teams");
           console.log("teamsCount", teamsCount);
-          teamsCount > 1 ? router.push("/documents") : signOut();
+          teamsCount > 1 ? router.push("/documents") : signOutWithCacheClear();
           resolve(null);
         } else {
           setDeleting(false);

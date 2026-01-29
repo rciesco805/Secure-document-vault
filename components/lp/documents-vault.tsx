@@ -1,4 +1,5 @@
 import { useState } from "react";
+import Link from "next/link";
 import {
   Card,
   CardContent,
@@ -17,7 +18,9 @@ import {
   FileLock,
   Shield,
   Eye,
+  WifiOff,
 } from "lucide-react";
+import { SaveOfflineButton } from "@/components/offline/save-offline-button";
 
 interface Document {
   id: string;
@@ -73,16 +76,29 @@ export function DocumentsVault({
               Securely stored signed documents and fund materials
             </CardDescription>
           </div>
-          {onViewAll && (
+          <div className="flex items-center gap-2">
             <Button 
-              variant="outline" 
+              variant="ghost" 
               size="sm" 
-              className="border-gray-600 text-gray-300 hover:bg-gray-700"
-              onClick={onViewAll}
+              className="text-gray-400 hover:text-white"
+              asChild
             >
-              View All
+              <Link href="/lp/offline-documents">
+                <WifiOff className="h-4 w-4 mr-1" />
+                Offline
+              </Link>
             </Button>
-          )}
+            {onViewAll && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="border-gray-600 text-gray-300 hover:bg-gray-700"
+                onClick={onViewAll}
+              >
+                View All
+              </Button>
+            )}
+          </div>
         </div>
       </CardHeader>
       
@@ -178,6 +194,13 @@ export function DocumentsVault({
                   <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     {doc.fileUrl && (
                       <>
+                        <SaveOfflineButton
+                          documentId={doc.id}
+                          documentName={doc.title}
+                          documentUrl={doc.fileUrl}
+                          documentType={doc.documentType}
+                          variant="icon"
+                        />
                         <a
                           href={doc.fileUrl}
                           target="_blank"

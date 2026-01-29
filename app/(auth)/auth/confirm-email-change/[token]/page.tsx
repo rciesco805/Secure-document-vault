@@ -54,7 +54,7 @@ export const metadata: Metadata = {
 };
 
 interface PageProps {
-  params: { token: string };
+  params: Promise<{ token: string }>;
 }
 
 export default async function ConfirmEmailChangePage(props: PageProps) {
@@ -65,7 +65,8 @@ export default async function ConfirmEmailChangePage(props: PageProps) {
   );
 }
 
-const VerifyEmailChange = async ({ params: { token } }: PageProps) => {
+const VerifyEmailChange = async ({ params }: PageProps) => {
+  const { token } = await params;
   const tokenFound = await prisma.verificationToken.findUnique({
     where: {
       token: hashToken(token),

@@ -9,7 +9,7 @@ The BF Fund Investor Dataroom is a 506(c) compliant GP/LP management suite desig
 - Focus: Security and ease of use for investors
 
 ## System Architecture
-The platform is built using Next.js 14 with a hybrid Pages and App Router architecture and TypeScript. Styling is managed with Tailwind CSS and shadcn/ui, emphasizing a UX-first, mobile-responsive design with minimal clicks and guided wizards. Data persistence is handled by PostgreSQL with Prisma ORM, and NextAuth.js provides authentication with database-backed sessions.
+The platform is built using Next.js 16 with a hybrid Pages and App Router architecture, React 19, and TypeScript. Styling is managed with Tailwind CSS and shadcn/ui, emphasizing a UX-first, mobile-responsive design with minimal clicks and guided wizards. Data persistence is handled by PostgreSQL with Prisma ORM, and NextAuth.js provides authentication with database-backed sessions.
 
 Core features include:
 - **506(c) Compliance**: Accreditation self-certification, audit logs, and KYC/AML hooks.
@@ -67,32 +67,21 @@ Failure to add domains will cause the integration to silently fail in production
 - CSP violations are logged to `/api/csp-report`
 - In development, the CSP is more permissive (allows http: for local testing)
 
-## Planned Upgrades
+## Recent Changes
 
-### Next.js 15/16 Migration (Future Project)
-**Purpose**: Resolve remaining npm audit vulnerabilities and access modern features.
+### Next.js 16 Migration (Completed January 2026)
+Successfully upgraded the platform to resolve security vulnerabilities:
+- **Next.js**: 14.2.x → 16.1.6
+- **React/React-DOM**: 18.3.x → 19.2.4
+- **eslint-config-next**: 14.x → 16.x
 
-**Key Breaking Changes**:
-1. React 19 required (currently on 18.3.1)
-2. Async request APIs - `cookies()`, `headers()`, `params` become async
-3. ESLint 9 required with eslint-config-next@16
-4. Caching defaults changed - `fetch` no longer cached by default
-5. Turbopack as default bundler
+**Breaking Changes Addressed**:
+1. Async cookies() API - All route handlers updated to await cookies()
+2. React 19 type changes - Updated cloneElement, RefObject, and event handler types
+3. Turbopack as default bundler - Added turbopack config for compatibility
+4. Moved experimental config keys to top-level (serverExternalPackages, outputFileTracingIncludes)
 
-**Dependencies to Update**:
-- `next`: 14.2.35 → 16.x
-- `react` / `react-dom`: 18.3.1 → 19.x  
-- `eslint-config-next`: 14.2.35 → 16.x
-- `next-auth`: Verify v5 compatibility
-
-**Testing Required**:
-- All authentication flows (NextAuth, LP auth)
-- Document upload/view/sign workflows
-- KYC/payment integrations (Persona, Plaid, Stripe)
-- PDF encryption/decryption
-- Admin dashboards and CRM features
-
-**Estimated Effort**: 2-3 days with thorough testing
+**Note**: The "middleware" file convention is deprecated in Next.js 16. Consider migrating to "proxy" convention in a future update.
 
 ## External Dependencies
 - **Resend**: Transactional email services.

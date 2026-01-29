@@ -12,10 +12,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - HSTS header enforcement in production environments
 - Integration test workflow for sandbox APIs (Plaid, Persona)
 - CI status badge in README
+- Docker support for reproducible local development
+  - Multi-stage Dockerfile for optimized production builds
+  - docker-compose.yml with Postgres and health checks
+  - docker-compose.dev.yml for database-only development
+  - docker-entrypoint.sh for automatic Prisma migrations
+- Unified storage abstraction layer supporting multiple providers
+  - Replit Object Storage (default for Replit deployments)
+  - AWS S3 and S3-compatible services
+  - Cloudflare R2 storage
+  - Local filesystem for development
+- AES-256-GCM encryption for stored files (via STORAGE_ENCRYPTION_KEY)
+- Error handling improvements with retry UI for real-time components
+  - Capital tracking dashboard error states
+  - Video analytics error boundaries
+  - Visitor video chart fallbacks
 
 ### Fixed
 - Data migration test mocks for auditLog and view models
 - Admin fund dashboard test ESM compatibility
+
+### Changed
+- Added `output: "standalone"` to next.config.mjs for Docker support
 
 ### Security
 - Documented known npm vulnerabilities with risk assessments

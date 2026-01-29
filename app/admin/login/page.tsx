@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import { Suspense } from "react";
 
 import { GTMComponent } from "@/components/gtm-component";
 
@@ -42,7 +43,9 @@ export default function AdminLoginPage() {
   return (
     <>
       <GTMComponent />
-      <AdminLoginClient />
+      <Suspense fallback={<div className="flex min-h-screen items-center justify-center">Loading...</div>}>
+        <AdminLoginClient />
+      </Suspense>
     </>
   );
 }

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import React from "react";
 
-import "@/public/vendor/handsontable/handsontable.full.min.css";
+import "handsontable/dist/handsontable.full.min.css";
 import { Brand, DataroomBrand } from "@prisma/client";
 
 import { useSafePageViewTracker } from "@/lib/tracking/safe-page-view-tracker";

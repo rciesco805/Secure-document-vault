@@ -1,0 +1,59 @@
+Create a project
+Agent mode: Note that if you run simply tb, the CLI will run in "agent mode", enabling you to work purely with natural language commands. Read more about Tinybird code.
+
+Start with the project structure tb create:
+
+tb create 
+
+Output should be this folder scaffolding:
+
+» Creating new project structure...
+Learn more about data files https://www.tinybird.co/docs/forward/datafiles
+./datasources       → Where your data lives. Define the schema and settings for your tables.
+./endpoints         → Expose real-time HTTP APIs of your transformed data.
+./materializations  → Stream continuous updates of the result of a pipe into a new data source.
+./copies            → Capture the result of a pipe at a moment in time and write it into a target data source.
+./sinks             → Export your data to external systems on a scheduled or on-demand basis.
+./pipes             → Transform your data and reuse the logic in endpoints, materializations and copies.
+./fixtures          → Files with sample data for your project.
+./tests             → Test your pipe files with data validation tests.
+./connections       → Connect to and ingest data from popular sources: Kafka, S3 or GCS.
+✓ Scaffolding completed!
+
+
+» Creating .env.local file...
+✓ Done!
+
+
+» Creating CI/CD files for GitHub and GitLab...
+./.gitignore
+./.github/workflows/tinybird-ci.yml
+./.github/workflows/tinybird-cd.yml
+./.gitlab-ci.yml
+./.gitlab/tinybird/tinybird-ci.yml
+./.gitlab/tinybird/tinybird-cd.yml
+✓ Done!
+
+
+» Creating rules...
+./.cursorrules
+✓ Done!
+
+
+» Creating Claude Code rules...
+./CLAUDE.md
+✓ Done!
+
+First things first, you need a data source. Use NYC yellow taxis dataset if you don't have sample data.
+
+tb datasource create --url https://tbrd.co/taxi_data.parquet --name trips
+
+This creates a new file in your project:
+
+Running against Tinybird Local
+
+» Creating .datasource file...
+/datasources/trips.datasource
+✓ .datasource created!
+
+Data sources are the definition of the database tables where you will store the data. More information about data sources

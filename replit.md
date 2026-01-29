@@ -20,7 +20,7 @@ Core features include:
 - **PWA Support**: Progressive Web App with auto-updates.
 - **Error Monitoring**: Rollbar integration for real-time tracking.
 
-Security is implemented with a defense-in-depth approach featuring four encryption layers: Transport (TLS 1.3), Client-Side (AES-256-GCM using Web Crypto API), Server-Side (AES-256-GCM using Node.js crypto module), and PDF Level (PDF 2.0 AES-256 using `pdf-lib-plus-encrypt`). The system incorporates rate limiting and anomaly detection to identify and mitigate suspicious activities, employing a STRIDE-based threat model. The signature workflow is secured with a dedicated encryption service, ensuring signature images and documents are encrypted, and all events are logged to an audit trail. An external API provides programmatic access to signature features, authenticated via Bearer tokens.
+Security is implemented with a defense-in-depth approach featuring four encryption layers: Transport (TLS 1.3), Client-Side (AES-256-GCM using Web Crypto API), Server-Side (AES-256-GCM using Node.js crypto module), and PDF Level (PDF 2.0 AES-256 using `pdf-lib-plus-encrypt`). The system incorporates rate limiting (`lib/security/rate-limiter.ts`) with three tiers (auth: 10/hour, strict: 3/hour, api: 100/min) and anomaly detection (`lib/security/anomaly-detection.ts`) to identify and mitigate suspicious activities, employing a STRIDE-based threat model. The signature workflow is secured with a dedicated encryption service, ensuring signature images and documents are encrypted, and all events are logged to an audit trail. An external API provides programmatic access to signature features, authenticated via Bearer tokens. A health check endpoint (`/api/health`) provides database and storage status monitoring.
 
 ### Content Security Policy (CSP)
 The platform implements an **enforcing CSP** (not report-only) with strict domain whitelisting. This is a critical security feature that blocks any scripts, connections, or resources from non-whitelisted domains.
@@ -208,8 +208,8 @@ Entity Mode toggle (FUND vs STARTUP) for platform flexibility:
 ### Mobile Optimization
 Mobile-responsive design improvements:
 - **Status**: In progress
-- **Completed**: Responsive layouts using Tailwind CSS, mobile-friendly navigation
-- **Pending**: Touch-optimized signature pad, mobile-specific document viewer, PWA offline support
+- **Completed**: Responsive layouts using Tailwind CSS, mobile-friendly navigation, touch-optimized signature pad with pointer events API
+- **Pending**: Mobile-specific document viewer, PWA offline support
 - **Target**: Full mobile experience for LP investors
 
 ### Real-Time Features Reliability

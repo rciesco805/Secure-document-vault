@@ -27,6 +27,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Capital tracking dashboard error states
   - Video analytics error boundaries
   - Visitor video chart fallbacks
+- Rate limiting for critical endpoints (lib/security/rate-limiter.ts)
+  - Authentication endpoints: 10 requests/hour
+  - Sensitive operations: 3 requests/hour (strict)
+  - General API endpoints: 100 requests/minute
+- Enhanced signature pad with pointer events API for better mobile/tablet support
+  - Pointer capture prevents losing strokes when finger moves off canvas
+  - Mobile-specific CSS optimizations (touch-action, WebkitTouchCallout)
+- Health check endpoint (/api/health) with database and storage status
 
 ### Fixed
 - Data migration test mocks for auditLog and view models

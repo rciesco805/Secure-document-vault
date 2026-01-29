@@ -249,9 +249,66 @@ STORAGE_REGION=us-east-1
 
 ---
 
+## Recent Issues & Fixes (January 2026)
+
+### Service Worker Registration Failed in Production
+
+**Error**: "The script resource is behind a redirect, which is disallowed."
+
+**Cause**: Middleware was intercepting `sw.js` requests and redirecting them.
+
+**Solution**: Updated `proxy.ts` middleware matcher to exclude service worker files:
+```typescript
+matcher: [
+  "/((?!api/|_next/|_static|vendor|_icons|_vercel|favicon.ico|favicon.png|sitemap.xml|sw.js|sw-version.json|manifest.json|offline).*)",
+]
+```
+
+### Magic Link 404 Error After Clicking Email Link
+
+**Error**: 404 on `/verify` page when clicking magic link.
+
+**Cause**: Checksum mismatch due to `NEXT_PRIVATE_VERIFICATION_SECRET` being different between email generation and verification.
+
+**Solution**: 
+1. Remove duplicate env vars that conflict with secrets
+2. Set `NEXT_PRIVATE_VERIFICATION_SECRET` in the "shared" environment so both development and production use the same value
+3. Ensure no secret with the same name has a different value
+
+### Rollbar "access token not found" Error
+
+**Error**: "access token not found: [hex string] please check that the access token exists"
+
+**Cause**: Using the Rollbar "Public ID" instead of an actual access token.
+
+**Solution**:
+1. Go to Rollbar Dashboard > Project Settings > Project Access Tokens
+2. Use a token with "post_client_item" scope (NOT the Public ID)
+3. Public IDs are ~32 hex characters but are NOT tokens
+
+### User Not Receiving Magic Link Email
+
+**Cause**: User email not authorized in the system.
+
+**Solution**: Before sending magic links, the system now checks if the user is:
+- An admin (listed in admin emails)
+- A viewer record (in database)
+- A member of a viewer group
+- On a link's allowList
+
+If not authorized, they see a "Request Access" message instead of receiving an email.
+
+### Next.js Deprecation Warning About Middleware
+
+**Warning**: "middleware.ts is deprecated, use proxy.ts instead"
+
+**Solution**: Rename `middleware.ts` to `proxy.ts`. Next.js 16 uses the new naming convention.
+
+---
+
 ## Getting Help
 
 1. **Check logs**: `npm run dev` console, browser DevTools, or Docker logs
 2. **Search docs**: `docs/` folder contains detailed guides
 3. **Review tests**: `__tests__/` folder shows expected behavior
-4. **Contact support**: support@bermudafranchisegroup.com
+4. **Contact support**: investors@bermudafranchisegroup.com

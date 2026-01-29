@@ -43,6 +43,35 @@ The platform is flexible for multi-fund/startup use: Toggle entity modes (`FUND`
 - Vercel for prod
 - Jest for E2E tests
 
+## Recent Updates (January 2026)
+
+### Authentication Improvements
+- **Pre-Send Authorization**: Visitor portal now checks if email is authorized BEFORE sending magic link
+- **Separate Login Portals**: `/login` for investors, `/admin/login` for administrators
+- **Admin-as-Visitor**: Admins using visitor portal enter as visitors (no admin access)
+- **Clear Access Messaging**: Unauthorized users see "Request Access" message with button
+
+### PWA & Offline Support
+- **User-Scoped Caching**: Documents cached per user with isolated storage
+- **Offline Documents Page**: `/lp/offline-documents` for managing cached documents
+- **Build-Time Cache Versioning**: Automatic cache invalidation on deployments
+
+### Error Monitoring
+- **Rollbar Integration**: Client and server-side error tracking with proper token configuration
+- **Tinybird Analytics**: Real-time investor engagement tracking
+
+### Security Enhancements
+- **Rate Limiting**: Three tiers (auth: 10/hour, strict: 3/hour, api: 100/min)
+- **Persona Webhooks**: Signature verification for KYC/AML callbacks
+- **CSP Enforcement**: Strict Content Security Policy with domain whitelisting
+
+### Infrastructure
+- **Next.js 16 Compatibility**: Middleware renamed to `proxy.ts`
+- **Service Worker Fixes**: Excluded from middleware to prevent redirect issues
+- **Unified Storage**: Support for Replit, S3, R2, and local filesystem
+
+---
+
 ## Repo Status
 
 ### Core

@@ -1,5 +1,45 @@
 # BF Fund Investor Dataroom
 
+## Recent Changes (Last 5 Days - January 24-29, 2026)
+
+### Authentication & Security Updates
+- **Visitor Authorization Pre-Check**: Added `/api/auth/check-visitor` endpoint that validates user authorization BEFORE sending magic link emails. Users not on approved lists now see a clear "Request Access" message instead of receiving emails that won't work.
+- **Separate Login Portals**: Maintained distinct login paths - `/login` for investors/visitors, `/admin/login` for administrators. Admins using the visitor portal enter as visitors (no admin access).
+- **Admin Portal Protection**: Non-admin users attempting admin login are redirected to investor portal with clear messaging.
+- **Content Security Policy (CSP)**: Added `data:` URLs to script-src directive to fix script blocking issues in production.
+
+### PWA & Offline Document Access
+- **User-Scoped Document Caching**: Implemented isolated cache storage per user (`bf-fund-documents-user-{userId}-{version}`) preventing cross-user data exposure.
+- **Offline Documents Page**: New page at `/lp/offline-documents` for viewing and managing cached documents.
+- **Automatic Cache Clearing**: User document caches are cleared on logout via `signOutWithCacheClear()`.
+- **Origin Validation**: Restricted caching to trusted domains only (dataroom.bermudafranchisegroup.com, objectstorage.replit.app).
+
+### Cache Invalidation & Deployment
+- **Build-Time Versioning**: `scripts/generate-sw-version.js` generates unique hashes on each build for automatic cache invalidation.
+- **Network-First Strategy**: All static assets use network-first with cache fallback to ensure fresh content after deployments.
+- **Service Worker Improvements**: Added `skipWaiting()`, `clients.claim()`, hourly update checks, and `updateViaCache: 'none'` for immediate takeover.
+- **Middleware Fix**: Renamed middleware to `proxy.ts` for Next.js 16 compatibility; excluded `sw.js`, `manifest.json`, and offline pages from middleware processing.
+
+### Error Monitoring & Analytics
+- **Rollbar Integration**: Added comprehensive client and server-side error monitoring with proper token configuration.
+- **Tinybird Analytics**: Integrated real-time analytics for tracking investor engagement and audit logging.
+
+### Signature Pad & Mobile Experience
+- **Mobile Optimization**: Improved signature pad touch handling for better mobile experience.
+- **Accessibility Improvements**: Enhanced PDF viewer and signature pad accessibility.
+
+### Security Enhancements
+- **Rate Limiting**: Implemented three tiers - auth (10/hour), strict (3/hour), api (100/min).
+- **Persona Webhook Integration**: Added webhook with signature verification for KYC/AML callbacks.
+- **Four-Layer Encryption**: Transport (TLS 1.3), Client-Side (AES-256-GCM), Server-Side (AES-256-GCM), PDF Level (AES-256).
+
+### Infrastructure
+- **Unified Storage Abstraction**: Support for Replit Object Storage, AWS S3, Cloudflare R2, and local filesystem.
+- **Environment Configuration**: Consistent verification secrets across development and production environments.
+- **Docker Support**: Added Docker files for reproducible local development.
+
+---
+
 ## Overview
 The BF Fund Investor Dataroom is a 506(c) compliant GP/LP management suite designed to streamline investor relations and compliance. It offers secure document sharing, self-hosted e-signature capabilities, personalized investor portals, and integrated KYC/AML verification. The platform aims to provide a robust, compliant, and user-friendly experience for fund managers and limited partners, covering investor onboarding, accreditation verification, secure document vaults, and comprehensive compliance audit trails. The business vision is to become the leading platform for fund managers seeking to automate and secure their investor relations while ensuring regulatory compliance and offering market-leading features.
 

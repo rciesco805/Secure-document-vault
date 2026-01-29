@@ -4,6 +4,29 @@ Complete guide for deploying BF Fund Investor Dataroom to various environments.
 
 ---
 
+## Recent Deployment Updates (January 2026)
+
+### Critical Configuration Changes
+
+1. **Middleware File**: Next.js 16 requires `proxy.ts` (not `middleware.ts`). The file has been renamed.
+
+2. **Service Worker Exclusions**: The middleware matcher now excludes PWA files to prevent redirect issues:
+   - `sw.js`, `sw-version.json`, `manifest.json`, `/offline`
+
+3. **Verification Secret**: `NEXT_PRIVATE_VERIFICATION_SECRET` must be consistent across environments. Set in "shared" environment to ensure both dev and prod use the same value.
+
+4. **Rollbar Tokens**: Use "post_client_item" scope tokens for `NEXT_PUBLIC_ROLLBAR_CLIENT_TOKEN`, NOT the Public ID.
+
+### Environment Variables Structure
+
+| Environment | Purpose |
+|-------------|---------|
+| **Shared** | Variables that must be identical in dev and prod (e.g., `NEXT_PRIVATE_VERIFICATION_SECRET`) |
+| **Development** | Dev-specific values (sandbox keys, dev URLs) |
+| **Production** | Prod-specific values (live keys, production domain) |
+
+---
+
 ## Deployment Options
 
 | Platform | Best For | Complexity |

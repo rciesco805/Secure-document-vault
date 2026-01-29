@@ -134,3 +134,24 @@ STORAGE_ENCRYPTION_KEY=xxx                 # AES-256 encryption key (hex)
 - **Sandbox Testing Guide**: See `docs/SANDBOX_TESTING.md` for external service sandbox configuration.
 - **Test Credentials**: Plaid sandbox uses `user_good`/`pass_good`; Persona sandbox uses test SSN patterns.
 - **Local Storage**: Set `STORAGE_PROVIDER=local` for development without cloud storage.
+
+## Planned Work (Review ~Feb 12, 2026)
+
+### App Router Migration
+Gradual migration from Pages Router to full App Router for better Server Actions, streaming, and consistency.
+- Phase 1: Move remaining auth pages → `app/(auth)/`
+- Phase 2: Move admin dashboard → `app/admin/`
+- Phase 3: Move LP portal pages → `app/(lp)/`
+- Phase 4: Move API routes last (most stable, least benefit)
+- **Status**: On hold - current hybrid mode is stable
+
+### E-Signature System Hardening
+Comprehensive testing and improvements for the self-hosted e-signature feature:
+- **Field Positioning**: Test drag-drop precision across pages/viewports for all 10+ field types
+- **PDF Compatibility**: Test with varied PDFs (scanned, protected, large, complex layouts)
+- **Mobile Support**: Touch support for signing on mobile devices
+- **Accessibility**: ARIA labels for signature fields
+- **Font Embedding**: Verify fonts render correctly in completed PDFs
+- **Completion Certificates**: Validate certificate generation
+- **Tamper Evidence**: Verify signature embedding and checksum validation
+- **Optional**: Screenshot protection and watermark implementation

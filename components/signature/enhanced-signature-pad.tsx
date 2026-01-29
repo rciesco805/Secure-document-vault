@@ -533,9 +533,6 @@ export const EnhancedSignaturePad = forwardRef<SignaturePadHandle, EnhancedSigna
             onPointerUp={mode === 'draw' ? stopDrawing : undefined}
             onPointerLeave={mode === 'draw' ? () => stopDrawing() : undefined}
             onPointerCancel={mode === 'draw' ? () => stopDrawing() : undefined}
-            onTouchStart={mode === 'draw' ? startDrawing : undefined}
-            onTouchMove={mode === 'draw' ? draw : undefined}
-            onTouchEnd={mode === 'draw' ? stopDrawing : undefined}
           />
           {!hasSignature && (
             <p 

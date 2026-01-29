@@ -61,9 +61,13 @@ Before deploying, ensure:
 - **Encryption Activation**: Requires `STORAGE_ENCRYPTION_KEY` environment variable (64-character hex string)
 - **Scope**: Encryption applies to files processed through the unified storage abstraction layer
 
+**PDF-Level Encryption (Implemented):**
+- See `lib/crypto/pdf-encryption.ts` for AES-256 PDF 2.0 encryption using `pdf-lib-plus-encrypt`
+- Supports user/owner passwords, permission controls, and watermarking
+- Used for completed signature documents
+
 **Not Yet Implemented:**
 - Client-side encryption before upload
-- PDF-level encryption for sensitive documents
 
 ### Content Security Policy (CSP)
 
@@ -219,31 +223,22 @@ Recommended retention periods for compliance:
 
 ### Rate Limiting (Implemented)
 
-Rate limiting is implemented for critical endpoints using `lib/security/rate-limiter.ts`:
+Rate limiting is implemented using `lib/security/rate-limiter.ts` with three tiers:
 
-| Endpoint | Recommended Limit | Window |
-|----------|-------------------|--------|
-| `/api/auth/*` | 5 requests | 15 minutes |
-| `/api/webhooks/*` | 100 requests | 1 minute |
-| `/api/funds/*` | 50 requests | 1 minute |
-| `/api/documents/*` | 30 requests | 1 minute |
-
-**Example implementation** (using `rate-limiter-flexible`):
-```typescript
-import { RateLimiterMemory } from 'rate-limiter-flexible';
-
-const authLimiter = new RateLimiterMemory({
-  points: 5,
-  duration: 900, // 15 minutes
-});
-```
+| Limiter | Limit | Window | Use Case |
+|---------|-------|--------|----------|
+| `authRateLimiter` | 10 requests | 1 hour | Authentication endpoints |
+| `strictRateLimiter` | 3 requests | 1 hour | Sensitive operations |
+| `apiRateLimiter` | 100 requests | 1 minute | General API endpoints |
 
 **Protected Endpoints:**
-- `/api/auth/*` - Authentication endpoints (10 req/hour)
-- `/api/request-invite` - Invite requests (3 req/hour, strict)
-- `/api/view/verify-magic-link` - Magic link verification (10 req/hour)
-- `/api/sign/*` - Signature endpoints (10-30 req/min via Redis)
-- `/api/lp/complete-gate` - LP onboarding (100 req/min)
+- `/api/auth/admin-magic-verify` - Admin magic link verification (auth limiter)
+- `/api/view/verify-magic-link` - Magic link verification (auth limiter)
+- `/api/request-invite` - Invite requests (strict limiter)
+- `/api/lp/complete-gate` - LP onboarding (api limiter)
+- `/api/sign/*` - Signature endpoints (10-30 req/min via Redis ratelimit)
+
+Violations are logged to the `SignatureAuditLog` table for security monitoring.
 
 ### CORS Configuration (Recommended - Not Yet Implemented)
 

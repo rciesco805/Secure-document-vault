@@ -10,7 +10,7 @@ export const dynamic = 'force-dynamic';
 // GET /app/(ee)/api/workflows/[workflowId]/executions?teamId=xxx - List workflow executions
 export async function GET(
   req: NextRequest,
-  { params }: { params: { workflowId: string } },
+  { params }: { params: Promise<{ workflowId: string }> },
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -18,7 +18,7 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { workflowId } = params;
+    const { workflowId } = await params;
     const searchParams = req.nextUrl.searchParams;
     const teamId = searchParams.get("teamId");
 

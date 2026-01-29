@@ -18,7 +18,7 @@ export const dynamic = 'force-dynamic';
 // GET /app/(ee)/api/workflows/[workflowId]/steps?teamId=xxx - List all steps
 export async function GET(
   req: NextRequest,
-  { params }: { params: { workflowId: string } },
+  { params }: { params: Promise<{ workflowId: string }> },
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -26,7 +26,7 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { workflowId } = params;
+    const { workflowId } = await params;
     const searchParams = req.nextUrl.searchParams;
     const teamId = searchParams.get("teamId");
 
@@ -134,7 +134,7 @@ export async function GET(
 // POST /app/(ee)/api/workflows/[workflowId]/steps?teamId=xxx - Create a new step
 export async function POST(
   req: NextRequest,
-  { params }: { params: { workflowId: string } },
+  { params }: { params: Promise<{ workflowId: string }> },
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -142,7 +142,7 @@ export async function POST(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { workflowId } = params;
+    const { workflowId } = await params;
     const searchParams = req.nextUrl.searchParams;
     const teamId = searchParams.get("teamId");
 
@@ -332,7 +332,7 @@ export async function POST(
 // PUT /app/(ee)/api/workflows/[workflowId]/steps?teamId=xxx - Reorder steps
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { workflowId: string } },
+  { params }: { params: Promise<{ workflowId: string }> },
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -340,7 +340,7 @@ export async function PUT(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { workflowId } = params;
+    const { workflowId } = await params;
     const searchParams = req.nextUrl.searchParams;
     const teamId = searchParams.get("teamId");
 

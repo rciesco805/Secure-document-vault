@@ -17,10 +17,10 @@ export const dynamic = 'force-dynamic';
 // POST /app/(ee)/api/workflow-entry/[entryLinkId]/access - Verify OTP and execute workflow
 export async function POST(
   req: NextRequest,
-  { params }: { params: { entryLinkId: string } },
+  { params }: { params: Promise<{ entryLinkId: string }> },
 ) {
   try {
-    const { entryLinkId } = params;
+    const { entryLinkId } = await params;
     const body = await req.json();
 
     // Validate entryLinkId format

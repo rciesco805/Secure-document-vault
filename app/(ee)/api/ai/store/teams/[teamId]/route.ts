@@ -16,10 +16,10 @@ export const dynamic = 'force-dynamic';
  */
 export async function GET(
   req: NextRequest,
-  { params }: { params: { teamId: string } },
+  { params }: { params: Promise<{ teamId: string }> },
 ) {
   try {
-    const { teamId } = params;
+    const { teamId } = await params;
     const session = await getServerSession(authOptions);
 
     if (!session) {

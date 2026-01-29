@@ -23,10 +23,10 @@ export const dynamic = 'force-dynamic';
 // where action is "verify" or "access"
 export async function POST(
   req: NextRequest,
-  { params }: { params: { domainSlug: string[] } },
+  { params }: { params: Promise<{ domainSlug: string[] }> },
 ) {
   try {
-    const domainSlug = params.domainSlug;
+    const { domainSlug } = await params;
 
     if (!domainSlug || domainSlug.length < 3) {
       return NextResponse.json(

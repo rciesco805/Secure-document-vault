@@ -20,10 +20,10 @@ export const dynamic = 'force-dynamic';
  */
 export async function POST(
   req: NextRequest,
-  { params }: { params: { chatId: string } },
+  { params }: { params: Promise<{ chatId: string }> },
 ) {
   try {
-    const { chatId } = params;
+    const { chatId } = await params;
     const body = await req.json();
     const validation = sendMessageSchema.safeParse(body);
 

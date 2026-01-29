@@ -19,10 +19,10 @@ export const dynamic = 'force-dynamic';
  */
 export async function POST(
   req: NextRequest,
-  { params }: { params: { documentId: string; teamId: string } },
+  { params }: { params: Promise<{ documentId: string; teamId: string }> },
 ) {
   try {
-    const { documentId, teamId } = params;
+    const { documentId, teamId } = await params;
     const session = await getServerSession(authOptions);
 
     if (!session) {
@@ -188,10 +188,10 @@ export async function POST(
  */
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { documentId: string; teamId: string } },
+  { params }: { params: Promise<{ documentId: string; teamId: string }> },
 ) {
   try {
-    const { documentId, teamId } = params;
+    const { documentId, teamId } = await params;
     const session = await getServerSession(authOptions);
 
     if (!session) {

@@ -16,7 +16,7 @@ export const dynamic = 'force-dynamic';
 // GET /app/(ee)/api/workflows/[workflowId]?teamId=xxx - Get single workflow with details
 export async function GET(
   req: NextRequest,
-  { params }: { params: { workflowId: string } },
+  { params }: { params: Promise<{ workflowId: string }> },
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -24,7 +24,7 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { workflowId } = params;
+    const { workflowId } = await params;
     const searchParams = req.nextUrl.searchParams;
     const teamId = searchParams.get("teamId");
 
@@ -115,7 +115,7 @@ export async function GET(
 // PATCH /app/(ee)/api/workflows/[workflowId]?teamId=xxx - Update workflow
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { workflowId: string } },
+  { params }: { params: Promise<{ workflowId: string }> },
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -123,7 +123,7 @@ export async function PATCH(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { workflowId } = params;
+    const { workflowId } = await params;
     const searchParams = req.nextUrl.searchParams;
     const teamId = searchParams.get("teamId");
 
@@ -225,7 +225,7 @@ export async function PATCH(
 // DELETE /app/(ee)/api/workflows/[workflowId]?teamId=xxx - Delete workflow
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { workflowId: string } },
+  { params }: { params: Promise<{ workflowId: string }> },
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -233,7 +233,7 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { workflowId } = params;
+    const { workflowId } = await params;
     const searchParams = req.nextUrl.searchParams;
     const teamId = searchParams.get("teamId");
 

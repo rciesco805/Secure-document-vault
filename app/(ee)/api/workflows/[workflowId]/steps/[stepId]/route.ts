@@ -18,7 +18,7 @@ export const dynamic = 'force-dynamic';
 // PATCH /app/(ee)/api/workflows/[workflowId]/steps/[stepId]?teamId=xxx - Update step
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { workflowId: string; stepId: string } },
+  { params }: { params: Promise<{ workflowId: string; stepId: string }> },
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -26,7 +26,7 @@ export async function PATCH(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { workflowId, stepId } = params;
+    const { workflowId, stepId } = await params;
     const searchParams = req.nextUrl.searchParams;
     const teamId = searchParams.get("teamId");
 
@@ -252,7 +252,7 @@ export async function PATCH(
 // DELETE /app/(ee)/api/workflows/[workflowId]/steps/[stepId]?teamId=xxx - Delete step
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { workflowId: string; stepId: string } },
+  { params }: { params: Promise<{ workflowId: string; stepId: string }> },
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -260,7 +260,7 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { workflowId, stepId } = params;
+    const { workflowId, stepId } = await params;
     const searchParams = req.nextUrl.searchParams;
     const teamId = searchParams.get("teamId");
 

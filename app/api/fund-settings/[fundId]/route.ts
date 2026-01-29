@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { fundId: string } }
+  { params }: { params: Promise<{ fundId: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -16,7 +16,7 @@ export async function GET(
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    const { fundId } = params;
+    const { fundId } = await params;
 
     const user = await prisma.user.findUnique({
       where: { email: session.user.email },

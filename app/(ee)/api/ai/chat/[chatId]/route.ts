@@ -16,10 +16,10 @@ export const dynamic = 'force-dynamic';
  */
 export async function GET(
   req: NextRequest,
-  { params }: { params: { chatId: string } },
+  { params }: { params: Promise<{ chatId: string }> },
 ) {
   try {
-    const { chatId } = params;
+    const { chatId } = await params;
     const session = await getServerSession(authOptions);
     const searchParams = req.nextUrl.searchParams;
     const viewerId = searchParams.get("viewerId");
@@ -92,10 +92,10 @@ export async function GET(
  */
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { chatId: string } },
+  { params }: { params: Promise<{ chatId: string }> },
 ) {
   try {
-    const { chatId } = params;
+    const { chatId } = await params;
     const session = await getServerSession(authOptions);
 
     if (!session) {

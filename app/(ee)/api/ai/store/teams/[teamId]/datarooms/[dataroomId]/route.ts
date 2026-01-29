@@ -18,10 +18,10 @@ export const dynamic = 'force-dynamic';
  */
 export async function POST(
   req: NextRequest,
-  { params }: { params: { dataroomId: string; teamId: string } },
+  { params }: { params: Promise<{ dataroomId: string; teamId: string }> },
 ) {
   try {
-    const { dataroomId, teamId } = params;
+    const { dataroomId, teamId } = await params;
     const session = await getServerSession(authOptions);
 
     if (!session) {

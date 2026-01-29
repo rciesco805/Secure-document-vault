@@ -40,9 +40,10 @@ export const ResponsiveButton = React.forwardRef<
     );
   }
 
-  const iconWithAriaHidden = cloneElement(icon, {
-    "aria-hidden": "true",
-  });
+  const iconWithAriaHidden = cloneElement(
+    icon as React.ReactElement<{ "aria-hidden"?: string }>,
+    { "aria-hidden": "true" },
+  );
 
   return (
     <Button ref={ref} {...props}>

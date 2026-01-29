@@ -127,7 +127,7 @@ function DeleteDomainModal({
               required
               autoComplete="off"
               className="bg-white dark:border-gray-500 dark:bg-gray-800 focus:dark:bg-transparent"
-              onInput={handleInputChange}
+              onChange={handleInputChange}
             />
           </div>
         </div>

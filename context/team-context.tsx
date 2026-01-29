@@ -47,7 +47,7 @@ const cleanupLegacyStorage = () => {
   }
 };
 
-export const TeamProvider = ({ children }: TeamContextProps): JSX.Element => {
+export const TeamProvider = ({ children }: TeamContextProps): React.ReactNode => {
   const { data: session, status: sessionStatus } = useSession();
   const { teams, loading: teamsLoading } = useTeams();
   const [currentTeam, setCurrentTeamState] = useState<Team | null>(null);

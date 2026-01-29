@@ -319,7 +319,8 @@ async function handleAccess(req: NextRequest, link: any) {
   }
 
   // Set link session cookie (httpOnly)
-  cookies().set(`pm_ls_${executionResult.targetLinkId}`, sessionToken, {
+  const cookieStore = await cookies();
+  cookieStore.set(`pm_ls_${executionResult.targetLinkId}`, sessionToken, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
@@ -329,7 +330,7 @@ async function handleAccess(req: NextRequest, link: any) {
 
   // Set client-readable flag cookie for auto-login detection
   const flagCookieId = `pm_link_flag_${cookieFlagId}`;
-  cookies().set(flagCookieId, "true", {
+  cookieStore.set(flagCookieId, "true", {
     httpOnly: false, // Client-readable
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
@@ -354,7 +355,7 @@ async function handleAccess(req: NextRequest, link: any) {
 
     // Only set cookies if session was successfully created (requires Redis)
     if (dataroomSession) {
-      cookies().set(
+      cookieStore.set(
         `pm_drs_${executionResult.targetLinkId}`,
         dataroomSession.token,
         {
@@ -368,7 +369,7 @@ async function handleAccess(req: NextRequest, link: any) {
 
       // Set client-readable flag cookie for dataroom
       const dataroomFlagId = `pm_drs_flag_${cookieFlagId}`;
-      cookies().set(dataroomFlagId, "true", {
+      cookieStore.set(dataroomFlagId, "true", {
         httpOnly: false, // Client-readable
         secure: process.env.NODE_ENV === "production",
         sameSite: "lax",

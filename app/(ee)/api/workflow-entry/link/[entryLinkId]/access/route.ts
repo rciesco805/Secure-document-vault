@@ -215,7 +215,8 @@ export async function POST(
     }
 
     // Set link session cookie (httpOnly)
-    cookies().set(`pm_ls_${executionResult.targetLinkId}`, sessionToken, {
+    const cookieStore = await cookies();
+    cookieStore.set(`pm_ls_${executionResult.targetLinkId}`, sessionToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
@@ -225,7 +226,7 @@ export async function POST(
 
     // Set client-readable flag cookie for auto-login detection
     const flagCookieId = `pm_link_flag_${cookieFlagId}`;
-    cookies().set(flagCookieId, "true", {
+    cookieStore.set(flagCookieId, "true", {
       httpOnly: false, // Client-readable
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
@@ -250,7 +251,7 @@ export async function POST(
 
       // Only set cookies if session was successfully created (requires Redis)
       if (dataroomSession) {
-        cookies().set(
+        cookieStore.set(
           `pm_drs_${executionResult.targetLinkId}`,
           dataroomSession.token,
           {
@@ -264,7 +265,7 @@ export async function POST(
 
         // Set client-readable flag cookie for dataroom
         const dataroomFlagId = `pm_drs_flag_${cookieFlagId}`;
-        cookies().set(dataroomFlagId, "true", {
+        cookieStore.set(dataroomFlagId, "true", {
           httpOnly: false, // Client-readable
           secure: process.env.NODE_ENV === "production",
           sameSite: "lax",

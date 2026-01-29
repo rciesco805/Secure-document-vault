@@ -6,12 +6,20 @@ import { cn } from "@/lib/utils";
 
 import { Checkbox } from "@/components/ui/checkbox";
 
+interface DraggableItemChildProps {
+  folder?: { name: string; type: string; parentId: string };
+  document?: { name: string; type: string; folderId: string };
+  isDragging?: boolean;
+  isSelected?: boolean;
+  isHovered?: boolean;
+}
+
 interface DraggableItemProps {
   id: string;
   isSelected: boolean;
   onSelect: (id: string, type: "document" | "folder") => void;
   isDraggingSelected: boolean;
-  children: React.ReactElement;
+  children: React.ReactElement<DraggableItemChildProps>;
   type: "document" | "folder";
 }
 
@@ -23,6 +31,7 @@ export function DraggableItem({
   children,
   type,
 }: DraggableItemProps) {
+  const childProps = children.props;
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: id,
     data: {
@@ -30,16 +39,16 @@ export function DraggableItem({
       id: id,
       name:
         type === "folder"
-          ? children.props.folder.name
-          : children.props.document.name,
+          ? childProps.folder?.name
+          : childProps.document?.name,
       contentType:
         type === "folder"
-          ? children.props.folder.type
-          : children.props.document.type,
+          ? childProps.folder?.type
+          : childProps.document?.type,
       parentFolderId:
         type === "folder"
-          ? children.props.folder.parentId
-          : children.props.document.folderId,
+          ? childProps.folder?.parentId
+          : childProps.document?.folderId,
     },
   });
 
@@ -54,11 +63,10 @@ export function DraggableItem({
     // transform: CSS.Transform.toString(transform),
   };
 
-  const childWithProps = React.cloneElement(children, {
-    isDragging,
-    isSelected,
-    isHovered,
-  });
+  const childWithProps = React.cloneElement(
+    children as React.ReactElement<DraggableItemChildProps>,
+    { isDragging, isSelected, isHovered },
+  );
 
   return (
     <div

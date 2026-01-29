@@ -314,7 +314,7 @@ export async function POST(request: NextRequest) {
     let cookieVerificationToken: string | null = null;
     let cookieEmail: string | null = null;
     if (!dataroomSession && !isPreview) {
-      const cookieStore = cookies();
+      const cookieStore = await cookies();
       cookieVerificationToken = cookieStore.get(`pm_vft_${linkId}`)?.value ?? null;
       cookieEmail = cookieStore.get(`pm_email_${linkId}`)?.value ?? null;
     }

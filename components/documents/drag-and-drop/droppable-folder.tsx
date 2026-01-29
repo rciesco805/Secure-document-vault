@@ -22,9 +22,10 @@ export function DroppableFolder({
     data: { type: "folder", id, path },
   });
 
-  const childWithProps = React.cloneElement(children, {
-    isOver,
-  });
+  const childWithProps = React.cloneElement(
+    children as React.ReactElement<{ isOver?: boolean }>,
+    { isOver },
+  );
 
   return (
     <div

@@ -78,7 +78,8 @@ async function verifyDataroomSession(
 ): Promise<DataroomSession | null> {
   if (!dataroomId || !redis) return null;
 
-  const sessionToken = cookies().get(`pm_drs_${linkId}`)?.value;
+  const cookieStore = await cookies();
+  const sessionToken = cookieStore.get(`pm_drs_${linkId}`)?.value;
   if (!sessionToken) return null;
 
   const session = await redis.get(`dataroom_session:${sessionToken}`);

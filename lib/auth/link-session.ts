@@ -94,7 +94,8 @@ export async function verifyLinkSession(
 ): Promise<LinkSession | null> {
   if (!redis) return null;
 
-  const sessionToken = cookies().get(`pm_ls_${linkId}`)?.value;
+  const cookieStore = await cookies();
+  const sessionToken = cookieStore.get(`pm_ls_${linkId}`)?.value;
 
   if (!sessionToken) return null;
 
@@ -179,7 +180,8 @@ async function deleteLinkSession(
 
 export async function revokeLinkSession(linkId: string): Promise<void> {
   if (!redis) return;
-  const sessionToken = cookies().get(`pm_ls_${linkId}`)?.value;
+  const cookieStore = await cookies();
+  const sessionToken = cookieStore.get(`pm_ls_${linkId}`)?.value;
   if (sessionToken) {
     const session = await redis.get(`link_session:${sessionToken}`);
     if (session) {

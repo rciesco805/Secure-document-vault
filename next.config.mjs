@@ -4,10 +4,7 @@ const nextConfig = {
   // productionBrowserSourceMaps: true, // Disabled - enable after deploy works
   pageExtensions: ["js", "jsx", "ts", "tsx", "mdx"],
   
-  // ESLint and TypeScript checks during build
-  eslint: {
-    ignoreDuringBuilds: false,
-  },
+  // TypeScript checks during build
   typescript: {
     ignoreBuildErrors: false,
   },
@@ -147,13 +144,11 @@ const nextConfig = {
     ];
   },
   allowedDevOrigins: ["*.replit.dev", "*.spock.replit.dev", "*.repl.co"],
-  experimental: {
-    outputFileTracingIncludes: {
-      "/api/mupdf/*": ["./node_modules/mupdf/dist/*.wasm"],
-    },
-    missingSuspenseWithCSRBailout: false,
-    serverComponentsExternalPackages: ["nodemailer"],
+  serverExternalPackages: ["nodemailer"],
+  outputFileTracingIncludes: {
+    "/api/mupdf/*": ["./node_modules/mupdf/dist/*.wasm"],
   },
+  turbopack: {},
   webpack: (config, { isServer }) => {
     if (!isServer) {
       config.resolve.fallback = {
@@ -166,12 +161,6 @@ const nextConfig = {
       };
     }
     return config;
-  },
-  eslint: {
-    ignoreDuringBuilds: false,
-  },
-  typescript: {
-    ignoreBuildErrors: false,
   },
 };
 

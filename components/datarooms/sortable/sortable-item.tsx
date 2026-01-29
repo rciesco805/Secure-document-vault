@@ -30,9 +30,10 @@ export const SortableItem: React.FC<SortableItemProps> = ({
     opacity: isDragging ? 0.5 : 1,
   };
 
-  const childWithProps = React.cloneElement(children, {
-    isDragging,
-  });
+  const childWithProps = React.cloneElement(
+    children as React.ReactElement<{ isDragging?: boolean }>,
+    { isDragging },
+  );
 
   return (
     <li

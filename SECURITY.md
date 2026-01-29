@@ -217,18 +217,18 @@ Recommended retention periods for compliance:
 4. Monitor logs for authentication errors
 5. Document rotation date
 
-### Rate Limiting
+### Rate Limiting (Recommended - Not Yet Implemented)
 
-Recommended limits for sensitive endpoints:
+The following limits are recommended for implementation:
 
-| Endpoint | Limit | Window |
-|----------|-------|--------|
+| Endpoint | Recommended Limit | Window |
+|----------|-------------------|--------|
 | `/api/auth/*` | 5 requests | 15 minutes |
 | `/api/webhooks/*` | 100 requests | 1 minute |
 | `/api/funds/*` | 50 requests | 1 minute |
 | `/api/documents/*` | 30 requests | 1 minute |
 
-Implementation example (using `rate-limiter-flexible`):
+**Example implementation** (using `rate-limiter-flexible`):
 ```typescript
 import { RateLimiterMemory } from 'rate-limiter-flexible';
 
@@ -238,11 +238,14 @@ const authLimiter = new RateLimiterMemory({
 });
 ```
 
-### CORS Configuration
+> **Note:** Rate limiting is listed in "Recommended Enhancements" below. This section provides guidance for implementation.
 
-Production CORS settings in `next.config.mjs`:
+### CORS Configuration (Recommended - Not Yet Implemented)
+
+For production deployments requiring cross-origin API access, add CORS headers in `next.config.mjs`:
 
 ```javascript
+// Example configuration - add to next.config.mjs if needed
 async headers() {
   return [
     {
@@ -257,6 +260,8 @@ async headers() {
   ];
 }
 ```
+
+> **Note:** The application currently uses same-origin requests. Configure CORS only if you need cross-origin API access.
 
 ### Backup Strategy
 

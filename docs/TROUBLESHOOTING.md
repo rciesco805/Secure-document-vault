@@ -17,8 +17,11 @@ Common issues and solutions for BF Fund Investor Dataroom.
 4. Verify network connectivity to database host
 
 ```bash
-# Test database connection
-npx prisma db push --force-reset  # Development only
+# Test database connection (verify connectivity only)
+npx prisma db pull  # Safe: reads schema, doesn't modify data
+
+# WARNING: The following command DESTROYS ALL DATA - use only in local development
+# npx prisma db push --force-reset
 ```
 
 ### "NEXTAUTH_SECRET must be set"
@@ -71,29 +74,22 @@ npx prisma generate
    STORAGE_ENDPOINT=https://<account-id>.r2.cloudflarestorage.com
    ```
 
-### Storage Fallback Configuration
+### Storage Configuration
 
-For high-availability, configure fallback storage:
+The application uses a single storage provider at a time. There is no built-in automatic fallback.
 
 ```bash
-# Primary: S3
+# Configure primary storage provider
 STORAGE_PROVIDER=s3
-STORAGE_BUCKET=my-primary-bucket
+STORAGE_BUCKET=my-bucket
 STORAGE_REGION=us-east-1
-
-# If S3 fails, the application logs errors but doesn't auto-fallback
-# Consider implementing application-level retry with secondary provider
 ```
 
-**Manual Fallback Pattern** (in application code):
-```typescript
-try {
-  await primaryStorage.upload(file);
-} catch (error) {
-  console.error('Primary storage failed, trying fallback');
-  await fallbackStorage.upload(file);
-}
-```
+**High-Availability Recommendations:**
+- Use managed services with built-in redundancy (S3, R2)
+- Enable bucket versioning for recovery
+- Monitor storage health via provider dashboards
+- Set up alerts for storage failures
 
 ---
 

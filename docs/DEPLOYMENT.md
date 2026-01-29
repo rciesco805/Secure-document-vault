@@ -196,22 +196,15 @@ Rotate secrets on a regular schedule:
 4. Monitor for authentication/access issues
 5. Remove old secret from backups
 
-### Rate Limiting
+### Rate Limiting (Recommended)
 
-The application includes built-in rate limiting. Configure in `lib/rate-limit.ts`:
+Rate limiting is recommended for production deployments but not currently implemented in the application. Consider adding:
 
-```typescript
-// Default limits
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // requests per window
-});
-```
-
-For stricter limits on sensitive endpoints:
 - Login attempts: 5 per 15 minutes
 - Password reset: 3 per hour
 - API calls: 1000 per hour (authenticated)
+
+See `SECURITY.md` for implementation examples using `rate-limiter-flexible`.
 
 ### CORS Configuration
 
@@ -331,8 +324,10 @@ PERSONA_ENVIRONMENT=production
 
 ### Health Endpoints
 
-- `/api/health` - Basic health check (returns 200 if app is running)
+- Application health can be monitored via successful page loads or API responses
 - Prisma Studio: `npx prisma studio` (development only)
+
+> **Note:** A dedicated `/api/health` endpoint is recommended for production monitoring but may need to be created if not present.
 
 ### Recommended Monitoring
 

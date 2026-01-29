@@ -5,6 +5,7 @@ import { z } from "zod";
 import { createAdminMagicLink } from "@/lib/auth/admin-magic-link";
 import { getAllAdminEmails } from "@/lib/constants/admins";
 import { sendEmail } from "@/lib/resend";
+import { strictRateLimiter } from "@/lib/security/rate-limiter";
 
 import InviteRequest from "@/components/emails/invite-request";
 
@@ -21,6 +22,9 @@ export default async function handler(
   if (req.method !== "POST") {
     return res.status(405).json({ message: "Method not allowed" });
   }
+
+  const allowed = await strictRateLimiter(req, res);
+  if (!allowed) return;
 
   try {
     const validation = inviteRequestSchema.safeParse(req.body);

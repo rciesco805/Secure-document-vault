@@ -149,7 +149,7 @@ export const EnhancedSignaturePad = forwardRef<SignaturePadHandle, EnhancedSigna
       ctx.setLineDash([]);
     };
 
-    const getCoordinates = (e: React.MouseEvent | React.TouchEvent) => {
+    const getCoordinates = (e: React.MouseEvent | React.TouchEvent | React.PointerEvent) => {
       const canvas = canvasRef.current;
       if (!canvas) return { x: 0, y: 0 };
 
@@ -157,26 +157,32 @@ export const EnhancedSignaturePad = forwardRef<SignaturePadHandle, EnhancedSigna
       const scaleX = canvas.width / rect.width;
       const scaleY = canvas.height / rect.height;
 
-      if ("touches" in e) {
+      if ("touches" in e && e.touches.length > 0) {
         return {
           x: (e.touches[0].clientX - rect.left) * scaleX,
           y: (e.touches[0].clientY - rect.top) * scaleY,
         };
       }
-      return {
-        x: (e.clientX - rect.left) * scaleX,
-        y: (e.clientY - rect.top) * scaleY,
-      };
+      if ("clientX" in e) {
+        return {
+          x: (e.clientX - rect.left) * scaleX,
+          y: (e.clientY - rect.top) * scaleY,
+        };
+      }
+      return { x: 0, y: 0 };
     };
 
-    const startDrawing = (e: React.MouseEvent | React.TouchEvent) => {
+    const startDrawing = (e: React.MouseEvent | React.TouchEvent | React.PointerEvent) => {
       e.preventDefault();
+      if ('pointerId' in e && canvasRef.current) {
+        (canvasRef.current as HTMLCanvasElement).setPointerCapture(e.pointerId);
+      }
       setIsDrawing(true);
       const { x, y } = getCoordinates(e);
       setCurrentStroke([{ x, y }]);
     };
 
-    const draw = (e: React.MouseEvent | React.TouchEvent) => {
+    const draw = (e: React.MouseEvent | React.TouchEvent | React.PointerEvent) => {
       if (!isDrawing) return;
       e.preventDefault();
 
@@ -204,7 +210,14 @@ export const EnhancedSignaturePad = forwardRef<SignaturePadHandle, EnhancedSigna
       setHasSignature(true);
     };
 
-    const stopDrawing = () => {
+    const stopDrawing = (e?: React.MouseEvent | React.TouchEvent | React.PointerEvent) => {
+      if (e && 'pointerId' in e && canvasRef.current) {
+        try {
+          (canvasRef.current as HTMLCanvasElement).releasePointerCapture(e.pointerId);
+        } catch {
+          // Pointer capture may have been released already
+        }
+      }
       if (isDrawing && currentStroke.length > 0) {
         const newStrokes = [...strokes, { points: currentStroke, color: penColor, width: penWidth }];
         setStrokes(newStrokes);
@@ -506,16 +519,20 @@ export const EnhancedSignaturePad = forwardRef<SignaturePadHandle, EnhancedSigna
             ref={canvasRef}
             width={width}
             height={height}
-            className="w-full rounded-lg cursor-crosshair touch-none"
+            className="w-full rounded-lg cursor-crosshair touch-none select-none"
             style={{ 
               maxWidth: `${width}px`,
               backgroundColor: theme.canvasBackground,
               border: `1px solid ${theme.canvasBorder}`,
+              touchAction: 'none',
+              WebkitTouchCallout: 'none',
+              WebkitUserSelect: 'none',
             }}
-            onMouseDown={mode === 'draw' ? startDrawing : undefined}
-            onMouseMove={mode === 'draw' ? draw : undefined}
-            onMouseUp={mode === 'draw' ? stopDrawing : undefined}
-            onMouseLeave={mode === 'draw' ? stopDrawing : undefined}
+            onPointerDown={mode === 'draw' ? startDrawing : undefined}
+            onPointerMove={mode === 'draw' ? draw : undefined}
+            onPointerUp={mode === 'draw' ? stopDrawing : undefined}
+            onPointerLeave={mode === 'draw' ? () => stopDrawing() : undefined}
+            onPointerCancel={mode === 'draw' ? () => stopDrawing() : undefined}
             onTouchStart={mode === 'draw' ? startDrawing : undefined}
             onTouchMove={mode === 'draw' ? draw : undefined}
             onTouchEnd={mode === 'draw' ? stopDrawing : undefined}

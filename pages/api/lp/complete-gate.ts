@@ -4,6 +4,7 @@ import crypto from "crypto";
 import prisma from "@/lib/prisma";
 import { authOptions } from "../auth/[...nextauth]";
 import { sendEmail } from "@/lib/resend";
+import { apiRateLimiter } from "@/lib/security/rate-limiter";
 import AccreditationConfirmedEmail from "@/components/emails/accreditation-confirmed";
 
 interface CompleteGateBody {
@@ -24,6 +25,9 @@ export default async function handler(
   if (req.method !== "POST") {
     return res.status(405).json({ message: "Method not allowed" });
   }
+
+  const allowed = await apiRateLimiter(req, res);
+  if (!allowed) return;
 
   try {
     const session = await getServerSession(req, res, authOptions);

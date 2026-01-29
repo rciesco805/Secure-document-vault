@@ -4,6 +4,7 @@ import { hashToken } from "@/lib/api/auth/token";
 import { verifyVisitorMagicLink } from "@/lib/auth/create-visitor-magic-link";
 import { newId } from "@/lib/id-helper";
 import prisma from "@/lib/prisma";
+import { authRateLimiter } from "@/lib/security/rate-limiter";
 
 export default async function handler(
   req: NextApiRequest,
@@ -13,6 +14,9 @@ export default async function handler(
     res.setHeader("Allow", ["POST"]);
     return res.status(405).end(`Method ${req.method} Not Allowed`);
   }
+
+  const allowed = await authRateLimiter(req, res);
+  if (!allowed) return;
 
   const { token, email, linkId } = req.body as {
     token: string;

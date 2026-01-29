@@ -217,9 +217,9 @@ Recommended retention periods for compliance:
 4. Monitor logs for authentication errors
 5. Document rotation date
 
-### Rate Limiting (Recommended - Not Yet Implemented)
+### Rate Limiting (Implemented)
 
-The following limits are recommended for implementation:
+Rate limiting is implemented for critical endpoints using `lib/security/rate-limiter.ts`:
 
 | Endpoint | Recommended Limit | Window |
 |----------|-------------------|--------|
@@ -238,7 +238,12 @@ const authLimiter = new RateLimiterMemory({
 });
 ```
 
-> **Note:** Rate limiting is listed in "Recommended Enhancements" below. This section provides guidance for implementation.
+**Protected Endpoints:**
+- `/api/auth/*` - Authentication endpoints (10 req/hour)
+- `/api/request-invite` - Invite requests (3 req/hour, strict)
+- `/api/view/verify-magic-link` - Magic link verification (10 req/hour)
+- `/api/sign/*` - Signature endpoints (10-30 req/min via Redis)
+- `/api/lp/complete-gate` - LP onboarding (100 req/min)
 
 ### CORS Configuration (Recommended - Not Yet Implemented)
 
@@ -284,12 +289,10 @@ See `docs/DEPLOYMENT.md` for detailed backup scripts.
 
 The following security improvements are recommended but not yet implemented:
 
-1. **Rate Limiting**: Add per-route rate limiting to prevent abuse
-2. **Anomaly Detection**: Monitor for unusual access patterns
-3. **Virus Scanning**: Integrate file scanning for uploads
-4. **Client-Side Encryption**: Encrypt sensitive data before transmission
-5. **Immutable Audit Logs**: Use append-only storage for compliance
-6. **Penetration Testing**: Conduct quarterly security assessments
+1. **Virus Scanning**: Integrate file scanning for uploads
+2. **Client-Side Encryption**: Encrypt sensitive data before transmission
+3. **Immutable Audit Logs**: Use append-only storage for compliance
+4. **Penetration Testing**: Conduct quarterly security assessments
 
 ## Contact
 

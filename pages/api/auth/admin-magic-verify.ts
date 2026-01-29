@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 
 import { verifyAdminMagicLink } from "@/lib/auth/admin-magic-link";
 import prisma from "@/lib/prisma";
+import { authRateLimiter } from "@/lib/security/rate-limiter";
 
 export default async function handler(
   req: NextApiRequest,
@@ -10,6 +11,9 @@ export default async function handler(
   if (req.method !== "GET") {
     return res.status(405).json({ message: "Method not allowed" });
   }
+
+  const allowed = await authRateLimiter(req, res);
+  if (!allowed) return;
 
   const { token, email, redirect } = req.query as {
     token?: string;

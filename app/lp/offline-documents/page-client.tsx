@@ -1,16 +1,14 @@
+"use client";
+
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
-import Head from "next/head";
 import Link from "next/link";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
 import {
   AlertDialog,
@@ -46,7 +44,7 @@ import {
 } from "@/lib/offline/document-cache";
 import { usePWAStatus } from "@/components/pwa-install";
 
-export default function OfflineDocumentsPage() {
+export default function OfflineDocumentsClient() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const { isOnline } = usePWAStatus();
@@ -164,9 +162,6 @@ export default function OfflineDocumentsPage() {
   if (!isSupported) {
     return (
       <div className="min-h-screen bg-slate-950 text-white">
-        <Head>
-          <title>Offline Documents - BF Fund</title>
-        </Head>
         <div className="container mx-auto px-4 py-8">
           <div className="flex items-center gap-4 mb-8">
             <Button variant="ghost" asChild>
@@ -194,11 +189,6 @@ export default function OfflineDocumentsPage() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-white">
-      <Head>
-        <title>Offline Documents - BF Fund</title>
-        <meta name="description" content="View and manage your offline documents" />
-      </Head>
-
       <div className="container mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">

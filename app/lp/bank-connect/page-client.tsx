@@ -1,6 +1,7 @@
+"use client";
+
 import { useCallback, useEffect, useState } from "react";
-import { useRouter } from "next/router";
-import Head from "next/head";
+import { useRouter } from "next/navigation";
 import { usePlaidLink } from "react-plaid-link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,7 +16,7 @@ interface BankLinkInfo {
   accountType: string | null;
 }
 
-export default function BankConnectPage() {
+export default function BankConnectClient() {
   const router = useRouter();
   const [linkToken, setLinkToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -112,7 +113,6 @@ export default function BankConnectPage() {
       setConnected(true);
       toast.success("Bank account connected successfully!");
       
-      // Trigger KYC verification after bank connect if not already verified
       if (data.requiresKyc) {
         setTimeout(() => {
           router.push("/lp/dashboard?triggerKyc=true");
@@ -148,9 +148,6 @@ export default function BankConnectPage() {
   if (!configured) {
     return (
       <div className="min-h-screen bg-gray-50 p-6">
-        <Head>
-          <title>Bank Connect | BF Fund</title>
-        </Head>
         <div className="max-w-lg mx-auto mt-20">
           <Card>
             <CardHeader className="text-center">
@@ -174,10 +171,6 @@ export default function BankConnectPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
-      <Head>
-        <title>Bank Connect | BF Fund</title>
-      </Head>
-      
       <div className="max-w-lg mx-auto mt-10">
         <Button
           variant="ghost"

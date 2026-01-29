@@ -1,7 +1,8 @@
-import { useRouter } from "next/router";
+"use client";
+
+import { useRouter } from "next/navigation";
 import { useEffect, useState, useCallback } from "react";
 import { useSession } from "next-auth/react";
-import Head from "next/head";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
@@ -127,7 +128,7 @@ interface FundDetailsData {
   lastUpdated: string;
 }
 
-export default function LPDashboard() {
+export default function LPDashboardClient() {
   const router = useRouter();
   const { data: session, status: sessionStatus } = useSession();
   const [investor, setInvestor] = useState<InvestorData | null>(null);
@@ -463,10 +464,6 @@ export default function LPDashboard() {
 
   return (
     <>
-      <Head>
-        <title>Investor Dashboard | BF Fund</title>
-      </Head>
-
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
         <nav className="bg-black/50 backdrop-blur border-b border-gray-800 sticky top-0 z-40">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

@@ -49,6 +49,12 @@
   - `/register` → `app/(auth)/register/`
   - `/verify` → `app/(auth)/verify/`
   - `/admin/login` → `app/admin/login/`
+- **Phase 2 In Progress**: LP Portal pages migrated to `app/lp/`:
+  - `/lp/dashboard` → `app/lp/dashboard/` (investor dashboard)
+  - `/lp/docs` → `app/lp/docs/` (document vault)
+  - `/lp/onboard` → `app/lp/onboard/` (investor onboarding)
+  - `/lp/bank-connect` → `app/lp/bank-connect/` (Plaid bank linking)
+  - `/lp/offline-documents` → `app/lp/offline-documents/` (offline document management)
 
 ---
 

@@ -1,13 +1,11 @@
-const CACHE_VERSION = 'v4-2026-01-29';
+const CACHE_VERSION = 'v5-3feb7a2f4e189f76';
 const CACHE_NAME = `bf-fund-${CACHE_VERSION}`;
 const STATIC_CACHE_NAME = `bf-fund-static-${CACHE_VERSION}`;
 const DYNAMIC_CACHE_NAME = `bf-fund-dynamic-${CACHE_VERSION}`;
 const DOCUMENT_CACHE_PREFIX = 'bf-fund-documents-';
 
 const STATIC_ASSETS = [
-  '/',
   '/offline',
-  '/lp/offline-documents',
   '/manifest.json',
   '/favicon.ico',
 ];
@@ -472,43 +470,44 @@ self.addEventListener('fetch', (event) => {
 
   if (url.pathname.match(/\/_next\/static\//)) {
     event.respondWith(
-      caches.open(STATIC_CACHE_NAME).then(async (cache) => {
-        const cachedResponse = await cache.match(request);
-        if (cachedResponse) {
-          return cachedResponse;
-        }
-        
+      (async () => {
         try {
           const networkResponse = await fetch(request);
           if (networkResponse.ok) {
+            const cache = await caches.open(STATIC_CACHE_NAME);
             cache.put(request, networkResponse.clone());
           }
           return networkResponse;
         } catch (error) {
+          const cachedResponse = await caches.match(request);
+          if (cachedResponse) {
+            return cachedResponse;
+          }
           return new Response('', { status: 404 });
         }
-      })
+      })()
     );
     return;
   }
 
   if (url.pathname.match(/\.(js|css|png|jpg|jpeg|gif|svg|woff|woff2|ttf|eot)$/)) {
     event.respondWith(
-      fetch(request).then((response) => {
-        if (response.ok) {
-          const responseClone = response.clone();
-          caches.open(STATIC_CACHE_NAME).then((cache) => {
-            cache.put(request, responseClone);
-          });
+      (async () => {
+        try {
+          const networkResponse = await fetch(request);
+          if (networkResponse.ok) {
+            const cache = await caches.open(STATIC_CACHE_NAME);
+            cache.put(request, networkResponse.clone());
+          }
+          return networkResponse;
+        } catch (error) {
+          const cachedResponse = await caches.match(request);
+          if (cachedResponse) {
+            return cachedResponse;
+          }
+          return new Response('', { status: 404 });
         }
-        return response;
-      }).catch(async () => {
-        const cachedResponse = await caches.match(request);
-        if (cachedResponse) {
-          return cachedResponse;
-        }
-        return new Response('', { status: 404 });
-      })
+      })()
     );
     return;
   }

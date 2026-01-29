@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v5-ffbb4b61970f0c37';
+const CACHE_VERSION = 'v5-540669af9756fdb6';
 const CACHE_NAME = `bf-fund-${CACHE_VERSION}`;
 const STATIC_CACHE_NAME = `bf-fund-static-${CACHE_VERSION}`;
 const DYNAMIC_CACHE_NAME = `bf-fund-dynamic-${CACHE_VERSION}`;

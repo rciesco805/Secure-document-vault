@@ -1,7 +1,7 @@
-import { useRouter } from "next/router";
+"use client";
 
-import { useEffect, useRef } from "react";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 
 import DataroomTemplates from "@/ee/features/templates/components/dataroom-templates";
 import { sendGTMEvent } from "@next/third-parties/google";
@@ -25,14 +25,18 @@ import NotionForm from "@/components/welcome/notion-form";
 import Select from "@/components/welcome/select";
 import Upload from "@/components/welcome/upload";
 
-export default function Welcome() {
+export default function WelcomeClient() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [showSkipButtons, setShowSkipButtons] = useState(false);
   const [isCheckingAdmin, setIsCheckingAdmin] = useState(true);
   const [sessionTimeout, setSessionTimeout] = useState(false);
   const { data: session, status } = useSession();
   const signupEventSent = useRef(false);
   const adminCheckDone = useRef(false);
+
+  const type = searchParams?.get("type");
+  const dataroomId = searchParams?.get("dataroomId");
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -42,7 +46,6 @@ export default function Welcome() {
     return () => clearTimeout(timer);
   }, []);
 
-  // Timeout fallback to prevent infinite loading if session check hangs
   useEffect(() => {
     const timeout = setTimeout(() => {
       if (status === "loading") {
@@ -50,7 +53,7 @@ export default function Welcome() {
         setSessionTimeout(true);
         router.replace("/login");
       }
-    }, 8000); // 8 second timeout
+    }, 8000);
     
     return () => clearTimeout(timeout);
   }, [status, router]);
@@ -65,7 +68,7 @@ export default function Welcome() {
       
       try {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout for API
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
         
         const res = await fetch("/api/teams", { signal: controller.signal });
         clearTimeout(timeoutId);
@@ -104,19 +107,18 @@ export default function Welcome() {
     }
   }, [session]);
 
-  const isDataroomUpload = router.query.type === "dataroom-upload";
-  const isDataroomChoice = router.query.type === "dataroom-choice";
-  const isDataroomTemplates = router.query.type === "dataroom-templates";
-  const isDataroomAIGenerate = router.query.type === "dataroom-ai-generate";
+  const isDataroomUpload = type === "dataroom-upload";
+  const isDataroomChoice = type === "dataroom-choice";
+  const isDataroomTemplates = type === "dataroom-templates";
+  const isDataroomAIGenerate = type === "dataroom-ai-generate";
 
   const skipButtonText =
     isDataroomUpload || isDataroomChoice || isDataroomTemplates || isDataroomAIGenerate
       ? "Skip to dataroom"
       : "Skip to dashboard";
   const skipButtonPath =
-    (isDataroomUpload || isDataroomChoice || isDataroomTemplates) &&
-    router.query.dataroomId
-      ? `/datarooms/${router.query.dataroomId}`
+    (isDataroomUpload || isDataroomChoice || isDataroomTemplates) && dataroomId
+      ? `/datarooms/${dataroomId}`
       : "/documents";
 
   if (isCheckingAdmin || status === "loading") {
@@ -132,7 +134,7 @@ export default function Welcome() {
       <GTMComponent />
       <div className="mx-auto flex h-screen max-w-3xl flex-col items-center justify-center overflow-x-hidden">
         <AnimatePresence mode="wait">
-          {router.query.type ? (
+          {type ? (
             <>
               <button
                 className="group absolute left-2 top-10 z-40 rounded-full p-2 transition-all hover:bg-gray-400 sm:left-10"
@@ -155,40 +157,37 @@ export default function Welcome() {
           ) : (
             <Intro key="intro" />
           )}
-          {router.query.type === "next" && <Next key="next" />}
-          {router.query.type === "select" && <Select key="select" />}
-          {router.query.type === "pitchdeck" && <Upload key="pitchdeck" />}
-          {router.query.type === "document" && <Upload key="document" />}
-          {router.query.type === "sales-document" && (
+          {type === "next" && <Next key="next" />}
+          {type === "select" && <Select key="select" />}
+          {type === "pitchdeck" && <Upload key="pitchdeck" />}
+          {type === "document" && <Upload key="document" />}
+          {type === "sales-document" && (
             <Upload key="sales-document" />
           )}
-          {router.query.type === "notion" && <NotionForm key="notion" />}
-          {router.query.type === "dataroom" && <Dataroom key="dataroom" />}
-          {router.query.type === "dataroom-trial" && (
+          {type === "notion" && <NotionForm key="notion" />}
+          {type === "dataroom" && <Dataroom key="dataroom" />}
+          {type === "dataroom-trial" && (
             <DataroomTrial key="dataroom-trial" />
           )}
-          {router.query.type === "dataroom-choice" &&
-            router.query.dataroomId && (
-              <DataroomChoice
-                key="dataroom-choice"
-                dataroomId={router.query.dataroomId as string}
-              />
-            )}
-          {router.query.type === "dataroom-templates" &&
-            router.query.dataroomId && (
-              <DataroomTemplates
-                key="dataroom-templates"
-                dataroomId={router.query.dataroomId as string}
-              />
-            )}
-          {router.query.type === "dataroom-upload" &&
-            router.query.dataroomId && (
-              <DataroomUpload
-                key="dataroom-upload"
-                dataroomId={router.query.dataroomId as string}
-              />
-            )}
-          {router.query.type === "dataroom-ai-generate" && (
+          {type === "dataroom-choice" && dataroomId && (
+            <DataroomChoice
+              key="dataroom-choice"
+              dataroomId={dataroomId}
+            />
+          )}
+          {type === "dataroom-templates" && dataroomId && (
+            <DataroomTemplates
+              key="dataroom-templates"
+              dataroomId={dataroomId}
+            />
+          )}
+          {type === "dataroom-upload" && dataroomId && (
+            <DataroomUpload
+              key="dataroom-upload"
+              dataroomId={dataroomId}
+            />
+          )}
+          {type === "dataroom-ai-generate" && (
             <DataroomAIGenerate key="dataroom-ai-generate" />
           )}
         </AnimatePresence>

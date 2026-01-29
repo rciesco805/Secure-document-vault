@@ -38,6 +38,18 @@
 - **Environment Configuration**: Consistent verification secrets across development and production environments.
 - **Docker Support**: Added Docker files for reproducible local development.
 
+### App Router Migration (In Progress)
+- **Phase 0 Complete**: All providers now match between Pages Router (`_app.tsx`) and App Router (`providers.tsx`):
+  - RollbarProvider + ErrorBoundary, SessionProvider, PostHogCustomProvider, ThemeProvider, NuqsAdapter, Toaster, TooltipProvider, PWAInstallPrompt
+  - App Router has additional `OfflineCacheSyncProvider` for user-scoped cache management
+- **Phase 1 Complete**: Auth pages migrated to `app/(auth)/`:
+  - `/login` → `app/(auth)/login/` (main visitor login)
+  - `/lp/login` → `app/(auth)/lp/login/` (investor-specific login)
+  - `/welcome` → `app/(auth)/welcome/` (onboarding wizard)
+  - `/register` → `app/(auth)/register/`
+  - `/verify` → `app/(auth)/verify/`
+  - `/admin/login` → `app/admin/login/`
+
 ---
 
 ## Overview

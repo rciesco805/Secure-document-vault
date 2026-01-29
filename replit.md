@@ -135,6 +135,48 @@ STORAGE_ENCRYPTION_KEY=xxx                 # AES-256 encryption key (hex)
 - **Test Credentials**: Plaid sandbox uses `user_good`/`pass_good`; Persona sandbox uses test SSN patterns.
 - **Local Storage**: Set `STORAGE_PROVIDER=local` for development without cloud storage.
 
+### Docker Development Setup
+For reproducible local development with Postgres:
+
+**Quick Start (Development - Database Only):**
+```bash
+# Start only Postgres for local development
+docker-compose -f docker-compose.dev.yml up -d
+
+# Run the app locally with npm
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/bf_fund_dataroom npm run dev
+```
+
+**Full Stack (Production-like):**
+```bash
+# Copy environment example
+cp .env.example .env.local
+
+# Edit .env.local with required values (NEXTAUTH_SECRET, etc.)
+
+# Build and run the full stack
+docker-compose up --build
+```
+
+**Docker Files:**
+- `Dockerfile` - Multi-stage build for optimized production image
+- `docker-compose.yml` - Full stack: app + Postgres with health checks
+- `docker-compose.dev.yml` - Postgres only for local development
+- `.dockerignore` - Excludes node_modules, tests, docs from build
+
+**Environment Variables for Docker:**
+```
+DATABASE_URL=postgresql://postgres:postgres@db:5432/bf_fund_dataroom
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=your-secret-here
+STORAGE_PROVIDER=local
+STORAGE_LOCAL_PATH=/app/.storage
+```
+
+**Volumes:**
+- `postgres_data` / `postgres_dev_data` - Database persistence
+- `app_storage` - File storage persistence
+
 ## Planned Work (Review ~Feb 12, 2026)
 
 ### App Router Migration

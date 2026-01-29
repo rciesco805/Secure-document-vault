@@ -325,7 +325,7 @@ npx jest --watch
 ## Test Execution Log
 
 ```
-> papermark@0.1.0 test
+> bf-fund-dataroom@0.1.0 test
 > jest
 
  PASS  __tests__/e2e/bulk-action-wizard.test.ts

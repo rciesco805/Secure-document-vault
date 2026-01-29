@@ -18,47 +18,9 @@ The platform is designed specifically for accredited investors, providing enterp
 
 ---
 
-## Platform Build Origins
+## Platform Architecture
 
-This platform is built on two open-source foundations, customized and integrated for BF Fund's investor relations needs:
-
-### Papermark (Dataroom Foundation)
-
-| Attribute | Details |
-|-----------|---------|
-| Repository | https://github.com/mfts/papermark |
-| License | AGPLv3 (with commercial license for /ee features) |
-| Description | Open-source DocSend alternative |
-
-**Components from Papermark:**
-- Complete document sharing infrastructure
-- Custom domain and branding system
-- Page-level analytics and view tracking
-- Magic link authentication via NextAuth.js
-- Viewer access controls and permission groups
-- Folder hierarchy with drag-and-drop organization
-- PDF rendering via MuPDF and pdf-lib
-- Email notification system via Resend
-- Full database schema for teams, users, documents, links, and viewers
-
-### OpenSign (E-Signature Foundation)
-
-| Attribute | Details |
-|-----------|---------|
-| Inspiration | OpenSign open-source e-signature platform |
-| Integration | Custom-built module with OpenSign-compatible data structures |
-| Location | `/prisma/schema/signature.prisma`, `/pages/sign/`, `/components/signature/` |
-
-**Components from OpenSign Integration:**
-- `SignatureDocument` model with OpenSign ID references (`openSignDocumentId`)
-- `SignatureRecipient` model with signing tokens and OpenSign recipient IDs
-- Multi-recipient signing workflows (Signer, Viewer, Approver roles)
-- 10 field types: Signature, Initials, Date, Text, Checkbox, Name, Email, Company, Title, Address
-- Sequential signing order enforcement
-- Secure signing URL generation
-- Complete audit trail system
-- Reusable template system
-- PDF signature embedding and certificate generation
+The BF Fund Platform is a custom-built investor portal with two integrated modules:
 
 ### Integration Architecture
 
@@ -68,7 +30,6 @@ This platform is built on two open-source foundations, customized and integrated
 ├─────────────────────────────────────────────────────────────────┤
 │  ┌─────────────────────────┐  ┌─────────────────────────────┐   │
 │  │    BF Fund Dataroom     │  │      BF Fund Sign           │   │
-│  │    (Papermark Base)     │  │   (OpenSign Integration)    │   │
 │  ├─────────────────────────┤  ├─────────────────────────────┤   │
 │  │ • Document sharing      │  │ • Signature workflows       │   │
 │  │ • Viewer management     │  │ • Field placement           │   │

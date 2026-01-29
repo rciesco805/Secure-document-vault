@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-This is the BF Fund Investor Dataroom, a secure dataroom and LP portal for General Partners (GPs) managing private investments under 506(c) rules. It provides tech-driven capital raises, transactions, and reporting. The platform is based on the open-source Papermark project but has been extensively customized for BF Fund's needs.
+This is the BF Fund Investor Dataroom, a secure dataroom and LP portal for General Partners (GPs) managing private investments under 506(c) rules. It provides tech-driven capital raises, transactions, and reporting.
 
 The "uniquefundroom" (per-LP dashboard + storage) is a personalized, secure space post-account, including fund data, signed docs, notes, and hooks for automations like Plaid payments and Persona KYC.
 

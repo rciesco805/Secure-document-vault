@@ -13,7 +13,7 @@ packages = ["jq"]
 deploymentTarget = "autoscale"
 ignorePorts = false
 build = ["npm", "run", "build"]
-run = ["npm", "run", "start"]
+run = ["node", ".next/standalone/server.js"]
 
 [agent]
 expertMode = true

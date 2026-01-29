@@ -1,0 +1,152 @@
+2026-01-29 07:40:01.61
+66301375
+System
+system: received signal terminated
+2026-01-29 07:58:46.57
+66301375
+System
+metasidecar: loaded enterprise status from environment is_enterprise=false
+2026-01-29 07:58:46.57
+66301375
+System
+starting up user application
+2026-01-29 07:58:46.58
+66301375
+System
+forwarding local port 5000 to external port 80 (mapped as 1104)
+2026-01-29 07:58:47.78
+66301375
+User
+> bf-fund-dataroom@0.1.0 start
+2026-01-29 07:58:47.78
+66301375
+User
+> next start
+2026-01-29 07:58:48.41
+66301375
+User
+▲ Next.js 16.1.6
+2026-01-29 07:58:48.41
+66301375
+User
+- Network: http://169.254.8.1:5000
+2026-01-29 07:58:48.41
+66301375
+User
+✓ Starting...
+2026-01-29 07:58:48.41
+66301375
+User
+- Local: http://localhost:5000
+2026-01-29 07:58:48.54
+66301375
+User
+⚠ "next start" does not work with "output: standalone" configuration. Use "node .next/standalone/server.js" instead.
+2026-01-29 07:58:48.73
+66301375
+User
+✓ Ready in 711ms
+2026-01-29 08:12:46.41
+66301375
+User
+Warning: Please use the `legacy` build in Node.js environments.
+2026-01-29 08:14:01.62
+66301375
+System
+system: received signal terminated
+2026-01-29 08:27:58.20
+66301375
+System
+starting up user application
+2026-01-29 08:27:58.20
+66301375
+System
+metasidecar: loaded enterprise status from environment is_enterprise=false
+2026-01-29 08:27:58.20
+66301375
+System
+forwarding local port 5000 to external port 80 (mapped as 1104)
+2026-01-29 08:27:59.30
+66301375
+User
+> next start
+2026-01-29 08:27:59.30
+66301375
+User
+> bf-fund-dataroom@0.1.0 start
+2026-01-29 08:27:59.96
+66301375
+User
+✓ Starting...
+2026-01-29 08:27:59.96
+66301375
+User
+- Network: http://169.254.8.1:5000
+2026-01-29 08:27:59.96
+66301375
+User
+- Local: http://localhost:5000
+2026-01-29 08:27:59.96
+66301375
+User
+▲ Next.js 16.1.6
+2026-01-29 08:28:00.08
+66301375
+User
+⚠ "next start" does not work with "output: standalone" configuration. Use "node .next/standalone/server.js" instead.
+2026-01-29 08:28:00.25
+66301375
+User
+✓ Ready in 652ms
+2026-01-29 08:43:53.60
+66301375
+User
+Warning: Please use the `legacy` build in Node.js environments.
+2026-01-29 08:50:11.63
+66301375
+System
+system: received signal terminated
+2026-01-29 09:04:58.37
+66301375
+System
+starting up user application
+2026-01-29 09:04:58.37
+66301375
+System
+metasidecar: loaded enterprise status from environment is_enterprise=false
+2026-01-29 09:04:58.37
+66301375
+System
+forwarding local port 5000 to external port 80 (mapped as 1104)
+2026-01-29 09:04:59.65
+66301375
+User
+> bf-fund-dataroom@0.1.0 start
+2026-01-29 09:04:59.65
+66301375
+User
+> next start
+2026-01-29 09:05:00.36
+66301375
+User
+▲ Next.js 16.1.6
+2026-01-29 09:05:00.36
+66301375
+User
+- Local: http://localhost:5000
+2026-01-29 09:05:00.36
+66301375
+User
+- Network: http://169.254.8.1:5000
+2026-01-29 09:05:00.36
+66301375
+User
+✓ Starting...
+2026-01-29 09:05:00.50
+66301375
+User
+⚠ "next start" does not work with "output: standalone" configuration. Use "node .next/standalone/server.js" instead.
+2026-01-29 09:05:00.68
+66301375
+User
+✓ Ready in 729ms

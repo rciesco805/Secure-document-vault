@@ -50,13 +50,18 @@ function isAllowedSource(req: NextApiRequest): boolean {
 
 export const config = {
   api: {
-    bodyParser: {
-      raw: {
-        type: "application/json",
-      },
-    },
+    bodyParser: false,
   },
 };
+
+async function getRawBody(req: NextApiRequest): Promise<Buffer> {
+  return new Promise((resolve, reject) => {
+    const chunks: Buffer[] = [];
+    req.on('data', (chunk: Buffer) => chunks.push(chunk));
+    req.on('end', () => resolve(Buffer.concat(chunks)));
+    req.on('error', reject);
+  });
+}
 
 export default async function handler(
   req: NextApiRequest,
@@ -69,16 +74,8 @@ export default async function handler(
   try {
     const signature = req.headers["x-webhook-signature"] as string;
     
-    let rawBody: Buffer;
-    let parsedBody: WebhookPayload;
-    
-    if (Buffer.isBuffer(req.body)) {
-      rawBody = req.body;
-      parsedBody = JSON.parse(rawBody.toString());
-    } else {
-      rawBody = Buffer.from(JSON.stringify(req.body));
-      parsedBody = req.body as WebhookPayload;
-    }
+    const rawBody = await getRawBody(req);
+    const parsedBody: WebhookPayload = JSON.parse(rawBody.toString());
     
     if (WEBHOOK_SECRET) {
       if (!verifyWebhookSignature(rawBody, signature)) {

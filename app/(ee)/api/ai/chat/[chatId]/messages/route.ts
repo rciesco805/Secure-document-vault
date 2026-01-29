@@ -14,13 +14,15 @@ import { CustomUser } from "@/lib/types";
 
 export const dynamic = 'force-dynamic';
 
+type RouteParams = { params: Promise<{ chatId: string }> };
+
 /**
  * POST /api/ai/chat/[chatId]/messages
  * Send a message and get streaming response
  */
 export async function POST(
   req: NextRequest,
-  { params }: { params: Promise<{ chatId: string }> },
+  { params }: RouteParams,
 ) {
   try {
     const { chatId } = await params;

@@ -104,7 +104,10 @@ export function SignaturePad({ onSignatureChange, width = 400, height = 150 }: S
           width={width}
           height={height}
           className="w-full border border-gray-600 rounded-lg cursor-crosshair touch-none"
-          style={{ maxWidth: `${width}px` }}
+          style={{ maxWidth: `${width}px`, touchAction: 'none' }}
+          role="img"
+          aria-label="Signature drawing area. Use mouse or touch to draw your signature."
+          tabIndex={0}
           onMouseDown={startDrawing}
           onMouseMove={draw}
           onMouseUp={stopDrawing}
@@ -127,8 +130,9 @@ export function SignaturePad({ onSignatureChange, width = 400, height = 150 }: S
           size="sm"
           onClick={clearSignature}
           className="text-gray-400 hover:text-white"
+          aria-label="Clear signature"
         >
-          <Eraser className="h-4 w-4 mr-2" />
+          <Eraser className="h-4 w-4 mr-2" aria-hidden="true" />
           Clear
         </Button>
         {hasSignature && (

@@ -477,8 +477,9 @@ export const EnhancedSignaturePad = forwardRef<SignaturePadHandle, EnhancedSigna
                     onClick={undoLastStroke}
                     disabled={strokes.length === 0}
                     className="text-gray-400 hover:text-white disabled:opacity-30"
+                    aria-label="Undo last stroke"
                   >
-                    <Undo2 className="h-4 w-4" />
+                    <Undo2 className="h-4 w-4" aria-hidden="true" />
                   </Button>
                 </>
               )}
@@ -493,8 +494,9 @@ export const EnhancedSignaturePad = forwardRef<SignaturePadHandle, EnhancedSigna
               onChange={(e) => updateTypedSignature(e.target.value, selectedFont)}
               placeholder="Type your name..."
               className="bg-gray-800 border-gray-600 text-white"
+              aria-label="Type your full legal name to create a signature"
             />
-            <div className="flex gap-2 flex-wrap">
+            <div className="flex gap-2 flex-wrap" role="radiogroup" aria-label="Select signature font style">
               {signatureFontOptions.map((option) => (
                 <button
                   key={option.id}
@@ -506,6 +508,9 @@ export const EnhancedSignaturePad = forwardRef<SignaturePadHandle, EnhancedSigna
                       : "bg-gray-800 text-gray-400 hover:bg-gray-700"
                   )}
                   style={{ fontFamily: option.font }}
+                  role="radio"
+                  aria-checked={selectedFont === option.font}
+                  aria-label={`${option.label} font style`}
                 >
                   {option.label}
                 </button>
@@ -528,6 +533,9 @@ export const EnhancedSignaturePad = forwardRef<SignaturePadHandle, EnhancedSigna
               WebkitTouchCallout: 'none',
               WebkitUserSelect: 'none',
             }}
+            role="img"
+            aria-label={mode === 'draw' ? 'Signature drawing area. Use mouse, touch, or stylus to draw your signature.' : 'Signature preview area showing your typed name.'}
+            tabIndex={0}
             onPointerDown={mode === 'draw' ? startDrawing : undefined}
             onPointerMove={mode === 'draw' ? draw : undefined}
             onPointerUp={mode === 'draw' ? stopDrawing : undefined}
@@ -551,8 +559,9 @@ export const EnhancedSignaturePad = forwardRef<SignaturePadHandle, EnhancedSigna
             size="sm"
             onClick={clearSignature}
             className="text-gray-400 hover:text-white"
+            aria-label="Clear signature and start over"
           >
-            <Eraser className="h-4 w-4 mr-2" />
+            <Eraser className="h-4 w-4 mr-2" aria-hidden="true" />
             Clear
           </Button>
 

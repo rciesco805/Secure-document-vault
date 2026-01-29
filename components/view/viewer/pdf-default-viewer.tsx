@@ -184,6 +184,44 @@ export default function PDFViewer(props: any) {
     setLoading(false);
   }
 
+  // Handle touch swipe gestures for mobile navigation
+  const touchStartX = useRef<number | null>(null);
+  const touchEndX = useRef<number | null>(null);
+  const minSwipeDistance = 50;
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchEndX.current = null;
+    touchStartX.current = e.targetTouches[0].clientX;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    touchEndX.current = e.targetTouches[0].clientX;
+  };
+
+  const handleTouchEnd = () => {
+    if (touchStartX.current === null || touchEndX.current === null) return;
+    const distance = touchStartX.current - touchEndX.current;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+    if (isLeftSwipe) {
+      goToNextPage();
+    } else if (isRightSwipe) {
+      goToPreviousPage();
+    }
+    touchStartX.current = null;
+    touchEndX.current = null;
+  };
+
+  // Calculate responsive page width for mobile
+  const getResponsivePageWidth = () => {
+    if (pageWidth < 640) {
+      return pageWidth * 0.95; // Mobile: use 95% of screen width
+    } else if (pageWidth < 1024) {
+      return pageWidth * 0.85; // Tablet: use 85% of screen width
+    }
+    return Math.max(pageWidth * 0.8, 390); // Desktop: use 80% with minimum
+  };
+
   const options = {
     cMapUrl: "cmaps/",
     cMapPacked: true,
@@ -270,25 +308,32 @@ export default function PDFViewer(props: any) {
         hidden={loading}
         style={{ height: "calc(100vh - 64px)" }}
         className="flex items-center"
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        role="region"
+        aria-label={`PDF document viewer. Page ${pageNumber} of ${numPages}. Use arrow keys or swipe to navigate.`}
       >
         <div
-          className={`absolute z-10 flex w-full items-center justify-between px-2`}
+          className={`absolute z-10 flex w-full items-center justify-between px-2 md:px-4`}
         >
           <button
             onClick={goToPreviousPage}
             disabled={pageNumber <= 1}
-            className="h-[calc(100vh - 64px)] relative px-2 py-24 text-gray-400 hover:text-gray-50 focus:z-20"
+            className="relative px-2 py-4 md:py-24 text-gray-400 hover:text-gray-50 focus:z-20 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900 rounded-lg disabled:opacity-30 transition-opacity touch-manipulation"
+            aria-label={`Go to previous page (${pageNumber - 1} of ${numPages})`}
           >
-            <span className="sr-only">Previous</span>
-            <ChevronLeftIcon className="h-10 w-10" aria-hidden="true" />
+            <span className="sr-only">Previous page</span>
+            <ChevronLeftIcon className="h-8 w-8 md:h-10 md:w-10" aria-hidden="true" />
           </button>
           <button
             onClick={goToNextPage}
             disabled={pageNumber >= numPages!}
-            className="h-[calc(100vh - 64px)] relative px-2 py-24 text-gray-400 hover:text-gray-50 focus:z-20"
+            className="relative px-2 py-4 md:py-24 text-gray-400 hover:text-gray-50 focus:z-20 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900 rounded-lg disabled:opacity-30 transition-opacity touch-manipulation"
+            aria-label={`Go to next page (${pageNumber + 1} of ${numPages})`}
           >
-            <span className="sr-only">Next</span>
-            <ChevronRightIcon className="h-10 w-10" aria-hidden="true" />
+            <span className="sr-only">Next page</span>
+            <ChevronRightIcon className="h-8 w-8 md:h-10 md:w-10" aria-hidden="true" />
           </button>
         </div>
 
@@ -308,7 +353,7 @@ export default function PDFViewer(props: any) {
               renderTextLayer={false}
               onLoadSuccess={onPageLoadSuccess}
               onRenderError={() => setLoading(false)}
-              width={Math.max(pageWidth * 0.8, 390)}
+              width={getResponsivePageWidth()}
             />
           </Document>
         </div>

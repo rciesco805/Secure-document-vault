@@ -99,7 +99,7 @@ export function buildCSP(nonce: string, path: string): string {
 
   const scriptSrc = isDev
     ? `script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: ${trustedScriptDomains} http:;`
-    : `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' 'wasm-unsafe-eval' blob: ${trustedScriptDomains};`;
+    : `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' 'unsafe-eval' blob: ${trustedScriptDomains};`;
 
   const styleSrc = isDev
     ? `style-src 'self' 'unsafe-inline' ${trustedStyleDomains} http:;`

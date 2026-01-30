@@ -45,11 +45,7 @@ export function PWAInstallPrompt() {
 
   useEffect(() => {
     if ("serviceWorker" in navigator) {
-      const swUrl = `/sw.js?v=${Date.now()}`;
-      
-      navigator.serviceWorker.register(swUrl, { updateViaCache: 'none' }).then((registration) => {
-        registration.update();
-        
+      navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' }).then((registration) => {
         setInterval(() => {
           registration.update();
         }, 60 * 60 * 1000);
@@ -59,22 +55,13 @@ export function PWAInstallPrompt() {
           if (newWorker) {
             newWorker.addEventListener("statechange", () => {
               if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
-                console.log("New version available, activating immediately...");
-                newWorker.postMessage({ type: "SKIP_WAITING" });
+                console.log("New version available, will activate on next visit");
               }
             });
           }
         });
       }).catch((error) => {
         console.warn("Service Worker registration failed:", error);
-      });
-
-      let refreshing = false;
-      navigator.serviceWorker.addEventListener("controllerchange", () => {
-        if (!refreshing) {
-          refreshing = true;
-          window.location.reload();
-        }
       });
     }
   }, []);

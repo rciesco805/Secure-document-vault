@@ -27,13 +27,13 @@ type DataroomDocumentLinkData = {
 };
 
 type DataroomDocumentProps = {
-  linkData: DataroomDocumentLinkData;
-  notionData: {
+  linkData?: DataroomDocumentLinkData;
+  notionData?: {
     rootNotionPageId: string | null;
     recordMap: ExtendedRecordMap | null;
     theme: NotionTheme | null;
   };
-  meta: {
+  meta?: {
     enableCustomMetatag: boolean;
     metaTitle: string | null;
     metaDescription: string | null;
@@ -41,23 +41,23 @@ type DataroomDocumentProps = {
     metaFavicon: string;
     metaUrl: string;
   };
-  showPoweredByBanner: boolean;
-  showAccountCreationSlide: boolean;
-  useAdvancedExcelViewer: boolean;
-  useCustomAccessForm: boolean;
-  logoOnAccessForm: boolean;
+  showPoweredByBanner?: boolean;
+  showAccountCreationSlide?: boolean;
+  useAdvancedExcelViewer?: boolean;
+  useCustomAccessForm?: boolean;
+  logoOnAccessForm?: boolean;
 };
 
 export default function DataroomDocumentViewPage({
-  linkData,
-  notionData,
-  meta,
-  showPoweredByBanner,
-  showAccountCreationSlide,
-  useAdvancedExcelViewer,
-  useCustomAccessForm,
-  logoOnAccessForm,
-}: DataroomDocumentProps) {
+  linkData: initialLinkData,
+  notionData: initialNotionData,
+  meta: initialMeta,
+  showPoweredByBanner = false,
+  showAccountCreationSlide = false,
+  useAdvancedExcelViewer = false,
+  useCustomAccessForm = false,
+  logoOnAccessForm = false,
+}: DataroomDocumentProps = {}) {
   const router = useRouter();
   const params = useParams();
   const searchParams = useSearchParams();
@@ -69,6 +69,33 @@ export default function DataroomDocumentViewPage({
   const [sessionTimeout, setSessionTimeout] = useState<boolean>(false);
   const [storedToken, setStoredToken] = useState<string | undefined>(undefined);
   const [storedEmail, setStoredEmail] = useState<string | undefined>(undefined);
+  const [linkData, setLinkData] = useState<DataroomDocumentLinkData | undefined>(initialLinkData);
+  const [notionData, setNotionData] = useState(initialNotionData);
+  const [meta, setMeta] = useState(initialMeta);
+  const [isLoading, setIsLoading] = useState(!initialLinkData);
+
+  // Fetch data if not provided as props
+  useEffect(() => {
+    if (initialLinkData || !linkId || !documentId) return;
+    
+    const fetchData = async () => {
+      try {
+        const response = await fetch(`/api/links/${linkId}/documents/${documentId}`);
+        if (response.ok) {
+          const data = await response.json();
+          setLinkData(data.linkData);
+          setNotionData(data.notionData);
+          setMeta(data.meta);
+        }
+      } catch (error) {
+        console.error("Failed to fetch document data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchData();
+  }, [linkId, documentId, initialLinkData]);
 
   // Timeout fallback to prevent infinite loading if session check hangs
   useEffect(() => {
@@ -104,23 +131,26 @@ export default function DataroomDocumentViewPage({
   const disableEditEmail = searchParams?.get("d") || "";
   const previewToken = searchParams?.get("previewToken") || undefined;
   const preview = searchParams?.get("preview") || undefined;
-  const { link, brand } = linkData;
+  const link = linkData?.link;
+  const brand = linkData?.brand;
 
   // Render the document view for DATAROOM_LINK
-  if (!linkData || status === "loading") {
+  if (!linkData || isLoading || status === "loading") {
     return (
       <>
-        <CustomMetaTag
-          favicon={meta.metaFavicon}
-          enableBranding={meta.enableCustomMetatag ?? false}
-          title={
-            meta.metaTitle ??
-            `${link?.dataroomDocument?.document?.name} | BF Fund Dataroom`
-          }
-          description={meta.metaDescription ?? null}
-          imageUrl={meta.metaImage ?? null}
-          url={meta.metaUrl ?? ""}
-        />
+        {meta && (
+          <CustomMetaTag
+            favicon={meta.metaFavicon}
+            enableBranding={meta.enableCustomMetatag ?? false}
+            title={
+              meta.metaTitle ??
+              `${link?.dataroomDocument?.document?.name} | BF Fund Dataroom`
+            }
+            description={meta.metaDescription ?? null}
+            imageUrl={meta.metaImage ?? null}
+            url={meta.metaUrl ?? ""}
+          />
+        )}
         <div className="flex h-screen items-center justify-center">
           <LoadingSpinner className="h-20 w-20" />
         </div>
@@ -155,23 +185,25 @@ export default function DataroomDocumentViewPage({
 
   return (
     <>
-      <CustomMetaTag
-        favicon={meta.metaFavicon}
-        enableBranding={meta.enableCustomMetatag ?? false}
-        title={
-          meta.metaTitle ??
-          `${link?.dataroomDocument?.document?.name} | BF Fund Dataroom`
-        }
-        description={meta.metaDescription ?? null}
-        imageUrl={meta.metaImage ?? null}
-        url={meta.metaUrl ?? ""}
-      />
+      {meta && (
+        <CustomMetaTag
+          favicon={meta.metaFavicon}
+          enableBranding={meta.enableCustomMetatag ?? false}
+          title={
+            meta.metaTitle ??
+            `${link?.dataroomDocument?.document?.name} | BF Fund Dataroom`
+          }
+          description={meta.metaDescription ?? null}
+          imageUrl={meta.metaImage ?? null}
+          url={meta.metaUrl ?? ""}
+        />
+      )}
       <DataroomDocumentView
         link={link}
         userEmail={verifiedEmail ?? storedEmail ?? userEmail}
         userId={userId}
         isProtected={!!(emailProtected || linkPassword || enableAgreement)}
-        notionData={notionData}
+        notionData={notionData ?? { rootNotionPageId: null, recordMap: null, theme: null }}
         brand={brand}
         useAdvancedExcelViewer={useAdvancedExcelViewer}
         previewToken={previewToken}

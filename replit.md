@@ -14,6 +14,15 @@ The BF Fund Investor Dataroom is a 506(c) compliant GP/LP management suite desig
 
 #### Critical Bug Fixes
 
+**Request Invite Self-Notification Fix (January 30, 2026)**
+- Fixed issue where admins using "Request Invite" received their own access request emails
+- Added client-side check: Before submitting invite request, verifies if email already has access via `/api/auth/check-visitor`
+- Added server-side defense-in-depth: `/api/request-invite` checks for existing admin/viewer status before processing
+- Filters requester's email from admin notification list to prevent self-notifications
+- Files modified:
+  - `app/(auth)/login/page-client.tsx` - Pre-check before invite submission
+  - `pages/api/request-invite.ts` - Server-side access check and admin filter
+
 **Admin Authentication Fix (January 30, 2026)**
 - Updated admin verification to check database for OWNER, SUPER_ADMIN, ADMIN roles instead of relying solely on static email list
 - Authentication now queries `UserTeam` table for active admin roles dynamically

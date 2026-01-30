@@ -115,6 +115,7 @@ The BF Fund Investor Dataroom is a 506(c) compliant GP/LP management suite desig
 - **Push Notifications**: Real-time alerts for document views, signatures, capital calls, and distributions.
 - **Advanced Reporting**: Custom report builder with 8 report types, scheduled reports, PDF/CSV/Excel export.
 - **Security**: Four-layer encryption (TLS 1.3, Client-Side AES-256-GCM, Server-Side AES-256-GCM, PDF 2.0 AES-256).
+- **Authentication**: NextAuth.js with OAuth (Google, LinkedIn), magic links, database sessions. See `docs/AUTHENTICATION.md` for comprehensive documentation.
 
 #### Directory Structure
 ```

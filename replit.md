@@ -1,20 +1,20 @@
 # BF Fund Investor Dataroom
 
-## Recent Changes (January 29, 2026)
+## Recent Changes (January 30, 2026)
 
-### App Router Migration - Phase 4 Complete (Viewer Pages Cleanup)
-- **Server-Side Code Removal**: Removed all Pages Router remnants from viewer client components
-  - Removed `getServerSideProps`/`getStaticProps` blocks containing `context.params`, `context.res.setHeader`, and `NEXTAUTH_URL` fetches
-  - Removed `getStaticPaths` export from domain viewer
-  - Removed `router.isFallback` checks (App Router doesn't have this API)
-- **Files Cleaned**: 
-  - `app/view/[linkId]/page-client.tsx`
-  - `app/view/[linkId]/d/[documentId]/page-client.tsx`
-  - `app/view/domains/[domain]/[slug]/page-client.tsx`
-  - `app/view/domains/[domain]/[slug]/d/[documentId]/page-client.tsx`
-- All viewer pages now use App Router patterns exclusively (useParams, useSearchParams, useRouter from next/navigation)
+### App Router Migration - Phase 5 Complete (Admin, Documents, Datarooms, Settings)
+- **Migrated ~73 pages** from Pages Router to App Router
+- **Admin pages** (6): audit, entities, fund, fund/[id], quick-add, subscriptions/new
+- **Documents pages** (4): index, new, [id], tree/[...name]
+- **Datarooms pages** (23): Full migration including groups, conversations, permissions, settings
+- **Settings pages** (22): All settings including billing, domains, webhooks, presets
+- **Account pages** (2): general, security
+- **Visitors pages** (2): index, [id]
+- **Workflows pages** (3): index, [id], new
+- **Misc pages** (7): branding, hub, offline, unsubscribe, viewer-portal, viewer-redirect, public/dataroom/[id]
 
-### Previous Changes (January 24-29, 2026)
+### Previous Changes (January 29, 2026)
+- **Phase 4 Complete**: Viewer pages cleanup - removed all Pages Router API remnants from viewer client components
 - **Visitor Authorization Pre-Check**: Added `/api/auth/check-visitor` endpoint that validates user authorization BEFORE sending magic link emails
 - **Separate Login Portals**: Maintained distinct login paths - `/login` for investors/visitors, `/admin/login` for administrators
 - **PWA User-Scoped Caching**: Implemented isolated cache storage per user preventing cross-user data exposure
@@ -97,8 +97,25 @@ The platform is actively migrating from Next.js Pages Router to App Router for i
 - `/view/domains/[domain]/[slug]` → `app/view/domains/[domain]/[slug]/` (custom domain viewer)
 - `/view/domains/[domain]/[slug]/d/[documentId]` → `app/view/domains/[domain]/[slug]/d/[documentId]/` (custom domain document)
 
-### Phase 5 Pending
-Admin pages, documents, datarooms, settings
+### Phase 5 Complete: Admin, Documents, Datarooms, Settings (January 30, 2026)
+- `/dashboard` → `app/dashboard/` (main admin dashboard)
+- `/hub` → `app/hub/` (LP hub)
+- `/admin/*` → `app/admin/` (6 pages: audit, entities, fund, quick-add, subscriptions)
+- `/documents/*` → `app/documents/` (4 pages: index, new, [id], tree)
+- `/datarooms/*` → `app/datarooms/` (23 pages including groups, conversations, permissions, settings)
+- `/settings/*` → `app/settings/` (22 pages including billing, domains, webhooks, presets)
+- `/account/*` → `app/account/` (2 pages: general, security)
+- `/visitors/*` → `app/visitors/` (2 pages: index, [id])
+- `/workflows/*` → `app/workflows/` (3 pages: index, [id], new)
+- `/branding` → `app/branding/`
+- `/offline` → `app/offline/`
+- `/unsubscribe` → `app/unsubscribe/`
+- `/viewer-portal` → `app/viewer-portal/`
+- `/viewer-redirect` → `app/viewer-redirect/`
+- `/public/dataroom/[id]` → `app/public/dataroom/[id]/`
+
+### Migration Complete
+All user-facing pages have been migrated to App Router. Legacy Pages Router files remain for API routes and may be removed after validation.
 
 ### Current App Router Structure
 ```
@@ -109,14 +126,39 @@ app/
 │   ├── welcome/               # /welcome - onboarding wizard
 │   ├── register/              # /register
 │   └── verify/                # /verify
-├── admin/
-│   └── login/                 # /admin/login - admin-only login
-├── lp/                        # LP Portal (regular folder, adds /lp/ to URL)
+├── admin/                     # Admin pages
+│   ├── login/                 # /admin/login - admin-only login
+│   ├── audit/                 # /admin/audit - audit logs
+│   ├── entities/              # /admin/entities - entity management
+│   ├── fund/                  # /admin/fund - fund management
+│   ├── quick-add/             # /admin/quick-add - quick entity creation
+│   └── subscriptions/new/     # /admin/subscriptions/new - new subscriptions
+├── lp/                        # LP Portal
 │   ├── dashboard/             # /lp/dashboard - investor dashboard
 │   ├── docs/                  # /lp/docs - document vault
 │   ├── onboard/               # /lp/onboard - onboarding flow
 │   ├── bank-connect/          # /lp/bank-connect - Plaid ACH linking
 │   └── offline-documents/     # /lp/offline-documents - offline docs
+├── dashboard/                 # /dashboard - main admin dashboard
+├── hub/                       # /hub - LP hub
+├── documents/                 # Document management
+│   ├── page.tsx               # /documents - list
+│   ├── new/                   # /documents/new - upload
+│   ├── [id]/                  # /documents/[id] - detail
+│   └── tree/                  # /documents/tree - folder view
+├── datarooms/                 # Dataroom management (23 pages)
+│   ├── page.tsx               # /datarooms - list
+│   └── [id]/                  # /datarooms/[id] - full suite
+├── settings/                  # Settings (22 pages)
+│   ├── general/               # /settings/general
+│   ├── billing/               # /settings/billing
+│   ├── domains/               # /settings/domains
+│   └── ...                    # All other settings
+├── account/                   # User account
+│   ├── general/               # /account/general
+│   └── security/              # /account/security
+├── visitors/                  # Visitor management
+├── workflows/                 # Workflow management
 ├── sign/                      # E-Signature module
 │   ├── page.tsx               # /sign - dashboard
 │   ├── new/                   # /sign/new - create document

@@ -144,7 +144,7 @@ const nextConfig = {
       },
     ];
   },
-  allowedDevOrigins: ["*.replit.dev", "*.spock.replit.dev", "*.repl.co"],
+  allowedDevOrigins: ["*"],
   serverExternalPackages: ["nodemailer"],
   outputFileTracingIncludes: {
     "/api/mupdf/*": ["./node_modules/mupdf/dist/*.wasm"],

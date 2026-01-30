@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { getServerSession } from "next-auth";
+import { Prisma } from "@prisma/client";
 
 import prisma from "@/lib/prisma";
 import { errorhandler } from "@/lib/errorHandler";
@@ -73,7 +74,7 @@ export default async function handle(
         const updatedReport = await prisma.generatedReport.update({
           where: { id: report.id },
           data: {
-            data,
+            data: data as Prisma.InputJsonValue,
             status: "COMPLETED",
             generatedAt: new Date(),
             expiresAt,

@@ -68,12 +68,12 @@ function isValidNextAuthCallbackPath(pathname: string): boolean {
   return pathname.startsWith('/api/auth/callback/');
 }
 
-export default function VerifyPage({
+export default async function VerifyPage({
   searchParams,
 }: {
-  searchParams: { verification_url?: string; checksum?: string };
+  searchParams: Promise<{ verification_url?: string; checksum?: string }>;
 }) {
-  const { verification_url, checksum } = searchParams;
+  const { verification_url, checksum } = await searchParams;
 
   console.log("[VERIFY] Received params:", { 
     hasUrl: !!verification_url, 

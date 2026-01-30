@@ -2,7 +2,7 @@ import { Hr, Section, Text } from "@react-email/components";
 
 export const Footer = ({
   withAddress = false,
-  footerText = "If you have any feedback or questions, please contact investors@bermudaclubfranchise.com",
+  footerText = "If you have any feedback or questions, please contact investors@bermudafranchisegroup.com",
 }: {
   withAddress?: boolean;
   footerText?: string | React.ReactNode;

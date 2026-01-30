@@ -13,6 +13,9 @@ The BF Fund Investor Dataroom is a 506(c) compliant GP/LP management suite desig
 ### Recent Changes (January 2026)
 
 #### Critical Bug Fixes
+- **Admin Authentication Fix**: Updated admin verification to check database for OWNER, SUPER_ADMIN, ADMIN roles instead of relying solely on static email list
+  - Files fixed: `/api/auth/check-admin`, `/api/auth/check-visitor`, `/pages/api/auth/[...nextauth].ts`, `/lib/auth/admin-magic-link.ts`
+- **Domain Typo Fix**: Corrected "bermudaclubfranchise.com" typos to "bermudafranchisegroup.com" in OG preview, email footer, and link settings
 - **useSession Crash Fix**: Applied safe pattern across 20+ files to prevent crashes when session is undefined. Pattern: `const sessionData = useSession(); const session = sessionData?.data;`
   - Files fixed: All `/app/` pages, `/components/` (profile-menu, nav-user, sidebar components), `/context/team-context.tsx`, `/ee/features/`
 - **Service Worker Infinite Refresh Fix**: Removed dynamic timestamp from service worker registration (`/sw.js` instead of `/sw.js?v=${Date.now()}`) to stop page refresh loops

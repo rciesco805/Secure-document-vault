@@ -23,7 +23,7 @@ export default function Preview({
     metaFavicon: favicon,
   } = data;
 
-  const hostname = "bermudaclubfranchise.com";
+  const hostname = "bermudafranchisegroup.com";
 
   return (
     <div>

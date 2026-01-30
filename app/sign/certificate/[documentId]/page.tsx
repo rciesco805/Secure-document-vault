@@ -2,6 +2,8 @@ import { Suspense } from "react";
 import { Metadata } from "next";
 import CertificateDownloadClient from "./page-client";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Completion Certificate | BF Fund",
   description: "Download the completion certificate for your signed document",

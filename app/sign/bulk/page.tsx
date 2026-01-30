@@ -2,6 +2,8 @@ import { Suspense } from "react";
 import { Metadata } from "next";
 import BulkSendClient from "./page-client";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Bulk Send Document | BF Fund",
   description: "Send the same document to multiple recipients for e-signature",

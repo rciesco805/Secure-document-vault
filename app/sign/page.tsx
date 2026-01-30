@@ -2,6 +2,8 @@ import { Suspense } from "react";
 import { Metadata } from "next";
 import SignatureDashboardClient from "./page-client";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "E-Signature | BF Fund",
   description: "Send documents for signature and track their status",

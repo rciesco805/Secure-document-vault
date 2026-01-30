@@ -2,6 +2,8 @@ import { Suspense } from "react";
 import { Metadata } from "next";
 import CertificateVerifyClient from "./page-client";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Verify Certificate | BF Fund",
   description: "Verify the authenticity of a completion certificate",

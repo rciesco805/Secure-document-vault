@@ -2,6 +2,8 @@ import { Suspense } from "react";
 import { Metadata } from "next";
 import TemplatesPageClient from "./page-client";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Signature Templates | BF Fund",
   description: "Reusable document templates for quick e-signature",

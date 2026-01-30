@@ -2,6 +2,8 @@ import { Suspense } from "react";
 import { Metadata } from "next";
 import NewSignatureDocumentClient from "./page-client";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "New Signature Document | BF Fund",
   description: "Upload a document and add recipients for e-signature",

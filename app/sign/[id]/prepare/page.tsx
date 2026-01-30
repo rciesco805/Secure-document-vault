@@ -2,6 +2,8 @@ import { Suspense } from "react";
 import { Metadata } from "next";
 import PrepareDocumentClient from "./page-client";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Prepare Document | BF Fund",
   description: "Place signature fields on your document",

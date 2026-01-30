@@ -100,10 +100,10 @@ export default function DataroomDocumentViewPage({
     }
   }, [linkId, linkData?.link?.slug]);
 
-  const verifiedEmail = searchParams.get("email") || "";
-  const disableEditEmail = searchParams.get("d") || "";
-  const previewToken = searchParams.get("previewToken") || undefined;
-  const preview = searchParams.get("preview") || undefined;
+  const verifiedEmail = searchParams?.get("email") || "";
+  const disableEditEmail = searchParams?.get("d") || "";
+  const previewToken = searchParams?.get("previewToken") || undefined;
+  const preview = searchParams?.get("preview") || undefined;
   const { link, brand } = linkData;
 
   // Render the document view for DATAROOM_LINK

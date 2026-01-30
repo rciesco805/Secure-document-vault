@@ -89,10 +89,10 @@ export default function ViewPage({
   const params = useParams();
   const searchParams = useSearchParams();
   const linkId = (params?.linkId as string) ?? "";
-  const queryToken = searchParams.get("token") || undefined;
-  const queryEmail = searchParams.get("email") || undefined;
-  const queryPreviewToken = searchParams.get("previewToken") || undefined;
-  const queryD = searchParams.get("d") || undefined;
+  const queryToken = searchParams?.get("token") || undefined;
+  const queryEmail = searchParams?.get("email") || undefined;
+  const queryPreviewToken = searchParams?.get("previewToken") || undefined;
+  const queryD = searchParams?.get("d") || undefined;
   const sessionResult = useSession();
   const session = sessionResult?.data ?? null;
   const rawStatus = sessionResult?.status ?? "loading";
@@ -271,7 +271,7 @@ export default function ViewPage({
   const verifiedEmail = queryEmail || "";
   const disableEditEmail = queryD || "";
   const previewToken = queryPreviewToken;
-  const preview = searchParams.get("preview") || undefined;
+  const preview = searchParams?.get("preview") || undefined;
   const magicLinkToken = queryToken;
   const { linkType } = linkData;
 

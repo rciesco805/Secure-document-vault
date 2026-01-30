@@ -65,9 +65,9 @@ export default function EmbedPage(props: ViewPageProps) {
     );
   }
 
-  const verifiedEmail = searchParams.get("email") || "";
-  const disableEditEmail = searchParams.get("d") || "";
-  const previewToken = searchParams.get("previewToken") || undefined;
+  const verifiedEmail = searchParams?.get("email") || "";
+  const disableEditEmail = searchParams?.get("d") || "";
+  const previewToken = searchParams?.get("previewToken") || undefined;
   const { linkType, brand } = props.linkData;
 
   // Render the document view for DOCUMENT_LINK

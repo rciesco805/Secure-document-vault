@@ -131,10 +131,10 @@ export default function ViewPage({
     );
   }
 
-  const verifiedEmail = searchParams.get("email") || "";
-  const disableEditEmail = searchParams.get("d") || "";
-  const previewToken = searchParams.get("previewToken") || undefined;
-  const preview = searchParams.get("preview") || undefined;
+  const verifiedEmail = searchParams?.get("email") || "";
+  const disableEditEmail = searchParams?.get("d") || "";
+  const previewToken = searchParams?.get("previewToken") || undefined;
+  const preview = searchParams?.get("preview") || undefined;
   const { linkType } = linkData;
 
   // Render workflow access view for WORKFLOW_LINK

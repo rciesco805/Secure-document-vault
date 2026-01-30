@@ -19,7 +19,21 @@ export default async function handler(
   const emailLower = email.toLowerCase().trim();
 
   try {
-    const isAdmin = isAdminEmail(emailLower);
+    // Check static list first
+    let isAdmin = isAdminEmail(emailLower);
+    
+    // Also check database for admin roles (OWNER, SUPER_ADMIN, ADMIN)
+    if (!isAdmin) {
+      const adminTeam = await prisma.userTeam.findFirst({
+        where: {
+          user: { email: { equals: emailLower, mode: "insensitive" } },
+          role: { in: ["OWNER", "ADMIN", "SUPER_ADMIN"] },
+          status: "ACTIVE",
+        },
+      });
+      isAdmin = !!adminTeam;
+    }
+    
     if (isAdmin) {
       return res.status(200).json({ 
         isAuthorized: true, 

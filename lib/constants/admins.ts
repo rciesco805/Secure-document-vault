@@ -82,6 +82,32 @@ export function isAdminEmail(email: string): boolean {
 }
 
 /**
+ * Check if a user is an admin of any team (async database lookup)
+ * Checks for OWNER, ADMIN, or SUPER_ADMIN roles
+ */
+export async function isUserAdminAsync(email: string): Promise<boolean> {
+  // First check static list
+  if (isAdminEmail(email)) {
+    return true;
+  }
+  
+  // Then check database
+  try {
+    const adminTeam = await prisma.userTeam.findFirst({
+      where: {
+        user: { email: { equals: email.toLowerCase().trim(), mode: "insensitive" } },
+        role: { in: ["OWNER", "ADMIN", "SUPER_ADMIN"] },
+        status: "ACTIVE",
+      },
+    });
+    return !!adminTeam;
+  } catch (error) {
+    console.error("Error checking admin status:", error);
+    return isAdminEmail(email);
+  }
+}
+
+/**
  * Check if a user is an admin of a specific team
  */
 export async function isTeamAdmin(email: string, teamId: string): Promise<boolean> {

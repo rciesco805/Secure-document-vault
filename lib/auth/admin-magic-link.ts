@@ -11,7 +11,7 @@ async function isUserAdmin(email: string): Promise<boolean> {
   const adminTeam = await prisma.userTeam.findFirst({
     where: {
       user: { email: { equals: email, mode: "insensitive" } },
-      role: { in: ["ADMIN", "SUPER_ADMIN"] },
+      role: { in: ["OWNER", "ADMIN", "SUPER_ADMIN"] },
       status: "ACTIVE",
     },
   });

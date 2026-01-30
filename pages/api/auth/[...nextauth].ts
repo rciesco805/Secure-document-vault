@@ -37,9 +37,22 @@ const getAuthOptions = (req: NextApiRequest): NextAuthOptions => {
           return false;
         }
 
-        // Check if user is an admin
+        // Check if user is an admin (static list first, then database)
         const emailLower = user.email.toLowerCase();
-        const isAdmin = isAdminEmail(emailLower);
+        let isAdmin = isAdminEmail(emailLower);
+        
+        // Also check database for admin roles
+        if (!isAdmin) {
+          const adminTeam = await prisma.userTeam.findFirst({
+            where: {
+              user: { email: { equals: emailLower, mode: "insensitive" } },
+              role: { in: ["OWNER", "ADMIN", "SUPER_ADMIN"] },
+              status: "ACTIVE",
+            },
+          });
+          isAdmin = !!adminTeam;
+        }
+        
         console.log("[AUTH] Admin email check:", emailLower, "isAdmin:", isAdmin);
         
         // If admin, allow access immediately

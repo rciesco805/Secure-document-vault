@@ -177,7 +177,7 @@ function RecipientStatusBadge({ status }: { status: string }) {
 export default function SignatureDocumentDetail() {
   const router = useRouter();
   const params = useParams();
-  const id = params.id as string;
+  const id = (params?.id as string) ?? "";
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
 

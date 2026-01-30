@@ -1,0 +1,80 @@
+Login Process Errors, Mistakes, and Recommended Fixes (Based on Actual Code)
+The authentication system uses NextAuth.js (Pages Router pages/api/auth/[...nextauth].ts with per-request getAuthOptions, base authOptions in lib/auth/auth-options.ts, PrismaAdapter, database sessions). Key files analyzed: [...nextauth].ts (overridden signIn + events), auth-options.ts (providers, callbacks, cookies, events), lib/constants/admins.ts (isAdminEmail).
+No password/Credentials provider. Relies on Google/LinkedIn OAuth, Email magic links (Resend/Unsend, 20-min expiry), conditional Passkey (Hanko).
+Critical Security Issues & Mistakes
+
+Hardcoded/Static Admin Emails (isAdminEmail in admins.ts):
+Simple array match: ADMIN_EMAILS.map(...).includes(emailLower.trim()).
+Likely sourced from env or constants (snippet shows no DB query or DEFAULT_ADMIN_EMAIL fallback in fetched code).
+Mistake: Static list in source is brittle, hard to rotate, and risky if any part committed. No dynamic/team-based check (e.g., UserTeam "ADMIN"/"SUPER_ADMIN").
+Risk: Admin bypasses all viewer/link checks immediately after this.
+Fix: Switch to env-only (process.env.ADMIN_EMAILS?.split(',') or single DEFAULT_ADMIN_EMAIL), or DB query on User/UserTeam with active role/status. Prefer role-based over email list.
+
+allowDangerousEmailAccountLinking: true (Google + LinkedIn):
+Explicitly enabled in providers.
+High risk: Allows automatic account linking if an OAuth email matches an existing User (magic link or other). Classic account takeover vector if email provider is compromised or attacker registers first.
+Fix: Set to false. If needed for UX, add explicit linking flow with confirmation + email ownership proof (magic link re-verification).
+
+Cookie Configuration (sameSite: "none", secure: true, httpOnly):
+Applies to sessionToken, callbackUrl, csrfToken.
+Mistake in dev: localhost (http) + secure: true → cookies fail to set, breaking auth. Production requires full HTTPS.
+Risk: Cross-site issues if not strictly HTTPS; session fixation/CSRF exposure.
+Fix: Use middleware or next.config to enforce HTTPS redirects. Set sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'. Add __Secure- prefix where applicable. Consider JWT strategy for statelessness if revocation needs are low.
+
+Redirect Callback Logic:
+Almost every success/external/relative path → /viewer-redirect.
+Origin check exists but permissive (baseUrl match or relative).
+Risk: Potential open redirect if malformed URLs slip through. Post-login always funnels to one page (good for LP personalization, risky for admin direct access).
+Fix: Add strict redirect allowlist (e.g., known internal paths only). Role-aware redirect (admins → /admin, LPs → dataroom/viewer-redirect). Validate url with new URL + allowed hosts.
+
+Magic Link Domain Rewrite (sendVerificationRequestEmail):
+Complex URL parsing/hostname swap if !NEXTAUTH_URL (dev/prod fallback).
+Mistake: Error-prone (protocol/port handling, new URL assumptions). Can produce broken/misleading links (e.g., localhost in prod emails or vice versa), phishing confusion, or failed verification.
+Fix: Mandate NEXTAUTH_URL in all envs. Remove rewrite or use a cleaner new URL(url, base).toString() with validated base. Add logging for finalUrl.
+
+signIn Callback Performance & Query Issues:
+Multiple separate prisma.*.findFirst calls (viewer direct, groups.some, link.allowList) for non-admins.
+Blacklist + rate limit + extensive console.log/debug.
+Mistake: N+1-style queries (slow at scale, exposes timing side-channels). Verbose console.log in potentially prod paths leaks attempt details.
+Risk: High load, rate limit bypass if Redis/checkRateLimit fails gracefully.
+Fix: Single Prisma query with OR conditions (where: { OR: [{viewer match}, {groups}, {link allowList}] }). Use structured logger (e.g., pino) instead of console.log. Make rate limiting fail-closed (reject on error).
+
+No MFA/2FA or Strong Admin Protections:
+Admins fast-track with email match only.
+No TOTP, WebAuthn (beyond optional Passkey), or step-up auth.
+Critical for GP dashboard (fund data, compliance, bulk actions).
+Fix: Add NextAuth MFA providers or custom middleware post-signIn for admins. Require Passkey/Hanko for ADMIN role.
+
+Other Gaps:
+Rate limiting: Depends on checkRateLimit(rateLimiters.auth, ip); unknown if fails open.
+Email verification: Magic link verifies once; no persistent emailVerified flag re-check.
+Session refresh: Good (fresh DB role fetch), but adds latency on every session access.
+Blacklist: Good presence (isBlacklistedEmail), but source/implementation unknown.
+New user flow: createUser event (welcome email, analytics, subscribe) – no rate limit on signups.
+Passkey: Conditional on hanko; missing config → silent fallback.
+Schema (inferred): Viewer (accessRevokedAt), Link (allowList, deletedAt, isArchived) enforce revocation/archival well, but no link expiry beyond that.
+
+
+Minor/Usability Issues
+
+Domain-specific main URL fallback (dataroom.bermudafranchisegroup.com).
+Dub analytics lead tracking on new signups (cookie-dependent).
+No explicit input sanitization beyond NextAuth defaults.
+
+Recommended Overall Fixes & Improvements
+
+Immediate Security:
+Disable allowDangerousEmailAccountLinking.
+Move admin logic to env/DB + add MFA.
+Enforce HTTPS + adjust sameSite.
+Fail-closed rate limiting.
+
+Refactor:
+Combine signIn DB queries.
+Simplify redirect/magic link domain logic.
+Use role-based post-login routing.
+
+Testing: Leverage existing 1599+ tests; add cases for admin bypass, linking attacks, redirect abuse, rate limit failures.
+Best Practice: Add CSP, rate limit on email sends, session invalidation on revocation/logout, audit log all attempts (already partially present via lib/audit).
+
+The system is well-structured overall (database sessions, fresh role fetch, explicit viewer/link gating for LPs, admin bypass), but has several sharp edges typical of OAuth/magic-link setups in secure datarooms. The signIn callback is the main choke point and is reasonably robust when configured correctly.

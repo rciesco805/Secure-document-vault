@@ -59,71 +59,55 @@ const getAuthOptions = (req: NextApiRequest): NextAuthOptions => {
         if (isAdmin) {
           console.log("[AUTH] Admin access granted for:", emailLower);
         } else {
-          // Check if user exists as a viewer in the system (any viewer record counts)
-          const existingViewer = await prisma.viewer.findFirst({
-            where: {
-              email: { equals: emailLower, mode: "insensitive" },
-              accessRevokedAt: null, // Not revoked
-            },
-            select: { id: true, email: true, teamId: true }
-          });
-          
-          console.log("[AUTH] Existing viewer check:", emailLower, "found:", !!existingViewer);
-          
-          // Also check if user is a member of any viewer group (added via quick link or invite)
-          const viewerWithGroups = await prisma.viewer.findFirst({
-            where: {
-              email: { equals: emailLower, mode: "insensitive" },
-              groups: {
-                some: {}
-              }
-            },
-            select: { id: true, email: true }
-          });
-          
-          console.log("[AUTH] Viewer group membership check:", emailLower, "found:", !!viewerWithGroups);
-          
-          // Also check if email is in any link's allowList (UI adds members this way)
-          let isInAllowList = false;
-          let foundLinkId: string | null = null;
-          if (!existingViewer && !viewerWithGroups) {
-            const linkWithEmail = await prisma.link.findFirst({
+          // OPTIMIZED: Run all authorization checks in a single transaction
+          // This reduces 3+ separate queries to 1 batched database round-trip
+          const [existingViewer, viewerWithGroups, linkWithEmail] = await prisma.$transaction([
+            // Check 1: Direct viewer record (not revoked)
+            prisma.viewer.findFirst({
+              where: {
+                email: { equals: emailLower, mode: "insensitive" },
+                accessRevokedAt: null,
+              },
+              select: { id: true, email: true, teamId: true }
+            }),
+            // Check 2: Viewer with group membership
+            prisma.viewer.findFirst({
+              where: {
+                email: { equals: emailLower, mode: "insensitive" },
+                groups: { some: {} }
+              },
+              select: { id: true, email: true }
+            }),
+            // Check 3: Email in any link's allowList
+            prisma.link.findFirst({
               where: {
                 allowList: { has: emailLower },
                 deletedAt: null,
                 isArchived: false,
               },
               select: { id: true, name: true }
-            });
-            isInAllowList = !!linkWithEmail;
-            foundLinkId = linkWithEmail?.id || null;
-            console.log("[AUTH] Link allowList check:", emailLower, "found:", isInAllowList, "linkId:", foundLinkId);
-          }
+            }),
+          ]);
           
-          if (!existingViewer && !viewerWithGroups && !isInAllowList) {
-            // Log detailed rejection info to help debug
-            const allViewers = await prisma.viewer.count({
-              where: { email: { equals: emailLower, mode: "insensitive" } }
-            });
-            const allLinks = await prisma.link.count({
-              where: { deletedAt: null, isArchived: false }
-            });
-            console.log("[AUTH] REJECTION DEBUG:", {
-              email: emailLower,
-              viewerRecordsFound: allViewers,
-              activeLinksTotal: allLinks,
-              existingViewer: false,
-              viewerHasGroups: false,
-              emailInAllowList: false,
-            });
+          const hasAccess = !!(existingViewer || viewerWithGroups || linkWithEmail);
+          
+          console.log("[AUTH] Authorization check for:", emailLower, {
+            existingViewer: !!existingViewer,
+            viewerWithGroups: !!viewerWithGroups,
+            linkAllowList: !!linkWithEmail,
+            hasAccess,
+          });
+          
+          if (!hasAccess) {
             log({
-              message: `Unauthorized login attempt: ${user.email} - not a viewer, not in group, not in allowList (viewers: ${allViewers}, links: ${allLinks})`,
+              message: `Unauthorized login attempt: ${user.email} - not a viewer, not in group, not in allowList`,
               type: "error",
             });
             return false;
           }
           
-          console.log("[AUTH] Access granted via", existingViewer ? "existing viewer record" : (viewerWithGroups ? "viewer group membership" : "link allowList"), "for:", emailLower);
+          const accessMethod = existingViewer ? "viewer record" : (viewerWithGroups ? "group membership" : "link allowList");
+          console.log("[AUTH] Access granted via", accessMethod, "for:", emailLower);
         }
 
         // Apply rate limiting for signin attempts (optional - skip if Redis unavailable)

@@ -129,7 +129,10 @@ Same login page as admins (shared auth infrastructure).
 2. Admin Check
    └── Returns false → continues to viewer checks
    
-3. Authorization Checks (THREE methods, any one grants access):
+3. Authorization Checks (THREE methods in ONE transaction, any grants access):
+   
+   // OPTIMIZED: All checks run in a single prisma.$transaction()
+   // This reduces 3+ queries to 1 batched database round-trip
    
    ├── Method A: Direct Viewer Record
    │   └── prisma.viewer.findFirst({
@@ -150,11 +153,7 @@ Same login page as admins (shared auth infrastructure).
              isArchived: false
            })
 
-4. If ALL checks fail → Reject with detailed logging:
-   - Viewer records count
-   - Active links count
-   - Analytics tracking
-   - Error logging
+4. If ALL checks fail → Reject with error logging
 
 5. If ANY check passes → Allow access
 ```

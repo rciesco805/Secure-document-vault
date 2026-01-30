@@ -193,6 +193,16 @@ Recent errors tracked and resolved:
 - Reports page in admin settings for viewing generated reports
 - Scheduled report automation
 
+### Security Backlog (From January 30, 2026 Security Review)
+| Priority | Issue | Status | Description |
+|----------|-------|--------|-------------|
+| HIGH | `allowDangerousEmailAccountLinking` | Pending | Disable in OAuth providers to prevent account takeover |
+| HIGH | Rate limiting fails open | Pending | Make rate limiting fail-closed (reject on Redis failure) |
+| MEDIUM | MFA for admins | Pending | Add TOTP/Passkey requirement for admin accounts |
+| MEDIUM | Cookie sameSite config | Pending | Use environment-aware sameSite (lax in dev, none in prod) |
+| LOW | Magic link URL rewriting | Pending | Simplify domain rewrite logic in sendVerificationRequest |
+| DONE | Multiple signIn queries | Fixed | Combined 3+ queries into single `$transaction()` call |
+
 ### Rollbar Integration
 Access Rollbar logs programmatically:
 ```bash
@@ -200,7 +210,8 @@ curl -s "https://api.rollbar.com/api/1/items?access_token=$ROLLBAR_READ_TOKEN&st
 ```
 
 ### Recent Commits (January 30, 2026)
-1. `eb35c4b` - Add comprehensive module for generating various types of reports
-2. `103e619` - Address remaining useSession crash errors in team and cache sync functions
-3. `ecad730` - Update links and contact information to use the correct company domain
-4. `b0d7533` - Grant admin access by checking user roles in the database
+1. Optimize signIn callback - Combine 3+ authorization queries into single `$transaction()` call
+2. `eb35c4b` - Add comprehensive module for generating various types of reports
+3. `103e619` - Address remaining useSession crash errors in team and cache sync functions
+4. `ecad730` - Update links and contact information to use the correct company domain
+5. `b0d7533` - Grant admin access by checking user roles in the database

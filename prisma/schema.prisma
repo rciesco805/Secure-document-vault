@@ -77,6 +77,11 @@ model User {
   // Signature documents created by this user
   createdSignatureDocuments SignatureDocument[] @relation("SignatureDocumentOwner")
 
+  // Push Notifications
+  pushSubscriptions       PushSubscription[]
+  notificationPreferences NotificationPreference?
+  notifications           Notification[]
+
   @@index([role])
 }
 
@@ -1406,6 +1411,10 @@ model Team {
   // Audit logs
   auditLogs AuditLog[]
 
+  // Advanced Reporting
+  reportTemplates  ReportTemplate[]
+  generatedReports GeneratedReport[]
+
   plan           String    @default("datarooms-plus")
   stripeId       String?   @unique // Stripe customer ID
   subscriptionId String?   @unique // Stripe subscription ID
@@ -2664,4 +2673,142 @@ model WorkflowStepLog {
 
   @@index([executionId])
   @@index([workflowStepId])
+}
+
+// --- Push Notifications ---
+// Web Push notification subscriptions and preferences
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  endpoint  String   @unique
+  p256dh    String   // Public key for encryption
+  auth      String   // Auth secret for encryption
+  userAgent String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model NotificationPreference {
+  id     String @id @default(cuid())
+  userId String @unique
+
+  // Email notification preferences
+  emailDocumentViewed    Boolean @default(true)
+  emailSignatureComplete Boolean @default(true)
+  emailCapitalCall       Boolean @default(true)
+  emailDistribution      Boolean @default(true)
+  emailNewDocument       Boolean @default(true)
+  emailWeeklyDigest      Boolean @default(false)
+
+  // Push notification preferences
+  pushDocumentViewed    Boolean @default(false)
+  pushSignatureComplete Boolean @default(true)
+  pushCapitalCall       Boolean @default(true)
+  pushDistribution      Boolean @default(true)
+  pushNewDocument       Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  type      NotificationType
+  title     String
+  body      String
+  data      Json?            // Additional context (documentId, linkId, etc.)
+  read      Boolean          @default(false)
+  sent      Boolean          @default(false) // Whether push was sent
+  createdAt DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, read])
+  @@index([userId, createdAt])
+}
+
+enum NotificationType {
+  DOCUMENT_VIEWED
+  SIGNATURE_COMPLETE
+  SIGNATURE_REQUESTED
+  CAPITAL_CALL
+  DISTRIBUTION
+  NEW_DOCUMENT
+  ACCREDITATION_UPDATE
+  SYSTEM
+}
+
+// --- Advanced Reporting ---
+// Custom report builder and saved reports
+
+model ReportTemplate {
+  id          String       @id @default(cuid())
+  teamId      String
+  name        String
+  description String?
+  reportType  ReportType
+  config      Json         // Report configuration (columns, filters, grouping, etc.)
+  schedule    Json?        // Optional schedule config for automated reports
+  isDefault   Boolean      @default(false)
+  createdById String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  team    Team             @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  reports GeneratedReport[]
+
+  @@index([teamId])
+  @@index([reportType])
+}
+
+model GeneratedReport {
+  id         String       @id @default(cuid())
+  templateId String?
+  teamId     String
+  name       String
+  reportType ReportType
+  config     Json         // Snapshot of config used to generate
+  data       Json?        // Cached report data (for quick viewing)
+  fileUrl    String?      // URL to exported file (PDF, CSV, Excel)
+  fileType   String?      // pdf, csv, xlsx
+  status     ReportStatus @default(PENDING)
+  error      String?
+  createdById String?
+  generatedAt DateTime?
+  expiresAt   DateTime?   // When cached data/file expires
+  createdAt   DateTime    @default(now())
+
+  template ReportTemplate? @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  team     Team            @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@index([teamId])
+  @@index([templateId])
+  @@index([status])
+}
+
+enum ReportType {
+  INVESTOR_SUMMARY      // Investor overview and commitments
+  CAPITAL_ACTIVITY      // Capital calls and distributions
+  DOCUMENT_ANALYTICS    // Document views and engagement
+  VISITOR_ANALYTICS     // Visitor tracking across links
+  SIGNATURE_STATUS      // E-signature completion status
+  FUND_PERFORMANCE      // Fund performance metrics
+  COMPLIANCE_AUDIT      // Accreditation and compliance status
+  CUSTOM                // User-defined custom report
+}
+
+enum ReportStatus {
+  PENDING
+  GENERATING
+  COMPLETED
+  FAILED
+  EXPIRED
 }

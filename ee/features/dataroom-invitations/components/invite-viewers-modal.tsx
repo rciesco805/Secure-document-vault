@@ -67,7 +67,8 @@ export function InviteViewersModal({
 }: InviteViewersModalProps) {
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
-  const { data: session } = useSession();
+  const sessionData = useSession();
+  const session = sessionData?.data;
   const senderEmail = session?.user?.email ?? "you";
 
   const { data: dataroomData } = useSWR<{ name: string }>(

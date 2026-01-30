@@ -28,7 +28,8 @@ import { AddTeamModal } from "../teams/add-team-modal";
 
 export const BlockingModal = () => {
   const { isFree, isTrial } = usePlan();
-  const { data: session } = useSession();
+  const sessionData = useSession();
+  const session = sessionData?.data;
   const { team } = useGetTeam()!;
   const { setCurrentTeam }: TeamContextType = useTeam() || initialState;
   const { teams } = useTeams();

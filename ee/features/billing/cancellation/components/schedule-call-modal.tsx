@@ -22,7 +22,8 @@ export function ScheduleCallModal({
   onDecline,
 }: ScheduleCallModalProps) {
   const [calLoaded, setCalLoaded] = useState(false);
-  const { data: session } = useSession();
+  const sessionData = useSession();
+  const session = sessionData?.data;
 
   useEffect(() => {
     if (open) {

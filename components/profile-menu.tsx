@@ -48,7 +48,9 @@ interface Article {
 }
 
 const ProfileMenu = ({ className, size }: ProfileMenuProps) => {
-  const { data: session, status } = useSession();
+  const sessionData = useSession();
+  const session = sessionData?.data;
+  const status = sessionData?.status ?? "loading";
   const [searchOpen, setSearchOpen] = useState(false);
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(false);

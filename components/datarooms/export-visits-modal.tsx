@@ -31,7 +31,8 @@ export function ExportVisitsModal({
   groupName,
   onClose,
 }: ExportVisitsModalProps) {
-  const { data: session } = useSession();
+  const sessionData = useSession();
+  const session = sessionData?.data;
   const [exportStatus, setExportStatus] = useState<ExportStatus | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [viewCount, setViewCount] = useState<number | null>(null);

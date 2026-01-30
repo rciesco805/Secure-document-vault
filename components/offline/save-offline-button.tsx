@@ -38,7 +38,8 @@ export function SaveOfflineButton({
   variant = "outline",
   className,
 }: SaveOfflineButtonProps) {
-  const { data: session } = useSession();
+  const sessionData = useSession();
+  const session = sessionData?.data;
   const [isCached, setIsCached] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isSupported, setIsSupported] = useState(true);

@@ -99,7 +99,8 @@ export default function UploadZone({
   const { plan, isFree, isTrial } = usePlan();
   const router = useRouter();
   const teamInfo = useTeam();
-  const { data: session } = useSession();
+  const sessionData = useSession();
+  const session = sessionData?.data;
   const { limits, canAddDocuments } = useLimits();
   const remainingDocuments = limits?.documents
     ? limits?.documents - limits?.usage?.documents

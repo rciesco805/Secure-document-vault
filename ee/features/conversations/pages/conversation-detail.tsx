@@ -104,7 +104,8 @@ interface ConversationSummary {
 export default function ConversationDetailPage() {
   const router = useRouter();
   const { dataroom } = useDataroom();
-  const { data: session } = useSession();
+  const sessionData = useSession();
+  const session = sessionData?.data;
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isPublishFAQModalOpen, setIsPublishFAQModalOpen] = useState(false);

@@ -32,7 +32,9 @@ const UploadAvatar = ({
   buttonText,
 }: UploadAvatarProps) => {
   const [uploading, setUploading] = useState(false);
-  const { data: session, update } = useSession();
+  const sessionData = useSession();
+  const session = sessionData?.data;
+  const update = sessionData?.update;
   const [image, setImage] = useState<string | null>(null);
 
   useEffect(() => {

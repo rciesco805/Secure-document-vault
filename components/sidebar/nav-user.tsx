@@ -53,7 +53,9 @@ interface Article {
 }
 
 export function NavUser() {
-  const { data: session, status } = useSession();
+  const sessionData = useSession();
+  const session = sessionData?.data;
+  const status = sessionData?.status ?? "loading";
   const { isMobile } = useSidebar();
 
   const [searchOpen, setSearchOpen] = useState(false);

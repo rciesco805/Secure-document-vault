@@ -48,7 +48,9 @@ const cleanupLegacyStorage = () => {
 };
 
 export const TeamProvider = ({ children }: TeamContextProps): React.ReactNode => {
-  const { data: session, status: sessionStatus } = useSession();
+  const sessionData = useSession();
+  const session = sessionData?.data;
+  const sessionStatus = sessionData?.status ?? "loading";
   const { teams, loading: teamsLoading } = useTeams();
   const [currentTeam, setCurrentTeamState] = useState<Team | null>(null);
   const [hasHydrated, setHasHydrated] = useState(false);

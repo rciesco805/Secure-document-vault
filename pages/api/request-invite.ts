@@ -3,7 +3,8 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { z } from "zod";
 
 import { createAdminMagicLink } from "@/lib/auth/admin-magic-link";
-import { getAllAdminEmails } from "@/lib/constants/admins";
+import { getAllAdminEmails, isUserAdminAsync } from "@/lib/constants/admins";
+import prisma from "@/lib/prisma";
 import { sendEmail } from "@/lib/resend";
 import { strictRateLimiter } from "@/lib/security/rate-limiter";
 
@@ -37,12 +38,49 @@ export default async function handler(
     }
 
     const { email, fullName, company } = validation.data;
+    const emailLower = email.toLowerCase().trim();
+
+    // Server-side defense-in-depth: check if user already has access
+    const isAdmin = await isUserAdminAsync(emailLower);
+    if (isAdmin) {
+      return res.status(200).json({ 
+        message: "You already have admin access. Please use the admin login.",
+        hasAccess: true,
+        isAdmin: true,
+      });
+    }
+
+    // Check if user is already a viewer
+    const existingViewer = await prisma.viewer.findFirst({
+      where: {
+        email: { equals: emailLower, mode: "insensitive" },
+        accessRevokedAt: null,
+      },
+      select: { id: true }
+    });
+    if (existingViewer) {
+      return res.status(200).json({ 
+        message: "You already have access. Please enter your email on the login page.",
+        hasAccess: true,
+        isAdmin: false,
+      });
+    }
 
     const baseUrl = process.env.NEXTAUTH_URL || "https://dataroom.bermudafranchisegroup.com";
     const quickAddPath = `/admin/quick-add?email=${encodeURIComponent(email)}`;
     
     // Get admin emails dynamically from the database
-    const adminEmails = await getAllAdminEmails();
+    const allAdminEmails = await getAllAdminEmails();
+    
+    // Filter out the requester's email - they shouldn't get notified about their own request
+    const adminEmails = allAdminEmails.filter(
+      (adminEmail) => adminEmail.toLowerCase().trim() !== emailLower
+    );
+    
+    if (adminEmails.length === 0) {
+      console.log("[REQUEST_INVITE] No admins to notify (requester is only admin)");
+      return res.status(200).json({ message: "Request sent successfully" });
+    }
     
     for (const adminEmail of adminEmails) {
       const magicLinkResult = await createAdminMagicLink({

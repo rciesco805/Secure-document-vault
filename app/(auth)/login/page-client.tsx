@@ -91,18 +91,49 @@ export default function Login() {
 
     setInviteLoading(true);
     try {
+      const checkRes = await fetch("/api/auth/check-visitor", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: inviteForm.email }),
+      });
+      const { isAuthorized, isAdmin } = await checkRes.json();
+      
+      if (isAuthorized) {
+        setInviteLoading(false);
+        setInviteDialogOpen(false);
+        if (isAdmin) {
+          toast.info("You already have admin access. Please use the admin login or enter your email below.");
+        } else {
+          toast.info("You already have access! Please enter your email below to receive a login link.");
+        }
+        setEmail(inviteForm.email);
+        setInviteForm({ email: "", fullName: "", company: "" });
+        return;
+      }
+
       const response = await fetch("/api/request-invite", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(inviteForm),
       });
 
-      if (response.ok) {
+      const data = await response.json();
+      
+      if (data.hasAccess) {
+        setInviteDialogOpen(false);
+        if (data.isAdmin) {
+          toast.info("You already have admin access. Please use the admin login or enter your email below.");
+        } else {
+          toast.info("You already have access! Please enter your email below to receive a login link.");
+        }
+        setEmail(inviteForm.email);
+        setInviteForm({ email: "", fullName: "", company: "" });
+      } else if (response.ok) {
         toast.success("Request sent! We'll be in touch soon.");
         setInviteDialogOpen(false);
         setInviteForm({ email: "", fullName: "", company: "" });
       } else {
-        toast.error("Failed to send request. Please try again.");
+        toast.error(data.message || "Failed to send request. Please try again.");
       }
     } catch (error) {
       toast.error("An error occurred. Please try again.");

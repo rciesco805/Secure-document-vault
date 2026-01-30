@@ -3,7 +3,7 @@
 **Prepared for External Review**  
 **Platform:** Bermuda Franchise Group Investor Portal  
 **Production URL:** https://dataroom.bermudafranchisegroup.com  
-**Last Updated:** January 2026
+**Last Updated:** January 30, 2026
 
 ---
 

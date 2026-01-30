@@ -29,7 +29,9 @@ export default function AdminLoginClient() {
     return decoded;
   }, [searchParams]);
   const router = useRouter();
-  const { data: session, status } = useSession();
+  const sessionData = useSession();
+  const session = sessionData?.data;
+  const status = sessionData?.status ?? "loading";
 
   useEffect(() => {
     if (status === "authenticated") {

@@ -38,7 +38,8 @@ interface AISettings {
 export default function AISettingsPageClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { data: session } = useSession();
+  const sessionData = useSession();
+  const session = sessionData?.data;
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
   const { team, loading: teamLoading } = useGetTeam();

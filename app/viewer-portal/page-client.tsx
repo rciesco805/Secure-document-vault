@@ -45,7 +45,9 @@ interface Team {
 
 export default function ViewerPortalPageClient() {
   const router = useRouter();
-  const { data: session, status } = useSession();
+  const sessionData = useSession();
+  const session = sessionData?.data;
+  const status = sessionData?.status ?? "loading";
   const hasRedirected = useRef(false);
   const [isRedirecting, setIsRedirecting] = useState(false);
 

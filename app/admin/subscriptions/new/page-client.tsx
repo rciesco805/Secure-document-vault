@@ -55,7 +55,9 @@ interface Fund {
 
 export default function NewSubscriptionPageClient() {
   const router = useRouter();
-  const { data: session, status: sessionStatus } = useSession();
+  const sessionData = useSession();
+  const session = sessionData?.data;
+  const sessionStatus = sessionData?.status ?? "loading";
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
 

@@ -31,7 +31,9 @@ export default function WelcomeClient() {
   const [showSkipButtons, setShowSkipButtons] = useState(false);
   const [isCheckingAdmin, setIsCheckingAdmin] = useState(true);
   const [sessionTimeout, setSessionTimeout] = useState(false);
-  const { data: session, status } = useSession();
+  const sessionData = useSession();
+  const session = sessionData?.data;
+  const status = sessionData?.status ?? "loading";
   const signupEventSent = useRef(false);
   const adminCheckDone = useRef(false);
 

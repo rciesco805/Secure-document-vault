@@ -130,7 +130,9 @@ interface FundDetailsData {
 
 export default function LPDashboardClient() {
   const router = useRouter();
-  const { data: session, status: sessionStatus } = useSession();
+  const sessionData = useSession();
+  const session = sessionData?.data;
+  const sessionStatus = sessionData?.status ?? "loading";
   const [investor, setInvestor] = useState<InvestorData | null>(null);
   const [capitalCalls, setCapitalCalls] = useState<CapitalCall[]>([]);
   const [isLoading, setIsLoading] = useState(true);

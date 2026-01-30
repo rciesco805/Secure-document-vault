@@ -43,7 +43,9 @@ interface FundSettings {
 }
 
 export default function FundSettingsPage() {
-  const { data: session, status } = useSession();
+  const sessionData = useSession();
+  const session = sessionData?.data;
+  const status = sessionData?.status ?? "loading";
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [funds, setFunds] = useState<Fund[]>([]);

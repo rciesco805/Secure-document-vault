@@ -14,7 +14,9 @@ import { validateEmail } from "@/lib/utils/validate-email";
 
 export default function GeneralPageClient() {
   const router = useRouter();
-  const { data: session, update } = useSession();
+  const sessionData = useSession();
+  const session = sessionData?.data;
+  const update = sessionData?.update;
 
   return (
     <AppLayout>

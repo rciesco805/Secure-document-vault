@@ -45,7 +45,9 @@ import {
 import { usePWAStatus } from "@/components/pwa-install";
 
 export default function OfflineDocumentsClient() {
-  const { data: session, status } = useSession();
+  const sessionData = useSession();
+  const session = sessionData?.data;
+  const status = sessionData?.status ?? "loading";
   const router = useRouter();
   const { isOnline } = usePWAStatus();
   

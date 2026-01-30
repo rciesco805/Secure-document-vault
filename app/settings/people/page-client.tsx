@@ -46,7 +46,8 @@ export default function PeoplePageClient() {
     useState<boolean>(false);
   const [leavingUserId, setLeavingUserId] = useState<string>("");
 
-  const { data: session } = useSession();
+  const sessionData = useSession();
+  const session = sessionData?.data;
   const { team, loading } = useGetTeam()!;
   const teamInfo = useTeam();
   const { teams } = useTeams();

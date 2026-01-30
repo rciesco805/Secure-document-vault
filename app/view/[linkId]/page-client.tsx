@@ -141,7 +141,6 @@ export default function ViewPage({
   // Auto-verify authenticated users from viewer portal
   useEffect(() => {
     const autoVerifyAuthenticatedUser = async () => {
-      const linkId = linkId as string;
       const userEmail = (session?.user as CustomUser)?.email;
       
       if (

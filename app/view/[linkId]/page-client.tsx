@@ -47,13 +47,13 @@ type WorkflowLinkData = {
 };
 
 export interface ViewPageProps {
-  linkData: DocumentLinkData | DataroomLinkData | WorkflowLinkData;
-  notionData: {
+  linkData?: DocumentLinkData | DataroomLinkData | WorkflowLinkData;
+  notionData?: {
     rootNotionPageId: string | null;
     recordMap: ExtendedRecordMap | null;
     theme: NotionTheme | null;
   };
-  meta: {
+  meta?: {
     enableCustomMetatag: boolean;
     metaTitle: string | null;
     metaDescription: string | null;
@@ -61,30 +61,30 @@ export interface ViewPageProps {
     metaUrl: string | null;
     metaFavicon: string | null;
   };
-  showPoweredByBanner: boolean;
-  showAccountCreationSlide: boolean;
-  useAdvancedExcelViewer: boolean;
-  useCustomAccessForm: boolean;
-  logoOnAccessForm: boolean;
+  showPoweredByBanner?: boolean;
+  showAccountCreationSlide?: boolean;
+  useAdvancedExcelViewer?: boolean;
+  useCustomAccessForm?: boolean;
+  logoOnAccessForm?: boolean;
   dataroomIndexEnabled?: boolean;
   annotationsEnabled?: boolean;
 }
 
 
 export default function ViewPage({
-  linkData,
-  notionData,
-  meta,
-  showPoweredByBanner,
-  showAccountCreationSlide,
-  useAdvancedExcelViewer,
-  useCustomAccessForm,
-  logoOnAccessForm,
-  dataroomIndexEnabled,
-  annotationsEnabled,
+  linkData: initialLinkData,
+  notionData: initialNotionData,
+  meta: initialMeta,
+  showPoweredByBanner = false,
+  showAccountCreationSlide = false,
+  useAdvancedExcelViewer = false,
+  useCustomAccessForm = false,
+  logoOnAccessForm = false,
+  dataroomIndexEnabled = false,
+  annotationsEnabled = false,
   error,
   notionError,
-}: ViewPageProps & { error?: boolean; notionError?: boolean }) {
+}: ViewPageProps & { error?: boolean; notionError?: boolean } = {}) {
   const router = useRouter();
   const params = useParams();
   const searchParams = useSearchParams();
@@ -96,6 +96,35 @@ export default function ViewPage({
   const sessionResult = useSession();
   const session = sessionResult?.data ?? null;
   const rawStatus = sessionResult?.status ?? "loading";
+  
+  // State for data fetching
+  const [linkData, setLinkData] = useState(initialLinkData);
+  const [notionData, setNotionData] = useState(initialNotionData);
+  const [meta, setMeta] = useState(initialMeta);
+  const [isDataLoading, setIsDataLoading] = useState(!initialLinkData);
+
+  // Fetch data if not provided as props
+  useEffect(() => {
+    if (initialLinkData || !linkId) return;
+    
+    const fetchData = async () => {
+      try {
+        const response = await fetch(`/api/links/${linkId}`);
+        if (response.ok) {
+          const data = await response.json();
+          setLinkData(data.linkData);
+          setNotionData(data.notionData);
+          setMeta(data.meta);
+        }
+      } catch (error) {
+        console.error("Failed to fetch link data:", error);
+      } finally {
+        setIsDataLoading(false);
+      }
+    };
+    
+    fetchData();
+  }, [linkId, initialLinkData]);
   const [storedToken, setStoredToken] = useState<string | undefined>(undefined);
   const [storedEmail, setStoredEmail] = useState<string | undefined>(undefined);
   const [magicLinkVerified, setMagicLinkVerified] = useState<boolean>(false);
@@ -266,6 +295,15 @@ export default function ViewPage({
     );
   }
 
+  // Show loading while data is being fetched
+  if (isDataLoading || !linkData) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <LoadingSpinner className="h-20 w-20" />
+      </div>
+    );
+  }
+
   const verifiedEmail = queryEmail || "";
   const disableEditEmail = queryD || "";
   const previewToken = queryPreviewToken;
@@ -279,14 +317,16 @@ export default function ViewPage({
 
     return (
       <>
-        <CustomMetaTag
-          favicon={meta.metaFavicon}
-          enableBranding={false}
-          title="Access Workflow | BF Fund Dataroom"
-          description={null}
-          imageUrl={null}
-          url={meta.metaUrl ?? ""}
-        />
+        {meta && (
+          <CustomMetaTag
+            favicon={meta.metaFavicon}
+            enableBranding={false}
+            title="Access Workflow | BF Fund Dataroom"
+            description={null}
+            imageUrl={null}
+            url={meta.metaUrl ?? ""}
+          />
+        )}
         <WorkflowAccessView entryLinkId={entryLinkId} brand={brand} />
       </>
     );
@@ -301,16 +341,18 @@ export default function ViewPage({
     if (!linkData || isDocSessionLoading) {
       return (
         <>
-          <CustomMetaTag
-            favicon={meta.metaFavicon}
-            enableBranding={meta.enableCustomMetatag ?? false}
-            title={
-              meta.metaTitle ?? `${link?.document?.name} | BF Fund Dataroom`
-            }
-            description={meta.metaDescription ?? null}
-            imageUrl={meta.metaImage ?? null}
-            url={meta.metaUrl ?? ""}
-          />
+          {meta && (
+            <CustomMetaTag
+              favicon={meta.metaFavicon}
+              enableBranding={meta.enableCustomMetatag ?? false}
+              title={
+                meta.metaTitle ?? `${link?.document?.name} | BF Fund Dataroom`
+              }
+              description={meta.metaDescription ?? null}
+              imageUrl={meta.metaImage ?? null}
+              url={meta.metaUrl ?? ""}
+            />
+          )}
           <div className="flex h-screen items-center justify-center">
             <LoadingSpinner className="h-20 w-20" />
           </div>
@@ -345,22 +387,24 @@ export default function ViewPage({
 
     return (
       <>
-        <CustomMetaTag
-          favicon={meta.metaFavicon}
-          enableBranding={meta.enableCustomMetatag ?? false}
-          title={
-            meta.metaTitle ?? `${link?.document?.name} | BF Fund Dataroom`
-          }
-          description={meta.metaDescription ?? null}
-          imageUrl={meta.metaImage ?? null}
-          url={meta.metaUrl ?? ""}
-        />
+        {meta && (
+          <CustomMetaTag
+            favicon={meta.metaFavicon}
+            enableBranding={meta.enableCustomMetatag ?? false}
+            title={
+              meta.metaTitle ?? `${link?.document?.name} | BF Fund Dataroom`
+            }
+            description={meta.metaDescription ?? null}
+            imageUrl={meta.metaImage ?? null}
+            url={meta.metaUrl ?? ""}
+          />
+        )}
         <DocumentView
           link={link}
           userEmail={verifiedEmail ?? storedEmail ?? userEmail}
           userId={userId}
           isProtected={!!(emailProtected || linkPassword || enableAgreement)}
-          notionData={notionData}
+          notionData={notionData ?? { rootNotionPageId: null, recordMap: null, theme: null }}
           brand={brand}
           showPoweredByBanner={showPoweredByBanner}
           showAccountCreationSlide={showAccountCreationSlide}
@@ -393,16 +437,18 @@ export default function ViewPage({
     if (shouldShowLoading) {
       return (
         <>
-          <CustomMetaTag
-            favicon={meta.metaFavicon}
-            enableBranding={meta.enableCustomMetatag ?? false}
-            title={
-              meta.metaTitle ?? `${link?.dataroom?.name} | BF Fund Dataroom`
-            }
-            description={meta.metaDescription ?? null}
-            imageUrl={meta.metaImage ?? null}
-            url={meta.metaUrl ?? ""}
-          />
+          {meta && (
+            <CustomMetaTag
+              favicon={meta.metaFavicon}
+              enableBranding={meta.enableCustomMetatag ?? false}
+              title={
+                meta.metaTitle ?? `${link?.dataroom?.name} | BF Fund Dataroom`
+              }
+              description={meta.metaDescription ?? null}
+              imageUrl={meta.metaImage ?? null}
+              url={meta.metaUrl ?? ""}
+            />
+          )}
           <div className="flex h-screen items-center justify-center bg-black">
             <LoadingSpinner className="h-20 w-20" />
           </div>
@@ -437,16 +483,18 @@ export default function ViewPage({
 
     return (
       <>
-        <CustomMetaTag
-          favicon={meta.metaFavicon}
-          enableBranding={meta.enableCustomMetatag ?? false}
-          title={
-            meta.metaTitle ?? `${link?.dataroom?.name} | BF Fund Dataroom`
-          }
-          description={meta.metaDescription ?? null}
-          imageUrl={meta.metaImage ?? null}
-          url={meta.metaUrl ?? ""}
-        />
+        {meta && (
+          <CustomMetaTag
+            favicon={meta.metaFavicon}
+            enableBranding={meta.enableCustomMetatag ?? false}
+            title={
+              meta.metaTitle ?? `${link?.dataroom?.name} | BF Fund Dataroom`
+            }
+            description={meta.metaDescription ?? null}
+            imageUrl={meta.metaImage ?? null}
+            url={meta.metaUrl ?? ""}
+          />
+        )}
         <DataroomView
           link={link}
           userEmail={verifiedEmail ?? storedEmail ?? userEmail}
@@ -466,4 +514,6 @@ export default function ViewPage({
       </>
     );
   }
+
+  return null;
 }

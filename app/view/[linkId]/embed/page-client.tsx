@@ -14,14 +14,40 @@ import DocumentView from "@/components/view/document-view";
 
 import { ViewPageProps } from "../page-client";
 
+type EmbedPageProps = Partial<ViewPageProps>;
 
-export default function EmbedPage(props: ViewPageProps) {
+export default function EmbedPage(props: EmbedPageProps = {}) {
   const router = useRouter();
   const params = useParams();
   const searchParams = useSearchParams();
   const linkId = (params?.linkId as string) ?? "";
   const [isEmbedded, setIsEmbedded] = useState<boolean | null>(null);
+  const [linkData, setLinkData] = useState(props.linkData);
+  const [notionData, setNotionData] = useState(props.notionData);
+  const [isLoading, setIsLoading] = useState(!props.linkData);
   const analytics = useAnalytics();
+
+  // Fetch data if not provided as props
+  useEffect(() => {
+    if (props.linkData || !linkId) return;
+    
+    const fetchData = async () => {
+      try {
+        const response = await fetch(`/api/links/${linkId}`);
+        if (response.ok) {
+          const data = await response.json();
+          setLinkData(data.linkData);
+          setNotionData(data.notionData);
+        }
+      } catch (error) {
+        console.error("Failed to fetch link data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchData();
+  }, [linkId, props.linkData]);
 
   useEffect(() => {
     if (!linkId) return;
@@ -68,12 +94,22 @@ export default function EmbedPage(props: ViewPageProps) {
   const verifiedEmail = searchParams?.get("email") || "";
   const disableEditEmail = searchParams?.get("d") || "";
   const previewToken = searchParams?.get("previewToken") || undefined;
-  const { linkType, brand } = props.linkData;
+
+  // Show loading while data is being fetched
+  if (isLoading || !linkData) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <LoadingSpinner className="h-20 w-20" />
+      </div>
+    );
+  }
+
+  const { linkType, brand } = linkData;
 
   // Render the document view for DOCUMENT_LINK
   if (linkType === "DOCUMENT_LINK") {
-    const { link } = props.linkData;
-    if (!props.linkData) {
+    const { link } = linkData;
+    if (!link) {
       return (
         <div className="flex h-screen items-center justify-center">
           <LoadingSpinner className="h-20 w-20" />
@@ -110,14 +146,14 @@ export default function EmbedPage(props: ViewPageProps) {
           userEmail={verifiedEmail}
           userId={null}
           isProtected={!!(emailProtected || linkPassword || enableAgreement)}
-          notionData={props.notionData}
+          notionData={notionData ?? { rootNotionPageId: null, recordMap: null, theme: null }}
           brand={brand}
-          showPoweredByBanner={props.showPoweredByBanner}
-          showAccountCreationSlide={props.showAccountCreationSlide}
-          useAdvancedExcelViewer={props.useAdvancedExcelViewer}
+          showPoweredByBanner={props.showPoweredByBanner ?? false}
+          showAccountCreationSlide={props.showAccountCreationSlide ?? false}
+          useAdvancedExcelViewer={props.useAdvancedExcelViewer ?? false}
           previewToken={previewToken}
           disableEditEmail={!!disableEditEmail}
-          useCustomAccessForm={props.useCustomAccessForm}
+          useCustomAccessForm={props.useCustomAccessForm ?? false}
           verifiedEmail={verifiedEmail}
           isEmbedded
         />
@@ -127,7 +163,7 @@ export default function EmbedPage(props: ViewPageProps) {
 
   // Render the dataroom view for DATAROOM_LINK
   if (linkType === "DATAROOM_LINK") {
-    const { link } = props.linkData;
+    const { link } = linkData;
     if (!link) {
       return (
         <div className="flex h-screen items-center justify-center">
@@ -168,11 +204,13 @@ export default function EmbedPage(props: ViewPageProps) {
           brand={brand as any}
           previewToken={previewToken}
           disableEditEmail={!!disableEditEmail}
-          useCustomAccessForm={props.useCustomAccessForm}
+          useCustomAccessForm={props.useCustomAccessForm ?? false}
           verifiedEmail={verifiedEmail}
           isEmbedded
         />
       </div>
     );
   }
+
+  return null;
 }

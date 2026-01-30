@@ -67,10 +67,14 @@ export const BadgeTooltip = ({
   linkText?: string;
   side?: "top" | "right" | "bottom" | "left";
 }) => {
+  const child = React.Children.count(children) === 1 && React.isValidElement(children) 
+    ? children 
+    : <span>{children}</span>;
+  
   return (
     <Tooltip>
       <TooltipTrigger asChild onClick={(e) => e.stopPropagation()}>
-        {children}
+        {child}
       </TooltipTrigger>
       <TooltipPortal>
         <TooltipContent
@@ -119,9 +123,13 @@ export const ButtonTooltip = ({
   children: React.ReactNode;
   link?: string;
 }) => {
+  const child = React.Children.count(children) === 1 && React.isValidElement(children) 
+    ? children 
+    : <span>{children}</span>;
+  
   return (
     <Tooltip>
-      <TooltipTrigger asChild>{children}</TooltipTrigger>
+      <TooltipTrigger asChild>{child}</TooltipTrigger>
       <TooltipPortal>
         <TooltipContent
           sideOffset={sideOffset}

@@ -6,6 +6,7 @@
 
 "use client";
 
+import * as React from "react";
 import { useEffect, useMemo, useState } from "react";
 
 import { formatDuration, intervalToDuration } from "date-fns";
@@ -51,13 +52,17 @@ export function TimestampTooltip({
   className,
   children,
 }: TimestampTooltipProps) {
+  const child = React.Children.count(children) === 1 && React.isValidElement(children) 
+    ? children 
+    : <span>{children}</span>;
+  
   if (!timestamp || new Date(timestamp).toString() === "Invalid Date")
     return <>{children}</>;
 
   return (
     <Tooltip>
       <TooltipTrigger asChild onClick={(e) => e.stopPropagation()}>
-        {children}
+        {child}
       </TooltipTrigger>
       <TooltipPortal>
         <TooltipContent

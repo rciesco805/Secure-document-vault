@@ -9,7 +9,9 @@ import {
 } from "./document-cache";
 
 export function useOfflineCacheSync() {
-  const { data: session, status } = useSession();
+  const sessionData = useSession();
+  const session = sessionData?.data;
+  const status = sessionData?.status;
 
   useEffect(() => {
     if (!isOfflineCacheSupported()) return;

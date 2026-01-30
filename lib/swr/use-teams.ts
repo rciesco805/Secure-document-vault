@@ -8,7 +8,8 @@ import { fetcher } from "@/lib/utils";
 
 export function useTeams() {
   const router = useRouter();
-  const { data: session } = useSession();
+  const sessionData = useSession();
+  const session = sessionData?.data;
 
   const { data: teams, isValidating } = useSWR<Team[]>(
     router.isReady && session ? "/api/teams" : null,

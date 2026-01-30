@@ -569,8 +569,9 @@ export default function ConversationDetailPageClient({ id, conversationId }: Con
                             <ConversationMessage
                               key={message.id}
                               message={message}
-                              isVisitor={message.viewerId !== null}
-                              isAdmin={true}
+                              isAuthor={message.userId !== null}
+                              senderEmail={conversation.participants?.[0]?.email || "Deleted Viewer"}
+                              isSelectable={true}
                               isSelected={
                                 message.id === selectedQuestionId ||
                                 message.id === selectedAnswerId

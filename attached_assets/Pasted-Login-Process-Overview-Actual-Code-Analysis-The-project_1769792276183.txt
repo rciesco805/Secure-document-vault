@@ -1,0 +1,90 @@
+Login Process Overview (Actual Code Analysis)
+The project uses NextAuth.js v4/v5 (with PrismaAdapter for database-backed accounts/sessions/users) in a hybrid Next.js setup (Pages Router dominant for auth routes). There is no traditional email/password Credentials provider. Authentication relies on:
+
+OAuth: GoogleProvider, LinkedInProvider (with allowDangerousEmailAccountLinking: true)
+EmailProvider (magic links via custom sendVerificationRequestEmail using Resend/Unsend, with domain fallback logic for dev/prod)
+Optional PasskeyProvider (Hanko integration, conditional)
+
+Core config lives in:
+
+pages/api/auth/[...nextauth].ts (handler + per-request options, custom signIn callback, events)
+lib/auth/auth-options.ts (providers, adapter, session config, callbacks, events)
+
+Session Strategy: "database" (30-day maxAge, 24h updateAge). Sessions stored in Prisma Session table. Cookies are httpOnly, secure: true, sameSite: "none" (cross-site friendly but requires HTTPS). No JWT strategy.
+User Model (inferred from session callback + PrismaAdapter usage): User has id, name, email, image, role (string, default "LP" in session callback if null). Role fetched fresh in session callback from DB to avoid stale data.
+Critical Gatekeeping: The signIn callback in [...nextauth].ts is highly restrictive and the primary security layer for both admin and LP flows.
+GP/Admin (General Partner) Dashboard Login Flow
+
+Initiation: User lands on login page (likely pages/auth/signin.tsx or /login – buttons for Google, LinkedIn, "Sign in with email" magic link form). No password field.
+Provider Flow:
+OAuth (Google/LinkedIn): Standard OAuth redirect → callback → account linking (via PrismaAdapter).
+Email: Magic link sent (sendVerificationRequestEmail), user clicks → verifies.
+
+signIn Callback Execution (key file: [...nextauth].ts):
+Blacklist check (isBlacklistedEmail from edge config).
+Admin check: isAdminEmail(emailLower) → calls DB query (Team/User with admin role or membership) + fallback to DEFAULT_ADMIN_EMAIL (likely env var).
+If admin → immediate allow (bypasses all viewer checks), logs "[AUTH] Admin access granted".
+Rate limit check (IP-based via checkRateLimit, Redis/edge if available; skips gracefully).
+Analytics (identifyUser, trackAnalytics "User Sign In Attempted").
+
+If Approved:
+events.signIn: Analytics "User Signed In", Dub lead tracking for new users (cookie-based).
+session callback (auth-options.ts): Fetches fresh User from Prisma, injects role (e.g., "ADMIN"), id, etc., into session.user as CustomUser.
+redirect callback: Typically sends to /viewer-redirect (or admin-specific path if role-based logic exists there).
+
+Post-Login:
+Protected admin routes (/admin/*, GP dashboard) use getServerSession + role check (role === "ADMIN" or Team membership).
+Full access: bulk actions, fund settings, compliance tools, etc.
+Audit logging (IP, UA, geo via lib/audit/) on successful admin actions/login.
+
+
+Admin Email Determination (lib/constants/admins.ts): Dynamic Prisma query for admin users/Team members + fallback env default. No static hardcoded list visible (avoids commit risks).
+LP / Dataroom Visitor Login Flow
+
+Initiation: Same login page as admins (shared auth).
+Provider Flow: Identical (Google, LinkedIn, magic link). New users trigger createUser event → welcome email + newsletter subscribe + analytics "User Signed Up".
+signIn Callback (Non-Admin Branch):
+Email blacklist check.
+Strict authorization checks (core for dataroom security):
+prisma.viewer.findFirst → email match (case-insensitive), accessRevokedAt: null.
+OR viewer.groups.some({}) (group membership from quick links/invites).
+OR prisma.link.findFirst → allowList array contains email (shareable dataroom links), link active/not archived.
+
+If none match → Reject (return false), detailed console.log + log() error with counts (viewers, links) for debugging, analytics attempt.
+If any match → Allow, log which method granted access.
+Rate limiting + IP extraction (getIpAddress).
+
+If Approved:
+Same events, session creation, role injection (defaults to "LP").
+redirect → /viewer-redirect (critical post-auth router).
+
+Viewer-Redirect Logic (inferred from callback + models):
+Likely checks Viewer association → specific dataroom, personalized LP portal (/lp/ or /dataroom/[id]), or pending onboarding.
+Onboarding gate (separate from pure login): New/incomplete LPs → NDA signature (self-hosted e-sign), accreditation wizard (self-cert + Persona KYC/AML iframe), subscription flow.
+Access via shareable links (Link model with allowList, expiry, NDA gate) or direct Viewer records.
+
+
+Key Differences:
+
+Admins: Fast-track via isAdminEmail (DB query/team membership).
+LPs: Must be explicitly authorized via Viewer/Link/Group (no open registration). Prevents unauthorized dataroom access.
+Both: Magic link/OAuth primary; heavy logging/auditing; rate limiting; analytics.
+
+Security & Compliance Highlights:
+
+Sign-in callback is the choke point (blacklist, revocation, allowList enforcement).
+Database sessions + fresh role fetch per session.
+IP/UA/geo/audit logs on attempts and success.
+Email domain handling, secure cookies.
+Onboarding compliance (NDA, Persona KYC, accreditation) happens post-login for LPs.
+Rate limiting, error pages (/login), debug mode conditional.
+
+Potential Edge Cases (from code comments/logs):
+
+Viewer revocation (accessRevokedAt).
+AllowList on archived/deleted links.
+New user vs. existing viewer mismatch.
+Rate limit/Redis unavailability (graceful skip).
+Cross-domain magic link URL rewriting.
+
+This constitutes a deep line-by-line analysis of the actual auth handler, options, callbacks, providers, and gatekeeping logic from the fetched source files. Onboarding is a distinct post-login flow (NDA → Persona → accreditation), not part of core sign-in. For further specifics (e.g., exact login UI form, middleware guards, viewer-redirect.tsx, User/Viewer/Link models in schema)

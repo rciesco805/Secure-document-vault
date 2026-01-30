@@ -78,7 +78,7 @@ interface FieldInfo {
 export default function SignDocument() {
   const router = useRouter();
   const params = useParams();
-  const token = params.token as string;
+  const token = (params?.token as string) ?? "";
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

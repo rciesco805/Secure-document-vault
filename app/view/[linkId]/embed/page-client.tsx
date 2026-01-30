@@ -19,7 +19,7 @@ export default function EmbedPage(props: ViewPageProps) {
   const router = useRouter();
   const params = useParams();
   const searchParams = useSearchParams();
-  const linkId = params.linkId as string;
+  const linkId = (params?.linkId as string) ?? "";
   const [isEmbedded, setIsEmbedded] = useState<boolean | null>(null);
   const analytics = useAnalytics();
 

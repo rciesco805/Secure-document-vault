@@ -61,9 +61,9 @@ export default function DataroomDocumentViewPage({
   const router = useRouter();
   const params = useParams();
   const searchParams = useSearchParams();
-  const domain = params.domain as string;
-  const slug = params.slug as string;
-  const documentId = params.documentId as string;
+  const domain = (params?.domain as string) ?? "";
+  const slug = (params?.slug as string) ?? "";
+  const documentId = (params?.documentId as string) ?? "";
   const sessionResult = useSession();
   const session = sessionResult?.data ?? null;
   const rawStatus = sessionResult?.status ?? "loading";

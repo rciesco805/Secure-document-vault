@@ -88,7 +88,7 @@ export default function ViewPage({
   const router = useRouter();
   const params = useParams();
   const searchParams = useSearchParams();
-  const linkId = params.linkId as string;
+  const linkId = (params?.linkId as string) ?? "";
   const queryToken = searchParams.get("token") || undefined;
   const queryEmail = searchParams.get("email") || undefined;
   const queryPreviewToken = searchParams.get("previewToken") || undefined;

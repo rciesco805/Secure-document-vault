@@ -81,7 +81,7 @@ export default function TagsPageClient() {
   const searchParams = useSearchParams();
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const searchQuery = searchParams.get("search");
+  const searchQuery = searchParams?.get("search") ?? null;
   const teamId = teamInfo?.currentTeam?.id;
   const [tagForm, setTagForm] = useState<{
     color: TagColorProps;

@@ -66,6 +66,17 @@ The BF Fund Investor Dataroom is a 506(c) compliant GP/LP management suite desig
   - Added `isSelectable={true}` to enable FAQ message selection
 - **File**: `app/datarooms/[id]/conversations/[conversationId]/page-client.tsx`
 
+#### 5. PublishFAQModal Component Props Fix (Build Blocker)
+- **Issue**: TypeScript compilation failed - `conversationId` prop does not exist on `PublishFAQModalProps`
+- **Cause**: Component interface expected `conversation` (full object) and different prop names
+- **Fix**: Updated props to match component interface:
+  - Replaced `conversationId` → `conversation` (full conversation object)
+  - Replaced `questionMessage` → `selectedQuestionMessage`
+  - Replaced `answerMessage` → `selectedAnswerMessage`
+  - Added required `onSuccess` callback handler
+  - Removed unsupported `dataroomDocument` prop
+- **File**: `app/datarooms/[id]/conversations/[conversationId]/page-client.tsx`
+
 ### January 29, 2026 - Route Conflict Resolution
 - Fixed 500 errors on login pages caused by route conflicts between App Router and Pages Router
 - Removed all legacy Pages Router page files for migrated routes

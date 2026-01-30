@@ -672,16 +672,21 @@ export default function ConversationDetailPageClient({ id, conversationId }: Con
         </DialogContent>
       </Dialog>
 
-      {isPublishFAQModalOpen && getSelectedMessages() && (
+      {isPublishFAQModalOpen && getSelectedMessages() && conversation && (
         <PublishFAQModal
           isOpen={isPublishFAQModalOpen}
           onClose={() => setIsPublishFAQModalOpen(false)}
-          conversationId={conversationId}
+          conversation={conversation}
           dataroomId={dataroomId}
           teamId={teamId!}
-          questionMessage={getSelectedMessages()!.questionMessage!}
-          answerMessage={getSelectedMessages()!.answerMessage!}
-          dataroomDocument={conversation?.dataroomDocument}
+          selectedQuestionMessage={getSelectedMessages()!.questionMessage!}
+          selectedAnswerMessage={getSelectedMessages()!.answerMessage!}
+          onSuccess={() => {
+            setIsPublishFAQModalOpen(false);
+            setSelectedQuestionId(null);
+            setSelectedAnswerId(null);
+            mutate(`/api/teams/${teamId}/datarooms/${dataroomId}/faqs`);
+          }}
         />
       )}
     </AppLayout>

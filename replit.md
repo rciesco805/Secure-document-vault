@@ -57,6 +57,15 @@ The BF Fund Investor Dataroom is a 506(c) compliant GP/LP management suite desig
 - **Fix**: Updated `allowedDevOrigins` to `["*"]` for development
 - **File**: `next.config.mjs`
 
+#### 4. ConversationMessage Component Props Fix (Build Blocker)
+- **Issue**: TypeScript compilation failed - `isVisitor` and `isAdmin` props do not exist on component interface
+- **Cause**: Component interface expected `isAuthor` and `senderEmail` but page was passing incorrect props
+- **Fix**: Updated props to match component interface:
+  - Replaced `isVisitor` → `isAuthor` (determines if message was sent by admin user)
+  - Replaced `isAdmin` → `senderEmail` (displays sender's email in message)
+  - Added `isSelectable={true}` to enable FAQ message selection
+- **File**: `app/datarooms/[id]/conversations/[conversationId]/page-client.tsx`
+
 ### January 29, 2026 - Route Conflict Resolution
 - Fixed 500 errors on login pages caused by route conflicts between App Router and Pages Router
 - Removed all legacy Pages Router page files for migrated routes
@@ -314,9 +323,10 @@ npm run type-check       # Run TypeScript checks
 
 ### Pending Deployment
 The following fixes are in the codebase but require production deployment:
-1. Verify page searchParams fix
+1. Verify page searchParams fix (Next.js 16 compatibility)
 2. React.Children.only fix in Button component
 3. CSP configuration updates
+4. ConversationMessage component props fix (build blocker resolved)
 
 ### WebSocket HMR Warnings
 - WebSocket connection warnings in Replit preview are normal

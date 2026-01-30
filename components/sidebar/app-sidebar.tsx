@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/router";
+import { usePathname, useParams } from "next/navigation";
 
 import * as React from "react";
 
@@ -36,7 +36,8 @@ import {
 
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const router = useRouter();
+  const pathname = usePathname() ?? "";
+  const params = useParams() ?? {};
   const { currentTeam, teams, setCurrentTeam, isLoading }: TeamContextType =
     useTeam() || initialState;
   const {
@@ -60,8 +61,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           title: dataroom.name,
           url: `/datarooms/${dataroom.id}/documents`,
           current:
-            router.pathname.includes("/datarooms/[id]") &&
-            String(router.query.id) === String(dataroom.id),
+            pathname.includes("/datarooms/") &&
+            String(params.id) === String(dataroom.id),
         }))
       : undefined;
 
@@ -71,51 +72,51 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         title: "Dashboard",
         url: "/dashboard",
         icon: HouseIcon,
-        current: router.pathname.includes("dashboard"),
+        current: pathname.includes("dashboard"),
       },
       {
         title: "All Documents",
         url: "/documents",
         icon: FolderIcon,
         current:
-          router.pathname.includes("documents") &&
-          !router.pathname.includes("datarooms"),
+          pathname.includes("documents") &&
+          !pathname.includes("datarooms"),
       },
       {
         title: "All Datarooms",
         url: "/datarooms",
         icon: ServerIcon,
-        current: router.pathname === "/datarooms",
+        current: pathname === "/datarooms",
         disabled: false,
-        isActive: router.pathname.includes("datarooms"),
+        isActive: pathname.includes("datarooms"),
         items: dataroomItems,
       },
       {
         title: "Visitors",
         url: "/visitors",
         icon: ContactIcon,
-        current: router.pathname.includes("visitors"),
+        current: pathname.includes("visitors"),
         disabled: false,
       },
       {
         title: "E-Signature",
         url: "/sign",
         icon: PenLineIcon,
-        current: router.pathname.includes("/sign"),
+        current: pathname.includes("/sign"),
         disabled: false,
       },
       {
         title: "Fundroom",
         url: "/admin/fund",
         icon: LandmarkIcon,
-        current: router.pathname.includes("/admin/fund"),
+        current: pathname.includes("/admin/fund"),
         disabled: false,
       },
       {
         title: "Workflows",
         url: "/workflows",
         icon: WorkflowIcon,
-        current: router.pathname.includes("/workflows"),
+        current: pathname.includes("/workflows"),
         disabled: !features?.workflows,
       },
       {
@@ -123,43 +124,43 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         url: "/branding",
         icon: BrushIcon,
         current:
-          router.pathname.includes("branding") &&
-          !router.pathname.includes("datarooms"),
+          pathname.includes("branding") &&
+          !pathname.includes("datarooms"),
       },
       {
         title: "Settings",
         url: "/settings/general",
         icon: CogIcon,
         isActive:
-          router.pathname.includes("settings") &&
-          !router.pathname.includes("branding") &&
-          !router.pathname.includes("datarooms") &&
-          !router.pathname.includes("documents"),
+          pathname.includes("settings") &&
+          !pathname.includes("branding") &&
+          !pathname.includes("datarooms") &&
+          !pathname.includes("documents"),
         items: [
           {
             title: "General",
             url: "/settings/general",
-            current: router.pathname.includes("settings/general"),
+            current: pathname.includes("settings/general"),
           },
           {
             title: "Team",
             url: "/settings/people",
-            current: router.pathname.includes("settings/people"),
+            current: pathname.includes("settings/people"),
           },
           {
             title: "Domains",
             url: "/settings/domains",
-            current: router.pathname.includes("settings/domains"),
+            current: pathname.includes("settings/domains"),
           },
           {
             title: "Webhooks",
             url: "/settings/webhooks",
-            current: router.pathname.includes("settings/webhooks"),
+            current: pathname.includes("settings/webhooks"),
           },
           {
             title: "Funds",
             url: "/settings/funds",
-            current: router.pathname.includes("settings/funds"),
+            current: pathname.includes("settings/funds"),
           },
         ],
       },

@@ -196,7 +196,6 @@ export default function ViewPage({
   // Handle magic link verification via backend
   useEffect(() => {
     const verifyMagicLink = async () => {
-      const linkId = linkId as string;
       const token = queryToken as string | undefined;
       const email = queryEmail as string | undefined;
 

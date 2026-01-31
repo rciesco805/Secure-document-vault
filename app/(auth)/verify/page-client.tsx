@@ -12,8 +12,8 @@ export default function VerifyPageClient() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
-  const verificationUrl = searchParams.get("verification_url");
-  const checksum = searchParams.get("checksum");
+  const verificationUrl = searchParams?.get("verification_url") ?? null;
+  const checksum = searchParams?.get("checksum") ?? null;
   
   const handleSignIn = async () => {
     if (!verificationUrl) {

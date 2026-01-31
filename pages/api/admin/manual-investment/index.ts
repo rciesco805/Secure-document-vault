@@ -115,10 +115,15 @@ async function handlePost(
 
     const investor = await prisma.investor.findUnique({
       where: { id: investorId },
+      include: { team: { select: { id: true } } },
     });
 
     if (!investor) {
       return res.status(404).json({ message: "Investor not found" });
+    }
+
+    if (investor.teamId !== teamId) {
+      return res.status(403).json({ message: "Investor does not belong to your team" });
     }
 
     const fund = await prisma.fund.findFirst({

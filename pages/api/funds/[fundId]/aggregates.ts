@@ -115,7 +115,10 @@ export default async function handler(
       (t) => t.status === "PENDING" || t.status === "PROCESSING"
     );
 
-    const totalInvestorCount = fund.investments.length + manualInvestments.length;
+    const investorIdsSet = new Set<string>();
+    fund.investments.forEach((inv) => investorIdsSet.add(inv.investorId));
+    manualInvestments.forEach((mi: any) => investorIdsSet.add(mi.investorId));
+    const totalInvestorCount = investorIdsSet.size;
 
     return res.status(200).json({
       fund: {

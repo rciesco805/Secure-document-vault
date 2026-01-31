@@ -114,7 +114,10 @@ export default async function handler(
       fund.investments.forEach((inv) => totalInvestors.add(inv.investorId));
       fundManualInvestments.forEach((mi: any) => totalInvestors.add(mi.investorId));
 
-      const totalInvestorCount = fund.investments.length + fundManualInvestments.length;
+      const fundInvestorIds = new Set<string>();
+      fund.investments.forEach((inv) => fundInvestorIds.add(inv.investorId));
+      fundManualInvestments.forEach((mi: any) => fundInvestorIds.add(mi.investorId));
+      const totalInvestorCount = fundInvestorIds.size;
 
       return {
         id: fund.id,

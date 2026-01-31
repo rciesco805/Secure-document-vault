@@ -276,6 +276,9 @@ export default function FundDashboardClient() {
                 <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? "animate-spin" : ""}`} />
                 {isRefreshing ? "Refreshing..." : "Refresh"}
               </Button>
+              <Link href="/admin/manual-investment">
+                <Button variant="outline">Add Manual Investment</Button>
+              </Link>
               <Link href="/admin/funds/new">
                 <Button variant="outline">Create New Fund</Button>
               </Link>

@@ -45,6 +45,7 @@ import { ActivityTimeline } from "@/components/lp/activity-timeline";
 import { SignaturePad } from "@/components/lp/signature-pad";
 import { FundCard } from "@/components/lp/fund-card";
 import { DocumentsVault } from "@/components/lp/documents-vault";
+import { ManualInvestmentsCard } from "@/components/lp/manual-investments-card";
 import { NotesCard } from "@/components/lp/notes-card";
 import { DashboardSummary } from "@/components/lp/dashboard-summary";
 import { DashboardSkeleton, FundCardSkeleton } from "@/components/lp/dashboard-skeleton";
@@ -986,6 +987,8 @@ export default function LPDashboardClient() {
                 accreditationStatus={investor?.accreditationStatus || "PENDING"}
                 onViewAll={() => router.push("/lp/docs")}
               />
+
+              <ManualInvestmentsCard />
             </div>
 
             <div className="space-y-6">

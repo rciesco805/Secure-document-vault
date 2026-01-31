@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -180,10 +181,14 @@ export default function LPDashboardClient() {
     canSubscribe: boolean;
     fund: any;
     pendingSubscription: any;
+    signedSubscription: any;
+    processingSubscription: any;
+    hasBankAccount: boolean;
     entityName: string | null;
   } | null>(null);
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
   const [bannerDismissed, setBannerDismissed] = useState(false);
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
 
   const fetchFundDetails = useCallback(async (silent = false) => {
     if (!silent) setIsRefreshing(true);
@@ -251,6 +256,40 @@ export default function LPDashboardClient() {
     } else {
       fetchSubscriptionStatus();
       fetchFundDetails();
+    }
+  };
+
+  const handleProcessPayment = async () => {
+    if (!subscriptionStatus?.signedSubscription) return;
+    
+    setIsProcessingPayment(true);
+    try {
+      const res = await fetch("/api/lp/subscription/process-payment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          subscriptionId: subscriptionStatus.signedSubscription.id,
+        }),
+      });
+
+      const result = await res.json();
+      
+      if (!res.ok) {
+        if (result.code === "NO_BANK_ACCOUNT") {
+          router.push("/lp/bank-connect");
+          return;
+        }
+        throw new Error(result.message || "Payment processing failed");
+      }
+
+      toast.success("Payment initiated successfully! Funds will be debited within 1-3 business days.");
+      fetchSubscriptionStatus();
+      fetchFundDetails();
+    } catch (error: any) {
+      console.error("Payment error:", error);
+      toast.error(error.message || "Failed to process payment");
+    } finally {
+      setIsProcessingPayment(false);
     }
   };
 
@@ -500,24 +539,42 @@ export default function LPDashboardClient() {
         {!bannerDismissed && subscriptionStatus && (
           <SubscriptionBanner
             status={
-              subscriptionStatus.pendingSubscription
+              subscriptionStatus.processingSubscription?.status === "COMPLETED"
+                ? "completed"
+                : subscriptionStatus.processingSubscription?.status === "PAYMENT_PROCESSING"
+                ? "processing"
+                : subscriptionStatus.signedSubscription
+                ? "signed"
+                : subscriptionStatus.pendingSubscription
                 ? "pending"
                 : subscriptionStatus.canSubscribe
                 ? "available"
                 : "none"
             }
-            fundName={subscriptionStatus.fund?.name || subscriptionStatus.pendingSubscription?.fundName}
+            fundName={
+              subscriptionStatus.processingSubscription?.fundName ||
+              subscriptionStatus.signedSubscription?.fundName ||
+              subscriptionStatus.fund?.name ||
+              subscriptionStatus.pendingSubscription?.fundName
+            }
             pendingAmount={
-              subscriptionStatus.pendingSubscription
+              subscriptionStatus.processingSubscription
+                ? parseFloat(subscriptionStatus.processingSubscription.amount)
+                : subscriptionStatus.signedSubscription
+                ? parseFloat(subscriptionStatus.signedSubscription.amount)
+                : subscriptionStatus.pendingSubscription
                 ? parseFloat(subscriptionStatus.pendingSubscription.amount)
                 : undefined
             }
+            hasBankAccount={subscriptionStatus.hasBankAccount}
             onSubscribe={() => setShowSubscriptionModal(true)}
             onSignPending={() => {
               if (subscriptionStatus.pendingSubscription?.signingToken) {
                 window.location.href = `/view/sign/${subscriptionStatus.pendingSubscription.signingToken}`;
               }
             }}
+            onCompletePayment={handleProcessPayment}
+            onConnectBank={() => router.push("/lp/bank-connect")}
             onDismiss={() => setBannerDismissed(true)}
           />
         )}

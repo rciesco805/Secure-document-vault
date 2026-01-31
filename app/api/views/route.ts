@@ -53,6 +53,14 @@ export async function POST(request: NextRequest) {
       ownerId: string;
     };
 
+    // Validate required linkId parameter
+    if (!linkId) {
+      return NextResponse.json(
+        { message: "Link ID is required." },
+        { status: 400 },
+      );
+    }
+
     const { email, password, name, hasConfirmedAgreement } = data as {
       email: string;
       password: string;

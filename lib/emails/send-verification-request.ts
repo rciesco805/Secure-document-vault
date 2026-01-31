@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import { sendEmail } from "@/lib/resend";
 import prisma from "@/lib/prisma";
 
@@ -5,17 +6,21 @@ import LoginLink from "@/components/emails/verification-link";
 
 import { generateChecksum } from "../utils/generate-checksum";
 
-/**
- * Check if a verification email was recently sent to prevent duplicates.
- * This prevents users from accidentally requesting multiple magic links.
- * 
- * Note: NextAuth creates the verification token BEFORE calling sendVerificationRequest.
- * We check for multiple unexpired tokens - if there's more than one, a previous recent
- * request exists. We skip the newest token (the one just created for this request).
- */
+function extractTokenFromCallbackUrl(url: string): string | null {
+  try {
+    const urlObj = new URL(url);
+    return urlObj.searchParams.get("token");
+  } catch {
+    return null;
+  }
+}
+
+function hashToken(token: string): string {
+  return crypto.createHash("sha256").update(token).digest("hex");
+}
+
 async function wasRecentEmailSent(email: string): Promise<boolean> {
   try {
-    // Get all unexpired tokens, ordered by expiry (newest first)
     const unexpiredTokens = await prisma.verificationToken.findMany({
       where: {
         identifier: email.toLowerCase(),
@@ -31,8 +36,6 @@ async function wasRecentEmailSent(email: string): Promise<boolean> {
 
     console.log(`[EMAIL] Duplicate check: Found ${unexpiredTokens.length} unexpired token(s) for ${email}`);
 
-    // If there's more than one unexpired token, the older ones are from previous requests
-    // Skip the first one (newest - just created by NextAuth for this request)
     if (unexpiredTokens.length > 1) {
       console.log(`[EMAIL] Duplicate prevention: Email to ${email} blocked - ${unexpiredTokens.length - 1} previous unexpired token(s) exist`);
       return true;
@@ -41,7 +44,6 @@ async function wasRecentEmailSent(email: string): Promise<boolean> {
     return false;
   } catch (error) {
     console.error("[EMAIL] Error checking for recent verification token:", error);
-    // On error, allow the email to be sent (fail open)
     return false;
   }
 }
@@ -52,26 +54,45 @@ export const sendVerificationRequestEmail = async (params: {
 }) => {
   const { url, email } = params;
   
-  // Check if we recently sent an email to this address
   const recentlySent = await wasRecentEmailSent(email);
   if (recentlySent) {
     console.log(`[EMAIL] Skipping duplicate verification email to: ${email}`);
-    // Don't throw - just silently skip to avoid confusing the user
     return;
   }
   
   console.log("[EMAIL] Sending verification email to:", email);
   
-  const checksum = generateChecksum(url);
+  const authToken = extractTokenFromCallbackUrl(url);
+  if (!authToken) {
+    console.error("[EMAIL] Could not extract token from callback URL");
+    throw new Error("Invalid callback URL - no token found");
+  }
+  
+  const authTokenHash = hashToken(authToken);
+  const magicLinkToken = crypto.randomBytes(32).toString("hex");
+  const expiresAt = new Date(Date.now() + 20 * 60 * 1000);
+  
+  await prisma.magicLinkCallback.create({
+    data: {
+      identifier: email.toLowerCase(),
+      token: magicLinkToken,
+      callbackUrl: url,
+      authTokenHash: authTokenHash,
+      expires: expiresAt,
+    },
+  });
+  
+  console.log("[EMAIL] Created MagicLinkCallback entry for:", email);
+  
+  const checksum = generateChecksum(magicLinkToken);
   const verificationUrlParams = new URLSearchParams({
-    verification_url: url,
+    id: magicLinkToken,
     checksum,
   });
 
-  // Use fallback URL if set (for when custom domain DNS is propagating)
   const baseUrl = process.env.VERIFICATION_EMAIL_BASE_URL || process.env.NEXTAUTH_URL;
   const verificationUrl = `${baseUrl}/verify?${verificationUrlParams}`;
-  console.log("[EMAIL] Verification URL:", verificationUrl);
+  console.log("[EMAIL] Verification URL (secure, no callback):", verificationUrl.substring(0, 80) + "...");
   
   const emailTemplate = LoginLink({ url: verificationUrl });
   try {
@@ -84,6 +105,6 @@ export const sendVerificationRequestEmail = async (params: {
     console.log("[EMAIL] Verification email sent successfully");
   } catch (e) {
     console.error("[EMAIL] Error sending verification email:", e);
-    throw e; // Re-throw to let NextAuth know about the error
+    throw e;
   }
 };

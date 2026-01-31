@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -11,12 +11,48 @@ export default function VerifyPageClient() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isValidating, setIsValidating] = useState(true);
+  const [isLinkValid, setIsLinkValid] = useState(false);
   
-  const verificationUrl = searchParams?.get("verification_url") ?? null;
+  const id = searchParams?.get("id") ?? null;
   const checksum = searchParams?.get("checksum") ?? null;
   
+  useEffect(() => {
+    async function validateOnLoad() {
+      if (!id || !checksum) {
+        setIsValidating(false);
+        return;
+      }
+      
+      try {
+        const response = await fetch("/api/auth/verify-link", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id, checksum, action: "validate" }),
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok && data.valid) {
+          setIsLinkValid(true);
+          setError(null);
+        } else {
+          setError(data.error || "This link is invalid or has expired.");
+          setIsLinkValid(false);
+        }
+      } catch {
+        setError("Failed to validate link. Please try again.");
+        setIsLinkValid(false);
+      } finally {
+        setIsValidating(false);
+      }
+    }
+    
+    validateOnLoad();
+  }, [id, checksum]);
+  
   const handleSignIn = async () => {
-    if (!verificationUrl) {
+    if (!id || !checksum) {
       setError("Invalid verification link");
       return;
     }
@@ -28,7 +64,7 @@ export default function VerifyPageClient() {
       const response = await fetch("/api/auth/verify-link", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ verification_url: verificationUrl, checksum }),
+        body: JSON.stringify({ id, checksum, action: "sign_in" }),
       });
       
       const data = await response.json();
@@ -39,14 +75,14 @@ export default function VerifyPageClient() {
         return;
       }
       
-      window.location.href = verificationUrl;
-    } catch (err) {
-      setError("Failed to verify link. Please try again.");
+      window.location.href = data.callbackUrl;
+    } catch {
+      setError("Failed to complete sign in. Please try again.");
       setIsLoading(false);
     }
   };
   
-  if (!verificationUrl || !checksum) {
+  if (!id || !checksum) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50 p-4">
         <Card className="w-full max-w-md">
@@ -62,6 +98,22 @@ export default function VerifyPageClient() {
               Return to Login
             </Button>
           </CardContent>
+        </Card>
+      </div>
+    );
+  }
+  
+  if (isValidating) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gray-50 p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <Loader2 className="mx-auto h-12 w-12 text-gray-400 animate-spin mb-4" />
+            <CardTitle>Verifying Link...</CardTitle>
+            <CardDescription>
+              Please wait while we verify your login link.
+            </CardDescription>
+          </CardHeader>
         </Card>
       </div>
     );
@@ -86,7 +138,7 @@ export default function VerifyPageClient() {
           
           <Button
             onClick={handleSignIn}
-            disabled={isLoading}
+            disabled={isLoading || !isLinkValid}
             className="w-full"
             size="lg"
           >
@@ -99,6 +151,16 @@ export default function VerifyPageClient() {
               "Sign In to Portal"
             )}
           </Button>
+          
+          {!isLinkValid && !error && (
+            <Button
+              onClick={() => router.push("/login")}
+              variant="outline"
+              className="w-full"
+            >
+              Request New Login Link
+            </Button>
+          )}
           
           <p className="text-center text-xs text-gray-500">
             This extra step ensures that only you can access your account,

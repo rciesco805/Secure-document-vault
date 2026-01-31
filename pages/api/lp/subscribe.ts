@@ -6,6 +6,7 @@ import { randomBytes } from "crypto";
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 import { putFileServer } from "@/lib/files/put-file-server";
 import { newId } from "@/lib/id-helper";
+import { logSubscriptionEvent } from "@/lib/audit/audit-logger";
 
 export default async function handler(
   req: NextApiRequest,
@@ -355,6 +356,16 @@ export default async function handler(
       });
 
       return { document, subscription, signingToken, subscriptionAmount };
+    });
+
+    await logSubscriptionEvent(req, {
+      eventType: "SUBSCRIPTION_CREATED",
+      userId: user.id,
+      teamId: fund.teamId,
+      subscriptionId: result.subscription.id,
+      investorId: investor.id,
+      fundId: fund.id,
+      amount: result.subscriptionAmount,
     });
 
     return res.status(201).json({

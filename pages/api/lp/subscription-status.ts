@@ -58,6 +58,35 @@ export default async function handler(
       orderBy: { createdAt: "desc" },
     });
 
+    const signedSubscription = await prisma.subscription.findFirst({
+      where: {
+        investorId: investor.id,
+        status: "SIGNED",
+      },
+      include: {
+        fund: true,
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    const processingSubscription = await prisma.subscription.findFirst({
+      where: {
+        investorId: investor.id,
+        status: { in: ["PAYMENT_PROCESSING", "COMPLETED"] },
+      },
+      include: {
+        fund: true,
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    const hasBankAccount = await prisma.bankLink.findFirst({
+      where: {
+        investorId: investor.id,
+        status: "ACTIVE",
+      },
+    });
+
     let pendingSigningToken = null;
     if (pendingSubscription) {
       const doc = await prisma.signatureDocument.findUnique({
@@ -80,10 +109,12 @@ export default async function handler(
         investor.accreditationStatus === "KYC_VERIFIED") &&
       fund &&
       fund.entityMode === "FUND" &&
-      !pendingSubscription;
+      !pendingSubscription &&
+      !signedSubscription &&
+      !processingSubscription;
 
     return res.status(200).json({
-      hasSubscription: !!pendingSubscription,
+      hasSubscription: !!pendingSubscription || !!signedSubscription || !!processingSubscription,
       canSubscribe,
       fund: fund
         ? {
@@ -113,6 +144,27 @@ export default async function handler(
             createdAt: pendingSubscription.createdAt.toISOString(),
           }
         : null,
+      signedSubscription: signedSubscription
+        ? {
+            id: signedSubscription.id,
+            fundName: signedSubscription.fund?.name || "Fund",
+            amount: signedSubscription.amount.toString(),
+            units: signedSubscription.units,
+            status: signedSubscription.status,
+            createdAt: signedSubscription.createdAt.toISOString(),
+          }
+        : null,
+      processingSubscription: processingSubscription
+        ? {
+            id: processingSubscription.id,
+            fundName: processingSubscription.fund?.name || "Fund",
+            amount: processingSubscription.amount.toString(),
+            units: processingSubscription.units,
+            status: processingSubscription.status,
+            createdAt: processingSubscription.createdAt.toISOString(),
+          }
+        : null,
+      hasBankAccount: !!hasBankAccount,
       entityName: investor.entityName,
     });
   } catch (error) {

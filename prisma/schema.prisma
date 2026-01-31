@@ -107,6 +107,21 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
+// Stores callback URLs separately to prevent email scanners from consuming tokens
+model MagicLinkCallback {
+  id              String   @id @default(cuid())
+  identifier      String   // email address
+  token           String   @unique // random secure token for the email link
+  callbackUrl     String   // the actual NextAuth callback URL
+  authTokenHash   String   // hash of the NextAuth verification token for exact matching
+  expires         DateTime
+  consumed        Boolean  @default(false)
+  createdAt       DateTime @default(now())
+
+  @@index([identifier])
+  @@index([expires])
+}
+
 model Domain {
   id          String   @id @default(cuid())
   slug        String   @unique
@@ -712,6 +727,15 @@ model AccreditationAck {
   confirmDocReview       Boolean @default(false) // "I have reviewed the offering documents"
   confirmRepresentations Boolean @default(false) // "My representations are true and accurate"
 
+  // SEC Guidance: Auto-Approval & Review Flagging
+  autoApproved        Boolean   @default(false) // Met minimum commitment + self-attest
+  needsManualReview   Boolean   @default(false) // Flagged for GP/admin review
+  reviewedAt          DateTime? // When manual review was completed
+  reviewedBy          String?   // Admin who reviewed
+  reviewNotes         String?   // Notes from manual review
+  minimumCommitmentMet Boolean  @default(false) // Commitment >= fund minimum
+  commitmentAmount    Decimal?  @db.Decimal(15, 2) // Actual commitment amount
+
   // KYC Integration Hooks (for future API connection)
   kycProvider       String? // PLAID, PARALLEL_MARKETS, VERIFY_INVESTOR, etc.
   kycVerificationId String? // External verification ID
@@ -1084,6 +1108,7 @@ model Transaction {
   userAgent   String?
   initiatedBy String? // userId of GP who initiated
   auditTrail  Json?
+  metadata    Json?   // Additional transaction metadata (e.g., subscriptionId)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1125,6 +1150,12 @@ model SignatureDocument {
 
   // Audit trail
   auditTrail Json? // Store complete audit trail
+
+  // Completion Certificate
+  certificateFile        String?   // Reference to certificate PDF in storage
+  certificateHash        String?   // SHA-256 hash for verification
+  certificateId          String?   // Unique certificate identifier
+  certificateGeneratedAt DateTime? // When certificate was generated
 
   // Subscription/investment metadata
   documentType       String? // "SUBSCRIPTION", "K1", "SIDE_LETTER", etc.

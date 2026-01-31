@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo } from "react";
 import { useSession } from "next-auth/react";
+import { toast } from "sonner";
 
 import { LPSignIn } from "@/components/auth/lp-signin";
 
@@ -28,6 +29,23 @@ export default function LPLoginClient() {
       router.replace(callbackUrl);
     }
   }, [status, router, next]);
+
+  // Handle authentication errors from URL params
+  const authError = searchParams?.get("error");
+  useEffect(() => {
+    if (authError) {
+      const errorMessages: Record<string, string> = {
+        Verification: "Your login link has expired or was already used. Please request a new one.",
+        AccessDenied: "Access denied. You may not have permission to access this portal.",
+        Configuration: "There was a configuration error. Please try again.",
+        Default: "An error occurred during sign in. Please try again.",
+      };
+      const message = errorMessages[authError] || errorMessages.Default;
+      toast.error(message);
+      // Clear the error from URL without refresh
+      window.history.replaceState({}, '', '/lp/login');
+    }
+  }, [authError]);
 
   if (status === "loading") {
     return (

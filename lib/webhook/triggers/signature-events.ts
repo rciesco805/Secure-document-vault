@@ -2,6 +2,7 @@ import prisma from "@/lib/prisma";
 import { log } from "@/lib/utils";
 import { triggerPersonaVerification } from "@/lib/persona-hooks";
 import { sendWebhooks } from "@/lib/webhook/send-webhooks";
+import { generateAndStoreCertificate } from "@/lib/signature/auto-certificate";
 
 export type SignatureEventType = 
   | "signature.recipient_signed"
@@ -217,6 +218,18 @@ export async function onDocumentCompleted({
       allRecipients,
     },
   });
+
+  // Auto-generate completion certificate
+  try {
+    const certResult = await generateAndStoreCertificate(documentId, teamId);
+    if (certResult.success) {
+      console.log(`[SIGNATURE_EVENT] Certificate generated for ${documentId}:`, certResult.certificateId);
+    } else {
+      console.error(`[SIGNATURE_EVENT] Certificate generation failed for ${documentId}:`, certResult.error);
+    }
+  } catch (certError) {
+    console.error(`[SIGNATURE_EVENT] Certificate generation error for ${documentId}:`, certError);
+  }
 
   // Post-subscription KYC verification: Trigger Persona for subscription documents
   // Check document metadata or title for subscription document detection

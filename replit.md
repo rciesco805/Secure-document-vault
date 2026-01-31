@@ -14,6 +14,15 @@ The BF Fund Investor Dataroom is a 506(c) compliant GP/LP management suite desig
 
 #### Critical Bug Fixes
 
+**Magic Link Email Fix (January 31, 2026)**
+- Fixed duplicate email prevention blocking ALL magic link emails
+- Issue: NextAuth creates verification token milliseconds before calling `sendVerificationRequest`
+- The duplicate check found this new token and incorrectly blocked the email
+- Fix: Check for multiple unexpired tokens - if >1 exists, block (skip the newest which is from current request)
+- This ensures first request sends email, subsequent requests within token lifetime are blocked
+- File modified: `lib/emails/send-verification-request.ts`
+- **Requires republish to take effect on production**
+
 **Investor Portal Redirect Fix (January 31, 2026)**
 - Changed default root redirect from `/dashboard` to `/login` in `next.config.mjs`
 - Visitors clicking "INVESTOR PORTAL" now land on the investor login page instead of admin login

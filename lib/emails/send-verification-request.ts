@@ -5,38 +5,37 @@ import LoginLink from "@/components/emails/verification-link";
 
 import { generateChecksum } from "../utils/generate-checksum";
 
-// Minimum time between verification emails (in minutes)
-const DUPLICATE_EMAIL_THRESHOLD_MINUTES = 2;
-
 /**
  * Check if a verification email was recently sent to prevent duplicates.
  * This prevents users from accidentally requesting multiple magic links.
+ * 
+ * Note: NextAuth creates the verification token BEFORE calling sendVerificationRequest.
+ * We check for multiple unexpired tokens - if there's more than one, a previous recent
+ * request exists. We skip the newest token (the one just created for this request).
  */
 async function wasRecentEmailSent(email: string): Promise<boolean> {
   try {
-    const thresholdTime = new Date(Date.now() - DUPLICATE_EMAIL_THRESHOLD_MINUTES * 60 * 1000);
-    
-    const recentToken = await prisma.verificationToken.findFirst({
+    // Get all unexpired tokens, ordered by expiry (newest first)
+    const unexpiredTokens = await prisma.verificationToken.findMany({
       where: {
         identifier: email.toLowerCase(),
         expires: {
-          gt: new Date(), // Token hasn't expired yet
+          gt: new Date(),
         },
       },
       orderBy: {
         expires: 'desc',
       },
+      take: 5,
     });
 
-    if (recentToken) {
-      // Check if the token was created recently (within threshold)
-      // Token expiry is set to maxAge (20 min) from creation time
-      // So we can estimate creation time from expiry - 20 min
-      const estimatedCreationTime = new Date(recentToken.expires.getTime() - 20 * 60 * 1000);
-      if (estimatedCreationTime > thresholdTime) {
-        console.log(`[EMAIL] Duplicate prevention: Email to ${email} blocked - recent token exists (created ~${Math.round((Date.now() - estimatedCreationTime.getTime()) / 1000)}s ago)`);
-        return true;
-      }
+    console.log(`[EMAIL] Duplicate check: Found ${unexpiredTokens.length} unexpired token(s) for ${email}`);
+
+    // If there's more than one unexpired token, the older ones are from previous requests
+    // Skip the first one (newest - just created by NextAuth for this request)
+    if (unexpiredTokens.length > 1) {
+      console.log(`[EMAIL] Duplicate prevention: Email to ${email} blocked - ${unexpiredTokens.length - 1} previous unexpired token(s) exist`);
+      return true;
     }
     
     return false;

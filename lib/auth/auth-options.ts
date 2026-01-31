@@ -136,16 +136,21 @@ export const authOptions: NextAuthOptions = {
       if (new URL(url).origin === baseUrl) return url;
       return `${baseUrl}/viewer-redirect`;
     },
-    session: async ({ session, user }) => {
+    session: async ({ session, user, token }) => {
       // With database sessions, user comes directly from the database
-      // Fetch the latest role from the database for each session access
-      const dbUser = await prisma.user.findUnique({
-        where: { id: user.id },
-        select: { id: true, name: true, email: true, image: true, role: true },
-      });
+      // Fetch the latest role and session portal from the database
+      const [dbUser, dbSession] = await prisma.$transaction([
+        prisma.user.findUnique({
+          where: { id: user.id },
+          select: { id: true, name: true, email: true, image: true, role: true },
+        }),
+        prisma.session.findFirst({
+          where: { userId: user.id },
+          orderBy: { expires: 'desc' },
+        }),
+      ]);
       
       if (!dbUser) {
-        // User no longer exists, session should be invalidated
         return session;
       }
 
@@ -154,6 +159,7 @@ export const authOptions: NextAuthOptions = {
       (session.user as CustomUser).email = dbUser.email;
       (session.user as CustomUser).image = dbUser.image;
       (session.user as CustomUser).role = dbUser.role || "LP";
+      (session as any).loginPortal = (dbSession as any)?.loginPortal || "VISITOR";
       return session;
     },
   },

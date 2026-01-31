@@ -40,7 +40,7 @@ The BF Fund Investor Dataroom is a 506(c) compliant GP/LP management suite desig
 - **Session Strategy**: Database sessions (30-day max age, 24-hour refresh).
 - **Magic Link Flow**: Two-step verification at `/verify` prevents email scanners from consuming tokens. Callback URLs are stored server-side in a `MagicLinkCallback` table. Users must manually click "Sign In to Portal" button to consume the link. Token correlation ensures exact match of the original NextAuth token.
 - **Admin Verification**: Checks static admin list + database UserTeam roles.
-- **Portal-Based Access Control**: Two-layer security: 1) SignIn callback detects portal type from callbackUrl and rejects non-admins at admin login with friendly error; 2) Server-side route guards on admin pages check UserTeam membership and redirect unauthorized users to viewer-portal.
+- **Portal-Based Access Control**: Session-based portal tracking with strict separation. Login portal (ADMIN or VISITOR) is stored in database Session record. Admin pages use `requireAdminPortalAccess()` guard that checks: 1) Valid session exists; 2) User has UserTeam membership with admin role; 3) Session loginPortal equals ADMIN. Users who authenticate via visitor portal cannot access admin pages even if they have admin privileges - they must log out and use admin login.
 
 **Role System**:
 - **User.role**: `GP` (General Partner), `LP` (Limited Partner).

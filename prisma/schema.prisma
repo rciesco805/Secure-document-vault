@@ -28,11 +28,17 @@ model Account {
 }
 
 model Session {
-  id           String   @id @default(cuid())
-  sessionToken String   @unique
+  id           String      @id @default(cuid())
+  sessionToken String      @unique
   userId       String
   expires      DateTime
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  loginPortal  LoginPortal @default(VISITOR)
+  user         User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+enum LoginPortal {
+  ADMIN
+  VISITOR
 }
 
 model User {

@@ -149,7 +149,62 @@ const getAuthOptions = (req: NextApiRequest): NextAuthOptions => {
     },
     events: {
       ...authOptions.events,
+      async session({ session, token }) {
+        // This event fires when a session is accessed - we can use it to set portal on new sessions
+        // Note: This won't work for updating existing sessions since it fires on access
+      },
       signIn: async (message) => {
+        // Set the loginPortal on the session based on which portal the user logged into
+        const loginPortal = isAdminPortalRequest ? "ADMIN" : "VISITOR";
+        console.log("[AUTH] Setting session loginPortal:", loginPortal, "for user:", message.user.email);
+        
+        // Get the session token from cookies (set by NextAuth during this request)
+        const sessionToken = req.cookies?.["next-auth.session-token"];
+        
+        if (sessionToken) {
+          // Update the specific session by token
+          try {
+            await prisma.session.update({
+              where: { sessionToken },
+              data: { loginPortal },
+            });
+            console.log("[AUTH] Updated session token:", sessionToken.slice(0, 8) + "...", "with portal:", loginPortal);
+          } catch (err) {
+            console.error("[AUTH] Failed to update session by token, falling back to updateMany:", err);
+            // Fallback: update the most recently created session for this user
+            const latestSession = await prisma.session.findFirst({
+              where: { userId: message.user.id },
+              orderBy: { expires: 'desc' },
+            });
+            if (latestSession) {
+              await prisma.session.update({
+                where: { id: latestSession.id },
+                data: { loginPortal },
+              });
+            }
+          }
+        } else {
+          // No session token in cookies yet - session will be created after this event
+          // We need to update the newest session for this user after a short delay
+          setTimeout(async () => {
+            try {
+              const latestSession = await prisma.session.findFirst({
+                where: { userId: message.user.id },
+                orderBy: { expires: 'desc' },
+              });
+              if (latestSession) {
+                await prisma.session.update({
+                  where: { id: latestSession.id },
+                  data: { loginPortal },
+                });
+                console.log("[AUTH] Delayed update of session:", latestSession.id, "with portal:", loginPortal);
+              }
+            } catch (err) {
+              console.error("[AUTH] Delayed session update failed:", err);
+            }
+          }, 100);
+        }
+
         // Identify and track sign-in without blocking the event flow
         await Promise.allSettled([
           identifyUser(message.user.email ?? message.user.id),

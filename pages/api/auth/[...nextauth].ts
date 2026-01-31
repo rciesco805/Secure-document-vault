@@ -19,6 +19,18 @@ export const config = {
 };
 
 const getAuthOptions = (req: NextApiRequest): NextAuthOptions => {
+  const callbackUrlFromCookie = req.cookies?.["next-auth.callback-url"] || "";
+  const callbackUrlFromQuery = typeof req.query?.callbackUrl === "string" ? req.query.callbackUrl : "";
+  const callbackUrl = callbackUrlFromQuery || callbackUrlFromCookie;
+  
+  const isAdminPortalRequest = callbackUrl.includes("/dashboard") || 
+                               callbackUrl.includes("/admin") ||
+                               callbackUrl.includes("/datarooms") ||
+                               callbackUrl.includes("/documents") ||
+                               callbackUrl.includes("/settings");
+  
+  console.log("[AUTH] Portal detection:", { callbackUrl, isAdminPortalRequest });
+
   return {
     ...authOptions,
     callbacks: {
@@ -34,11 +46,9 @@ const getAuthOptions = (req: NextApiRequest): NextAuthOptions => {
           return false;
         }
 
-        // Check if user is an admin (static list first, then database)
         const emailLower = user.email.toLowerCase();
-        let isAdmin = isAdminEmail(emailLower);
         
-        // Also check database for admin roles
+        let isAdmin = isAdminEmail(emailLower);
         if (!isAdmin) {
           const adminTeam = await prisma.userTeam.findFirst({
             where: {
@@ -50,64 +60,69 @@ const getAuthOptions = (req: NextApiRequest): NextAuthOptions => {
           isAdmin = !!adminTeam;
         }
         
-        console.log("[AUTH] Admin email check:", emailLower, "isAdmin:", isAdmin);
+        console.log("[AUTH] User check:", emailLower, "isAdmin:", isAdmin, "isAdminPortalRequest:", isAdminPortalRequest);
         
-        // If admin, allow access immediately
-        if (isAdmin) {
-          console.log("[AUTH] Admin access granted for:", emailLower);
-        } else {
-          // OPTIMIZED: Run all authorization checks in a single transaction
-          // This reduces 3+ separate queries to 1 batched database round-trip
-          const [existingViewer, viewerWithGroups, linkWithEmail] = await prisma.$transaction([
-            // Check 1: Direct viewer record (not revoked)
-            prisma.viewer.findFirst({
-              where: {
-                email: { equals: emailLower, mode: "insensitive" },
-                accessRevokedAt: null,
-              },
-              select: { id: true, email: true, teamId: true }
-            }),
-            // Check 2: Viewer with group membership
-            prisma.viewer.findFirst({
-              where: {
-                email: { equals: emailLower, mode: "insensitive" },
-                groups: { some: {} }
-              },
-              select: { id: true, email: true }
-            }),
-            // Check 3: Email in any link's allowList
-            prisma.link.findFirst({
-              where: {
-                allowList: { has: emailLower },
-                deletedAt: null,
-                isArchived: false,
-              },
-              select: { id: true, name: true }
-            }),
-          ]);
-          
-          const hasAccess = !!(existingViewer || viewerWithGroups || linkWithEmail);
-          
-          console.log("[AUTH] Authorization check for:", emailLower, {
-            existingViewer: !!existingViewer,
-            viewerWithGroups: !!viewerWithGroups,
-            linkAllowList: !!linkWithEmail,
-            hasAccess,
-          });
-          
-          if (!hasAccess) {
+        if (isAdminPortalRequest) {
+          if (!isAdmin) {
+            console.log("[AUTH] Non-admin trying to access admin portal:", emailLower);
             log({
-              message: `Unauthorized login attempt: ${user.email} - not a viewer, not in group, not in allowList`,
+              message: `Access denied: ${user.email} attempted admin portal login without admin role`,
               type: "error",
             });
-            return false;
+            return "/admin/login?error=AccessDenied&message=You+do+not+have+admin+access.+Please+use+the+investor+portal.";
           }
-          
-          const accessMethod = existingViewer ? "viewer record" : (viewerWithGroups ? "group membership" : "link allowList");
-          console.log("[AUTH] Access granted via", accessMethod, "for:", emailLower);
+          console.log("[AUTH] Admin access granted for:", emailLower);
+          return true;
         }
+        
+        const [existingViewer, viewerWithGroups, linkWithEmail] = await prisma.$transaction([
+          prisma.viewer.findFirst({
+            where: {
+              email: { equals: emailLower, mode: "insensitive" },
+              accessRevokedAt: null,
+            },
+            select: { id: true, email: true, teamId: true }
+          }),
+          prisma.viewer.findFirst({
+            where: {
+              email: { equals: emailLower, mode: "insensitive" },
+              groups: { some: {} }
+            },
+            select: { id: true, email: true }
+          }),
+          prisma.link.findFirst({
+            where: {
+              allowList: { has: emailLower },
+              deletedAt: null,
+              isArchived: false,
+            },
+            select: { id: true, name: true }
+          }),
+        ]);
+        
+        const hasViewerAccess = !!(existingViewer || viewerWithGroups || linkWithEmail);
+        
+        console.log("[AUTH] Viewer authorization for:", emailLower, {
+          existingViewer: !!existingViewer,
+          viewerWithGroups: !!viewerWithGroups,
+          linkAllowList: !!linkWithEmail,
+          hasViewerAccess,
+          isAdmin,
+        });
+        
+        if (!hasViewerAccess && !isAdmin) {
+          log({
+            message: `Unauthorized login attempt: ${user.email} - not a viewer, not in group, not in allowList`,
+            type: "error",
+          });
+          return "/login?error=AccessDenied&message=You+do+not+have+access+to+this+portal.+Please+contact+an+administrator.";
+        }
+        
+        const accessMethod = hasViewerAccess 
+          ? (existingViewer ? "viewer record" : (viewerWithGroups ? "group membership" : "link allowList"))
+          : "admin role";
+        console.log("[AUTH] Visitor portal access granted via", accessMethod, "for:", emailLower);
 
-        // Apply rate limiting for signin attempts (optional - skip if Redis unavailable)
         try {
           if (req && rateLimiters?.auth) {
             const clientIP = getIpAddress(req.headers);

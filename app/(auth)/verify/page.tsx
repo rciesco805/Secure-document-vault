@@ -1,9 +1,6 @@
 import { Metadata } from "next";
-import { redirect } from "next/navigation";
-
-import NotFound from "@/pages/404";
-
-import { generateChecksum } from "@/lib/utils/generate-checksum";
+import { Suspense } from "react";
+import VerifyPageClient from "./page-client";
 
 const data = {
   description: "Verify login to BF Fund Investor Portal",
@@ -39,91 +36,14 @@ export const metadata: Metadata = {
   },
 };
 
-function normalizeOrigin(urlString: string): string {
-  try {
-    const url = new URL(urlString);
-    return `${url.protocol}//${url.hostname}${url.port ? ':' + url.port : ''}`.toLowerCase();
-  } catch {
-    return '';
-  }
-}
-
-function getAllowedOrigins(): string[] {
-  const origins: string[] = [];
-  
-  const nextAuthUrl = process.env.NEXTAUTH_URL;
-  const verificationBaseUrl = process.env.VERIFICATION_EMAIL_BASE_URL;
-  const publicBaseUrl = process.env.NEXT_PUBLIC_BASE_URL;
-  
-  if (nextAuthUrl) origins.push(normalizeOrigin(nextAuthUrl));
-  if (verificationBaseUrl) origins.push(normalizeOrigin(verificationBaseUrl));
-  if (publicBaseUrl) origins.push(normalizeOrigin(publicBaseUrl));
-  
-  origins.push('https://dataroom.bermudafranchisegroup.com');
-  
-  return [...new Set(origins.filter(o => o))];
-}
-
-function isValidNextAuthCallbackPath(pathname: string): boolean {
-  return pathname.startsWith('/api/auth/callback/');
-}
-
-export default async function VerifyPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ verification_url?: string; checksum?: string }>;
-}) {
-  const { verification_url, checksum } = await searchParams;
-
-  console.log("[VERIFY] Received params:", { 
-    hasUrl: !!verification_url, 
-    hasChecksum: !!checksum 
-  });
-
-  if (!verification_url || !checksum) {
-    console.log("[VERIFY] Missing required params");
-    return <NotFound />;
-  }
-
-  const isValidVerificationUrl = (url: string, providedChecksum: string): boolean => {
-    try {
-      const urlObj = new URL(url);
-      const urlOrigin = normalizeOrigin(url);
-      const allowedOrigins = getAllowedOrigins();
-      
-      console.log("[VERIFY] Origin check:", { 
-        urlOrigin, 
-        allowedOrigins,
-        isAllowed: allowedOrigins.includes(urlOrigin)
-      });
-      
-      if (!allowedOrigins.includes(urlOrigin)) {
-        console.log("[VERIFY] Origin not in allowed list");
-        return false;
-      }
-      
-      if (!isValidNextAuthCallbackPath(urlObj.pathname)) {
-        console.log("[VERIFY] Invalid callback path:", urlObj.pathname);
-        return false;
-      }
-      
-      const expectedChecksum = generateChecksum(url);
-      const checksumMatch = providedChecksum === expectedChecksum;
-      
-      console.log("[VERIFY] Checksum match:", checksumMatch);
-      
-      return checksumMatch;
-    } catch (error) {
-      console.error("[VERIFY] Validation error:", error);
-      return false;
-    }
-  };
-
-  if (!isValidVerificationUrl(verification_url, checksum)) {
-    console.log("[VERIFY] Validation failed for URL");
-    return <NotFound />;
-  }
-
-  console.log("[VERIFY] Redirecting to callback URL");
-  redirect(verification_url);
+export default function VerifyPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+      </div>
+    }>
+      <VerifyPageClient />
+    </Suspense>
+  );
 }

@@ -23,11 +23,8 @@ const getAuthOptions = (req: NextApiRequest): NextAuthOptions => {
     ...authOptions,
     callbacks: {
       ...authOptions.callbacks,
-      signIn: async ({ user }) => {
-        console.log("[AUTH] signIn callback called for:", user.email);
-        
+      signIn: async ({ user, account, email }) => {
         if (!user.email || (await isBlacklistedEmail(user.email))) {
-          console.log("[AUTH] User blocked - no email or blacklisted");
           await identifyUser(user.email ?? user.id);
           await trackAnalytics({
             event: "User Sign In Attempted",
@@ -132,7 +129,6 @@ const getAuthOptions = (req: NextApiRequest): NextAuthOptions => {
           console.log("[AUTH] Rate limit check skipped:", error);
         }
 
-        console.log("[AUTH] Sign-in allowed for:", user.email);
         return true;
       },
     },

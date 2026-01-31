@@ -10,9 +10,19 @@ The BF Fund Investor Dataroom is a 506(c) compliant GP/LP management suite desig
 - Technical level: Non-technical explanations preferred
 - Focus: Security and ease of use for investors
 
-### Recent Changes (January 30, 2026)
+### Recent Changes (January 31, 2026)
 
 #### Critical Bug Fixes
+
+**Investor Portal Redirect Fix (January 31, 2026)**
+- Changed default root redirect from `/dashboard` to `/login` in `next.config.mjs`
+- Visitors clicking "INVESTOR PORTAL" now land on the investor login page instead of admin login
+- Admins can still access admin login via the "Admin access" link at bottom of investor login page
+- **Requires republish to take effect on production**
+
+### Previous Changes (January 30, 2026)
+
+#### Bug Fixes
 
 **Request Invite Self-Notification Fix (January 30, 2026)**
 - Fixed issue where admins using "Request Invite" received their own access request emails

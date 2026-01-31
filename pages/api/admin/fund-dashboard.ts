@@ -59,20 +59,50 @@ export default async function handler(
       orderBy: { createdAt: "desc" },
     });
 
+    const fundIds = funds.map((f) => f.id);
+    const manualInvestments = await (prisma as any).manualInvestment.findMany({
+      where: {
+        fundId: { in: fundIds },
+        status: "ACTIVE",
+      },
+    });
+
+    const manualByFund = new Map<string, typeof manualInvestments>();
+    manualInvestments.forEach((mi: any) => {
+      if (!manualByFund.has(mi.fundId)) {
+        manualByFund.set(mi.fundId, []);
+      }
+      manualByFund.get(mi.fundId)!.push(mi);
+    });
+
     let totalRaised = 0;
     let totalDistributed = 0;
     let totalCommitments = 0;
     let totalInvestors = new Set<string>();
 
     const fundData = funds.map((fund) => {
-      const commitments = fund.investments.reduce(
+      const fundManualInvestments = manualByFund.get(fund.id) || [];
+
+      const platformCommitments = fund.investments.reduce(
         (sum, inv) => sum + Number(inv.commitmentAmount),
         0
       );
-      const funded = fund.investments.reduce(
+      const manualCommitments = fundManualInvestments.reduce(
+        (sum: number, mi: any) => sum + Number(mi.commitmentAmount),
+        0
+      );
+      const commitments = platformCommitments + manualCommitments;
+
+      const platformFunded = fund.investments.reduce(
         (sum, inv) => sum + Number(inv.fundedAmount),
         0
       );
+      const manualFunded = fundManualInvestments.reduce(
+        (sum: number, mi: any) => sum + Number(mi.fundedAmount),
+        0
+      );
+      const funded = platformFunded + manualFunded;
+
       const distributed = fund.distributions.reduce(
         (sum, d) => sum + Number(d.totalAmount),
         0
@@ -82,6 +112,9 @@ export default async function handler(
       totalDistributed += distributed;
       totalCommitments += commitments;
       fund.investments.forEach((inv) => totalInvestors.add(inv.investorId));
+      fundManualInvestments.forEach((mi: any) => totalInvestors.add(mi.investorId));
+
+      const totalInvestorCount = fund.investments.length + fundManualInvestments.length;
 
       return {
         id: fund.id,
@@ -92,13 +125,14 @@ export default async function handler(
         commitments,
         funded,
         distributed,
-        investorCount: fund.investments.length,
+        investorCount: totalInvestorCount,
         capitalCallCount: fund.capitalCalls.length,
         distributionCount: fund.distributions.length,
         closingDate: fund.closingDate,
         progress: Number(fund.targetRaise) > 0
           ? Math.round((funded / Number(fund.targetRaise)) * 100)
           : 0,
+        manualInvestmentCount: fundManualInvestments.length,
       };
     });
 
@@ -109,7 +143,6 @@ export default async function handler(
       target: f.targetRaise,
     }));
 
-    const fundIds = funds.map((f) => f.id);
     const transactions = await prisma.transaction.findMany({
       where: { fundId: { in: fundIds } },
       include: {

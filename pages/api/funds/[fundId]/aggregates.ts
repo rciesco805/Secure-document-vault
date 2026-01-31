@@ -58,19 +58,36 @@ export default async function handler(
       return res.status(404).json({ message: "Fund not found" });
     }
 
+    const manualInvestments = await (prisma as any).manualInvestment.findMany({
+      where: {
+        fundId,
+        status: "ACTIVE",
+      },
+    });
+
     const transactions = await prisma.transaction.findMany({
       where: { fundId },
     });
 
-    const totalCommitments = fund.investments.reduce(
+    const platformCommitments = fund.investments.reduce(
       (sum, inv) => sum + Number(inv.commitmentAmount),
       0
     );
+    const manualCommitments = manualInvestments.reduce(
+      (sum: number, mi: any) => sum + Number(mi.commitmentAmount),
+      0
+    );
+    const totalCommitments = platformCommitments + manualCommitments;
 
-    const totalFunded = fund.investments.reduce(
+    const platformFunded = fund.investments.reduce(
       (sum, inv) => sum + Number(inv.fundedAmount),
       0
     );
+    const manualFunded = manualInvestments.reduce(
+      (sum: number, mi: any) => sum + Number(mi.fundedAmount),
+      0
+    );
+    const totalFunded = platformFunded + manualFunded;
 
     const totalCapitalCalled = fund.capitalCalls.reduce(
       (sum, cc) => sum + Number(cc.amount),
@@ -98,6 +115,8 @@ export default async function handler(
       (t) => t.status === "PENDING" || t.status === "PROCESSING"
     );
 
+    const totalInvestorCount = fund.investments.length + manualInvestments.length;
+
     return res.status(200).json({
       fund: {
         id: fund.id,
@@ -115,8 +134,11 @@ export default async function handler(
         totalInbound: totalInbound.toFixed(2),
         totalOutbound: totalOutbound.toFixed(2),
         netCashFlow: (totalInbound - totalOutbound).toFixed(2),
+        platformCommitments: platformCommitments.toFixed(2),
+        manualCommitments: manualCommitments.toFixed(2),
       },
-      investorCount: fund.investments.length,
+      investorCount: totalInvestorCount,
+      manualInvestmentCount: manualInvestments.length,
       pendingTransactionCount: pendingTransactions.length,
       investors: fund.investments.map((inv) => ({
         id: inv.investor.id,
@@ -125,6 +147,16 @@ export default async function handler(
         commitment: inv.commitmentAmount.toString(),
         funded: inv.fundedAmount.toString(),
         status: inv.status,
+      })),
+      manualInvestments: manualInvestments.map((mi: any) => ({
+        id: mi.id,
+        investorId: mi.investorId,
+        documentType: mi.documentType,
+        documentTitle: mi.documentTitle,
+        commitment: mi.commitmentAmount.toString(),
+        funded: mi.fundedAmount.toString(),
+        signedDate: mi.signedDate,
+        status: mi.status,
       })),
     });
   } catch (error) {

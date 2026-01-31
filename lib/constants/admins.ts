@@ -10,14 +10,14 @@ export const ADMIN_EMAILS = [
 
 /**
  * Get admin emails for a specific team from the database
- * Returns users with ADMIN or SUPER_ADMIN roles
+ * Returns users with OWNER, ADMIN, or SUPER_ADMIN roles
  */
 export async function getTeamAdminEmails(teamId: string): Promise<string[]> {
   try {
     const teamAdmins = await prisma.userTeam.findMany({
       where: {
         teamId,
-        role: { in: ["ADMIN", "SUPER_ADMIN"] },
+        role: { in: ["OWNER", "ADMIN", "SUPER_ADMIN"] },
         status: "ACTIVE",
       },
       include: {
@@ -50,7 +50,7 @@ export async function getAllAdminEmails(): Promise<string[]> {
   try {
     const allAdmins = await prisma.userTeam.findMany({
       where: {
-        role: { in: ["ADMIN", "SUPER_ADMIN"] },
+        role: { in: ["OWNER", "ADMIN", "SUPER_ADMIN"] },
         status: "ACTIVE",
       },
       include: {
@@ -116,7 +116,7 @@ export async function isTeamAdmin(email: string, teamId: string): Promise<boolea
       where: {
         teamId,
         user: { email: email.toLowerCase().trim() },
-        role: { in: ["ADMIN", "SUPER_ADMIN"] },
+        role: { in: ["OWNER", "ADMIN", "SUPER_ADMIN"] },
         status: "ACTIVE",
       },
     });

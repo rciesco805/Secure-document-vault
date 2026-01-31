@@ -20,7 +20,7 @@ export default async function handler(
     ? await prisma.userTeam.findFirst({
         where: {
           user: { email: { equals: session.user.email, mode: "insensitive" } },
-          role: { in: ["ADMIN", "SUPER_ADMIN"] },
+          role: { in: ["OWNER", "ADMIN", "SUPER_ADMIN"] },
           status: "ACTIVE",
         },
       })
@@ -70,7 +70,7 @@ export default async function handler(
     // Find other admin users (dynamically from database)
     const allAdminMemberships = await prisma.userTeam.findMany({
       where: {
-        role: { in: ["ADMIN", "SUPER_ADMIN"] },
+        role: { in: ["OWNER", "ADMIN", "SUPER_ADMIN"] },
         status: "ACTIVE",
         user: {
           email: { not: "investors@bermudafranchisegroup.com" },
@@ -197,7 +197,7 @@ export default async function handler(
     const finalTeamCount = await prisma.team.count();
     const finalAdminCheck = await prisma.userTeam.findMany({
       where: {
-        role: { in: ["ADMIN", "SUPER_ADMIN"] },
+        role: { in: ["OWNER", "ADMIN", "SUPER_ADMIN"] },
         status: "ACTIVE",
       },
       include: {

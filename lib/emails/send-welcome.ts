@@ -17,7 +17,7 @@ export const sendWelcomeEmail = async (params: CreateUserEmailProps) => {
   const adminTeam = await prisma.userTeam.findFirst({
     where: {
       user: { email: { equals: emailLower, mode: "insensitive" } },
-      role: { in: ["ADMIN", "SUPER_ADMIN"] },
+      role: { in: ["OWNER", "ADMIN", "SUPER_ADMIN"] },
       status: "ACTIVE",
     },
   });

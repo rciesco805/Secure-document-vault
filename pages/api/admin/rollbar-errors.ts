@@ -68,7 +68,7 @@ export default async function handler(
   const userTeam = await prisma.userTeam.findFirst({
     where: {
       user: { email: session.user.email },
-      role: { in: ["ADMIN", "SUPER_ADMIN"] },
+      role: { in: ["OWNER", "ADMIN", "SUPER_ADMIN"] },
       status: "ACTIVE",
     },
   });

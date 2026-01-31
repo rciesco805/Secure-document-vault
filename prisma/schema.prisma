@@ -666,14 +666,15 @@ model Investor {
   onboardingStep        Int       @default(0)
   onboardingCompletedAt DateTime?
 
-  investments       Investment[]
-  capitalCalls      CapitalCallResponse[]
-  notes             InvestorNote[]
-  accreditationAcks AccreditationAck[]
-  documents         InvestorDocument[]
-  bankLinks         BankLink[]
-  transactions      Transaction[]
-  entities          EntityInvestor[]
+  investments         Investment[]
+  capitalCalls        CapitalCallResponse[]
+  notes               InvestorNote[]
+  accreditationAcks   AccreditationAck[]
+  documents           InvestorDocument[]
+  bankLinks           BankLink[]
+  transactions        Transaction[]
+  entities            EntityInvestor[]
+  manualInvestments   ManualInvestment[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -822,14 +823,15 @@ model Fund {
 
   flatModeEnabled Boolean @default(false)
 
-  investments   Investment[]
-  capitalCalls  CapitalCall[]
-  distributions Distribution[]
-  reports       FundReport[]
-  aggregate     FundAggregate?
-  investors     Investor[]
-  pricingTiers  FundPricingTier[]
-  subscriptions Subscription[]
+  investments       Investment[]
+  capitalCalls      CapitalCall[]
+  distributions     Distribution[]
+  reports           FundReport[]
+  aggregate         FundAggregate?
+  investors         Investor[]
+  pricingTiers      FundPricingTier[]
+  subscriptions     Subscription[]
+  manualInvestments ManualInvestment[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1121,6 +1123,71 @@ model Transaction {
   @@index([fundId, status, type]) // Composite index for AUM calculations by fund
   @@index([fundId, type, completedAt]) // Composite index for time-based AUM reporting
   @@index([investorId, type, status]) // Composite index for investor transaction summaries
+}
+
+// Manual Investment Entry - For tracking off-platform investments
+model ManualInvestment {
+  id         String   @id @default(cuid())
+  investorId String
+  investor   Investor @relation(fields: [investorId], references: [id], onDelete: Cascade)
+  fundId     String
+  fund       Fund     @relation(fields: [fundId], references: [id], onDelete: Cascade)
+  teamId     String
+  team       Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  // Investment Details
+  documentType    String // SUBSCRIPTION, LPA, SIDE_LETTER, OTHER
+  documentTitle   String
+  documentNumber  String? // External reference number
+
+  // Financial Details
+  commitmentAmount Decimal  @db.Decimal(18, 2)
+  fundedAmount     Decimal  @default(0) @db.Decimal(18, 2)
+  unfundedAmount   Decimal? @db.Decimal(18, 2) // Calculated or manual
+  units            Decimal? @db.Decimal(18, 4)
+  shares           Decimal? @db.Decimal(18, 4)
+  pricePerUnit     Decimal? @db.Decimal(18, 4)
+  ownershipPercent Decimal? @db.Decimal(8, 4) // Percentage with 4 decimal places
+
+  // Dates
+  signedDate   DateTime
+  effectiveDate DateTime?
+  fundedDate   DateTime?
+  maturityDate DateTime?
+
+  // Transfer Details
+  transferMethod  String? // WIRE, ACH, CHECK, CRYPTO, OTHER
+  transferStatus  String  @default("PENDING") // PENDING, PARTIAL, COMPLETED
+  transferDate    DateTime?
+  transferRef     String? // Bank reference or transaction ID
+  bankName        String?
+  accountLast4    String?
+
+  // Document Storage
+  documentFile    String? // Path to uploaded document
+  storageType     String  @default("S3_PATH")
+
+  // Status
+  status      String @default("ACTIVE") // ACTIVE, REDEEMED, TRANSFERRED, CANCELLED
+  isVerified  Boolean @default(false) // GP has verified the document
+  verifiedBy  String?
+  verifiedAt  DateTime?
+
+  // Notes and Audit
+  notes       String? @db.Text
+  addedBy     String // userId who added the entry
+  auditTrail  Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([investorId])
+  @@index([fundId])
+  @@index([teamId])
+  @@index([status])
+  @@index([signedDate])
+  @@index([fundId, status]) // For fund-level aggregations
+  @@index([investorId, fundId]) // For investor-fund lookups
 }
 
 // --- From signature.prisma ---
@@ -1435,9 +1502,10 @@ model Team {
   accessRequests AccessRequest[]
 
   // LP Portal - Fund Management
-  funds         Fund[]
-  investorNotes InvestorNote[]
-  entities      Entity[]
+  funds             Fund[]
+  investorNotes     InvestorNote[]
+  entities          Entity[]
+  manualInvestments ManualInvestment[]
 
   // Audit logs
   auditLogs AuditLog[]

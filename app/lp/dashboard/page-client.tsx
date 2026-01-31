@@ -174,6 +174,15 @@ export default function LPDashboardClient() {
   const [fundDetailsError, setFundDetailsError] = useState<string | null>(null);
   const [fundDetailsLoaded, setFundDetailsLoaded] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [offeringDocuments, setOfferingDocuments] = useState<{
+    id: string;
+    name: string;
+    description: string;
+    url: string;
+    version: string;
+    required: boolean;
+    order: number;
+  }[]>([]);
   const POLL_INTERVAL = 30000; // 30 seconds for real-time updates
 
   const [subscriptionStatus, setSubscriptionStatus] = useState<{
@@ -317,10 +326,20 @@ export default function LPDashboardClient() {
     return () => clearInterval(pollInterval);
   }, [sessionStatus, investor, fetchFundDetails]);
 
-  // Fetch subscription status after NDA is signed
+  // Fetch subscription status and offering documents after NDA is signed
   useEffect(() => {
     if (investor?.ndaSigned && investor?.accreditationStatus !== "PENDING") {
       fetchSubscriptionStatus();
+    }
+    if (investor?.ndaSigned && investor?.accreditationStatus === "VERIFIED") {
+      fetch("/api/lp/offering-documents")
+        .then((res) => res.ok ? res.json() : null)
+        .then((data) => {
+          if (data?.documents) {
+            setOfferingDocuments(data.documents);
+          }
+        })
+        .catch(console.error);
     }
   }, [investor?.ndaSigned, investor?.accreditationStatus, fetchSubscriptionStatus]);
 
@@ -744,7 +763,7 @@ export default function LPDashboardClient() {
             </div>
           )}
 
-          {investor?.ndaSigned && investor?.accreditationStatus === "VERIFIED" && (
+          {investor?.ndaSigned && investor?.accreditationStatus === "VERIFIED" && offeringDocuments.length > 0 && (
             <Card className="bg-gray-800/50 border-gray-700 mb-6">
               <CardHeader>
                 <CardTitle className="text-white flex items-center">
@@ -756,52 +775,38 @@ export default function LPDashboardClient() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <a
-                    href="/fund-documents/LPA.pdf"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-3 p-4 bg-gray-700/50 hover:bg-gray-700 rounded-lg border border-gray-600 transition-colors group"
-                  >
-                    <div className="p-2 bg-blue-500/20 rounded-lg">
-                      <FileText className="h-5 w-5 text-blue-400" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-white font-medium group-hover:text-blue-300 transition-colors">LPA v4.0</p>
-                      <p className="text-gray-400 text-sm">Limited Partnership Agreement</p>
-                    </div>
-                    <ExternalLink className="h-4 w-4 text-gray-500 group-hover:text-blue-400" />
-                  </a>
-                  <a
-                    href="/fund-documents/PPM.pdf"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-3 p-4 bg-gray-700/50 hover:bg-gray-700 rounded-lg border border-gray-600 transition-colors group"
-                  >
-                    <div className="p-2 bg-purple-500/20 rounded-lg">
-                      <FileText className="h-5 w-5 text-purple-400" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-white font-medium group-hover:text-purple-300 transition-colors">PPM v2.0</p>
-                      <p className="text-gray-400 text-sm">Private Placement Memorandum</p>
-                    </div>
-                    <ExternalLink className="h-4 w-4 text-gray-500 group-hover:text-purple-400" />
-                  </a>
-                  <a
-                    href="/fund-documents/Subscription-Agreement.pdf"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-3 p-4 bg-gray-700/50 hover:bg-gray-700 rounded-lg border border-gray-600 transition-colors group"
-                  >
-                    <div className="p-2 bg-emerald-500/20 rounded-lg">
-                      <FileText className="h-5 w-5 text-emerald-400" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-white font-medium group-hover:text-emerald-300 transition-colors">Subscription Agreement v2.0</p>
-                      <p className="text-gray-400 text-sm">Investment Subscription Form</p>
-                    </div>
-                    <ExternalLink className="h-4 w-4 text-gray-500 group-hover:text-emerald-400" />
-                  </a>
+                <div className={`grid grid-cols-1 ${offeringDocuments.length === 2 ? 'sm:grid-cols-2' : offeringDocuments.length >= 3 ? 'sm:grid-cols-3' : ''} gap-4`}>
+                  {offeringDocuments.map((doc, index) => {
+                    const colorStyles = [
+                      { bg: 'bg-blue-500/20', text: 'text-blue-400', hover: 'group-hover:text-blue-300' },
+                      { bg: 'bg-purple-500/20', text: 'text-purple-400', hover: 'group-hover:text-purple-300' },
+                      { bg: 'bg-emerald-500/20', text: 'text-emerald-400', hover: 'group-hover:text-emerald-300' },
+                      { bg: 'bg-amber-500/20', text: 'text-amber-400', hover: 'group-hover:text-amber-300' },
+                      { bg: 'bg-rose-500/20', text: 'text-rose-400', hover: 'group-hover:text-rose-300' },
+                      { bg: 'bg-cyan-500/20', text: 'text-cyan-400', hover: 'group-hover:text-cyan-300' },
+                    ];
+                    const style = colorStyles[index % colorStyles.length];
+                    return (
+                      <a
+                        key={doc.id}
+                        href={doc.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-3 p-4 bg-gray-700/50 hover:bg-gray-700 rounded-lg border border-gray-600 transition-colors group"
+                      >
+                        <div className={`p-2 ${style.bg} rounded-lg`}>
+                          <FileText className={`h-5 w-5 ${style.text}`} />
+                        </div>
+                        <div className="flex-1">
+                          <p className={`text-white font-medium ${style.hover} transition-colors`}>
+                            {doc.name} {doc.version && `v${doc.version}`}
+                          </p>
+                          <p className="text-gray-400 text-sm">{doc.description}</p>
+                        </div>
+                        <ExternalLink className={`h-4 w-4 text-gray-500 ${style.text}`} />
+                      </a>
+                    );
+                  })}
                 </div>
               </CardContent>
             </Card>

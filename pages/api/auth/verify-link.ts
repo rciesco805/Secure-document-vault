@@ -1,11 +1,6 @@
-import crypto from "crypto";
 import { NextApiRequest, NextApiResponse } from "next";
 import { generateChecksum } from "@/lib/utils/generate-checksum";
 import prisma from "@/lib/prisma";
-
-function hashToken(token: string): string {
-  return crypto.createHash("sha256").update(token).digest("hex");
-}
 
 export default async function handler(
   req: NextApiRequest,
@@ -63,32 +58,6 @@ export default async function handler(
       return res.status(400).json({ 
         valid: false, 
         error: "This link has expired. Please request a new login link." 
-      });
-    }
-
-    const verificationToken = await prisma.verificationToken.findFirst({
-      where: {
-        identifier: magicLink.identifier,
-        expires: { gt: new Date() },
-      },
-    });
-    
-    if (!verificationToken) {
-      console.log("[VERIFY-LINK] NextAuth token not found or expired");
-      await prisma.magicLinkCallback.delete({ where: { id: magicLink.id } });
-      return res.status(400).json({ 
-        valid: false, 
-        error: "This link has expired. Please request a new login link." 
-      });
-    }
-
-    const tokenHash = hashToken(verificationToken.token);
-    if (tokenHash !== magicLink.authTokenHash) {
-      console.log("[VERIFY-LINK] Token hash mismatch - original token may have been replaced");
-      await prisma.magicLinkCallback.delete({ where: { id: magicLink.id } });
-      return res.status(400).json({ 
-        valid: false, 
-        error: "This link is no longer valid. A newer login link may have been requested. Please check for the latest email or request a new link." 
       });
     }
 

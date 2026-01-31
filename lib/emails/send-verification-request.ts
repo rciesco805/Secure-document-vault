@@ -6,78 +6,23 @@ import LoginLink from "@/components/emails/verification-link";
 
 import { generateChecksum } from "../utils/generate-checksum";
 
-function extractTokenFromCallbackUrl(url: string): string | null {
-  try {
-    const urlObj = new URL(url);
-    return urlObj.searchParams.get("token");
-  } catch {
-    return null;
-  }
-}
-
-function hashToken(token: string): string {
-  return crypto.createHash("sha256").update(token).digest("hex");
-}
-
-async function wasRecentEmailSent(email: string): Promise<boolean> {
-  try {
-    const unexpiredTokens = await prisma.verificationToken.findMany({
-      where: {
-        identifier: email.toLowerCase(),
-        expires: {
-          gt: new Date(),
-        },
-      },
-      orderBy: {
-        expires: 'desc',
-      },
-      take: 5,
-    });
-
-    console.log(`[EMAIL] Duplicate check: Found ${unexpiredTokens.length} unexpired token(s) for ${email}`);
-
-    if (unexpiredTokens.length > 1) {
-      console.log(`[EMAIL] Duplicate prevention: Email to ${email} blocked - ${unexpiredTokens.length - 1} previous unexpired token(s) exist`);
-      return true;
-    }
-    
-    return false;
-  } catch (error) {
-    console.error("[EMAIL] Error checking for recent verification token:", error);
-    return false;
-  }
-}
-
 export const sendVerificationRequestEmail = async (params: {
   email: string;
   url: string;
 }) => {
   const { url, email } = params;
   
-  const recentlySent = await wasRecentEmailSent(email);
-  if (recentlySent) {
-    console.log(`[EMAIL] Skipping duplicate verification email to: ${email}`);
-    return;
-  }
-  
   console.log("[EMAIL] Sending verification email to:", email);
   
-  const authToken = extractTokenFromCallbackUrl(url);
-  if (!authToken) {
-    console.error("[EMAIL] Could not extract token from callback URL");
-    throw new Error("Invalid callback URL - no token found");
-  }
-  
-  const authTokenHash = hashToken(authToken);
   const magicLinkToken = crypto.randomBytes(32).toString("hex");
-  const expiresAt = new Date(Date.now() + 20 * 60 * 1000);
+  const expiresAt = new Date(Date.now() + 30 * 60 * 1000);
   
   await prisma.magicLinkCallback.create({
     data: {
       identifier: email.toLowerCase(),
       token: magicLinkToken,
       callbackUrl: url,
-      authTokenHash: authTokenHash,
+      authTokenHash: "",
       expires: expiresAt,
     },
   });
